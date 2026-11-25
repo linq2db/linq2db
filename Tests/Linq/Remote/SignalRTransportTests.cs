@@ -107,6 +107,124 @@ namespace Tests.Remote
 			}
 		}
 
+		// Where logic of a derived hub goes (validation, authorization, auditing): a decorator returned by its
+		// CreateLinqService override sees every call, with a token the client can cancel.
+		[Test]
+		public async Task DerivedHubDecoratorSeesEveryCall()
+		{
+			using var database = new SqliteDatabase();
+
+			var calls = new RecordedCalls();
+
+			using var host = TestHost.Start<DecoratingHub>(services =>
+			{
+				services.AddSingleton(database);
+				services.AddSingleton(calls);
+			});
+
+			var hubConnection = await host.ConnectAsync();
+
+			// A configuration string of its own: the client asks the server for its information once per string and
+			// process, and this test expects that call too.
+			await using (Own(hubConnection))
+			await using (var db = new SignalRDataContext(hubConnection, o => o.UseConfiguration(Configuration + ".Decorated")))
+			{
+				await db.InsertAsync(new Item { Id = 1, Value = "one" });
+
+				(await CountItemsAsync(db))
+					.ShouldBe(1);
+
+				var items = await db
+					.GetTable<Item>()
+					.ToListAsync();
+
+				items.Count.ShouldBe(1);
+
+				// A scalar call: the insert and the identity read back in one command.
+				await db.InsertWithInt32IdentityAsync(new Item { Id = 4, Value = "four" });
+
+				db.BeginBatch();
+				await db.InsertAsync(new Item { Id = 2, Value = "two" });
+				await db.CommitBatchAsync();
+			}
+
+			calls.Names.ShouldBe(["GetInfo", "ExecuteNonQuery", "ExecuteScalar", "ExecuteReader", "ExecuteBatch"], ignoreOrder: true);
+			calls.UncancellableTokens.ShouldBe(0);
+		}
+
+		sealed class RecordedCalls
+		{
+			readonly HashSet<string> _names = new();
+			int                      _uncancellable;
+
+			public IReadOnlyCollection<string> Names
+			{
+				get
+				{
+					lock (_names)
+						return _names.ToArray();
+				}
+			}
+
+			public int UncancellableTokens => Volatile.Read(ref _uncancellable);
+
+			public void Add(string name, CancellationToken cancellationToken)
+			{
+				lock (_names)
+					_names.Add(name);
+
+				if (!cancellationToken.CanBeCanceled)
+					Interlocked.Increment(ref _uncancellable);
+			}
+		}
+
+		sealed class DecoratingHub(SqliteDatabase database, RecordedCalls calls, IOptions<LinqToDBHubOptions> options) : LinqToDBHub(options)
+		{
+			protected override ILinqService CreateLinqService()
+			{
+				return new RecordingLinqService(new SqliteLinqService(database) { AllowUpdates = true }, calls);
+			}
+		}
+
+		sealed class RecordingLinqService(ILinqService inner, RecordedCalls calls) : ILinqService
+		{
+			public string? RemoteClientTag
+			{
+				get => inner.RemoteClientTag;
+				set => inner.RemoteClientTag = value;
+			}
+
+			public Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken = default)
+			{
+				calls.Add("GetInfo", cancellationToken);
+				return inner.GetInfoAsync(configuration, cancellationToken);
+			}
+
+			public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+			{
+				calls.Add("ExecuteNonQuery", cancellationToken);
+				return inner.ExecuteNonQueryAsync(configuration, queryData, cancellationToken);
+			}
+
+			public Task<string?> ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+			{
+				calls.Add("ExecuteScalar", cancellationToken);
+				return inner.ExecuteScalarAsync(configuration, queryData, cancellationToken);
+			}
+
+			public Task<string> ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+			{
+				calls.Add("ExecuteReader", cancellationToken);
+				return inner.ExecuteReaderAsync(configuration, queryData, cancellationToken);
+			}
+
+			public Task<int> ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+			{
+				calls.Add("ExecuteBatch", cancellationToken);
+				return inner.ExecuteBatchAsync(configuration, queryData, cancellationToken);
+			}
+		}
+
 		// The DI-free way to share one connection between contexts: disposing one context leaves the connection
 		// to the others.
 		[Test]
@@ -983,226 +1101,6 @@ namespace Tests.Remote
 			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
 
 			await WithinLimit(client.ExecuteReaderAsync(Configuration, "query"));
-		}
-
-		#endregion
-
-		#region Clients older than 6.7.0
-
-		// A client older than 6.7.0 calls the hub's original methods by name, as plain invocations; a 6.7.0 server
-		// still serves it.
-		[Test]
-		public async Task OldClientRoundTrips()
-		{
-			using var database = new SqliteDatabase();
-			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
-
-			var hubConnection = await host.ConnectAsync();
-
-			await using (Own(hubConnection))
-			{
-				(await WithinLimit(hubConnection.InvokeAsync<LinqServiceInfo>("GetInfoAsync", Configuration)))
-					.ShouldNotBeNull();
-
-				await using var db = new OldClientContext(hubConnection);
-
-				(await db.InsertAsync(new Item { Id = 1, Value = "one" }))
-					.ShouldBe(1); // ExecuteNonQuery
-				(await CountItemsAsync(db))
-					.ShouldBe(1); // ExecuteScalar
-
-				// ExecuteReader
-				var items = await db.GetTable<Item>()
-					.ToListAsync();
-
-				items
-					.Single()
-					.Value
-					.ShouldBe("one");
-
-				db.BeginBatch();
-				await db.InsertAsync(new Item { Id = 2, Value = "two" });
-				await db.InsertAsync(new Item { Id = 3, Value = "three" });
-				await db.CommitBatchAsync();                                                                  // ExecuteBatch
-
-				(await CountItemsAsync(db))
-					.ShouldBe(3);
-			}
-		}
-
-		// The global limit holds for the calls of old clients too.
-		[Test]
-		public async Task OldClientCallsHonourMaxConcurrentCalls()
-		{
-			var service = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(200) };
-			using var host = TestHost.Start<OldClientHub>(services =>
-			{
-				services.AddSingleton<ILinqService>(service);
-				services.Configure<LinqToDBHubOptions>(o =>
-				{
-					o.MaxConcurrentCallsPerConnection = 4;
-					o.MaxConcurrentCalls              = 1;
-				});
-			});
-
-			await RunConcurrentOldClientCallsAsync(host, connections: 3, callsPerConnection: 2);
-
-			service.MaxConcurrency.ShouldBe(1);
-			service.Calls.ShouldBe(6);
-		}
-
-#if !NETFRAMEWORK
-		// The per-connection limit holds for the calls of old clients too. (The legacy server runs the plain
-		// invocations of a connection one at a time anyway.)
-		[Test]
-		public async Task OldClientCallsHonourMaxConcurrentCallsPerConnection()
-		{
-			var service = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(200) };
-			using var host = TestHost.Start<OldClientHub>(
-				services =>
-				{
-					services.AddSingleton<ILinqService>(service);
-					services.Configure<LinqToDBHubOptions>(o => o.MaxConcurrentCallsPerConnection = 2);
-				},
-				hub => hub.MaximumParallelInvocationsPerClient = 8);
-
-			await RunConcurrentOldClientCallsAsync(host, connections: 1, callsPerConnection: 6);
-
-			service.MaxConcurrency.ShouldBe(2);
-			service.Calls.ShouldBe(6);
-		}
-#endif
-
-		static async Task RunConcurrentOldClientCallsAsync(TestHost host, int connections, int callsPerConnection)
-		{
-			var hubConnections = new List<HubConnection>();
-
-			try
-			{
-				for (var i = 0; i < connections; i++)
-					hubConnections.Add(await host.ConnectAsync());
-
-				await WithinLimit(Task.WhenAll(hubConnections.SelectMany(c => Enumerable.Range(0, callsPerConnection).Select(n =>
-					c.InvokeAsync<string>("ExecuteReaderAsync", Configuration, "query")))));
-			}
-			finally
-			{
-				foreach (var c in hubConnections)
-					await c.DisposeAsync();
-			}
-		}
-
-		// A 6.7.0 client never reaches an override of an obsolete method, so the hub refuses its calls instead of bypassing
-		// the override; an old client still goes through the override.
-		[Test]
-		public async Task HubOverridingAnObsoleteMethodRefusesNewClients()
-		{
-			var service   = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(0) };
-			var overrides = new OverrideCalls();
-			using var host = TestHost.Start<ObsoleteOverrideHub>(services =>
-			{
-				services.AddSingleton<ILinqService>(service);
-				services.AddSingleton(overrides);
-			});
-
-			var hubConnection = await host.ConnectAsync();
-			await using var owner = Own(hubConnection);
-
-			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
-
-			// Every call is refused, not only the one whose obsolete counterpart is overridden.
-#if NETFRAMEWORK
-			// The legacy server drops the text of every error unless HubOptions.EnableDetailedErrors is set.
-			await Assert.ThatAsync(() => WithinLimit(client.ExecuteNonQueryAsync(Configuration, "query")), Throws.TypeOf<HubException>());
-#else
-			await Assert.ThatAsync(
-				() => WithinLimit(client.ExecuteNonQueryAsync(Configuration, "query")),
-				Throws.TypeOf<HubException>().With.Message.Contains("ObsoleteOverrideHub overrides ExecuteNonQueryAsync"));
-#endif
-			await Assert.ThatAsync(() => WithinLimit(client.ExecuteReaderAsync(Configuration, "query")), Throws.TypeOf<HubException>());
-
-			service.Calls.ShouldBe(0);
-			overrides.Count.ShouldBe(0);
-
-			(await WithinLimit(hubConnection.InvokeAsync<int>("ExecuteNonQueryAsync", Configuration, "query")))
-				.ShouldBe(5);
-
-			overrides.Count.ShouldBe(1);
-			service.Calls.ShouldBe(1);
-		}
-
-		sealed class OverrideCalls
-		{
-			public int Count;
-		}
-
-		sealed class ObsoleteOverrideHub(ILinqService service, OverrideCalls calls, IOptions<LinqToDBHubOptions> options) : LinqToDBHub(options)
-		{
-			protected override ILinqService CreateLinqService()
-			{
-				return service;
-			}
-
-			// CS0672: the override of an obsolete member is the case under test.
-#pragma warning disable CS0672
-			public override Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
-#pragma warning restore CS0672
-			{
-				Interlocked.Increment(ref calls.Count);
-#pragma warning disable CS0618 // see CS0672 above
-				return base.ExecuteNonQueryAsync(configuration, queryData);
-#pragma warning restore CS0618
-			}
-		}
-
-		// A hub type of its own: the global limit is shared by all hubs of one type in the process.
-		sealed class OldClientHub(ILinqService service, IOptions<LinqToDBHubOptions> options) : LinqToDBHub(options)
-		{
-			protected override ILinqService CreateLinqService()
-			{
-				return service;
-			}
-		}
-
-		// The remote context of a client older than 6.7.0: every call is a plain invocation of the method of the same name.
-		sealed class OldClientContext(HubConnection hubConnection) : RemoteDataContextBase(new DataOptions().UseConfiguration(Configuration))
-		{
-			protected override ILinqService GetClient()
-			{
-				return new OldClient(hubConnection);
-			}
-
-			protected override string ContextIDPrefix => "OldSignalR";
-
-			sealed class OldClient(HubConnection hubConnection) : ILinqService
-			{
-				public string? RemoteClientTag { get; set; } = "Signal/R";
-
-				public Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken = default)
-				{
-					return hubConnection.InvokeAsync<LinqServiceInfo>("GetInfoAsync", configuration, cancellationToken);
-				}
-
-				public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
-				{
-					return hubConnection.InvokeAsync<int>("ExecuteNonQueryAsync", configuration, queryData, cancellationToken);
-				}
-
-				public Task<string?> ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
-				{
-					return hubConnection.InvokeAsync<string?>("ExecuteScalarAsync", configuration, queryData, cancellationToken);
-				}
-
-				public Task<string> ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
-				{
-					return hubConnection.InvokeAsync<string>("ExecuteReaderAsync", configuration, queryData, cancellationToken);
-				}
-
-				public Task<int> ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
-				{
-					return hubConnection.InvokeAsync<int>("ExecuteBatchAsync", configuration, queryData, cancellationToken);
-				}
-			}
 		}
 
 		#endregion

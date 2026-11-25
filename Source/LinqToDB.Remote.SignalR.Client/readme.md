@@ -52,8 +52,7 @@ running command is cancelled where the database provider supports it, and readin
 Calls are never re-sent after a lost connection. Synchronous APIs block a thread, which Blazor
 WebAssembly does not support: use the async ones there.
 
-The hub protocol changed in 6.7.0: this client needs a 6.7.0 or later server. (A 6.7.0 server still serves older
-clients.)
+Use the same linq2db version on the client and the server.
 
 ## Other Transports
 
