@@ -3,7 +3,5 @@
 	/// <summary>
 	/// For internal use.
 	/// </summary>
-	public interface IClassMember : ITree
-	{
-	}
+	public interface IClassMember : ITree;
 }

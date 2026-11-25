@@ -4,7 +4,7 @@ Third-party binaries required for testing. None of them is redistributed.
 - `dotMorten.Microsoft.SqlServer.Types` : signed build of [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) v1.5.0. Test-only.
 - `IBM` : `IDS` and `OCI` versions of `IBM.Data.Informix` .NET Framework provider for tests. Test-only.
 - `Oracle` : Assembly for `Oracle.DataAccess.dll` ODP.NET Unmanaged provider (.NET Framework). Test-only.
-- `SapHana` : SAP HANA .NET Framework provider (`v4.5/`) and its matching `libadonetHDB` natives for the net462 tests, plus `hdbsql.exe` for database setup. Test-only. The net8+ tests take the client from SAP's `Sap.Data.Hana.Net.v8.0` / `v10.0` packages; no package carries the .NET Framework one.
+- `SapHana` : SAP HANA .NET Framework provider (`v4.5/`) and its matching `libadonetHDB` natives for the net462 tests, plus `hdbsql.exe` for database setup. Test-only. The net10+ tests take the client from SAP's `Sap.Data.Hana.Net.v10.0` package; no package carries the .NET Framework one.
 - `SqlServerTypes` : `SqlServerTypes` 14.0 for .NET Framework testing. Test-only.
 
 - **SapHana** — no longer redistributed ([#5862](https://github.com/linq2db/linq2db/issues/5862)). `Sap.Data.Hana.v4.5.dll` arrived from a HANA client installation with no accompanying terms, and SAP's own packages for the same provider carry the SAP Developer License Agreement 3.2, whose §2(a) says the software may not be made available to any third party. The T4 packages now rely on the user's HANA client installation.

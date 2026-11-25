@@ -3,32 +3,16 @@
 namespace LinqToDB.LINQPad;
 
 /// <summary>
-/// Base class for generated contexts and context for direct use.
+/// Context for direct use from driver code. Internal: a public <see cref="DataConnection"/> subclass breaks
+/// LINQPad 5 driver discovery, see <see cref="LINQPadContextOptions"/>.
 /// </summary>
-public class LINQPadDataConnection : DataConnection
+internal sealed class LINQPadDataConnection : DataConnection
 {
-	/// <summary>
-	/// Constructor for inherited context.
-	/// </summary>
-	/// <param name="providerName">Provider name.</param>
-	/// <param name="providerPath">Optional provider assembly path.</param>
-	/// <param name="connectionString">Connection string must have password manager tokens replaced already.</param>
-	protected LINQPadDataConnection(string? providerName, string? providerPath, string? connectionString)
-		: base(
-			new DataOptions()
-			  .UseConnectionString(connectionString ?? throw new LinqToDBLinqPadException("Connection string missing"))
-			  .UseDataProvider(DatabaseProviders.GetDataProvider(providerName, connectionString, providerPath)))
-	{
-	}
-
-	/// <summary>
-	/// Constructor for use from driver code directly.
-	/// </summary>
 	internal LINQPadDataConnection(ConnectionSettings settings)
-		: this(
+		: base(LINQPadContextOptions.Create(
 			settings.Connection.Provider,
 			settings.Connection.ProviderPath,
-			settings.Connection.GetFullConnectionString())
+			settings.Connection.GetFullConnectionString()))
 	{
 		if (settings.Connection.CommandTimeout != null)
 			CommandTimeout = settings.Connection.CommandTimeout.Value;

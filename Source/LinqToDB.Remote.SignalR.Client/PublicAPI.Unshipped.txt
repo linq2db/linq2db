@@ -1,5 +1,4 @@
 ﻿#nullable enable
-LinqToDB.Remote.SignalR.SignalRDataContext.SignalRDataContext(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, bool disposeHubConnection, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
 LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions
 LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConfigureConnection.get -> System.Action<Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder!>?
 LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConfigureConnection.set -> void

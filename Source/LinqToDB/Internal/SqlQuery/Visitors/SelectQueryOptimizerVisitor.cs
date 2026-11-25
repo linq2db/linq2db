@@ -260,7 +260,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					else
 						FirstIterationPassesExecuted++;
 #endif
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
 				}
 			}
 
@@ -355,7 +355,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					_expressionOptimizerVisitor.Optimize(
 						_evaluationContext,
 						NullabilityContext.GetContext(selectQuery),
-						transformationInfo: null,
 						_dataOptions,
 						_mappingSchema,
 						selectQuery,
@@ -2653,6 +2652,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
+				// #6208: joins lifted under an APPLY render flat after it (no ON to group them) or as LATERAL ((...)),
+				// which changes rows or is invalid SQL - they must stay inside the APPLY subquery.
+				if (joinTable.JoinType is JoinType.OuterApply or JoinType.CrossApply
+					&& _providerFlags.IsApplyJoinSupported
+					&& !subQuery.IsSingleTableQueryWithoutJoins)
+				{
+					return false;
+				}
+
 				if (subQuery.HasWhere)
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
@@ -2723,6 +2731,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			// #5413: only flatten a subquery-expression apply when its source is a single table whose joins
 			// are each limited to one record - otherwise flattening could lose the apply one-row bound.
+			// With APPLY support such joins are already refused above (#6208).
 			if (joinTable.IsSubqueryExpression && !(subQuery.From.Tables is [{ Joins: var joins }] && joins.TrueForAll(QueryHelper.IsLimitedToOneRecord)))
 				return false;
 
@@ -3936,7 +3945,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var nullabilityContext = NullabilityContext.GetContext(sq);
 				foreach (var column in sq.Select.Columns)
 				{
-					var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, null, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
+					var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
 
 					if (!ReferenceEquals(optimized, column.Expression))
 					{

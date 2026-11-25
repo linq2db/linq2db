@@ -16,11 +16,10 @@ using NUnit.Framework;
 using Tests;
 using Tests.Model;
 
-// for unknown reason order doesn't help on ubuntu 18, so namespace were removed and class name changed to be first in
-// sort order
+// No namespace and the `a_` prefix make this fixture sort first, so a serial run executes `CreateDatabase` before
+// the other tests (parallel runs wait on it through `CustomTestContext.EnsureDatabaseReady`); don't rename or move it.
 [TestFixture]
 [Category(TestCategory.Create)]
-[Order(-1)]
 // ReSharper disable once InconsistentNaming
 // ReSharper disable once TestClassNameSuffixWarning
 public class a_CreateData : TestBase
@@ -249,7 +248,7 @@ public class a_CreateData : TestBase
 		RunScript(script.ConfigString, script.Divider, script.Name, script.Action, script.Database);
 	}
 
-	[Test, Order(0)]
+	[Test]
 	public void CreateDatabase([CreateDatabaseSources] string context)
 	{
 		switch (context)
@@ -272,6 +271,8 @@ public class a_CreateData : TestBase
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);      break;
 			case string when context.IsAnyOf(TestProvName.AllAccessOdbc)  : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);  break;
+			case string when context.IsAnyOf(TestProvName.AllAccessLibRed): RunScript(context,          "\nGO\n",  "Access",   AccessLibRedAction);
+			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessLibRedAction); break;
 			case ProviderName.SqlCe                                       : RunScript(context,          "\nGO\n",  "SqlCe");
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
 			case string when context.IsAnyOf(TestProvName.AllClickHouse)  : RunScript(context,          "\nGO\n",  "ClickHouse");                  break;
@@ -287,6 +288,8 @@ public class a_CreateData : TestBase
 
 				throw new InvalidOperationException(context);
 		}
+
+		CaptureReferenceData(context);
 	}
 
 	// MySql.sql drops the database its own connection names, so an interrupted run would fail every later one at open.
@@ -345,9 +348,12 @@ public class a_CreateData : TestBase
 			});
 	}
 
-	static void AccessAction(DbConnection connection)
+	static void AccessAction      (DbConnection connection) => AccessNamedParametersAction(connection, AccessProvider.OleDb);
+	static void AccessLibRedAction(DbConnection connection) => AccessNamedParametersAction(connection, AccessProvider.LibRed);
+
+	static void AccessNamedParametersAction(DbConnection connection, AccessProvider provider)
 	{
-		using var conn = AccessTools.CreateDataConnection(connection, provider: AccessProvider.OleDb);
+		using var conn = AccessTools.CreateDataConnection(connection, provider: provider);
 		conn.Execute(@"
 				INSERT INTO AllTypes
 				(

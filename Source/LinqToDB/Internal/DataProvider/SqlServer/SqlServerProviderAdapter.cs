@@ -19,6 +19,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
@@ -429,26 +430,26 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					var ln = Expression.Lambda<Func<float[],DataParameter>>(
 						Expression.New(
-							typeof(DataParameter).GetConstructor([typeof(string), typeof(object)])!,
+							typeof(DataParameter).GetConstructorEx([typeof(string), typeof(object)])!,
 							Expression.Constant(null, typeof(string)),
 							Expression.Condition(
 								Expression.Equal(p, Expression.Constant(null, typeof(float[]))),
 								Expression.Convert(ExpressionHelper.Property(sqlVectorType, "Null"), typeof(object)),
 								Expression.Convert(
 									Expression.New(
-										sqlVectorType.GetConstructor([readOnlyMemoryType])!,
-										Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, p)),
+										sqlVectorType.GetConstructorEx([readOnlyMemoryType])!,
+										Expression.New(readOnlyMemoryType.GetConstructorEx([typeof(float[])])!, p)),
 									typeof(object)))),
 						p);
 
 					var l = Expression.Lambda<Func<float[],DataParameter>>(
 						Expression.New(
-							typeof(DataParameter).GetConstructor([typeof(string), typeof(object)])!,
+							typeof(DataParameter).GetConstructorEx([typeof(string), typeof(object)])!,
 							Expression.Constant(null, typeof(string)),
 							Expression.Convert(
 								Expression.New(
-									sqlVectorType.GetConstructor([readOnlyMemoryType])!,
-									Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, p)),
+									sqlVectorType.GetConstructorEx([readOnlyMemoryType])!,
+									Expression.New(readOnlyMemoryType.GetConstructorEx([typeof(float[])])!, p)),
 								typeof(object))),
 						p);
 
@@ -471,8 +472,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					floatToVectorConverter = Expression.Lambda<Func<float[], object>>(
 						Expression.Convert(
 							Expression.New(
-								sqlVectorType.GetConstructor([readOnlyMemoryType])!,
-								Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, arrayParameter)),
+								sqlVectorType.GetConstructorEx([readOnlyMemoryType])!,
+								Expression.New(readOnlyMemoryType.GetConstructorEx([typeof(float[])])!, arrayParameter)),
 							typeof(object)),
 						arrayParameter)
 						.CompileExpression();
@@ -491,9 +492,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var stringParameter = Expression.Parameter(typeof(string), "v");
 					mappingSchema.SetConvertExpression(typeof(string), sqlVectorType, Expression.Lambda(
 						Expression.New(
-								sqlVectorType.GetConstructor([readOnlyMemoryType])!,
+								sqlVectorType.GetConstructorEx([readOnlyMemoryType])!,
 								Expression.New(
-									readOnlyMemoryType.GetConstructor([typeof(float[])])!,
+									readOnlyMemoryType.GetConstructorEx([typeof(float[])])!,
 									Expression.Call(
 										MemberHelper.MethodOf(() => ReadVector<float>(string.Empty, default)),
 										stringParameter,
@@ -541,8 +542,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					halfToVectorConverter = Expression.Lambda<Func<Half[], object>>(
 						Expression.Convert(
 							Expression.New(
-								sqlHalfVectorType.GetConstructor([typeof(ReadOnlyMemory<Half>)])!,
-								Expression.New(typeof(ReadOnlyMemory<Half>).GetConstructor([typeof(Half[])])!, arrayParameter)),
+								sqlHalfVectorType.GetConstructorEx([typeof(ReadOnlyMemory<Half>)])!,
+								Expression.New(typeof(ReadOnlyMemory<Half>).GetConstructorEx([typeof(Half[])])!, arrayParameter)),
 							typeof(object)),
 						arrayParameter)
 						.CompileExpression();
@@ -561,9 +562,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var stringParameter = Expression.Parameter(typeof(string), "v");
 					mappingSchema.SetConvertExpression(typeof(string), sqlHalfVectorType, Expression.Lambda(
 						Expression.New(
-								sqlHalfVectorType.GetConstructor([typeof(ReadOnlyMemory<Half>)])!,
+								sqlHalfVectorType.GetConstructorEx([typeof(ReadOnlyMemory<Half>)])!,
 								Expression.New(
-									typeof(ReadOnlyMemory<Half>).GetConstructor([typeof(Half[])])!,
+									typeof(ReadOnlyMemory<Half>).GetConstructorEx([typeof(Half[])])!,
 									Expression.Call(
 										MemberHelper.MethodOf(() => ReadVector<Half>(string.Empty, default)),
 										stringParameter,

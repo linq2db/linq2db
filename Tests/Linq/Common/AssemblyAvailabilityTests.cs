@@ -22,7 +22,7 @@ namespace Tests.Common
 		public void ReturnsTrueForLinqToDbCoreAssembly()
 		{
 			// Referenced by the test project and thus loadable via Assembly.Load
-			// on every TFM the tests run under (net462 / net8.0 / net9.0 / net10.0).
+			// on every TFM the tests run under (net462 / net10.0 / net11.0).
 			LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent("linq2db").ShouldBeTrue();
 		}
 

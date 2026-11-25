@@ -1,0 +1,16 @@
+{
+	"Azure.TestJob": {
+		// it's hard to setup TLS 1.1 for SQL Server and TLS 1.2+ for gRPC at the same time...
+		"DisableRemoteContext": true,
+		"Providers": [
+			"SqlServer.2005",
+			"SqlServer.2005.MS"
+		]
+	},
+
+	// The only per-TFM deviation in this directory: the netfx leg has always run this config with the
+	// remote context enabled, so it opts back out of the value inherited from Azure.TestJob.
+	"NETFX.Azure": {
+		"DisableRemoteContext": false
+	}
+}

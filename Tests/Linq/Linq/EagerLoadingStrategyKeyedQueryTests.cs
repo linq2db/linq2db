@@ -157,7 +157,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalKeyedQuery_InlineCollection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -203,13 +203,13 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
 		[Test]
 		public void Select_GlobalKeyedQuery_MultipleAssociations(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -254,13 +254,13 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 2 child queries = 3 SELECT queries
+			// 1 buffer harvester + 2 child queries = 3 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 
 		[Test]
 		public void Select_GlobalKeyedQuery_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -322,7 +322,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_GlobalKeyedQuery_SingleLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -352,13 +352,13 @@ namespace Tests.Linq
 					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
 			}
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
 		[Test]
 		public void Select_GlobalKeyedQuery_FirstOrDefault(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -398,7 +398,7 @@ namespace Tests.Linq
 
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
@@ -408,7 +408,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentFieldFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -461,7 +461,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_NestedChildProjectsGrandparentFieldFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -531,7 +531,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentFieldVerifyValuesFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -575,7 +575,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_MixedChildrenSomeWithParentFieldsFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -637,9 +637,181 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
+		// Mixed combinable + non-combinable eager loads in ONE query, nested variant - the highest-risk path flagged in
+		// review (rests on EagerResultEnumerable.BuildPlan's ORDERING INVARIANT). Under global KeyedQuery, a Department
+		// child that references a parent non-key field (c.Name) falls back to Default (a combinable candidate), but because
+		// its OWN nested Employees load stays KeyedQuery it buffers => that whole harvester is NON-combinable and runs
+		// first. A sibling Department child (also Default via the same fallback, no nested load) stays COMBINABLE and rides
+		// the combined command with the main query. If the plan ever ran a non-combinable harvester against a combinable
+		// sibling's not-yet-populated slot, a child collection would come back empty and AreEqual below would catch it.
+		[Test]
+		public void MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable(
+			[DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
+		{
+			// Eager loads do not combine on a remote context, so it would run the same eager load as separate commands and
+			// produce a differently-grouped baseline than the direct leg; remote legs are excluded above.
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			// Combining forced on: the ORDERING INVARIANT this test guards exists only in BuildPlan's combined path, so with
+			// the policy switch off (the 6.x default) everything runs sequentially and there is no ordering left to violate.
+			using var db = GetDataContext(context, o => o
+				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery)
+				.UseCombinedCommands(true));
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			counter.Count = 0;
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					// Default fallback (parent non-key ref) + nested KeyedQuery Employees => buffered => NON-combinable
+					DeptsWithEmployees = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					// Default fallback (parent non-key ref), no nested load => COMBINABLE sibling
+					PlainDepts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DeptsWithEmployees = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					PlainDepts = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Anti-trivial guard: the non-combinable buffered harvester runs its own queries in addition to the combined
+			// command, so a mixed plan is strictly more than a single round-trip (a fully-combined collapse would be 1).
+			counter.Count.ShouldBeGreaterThan(1);
+		}
+
+		// The other side of the ordering guard. TryGetCombinedEagerEnumerable refuses the combined path for a layout where
+		// a non-combinable harvester sits above a combinable one; the shape above is the SAFE mixed one — the buffered
+		// harvesters take the low indices and the plain sibling the high one — so the guard has to keep letting it combine.
+		// The test above cannot show that: its "more than one round-trip" guard passes just as happily when combining is
+		// refused outright and everything runs sequentially, which is exactly how an over-eager guard would fail. Comparing
+		// the two configurations does show it.
+		[Test]
+		public void MixedCombinableAndNonCombinable_StillCombines([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var off = MixedHierarchySelectCount(context, combinedCommands: false);
+			var on  = MixedHierarchySelectCount(context, combinedCommands: true);
+
+			on.ShouldBeLessThan(off);
+		}
+
+		int MixedHierarchySelectCount(string context, bool combinedCommands)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db = GetDataContext(context, o => o
+				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery)
+				.UseCombinedCommands(combinedCommands));
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			counter.Count = 0;
+
+			// The same mixed shape as above: the nested KeyedQuery load makes DeptsWithEmployees buffered and therefore
+			// non-combinable, while PlainDepts stays combinable.
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					DeptsWithEmployees = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					PlainDepts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new { d.Id, CompanyName = c.Name })
+						.ToList(),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			return counter.Count;
+		}
+
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentExpressionFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -693,7 +865,7 @@ namespace Tests.Linq
 			Details = "no-issue: YDB Re2.PatternFromLike (LIKE UDF) requires a non-nullable String pattern; building it from a nullable column (the parent Name referenced in the child-filter method call) yields Optional<Utf8>. Needs nullable-pattern coercion in the YDB LIKE translation.")]
 		[Test]
 		public void Select_KeyedQuery_ChildFilterUsesParentInMethodCallFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -739,7 +911,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_KeyedQuery_EagerLoadDifferentDetails(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -815,7 +987,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_KeyedQuery_SingleLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -842,7 +1014,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_InlineCollection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -885,7 +1057,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_FilteredChildren(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -926,7 +1098,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_MultipleAssociations(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -968,7 +1140,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_NestedTwoLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1025,7 +1197,7 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void Select_KeyedQuery_ScalarAndCollection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1074,7 +1246,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_FirstOrDefault_SingleAssociation(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1106,7 +1278,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_EmptyMaster_OnlyOneQuery(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			using var db      = GetDataContext(context);
 			using var tCo     = db.CreateLocalTable<Company>();
@@ -1142,7 +1314,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_KeyedQuery_LoadWithSingleLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1174,7 +1346,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_KeyedQuery_LoadWithThenLoad(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1214,7 +1386,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootWithKeyedLoadStrategy_SingleChild(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1255,7 +1427,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootWithKeyedLoadStrategy_MultipleChildren(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -1299,7 +1471,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ToDictionaryInSelect(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1358,7 +1530,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_Single_OneParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1386,7 +1558,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_Single_MultipleParents_Throws(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1415,7 +1587,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_SingleOrDefault_MultipleParents_Throws(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1441,8 +1613,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_KeyedQuery_SingleAsync_MultipleParents_Throws(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public async Task Select_KeyedQuery_SingleAsync_MultipleParents_Throws(
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1463,12 +1635,12 @@ namespace Tests.Linq
 				}
 			).WithKeyedLoadStrategy();
 
-			Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
+			await Assert.ThatAsync(async () => await query.SingleAsync(), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]
 		public async Task Select_KeyedQuery_FirstAsync_OneParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1501,7 +1673,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_KeyedQuery_MixedOperatorDependency(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1545,7 +1717,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL",
 			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
 		public void Select_KeyedQuery_DetailTakeIsPerParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context,
 			[Values] EagerLoadingStrategy strategy)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1585,7 +1757,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL")]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL")]
 		public void Select_KeyedQuery_AssociationDetailSkipTakeIsPerParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1626,7 +1798,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL")]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL")]
 		public void Select_KeyedQuery_AssociationDetailTakeIsPerParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1669,7 +1841,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_WideProjection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1717,10 +1889,10 @@ namespace Tests.Linq
 
 		#region Concurrency — shared cached query must not share per-execution key state
 
-		// Regression for MAJ001: KeyedQueryKeysHolder used to be build-time state baked into the
+		// Regression for MAJ001: the keyed keys were once build-time state baked into the
 		// cached query, so concurrent executions of the same cached query clobbered each other's
 		// key sets — producing empty or cross-loaded child collections. Keys are now isolated per
-		// execution via the preamble-results array, so this must stay green under concurrency.
+		// execution via the harvester-results array, so this must stay green under concurrency.
 		// Scoped to providers whose CreateLocalTable tables are visible across connections.
 		[Test]
 		[NoBaselines("Multi-threading")]
@@ -1809,14 +1981,14 @@ namespace Tests.Linq
 
 		#region Default strategy — runtime-parameter regression
 
-		// Regression: DetachedPreamble and Preamble<TKey,T> in ExpressionBuilder.EagerLoadDefault.cs
-		// used to call query.GetResultEnumerable(…, preambles, preambles) — passing preambles in both
-		// the parameters and preambles slots. Any captured local variable that feeds a SQL parameter on
+		// Regression: DetachedHarvester and Harvester<TKey,T> in ExpressionBuilder.EagerLoadDefault.cs
+		// used to call query.GetResultEnumerable(…, harvesters, harvesters) — passing harvesters in both
+		// the parameters and harvesters slots. Any captured local variable that feeds a SQL parameter on
 		// the detail query arrived as null (or empty) because the real parameters array was never forwarded.
 		// This test ensures that a captured local variable (minId) reaches the detail query correctly.
 		[Test]
 		public void Select_DefaultStrategy_RuntimeParameterReachesDetailQuery(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1875,7 +2047,7 @@ namespace Tests.Linq
 		// MAJ001: root marker — global KeyedQuery overridden to Default.
 		[Test]
 		public void WithSeparateLoadStrategy_OverridesGlobalKeyedQuery(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1942,7 +2114,7 @@ namespace Tests.Linq
 		// child collections into a single UNION ALL query (counter == 1 on CTE providers).
 		[Test]
 		public void WithUnionLoadStrategy_OverridesGlobalDefault_QueryCountDistinguishesStrategy(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -1993,7 +2165,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
 			// CteUnion (marker won): 1 UNION ALL query loads both child collections.
-			// Non-CTE providers fall back to KeyedQuery: 1 buffer preamble + 2 child queries = 3.
+			// Non-CTE providers fall back to KeyedQuery: 1 buffer harvester + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
@@ -2055,7 +2227,7 @@ namespace Tests.Linq
 		}
 
 		// Inverse order: outer WithKeyedLoadStrategy() beats inner WithUnionLoadStrategy(), so KeyedQuery runs
-		// (1 buffer preamble + 2 child queries = 3) even though SQLite supports CTE — proving the rule is
+		// (1 buffer harvester + 2 child queries = 3) even though SQLite supports CTE — proving the rule is
 		// "outermost wins", not "CteUnion always wins".
 		[Test]
 		public void WithLoadStrategy_LastMarkerWins_OuterKeyedOverInnerUnion(
@@ -2105,7 +2277,7 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// Outer KeyedQuery won: 1 buffer preamble + 2 child queries = 3.
+			// Outer KeyedQuery won: 1 buffer harvester + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 
@@ -2132,7 +2304,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_CompositeKey_ChildrenAttachedCorrectly(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var parents = new[]
 			{
@@ -2297,7 +2469,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_NullableFK_OrphanChildrenNotAttachedToAnyParent(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var parents = new[]
 			{

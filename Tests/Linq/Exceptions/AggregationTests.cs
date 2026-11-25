@@ -14,7 +14,7 @@ namespace Tests.Exceptions
 		public void NonNullableMin1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<InvalidOperationException>(() => db.Parent.Where(_ => _.ParentID < 0).Min(_ => _.ParentID));
+			Assert.That(() => db.Parent.Where(_ => _.ParentID < 0).Min(_ => _.ParentID), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]
@@ -29,7 +29,7 @@ namespace Tests.Exceptions
 					max = p.Children.Where(_ => _.ParentID < 0).Min(_ => _.ParentID)
 				};
 
-			Assert.Catch<InvalidOperationException>(() => q.ToList());
+			Assert.That(() => q.ToList(), Throws.InstanceOf<InvalidOperationException>());
 		}
 
 		[Test]
@@ -37,7 +37,7 @@ namespace Tests.Exceptions
 		{
 			using var db = GetDataContext(context);
 
-			Assert.Throws<InvalidOperationException>(() => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID));
+			Assert.That(() => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]
@@ -60,7 +60,7 @@ namespace Tests.Exceptions
 		{
 			using var db = GetDataContext(context);
 
-			Assert.Throws<InvalidOperationException>(() => db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID));
+			Assert.That(() => db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID), Throws.TypeOf<InvalidOperationException>());
 		}
 	}
 }

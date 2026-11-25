@@ -699,7 +699,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// #### database_id<br/>
 			/// *database_id* is an <strong>integer</strong> representing the database ID, with no default value. Valid inputs are either a database ID or <c>NULL</c>.<br/>
 			/// Specified <c>database_id</c>: Returns a row for that specific database.<br/>
-			/// <c>NULL</c>: For a single database, returns a row for the current database. For a database in an elastic pool, returns rows for all databases in the pool where the caller has sufficient [permissions](#permissions).<br/>
+			/// <c>NULL</c>: For a single database, returns a row for the current database. For a database in an elastic pool, returns rows for all databases in the pool where the caller has sufficient [permissions](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-hs-database-log-rate#permissions).<br/>
 			/// The built-in function <a href='https://docs.microsoft.com/en-us/sql/t-sql/functions/db-id-transact-sql'>DB_ID</a> can be specified.<br/>
 			/// ## Table Returned</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-hs-database-log-rate'>sys.dm_hs_database_log_rate</a>.</para>
@@ -735,7 +735,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>Applies to:</strong> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Database</a></para>
 			/// <para>Returns CPU usage and storage data for a database in Azure SQL Database. The data is collected and aggregated within five-minute intervals. For each user database, there is one row for every five-minute reporting window in which there is a change in resource consumption. The data returned includes CPU usage, storage size change, and database SKU modification. Idle databases with no changes may not have rows for every five-minute interval. Historical data is retained for approximately 14 days.<br/>
 			/// <note type='note'><br/>
-			/// 		This dynamic management view applies to Azure SQL Database only. For an equivalent view for Azure SQL Managed Instance, use [sys.server_resource_stats](sys-server-resource-stats-azure-sql-database.md?view=azuresqldb-mi-current&amp;preserve-view=true).<br/>
+			/// 		This dynamic management view applies to Azure SQL Database only. For an equivalent view for Azure SQL Managed Instance, use [sys.server_resource_stats](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-server-resource-stats-azure-sql-database?view=azuresqldb-mi-current).<br/>
 			/// </note></para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-stats-azure-sql-database'>sys.resource_stats</a>.</para>
 			/// </summary>
@@ -1094,7 +1094,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// #### database_id<br/>
 		/// *database_id* is an <strong>integer</strong> representing the database ID, with no default value. Valid inputs are either a database ID or <c>NULL</c>.<br/>
 		/// Specified <c>database_id</c>: Returns a row for that specific database.<br/>
-		/// <c>NULL</c>: For a single database, returns a row for the current database. For a database in an elastic pool, returns rows for all databases in the pool where the caller has sufficient [permissions](#permissions).<br/>
+		/// <c>NULL</c>: For a single database, returns a row for the current database. For a database in an elastic pool, returns rows for all databases in the pool where the caller has sufficient [permissions](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-hs-database-log-rate#permissions).<br/>
 		/// The built-in function <a href='https://docs.microsoft.com/en-us/sql/t-sql/functions/db-id-transact-sql'>DB_ID</a> can be specified.<br/>
 		/// ## Table Returned</para><br/>
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-hs-database-log-rate'>sys.dm_hs_database_log_rate</a>.</para>
@@ -1366,7 +1366,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para><strong>Applies to:</strong> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Database</a></para>
 		/// <para>Returns CPU usage and storage data for a database in Azure SQL Database. The data is collected and aggregated within five-minute intervals. For each user database, there is one row for every five-minute reporting window in which there is a change in resource consumption. The data returned includes CPU usage, storage size change, and database SKU modification. Idle databases with no changes may not have rows for every five-minute interval. Historical data is retained for approximately 14 days.<br/>
 		/// <note type='note'><br/>
-		/// 		This dynamic management view applies to Azure SQL Database only. For an equivalent view for Azure SQL Managed Instance, use [sys.server_resource_stats](sys-server-resource-stats-azure-sql-database.md?view=azuresqldb-mi-current&amp;preserve-view=true).<br/>
+		/// 		This dynamic management view applies to Azure SQL Database only. For an equivalent view for Azure SQL Managed Instance, use [sys.server_resource_stats](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-server-resource-stats-azure-sql-database?view=azuresqldb-mi-current).<br/>
 		/// </note></para><br/>
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-stats-azure-sql-database'>sys.resource_stats</a>.</para>
 		/// </summary>
@@ -1993,7 +1993,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <para><strong>pdw_node_id</strong> NOT NULL <strong>int</strong></para>
 			/// ID of the node this distribution is on.<br/>
-			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).
+			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql).
 			/// </summary>
 			[Column("pdw_node_id"),     NotNull] public int    PdwNodeID      { get; set; } // int
 			/// <summary>
@@ -2315,13 +2315,13 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <para><strong>session_id</strong> NOT NULL <strong>nvarchar(32)</strong></para>
 			/// ID of the session performing the operation.<br/>
-			/// Range: See <c>session_id</c> in [sys.dm_pdw_exec_sessions](../system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql.md).
+			/// Range: See <c>session_id</c> in [sys.dm_pdw_exec_sessions](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql).
 			/// </summary>
 			[Column("session_id"),         NotNull] public string   SessionID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
 			/// <para><strong>request_id</strong> NOT NULL <strong>nvarchar(32)</strong></para>
 			/// ID of the request performing the operation. For loads, this is the current or last request associated with this load.<br/>
-			/// Range: See <c>request_id</c> in [sys.dm_pdw_exec_requests](../system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql.md).
+			/// Range: See <c>request_id</c> in [sys.dm_pdw_exec_requests](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql).
 			/// </summary>
 			[Column("request_id"),         NotNull] public string   RequestID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
@@ -2376,7 +2376,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <para><strong>pdw_node_id</strong> NOT NULL <strong>int</strong></para>
 			/// Unique identifier of an appliance node for which this record holds details.<br/><br/> run_id and pdw_node_id form the key for this view.<br/>
-			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).
+			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql).
 			/// </summary>
 			[Column("pdw_node_id"),        NotNull] public int      PdwNodeID        { get; set; } // int
 			/// <summary>
@@ -2547,7 +2547,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("physical_name"), NotNull] public string PhysicalName { get; set; } = null!; // nvarchar(36)
 			/// <summary>
 			/// <para><strong>object_id</strong> NOT NULL <strong>int</strong></para>
-			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](./sys-objects-transact-sql.md?view=azure-sqldw-latest&amp;preserve-view=true).
+			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=azure-sqldw-latest).
 			/// </summary>
 			[Column("object_id"),     NotNull] public int    ObjectID     { get; set; } // int
 
@@ -4145,7 +4145,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// 		This SQL Server 2000 system table is included as a view for backward compatibility. We  recommend that you use the current SQL Server system views instead. To find the equivalent system view or views, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/relational-databases/system-tables/mapping-system-tables-to-system-views-transact-sql'>Mapping System Tables to System Views (Transact-SQL)</a>. This feature will be removed in a future version of Microsoft SQL Server. Avoid using this feature in new development work, and plan to modify applications that currently use this feature.<br/>
 			/// </note><br/>
 			/// 		<br/>
-			/// <strong>Applies to</strong>: SQL Server ( SQL Server 2008 (10.0.x) through [current version](/troubleshoot/sql/general/determine-version-edition-update-level)).</para><br/>
+			/// <strong>Applies to</strong>: SQL Server ( SQL Server 2008 (10.0.x) through [current version](https://learn.microsoft.com/troubleshoot/sql/general/determine-version-edition-update-level)).</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-syslogins-transact-sql'>sys.syslogins</a>.</para>
 			/// </summary>
 			public ITable<Login>           Logins           { get { return _dataContext.GetTable<Login>(); } }
@@ -5709,7 +5709,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// 		This SQL Server 2000 system table is included as a view for backward compatibility. We  recommend that you use the current SQL Server system views instead. To find the equivalent system view or views, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/relational-databases/system-tables/mapping-system-tables-to-system-views-transact-sql'>Mapping System Tables to System Views (Transact-SQL)</a>. This feature will be removed in a future version of Microsoft SQL Server. Avoid using this feature in new development work, and plan to modify applications that currently use this feature.<br/>
 		/// </note><br/>
 		/// 		<br/>
-		/// <strong>Applies to</strong>: SQL Server ( SQL Server 2008 (10.0.x) through [current version](/troubleshoot/sql/general/determine-version-edition-update-level)).</para><br/>
+		/// <strong>Applies to</strong>: SQL Server ( SQL Server 2008 (10.0.x) through [current version](https://learn.microsoft.com/troubleshoot/sql/general/determine-version-edition-update-level)).</para><br/>
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-syslogins-transact-sql'>sys.syslogins</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="syslogins", IsView=true)]
@@ -8342,7 +8342,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_federation_member"),                          Nullable] public bool?    IsFederationMember                   { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_remote_data_archive_enabled</strong> NULL <strong>bit</strong></para>
-			/// Indicates whether the database is stretched.<br/><c>0</c> = The database isn't Stretch-enabled.<br/><c>1</c> = The database is Stretch-enabled.<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions<br/>For more information, see [Stretch Database](/previous-versions/sql/sql-server/stretch-database/stretch-database).
+			/// Indicates whether the database is stretched.<br/><c>0</c> = The database isn't Stretch-enabled.<br/><c>1</c> = The database is Stretch-enabled.<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions<br/>For more information, see [Stretch Database](https://learn.microsoft.com/previous-versions/sql/sql-server/stretch-database/stretch-database).
 			/// </summary>
 			[Column("is_remote_data_archive_enabled"),                Nullable] public bool?    IsRemoteDataArchiveEnabled           { get; set; } // bit
 			/// <summary>
@@ -8407,12 +8407,12 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ledger_on"),                                  Nullable] public bool?    IsLedgerOn                           { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_change_feed_enabled</strong> NULL <strong>bit</strong></para>
-			/// Indicates whether the current database is enabled for <a href='https://docs.microsoft.com/en-us/azure/synapse-analytics/synapse-link/sql-synapse-link-overview'>Azure Synapse Link for SQL</a> or [Fabric Mirrored Database](/fabric/database/mirrored-database/overview).<br/><br/><strong>Applies to</strong>: SQL Server 2022 (16.x) and later versions, and Azure SQL Database
+			/// Indicates whether the current database is enabled for <a href='https://docs.microsoft.com/en-us/azure/synapse-analytics/synapse-link/sql-synapse-link-overview'>Azure Synapse Link for SQL</a> or [Fabric Mirrored Database](https://learn.microsoft.com/fabric/database/mirrored-database/overview).<br/><br/><strong>Applies to</strong>: SQL Server 2022 (16.x) and later versions, and Azure SQL Database
 			/// </summary>
 			[Column("is_change_feed_enabled"),                        Nullable] public bool?    IsChangeFeedEnabled                  { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_vorder_enabled</strong> NOT NULL <strong>bit</strong></para>
-			/// Indicates whether [V-Order](/fabric/data-warehouse/v-order) is enabled for each Warehouse.<br/><br/><strong>Applies to</strong>: Microsoft Fabric only.
+			/// Indicates whether [V-Order](https://learn.microsoft.com/fabric/data-warehouse/v-order) is enabled for each Warehouse.<br/><br/><strong>Applies to</strong>: Microsoft Fabric only.
 			/// </summary>
 			[Column("is_vorder_enabled"),                          NotNull    ] public bool     IsVorderEnabled                      { get; set; } // bit
 		}
@@ -14092,7 +14092,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("modify_date"),                                  NotNull    ] public DateTime ModifyDate                              { get; set; } // datetime
 			/// <summary>
 			/// <para><strong>is_rda_server</strong> NULL <strong>bit</strong></para>
-			/// <strong>Applies to:</strong> Starting with SQL Server 2016 (13.x).<br/><br/>Server is remote data archive enable (stretch-enabled). For more information, see [Enable Stretch Database on the server](/previous-versions/sql/sql-server/stretch-database/enable-stretch-database-for-a-database#EnableTSQLServer).
+			/// <strong>Applies to:</strong> Starting with SQL Server 2016 (13.x).<br/><br/>Server is remote data archive enable (stretch-enabled). For more information, see [Enable Stretch Database on the server](https://learn.microsoft.com/previous-versions/sql/sql-server/stretch-database/enable-stretch-database-for-a-database#EnableTSQLServer).
 			/// </summary>
 			[Column("is_rda_server"),                                   Nullable] public bool?    IsRdaServer                             { get; set; } // bit
 		}
@@ -14539,7 +14539,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  For more information about statistics, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/statistics/statistics'>Statistics</a>.<br/>
 			/// ::: moniker range='=fabric'<br/>
 			/// <note type='note'><br/>
-			/// 		For more information on statistics in Microsoft Fabric, see [Statistics in Microsoft Fabric](/fabric/data-warehouse/statistics).<br/>
+			/// 		For more information on statistics in Microsoft Fabric, see [Statistics in Microsoft Fabric](https://learn.microsoft.com/fabric/data-warehouse/statistics).<br/>
 			/// </note><br/>
 			/// 		<br/>
 			/// ::: moniker-end</para><br/>
@@ -15833,7 +15833,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("version"),                 Nullable] public int?    Version               { get; set; } // int
 			/// <summary>
 			/// <para><strong>encoding_type</strong> NULL <strong>int</strong></para>
-			/// Type of encoding used for that segment:<br/><br/>1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/>2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/>3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/>4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/>5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/>For more information, see the [Remarks](#remarks) section.
+			/// Type of encoding used for that segment:<br/><br/>1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/>2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/>3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/>4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/>5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/>For more information, see the [Remarks](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql#remarks) section.
 			/// </summary>
 			[Column("encoding_type"),           Nullable] public int?    EncodingType          { get; set; } // int
 			/// <summary>
@@ -19678,7 +19678,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		///  For more information about statistics, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/statistics/statistics'>Statistics</a>.<br/>
 		/// ::: moniker range='=fabric'<br/>
 		/// <note type='note'><br/>
-		/// 		For more information on statistics in Microsoft Fabric, see [Statistics in Microsoft Fabric](/fabric/data-warehouse/statistics).<br/>
+		/// 		For more information on statistics in Microsoft Fabric, see [Statistics in Microsoft Fabric](https://learn.microsoft.com/fabric/data-warehouse/statistics).<br/>
 		/// </note><br/>
 		/// 		<br/>
 		/// ::: moniker-end</para><br/>
@@ -20585,7 +20585,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("history_table_id"),                      Nullable] public int?    HistoryTableID                 { get; set; } // int
 			/// <summary>
 			/// <para><strong>is_remote_data_archive_enabled</strong> NULL <strong>bit</strong></para>
-			/// Indicates whether the table is Stretch-enabled.<br/><br/>0 = The table isn't Stretch-enabled.<br/>1 = The table is Stretch-enabled.<br/><br/>For more info, see [Stretch Database](/previous-versions/sql/sql-server/stretch-database/stretch-database).<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, and Azure SQL Database
+			/// Indicates whether the table is Stretch-enabled.<br/><br/>0 = The table isn't Stretch-enabled.<br/>1 = The table is Stretch-enabled.<br/><br/>For more info, see [Stretch Database](https://learn.microsoft.com/previous-versions/sql/sql-server/stretch-database/stretch-database).<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, and Azure SQL Database
 			/// </summary>
 			[Column("is_remote_data_archive_enabled"),        Nullable] public bool?   IsRemoteDataArchiveEnabled     { get; set; } // bit
 			/// <summary>
@@ -23570,7 +23570,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>Applies to:</strong> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL Server</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Database</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Managed Instance</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure Synapse Analytics</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Analytics Platform System (PDW)</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL analytics endpoint in Microsoft Fabric</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Warehouse in Microsoft Fabric</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL database in Microsoft Fabric</a></para>
 			/// <para>Returns a row for each security principal in a SQL Server database.<br/>
 			/// <note type='note'><br/>
-			/// 		[Microsoft Entra ID](/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
+			/// 		[Microsoft Entra ID](https://learn.microsoft.com/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
 			/// </note><br/>
 			/// 		.<br/>
 			/// ## Column descriptions</para><br/>
@@ -23705,7 +23705,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>Applies to:</strong> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL Server</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Database</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Managed Instance</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Analytics Platform System (PDW)</a></para>
 			/// <para>Contains a row for every server-level principal.<br/>
 			/// <note type='note'><br/>
-			/// 		[Microsoft Entra ID](/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
+			/// 		[Microsoft Entra ID](https://learn.microsoft.com/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
 			/// </note><br/>
 			/// 		.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-principals-transact-sql'>sys.server_principals</a>.</para>
@@ -24509,7 +24509,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para><strong>Applies to:</strong> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL Server</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Database</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Managed Instance</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure Synapse Analytics</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Analytics Platform System (PDW)</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL analytics endpoint in Microsoft Fabric</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Warehouse in Microsoft Fabric</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL database in Microsoft Fabric</a></para>
 		/// <para>Returns a row for each security principal in a SQL Server database.<br/>
 		/// <note type='note'><br/>
-		/// 		[Microsoft Entra ID](/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
+		/// 		[Microsoft Entra ID](https://learn.microsoft.com/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
 		/// </note><br/>
 		/// 		.<br/>
 		/// ## Column descriptions</para><br/>
@@ -25511,7 +25511,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para><strong>Applies to:</strong> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>SQL Server</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Database</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Azure SQL Managed Instance</a> √ <a href='https://docs.microsoft.com/en-us/sql/sql-server/sql-docs-navigation-guide#applies-to'>Analytics Platform System (PDW)</a></para>
 		/// <para>Contains a row for every server-level principal.<br/>
 		/// <note type='note'><br/>
-		/// 		[Microsoft Entra ID](/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
+		/// 		[Microsoft Entra ID](https://learn.microsoft.com/entra/fundamentals/new-name) was previously known as Azure Active Directory (Azure AD).<br/>
 		/// </note><br/>
 		/// 		.</para><br/>
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-principals-transact-sql'>sys.server_principals</a>.</para>

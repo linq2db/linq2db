@@ -240,7 +240,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void InnerJoin9([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -403,7 +403,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin51([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -428,7 +428,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -445,7 +445,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin53([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -463,7 +463,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin54([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -573,7 +573,7 @@ namespace Tests.Linq
 		// Access has strange order strategy
 		// Informix move constant column value from left-joined subquery to top level even for null records
 		[Test]
-		public void GroupJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void GroupJoin9([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -797,7 +797,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinSubqueryDoNotOptimize([DataSources(TestProvName.AllAccess)] string context)
+		public void LeftJoinSubqueryDoNotOptimize([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -831,7 +831,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Oracle 11g bug: merged outer-joined view returns COALESCE constant for null-extended row", Configurations = [TestProvName.AllOracle11])]
 		[Test]
-		public void Issue5970Test([DataSources(TestProvName.AllAccess)] string context, [Values] bool parameterDependent)
+		public void Issue5970Test([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool parameterDependent)
 		{
 			using var db = GetDataContext(context);
 
@@ -973,7 +973,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReferenceJoin2([DataSources(TestProvName.AllAccess)] string context)
+		public void ReferenceJoin2([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1481,7 +1481,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount1([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1500,7 +1500,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount2([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1521,7 +1521,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount3([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1542,7 +1542,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount4([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1564,7 +1564,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithCount5([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1585,7 +1585,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithBothFilters([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1618,7 +1618,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithBothFiltersAlternative([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -1651,7 +1651,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithConditions([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -1697,7 +1697,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -1742,7 +1742,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -1785,7 +1785,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnRightWithConditions([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -1831,7 +1831,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnRightWithoutConditions([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -1876,7 +1876,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -2073,7 +2073,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutConditions([DataSources(TestProvName.AllSQLite, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var id1 = Parent.First().ParentID;
@@ -2112,7 +2112,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllAccess)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var actual =
@@ -2481,7 +2481,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection1([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -2509,7 +2509,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection2([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -2537,7 +2537,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection3([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -2564,7 +2564,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithRecordSelection4([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -3042,7 +3042,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(1224, Configurations = new[]
 		{
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe
@@ -3270,7 +3270,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "Not implemented Error: Non-inner join on correlated columns not supported")]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllNativeAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		// PostgreSQL 9.3+ (LATERAL); 9.2 excluded
@@ -3428,7 +3428,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
-		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllAccess, TestProvName.AllClickHouse])] string context)
+		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllNativeAccess, TestProvName.AllClickHouse])] string context)
 		{
 			using var db   = GetDataContext(context);
 
@@ -3472,7 +3472,7 @@ namespace Tests.Linq
 		// Captured selectors cannot be written in query syntax.
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
-		public void JoinWithCapturedExpressionsInCorrelatedSubquery([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinWithCapturedExpressionsInCorrelatedSubquery([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3492,5 +3492,210 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void OuterApplyTakeWithInnerJoinKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				from x in (
+					from g in db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.OrderBy(g => g.GrandChildID)
+						.Take(1)
+					join p in db.Parent on g.ParentID equals (int?)p.ParentID
+					select p
+				).DefaultIfEmpty()
+				select new
+				{
+					c.ChildID,
+					ParentID = x == null ? (int?)null : x.ParentID,
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse, ProviderName.Ydb], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "nested LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "nested LATERAL")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void NestedOuterApplyTakeWithInnerJoinKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				from x in (
+					from g in db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.OrderBy(g => g.GrandChildID)
+						.Take(1)
+					join p in db.Parent on g.ParentID equals (int?)p.ParentID
+					from ch in db.Child
+						.Where(ch => ch.ParentID == p.ParentID && ch.ChildID != c.ChildID)
+						.OrderBy(ch => ch.ChildID)
+						.Take(1)
+						.DefaultIfEmpty()
+					select new
+					{
+						p.ParentID,
+						OtherChildID = ch == null ? (int?)null : ch.ChildID,
+					}
+				).DefaultIfEmpty()
+				select new
+				{
+					c.ChildID,
+					ParentID     = x == null ? (int?)null : x.ParentID,
+					OtherChildID = x == null ? null       : x.OtherChildID,
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodWithNullComparer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID }, comparer: null);
+
+			AssertQuery(query);
+		}
+
+		// The comparer is refused by JoinBuilder.CanBuildMethod before any SQL is built, so one provider covers it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodWithComparerIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID }, EqualityComparer<int>.Default);
+
+			var act = () => query.ToArray();
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodLookalikeWithThreeGenericArguments([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = JoinLookalike.Join(db.Parent, db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID });
+
+			var expected =
+				from p in Parent
+				join c in Child on p.ParentID equals c.ParentID
+				select new { p.ParentID, c.ChildID };
+
+			AreEqual(expected, query);
+		}
+
+		// Not an extension method, so it never competes with Queryable.Join in this namespace. Its three generic arguments match
+		// the .NET 11 tuple-returning Join, but it takes a result selector.
+		static class JoinLookalike
+		{
+			[IsQueryable]
+			public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
+				IQueryable<TOuter> outer,
+				IQueryable<TInner> inner,
+				Expression<Func<TOuter, int>> outerKeySelector,
+				Expression<Func<TInner, int>> innerKeySelector,
+				Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			{
+				var method = typeof(JoinLookalike)
+					.GetMethod(nameof(Join))!
+					.MakeGenericMethod(typeof(TOuter), typeof(TInner), typeof(TResult));
+
+				return outer.Provider.CreateQuery<TResult>(
+					Expression.Call(
+						method,
+						outer.Expression,
+						inner.Expression,
+						Expression.Quote(outerKeySelector),
+						Expression.Quote(innerKeySelector),
+						Expression.Quote(resultSelector)));
+			}
+		}
+
+#if NET11_0_OR_GREATER
+		// The comparer is refused by JoinBuilder.CanBuildMethod before any SQL is built, so one provider covers it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverloadWithComparerIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, EqualityComparer<int>.Default);
+
+			var act = () => query.ToArray();
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverload([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverloadComposed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Join(db.Child, p => p.ParentID, c => c.ParentID)
+				.Where(t => t.Inner.ChildID > 20)
+				.Select(t => new { t.Outer.ParentID, t.Outer.Value1, t.Inner.ChildID });
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodEnumerableTupleOverload([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => p.Children
+					.Join(p.GrandChildren, c => (int?)c.ChildID, g => g.ChildID)
+					.Any(t => t.Inner.GrandChildID > 0));
+
+			AreEqual(ExpectedParentsWithJoinedGrandChildren(), query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodEnumerableTupleOverloadWithNullComparer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => p.Children
+					.Join(p.GrandChildren, c => (int?)c.ChildID, g => g.ChildID, comparer: null)
+					.Any(t => t.Inner.GrandChildID > 0));
+
+			AreEqual(ExpectedParentsWithJoinedGrandChildren(), query);
+		}
+
+		// The in-memory Parent rows carry no Children / GrandChildren, so the expected side spells the associations out.
+		IEnumerable<Parent> ExpectedParentsWithJoinedGrandChildren()
+			=> Parent.Where(p => Child
+				.Where(c => c.ParentID == p.ParentID)
+				.Join(GrandChild.Where(g => g.ParentID == p.ParentID), c => (int?)c.ChildID, g => g.ChildID, (c, g) => g)
+				.Any(g => g.GrandChildID > 0));
+#endif
 	}
 }

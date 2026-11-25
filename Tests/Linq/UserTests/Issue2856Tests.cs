@@ -29,8 +29,7 @@ namespace Tests.UserTests
 			{
 				var allRpIds = new[] { TestData.Guid1, TestData.Guid2 };
 
-				Assert.DoesNotThrow(() =>
-					_ = (
+				_ = (
 							from gt1 in s.GetTable<GlobalTaskDTO>()
 							where allRpIds.Contains(gt1.RPSourceID!.Value)
 							select gt1.RPSourceID!.Value
@@ -39,7 +38,7 @@ namespace Tests.UserTests
 							from gt2 in s.GetTable<GlobalTaskDTO>()
 							select gt2.RPDestinationID!.Value
 						)
-						.ToList());
+						.ToList();
 			}
 		}
 	}
