@@ -44,8 +44,12 @@ contexts. Use `SignalRDataContext(connection, disposeHubConnection: true)` to ha
 On .NET Framework / .NET Standard, and in .NET 8 and .NET 9 applications (which get the .NET Standard build of this
 package), it is built against the 1.x Signal/R client it depends on, and works with that version only: from 3.0 on,
 `HubConnection` is not binary compatible with it (`DisposeAsync` returns `ValueTask`), so keep
-`Microsoft.AspNetCore.SignalR.Client` at 1.x there. What this readme says about .NET Framework / .NET Standard applies
-to .NET 8 and .NET 9 applications too: no size check before sending, no automatic reconnect.
+`Microsoft.AspNetCore.SignalR.Client` at 1.x there. That client does not reconnect automatically, in .NET 8 and
+.NET 9 applications either.
+
+Every client build checks a request against the size limit the server reports before sending it. Whether there is one
+depends on the server: a .NET 10+ server reports its own, the .NET Framework / .NET Standard build of the server
+package (which .NET 8 and .NET 9 servers get too) reports none.
 
 Cancelling a query (the `CancellationToken` of `ToListAsync` and other async methods) cancels it on the server: a
 running command is cancelled where the database provider supports it, and reading the result stops at the next row.
