@@ -172,20 +172,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303")]
 		public void DefaultImplementationInterceptorHasCacheKey([EFDataSources] string provider)
 		{
-			try
-			{
-				using var ctx = CreateContext(provider);
-				using var db  = ctx.CreateLinqToDBConnection();
+			using var ctx = CreateContext(provider);
+			using var db  = ctx.CreateLinqToDBConnection();
 
-				((IInterceptable<IQueryExpressionInterceptor>)db).Interceptor
-					.ShouldBeAssignableTo<IInterceptorCacheKey>();
-			}
-			finally
-			{
-				// The metadata reader cached for the model keeps this context's services, and the MySQL provider needs
-				// them alive when it first translates a method, which this context never does.
-				LinqToDBForEFTools.ClearCaches();
-			}
+			((IInterceptable<IQueryExpressionInterceptor>)db).Interceptor
+				.ShouldBeAssignableTo<IInterceptorCacheKey>();
 		}
 
 		// A custom implementation is not trusted to rewrite queries alike for every context, so a query translated for
