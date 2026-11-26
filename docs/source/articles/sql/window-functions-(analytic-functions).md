@@ -102,6 +102,29 @@ FROM
 		INNER JOIN [Child] [c_1] ON [p].[ParentID] = [c_1].[ParentID]
 ```
 
+#### Compile-Time and Run-Time Checks
+
+The builder lambdas are typed so that most invalid `OVER` clauses do not compile: ranking functions and `LEAD` / `LAG` need an ordering and take no frame, `KeepFirst()` / `KeepLast()` need an ordering, and nothing can follow `UseWindow`. What the types cannot express is checked when the query is translated, before anything is sent to the database, and reported as a `LinqToDBException`:
+
+- A function or clause the current database does not support, e.g. `NTH_VALUE is not supported by current provider.` on SQL Server, or `KEEP clause is not supported by current provider.` on any database but Oracle. [WindowFunctions.FeatureMatrix.md](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Sql/WindowFunctions.FeatureMatrix.md) lists what each database supports. Some clauses are emulated rather than rejected: `Filter(...)` becomes a `CASE WHEN` inside the aggregate where `FILTER (WHERE ...)` is missing, and `NULLS FIRST` / `NULLS LAST` become an extra sort key.
+- A `RANGE` or `GROUPS` frame with a value offset, such as `RangeBetween.ValuePreceding(1)`, with more than one ordering key: `A RANGE or GROUPS frame with a value offset requires exactly one ORDER BY expression.`
+- A window function in a `where` condition: `Window functions cannot be used in search condition.` Select it in a subquery and filter the outer query instead:
+
+```c#
+var firstChildren =
+	from x in
+		from c in db.Child
+		select new
+		{
+			Child     = c,
+			RowNumber = Sql.Window.RowNumber(w => w.PartitionBy(c.ParentID).OrderBy(c.ChildID)),
+		}
+	where x.RowNumber == 1
+	select x.Child;
+```
+
+Two shapes compile without an ordering and are not rejected: a frame given before `OrderBy`, as in `w.PartitionBy(x).RowsBetweenValues(1, 1)`, and a `DefineWindow` window without `OrderBy` passed to a ranking function. Databases that require an ordering there get a constant stand-in, such as `ORDER BY (SELECT 1)` on SQL Server, and the others run the window unordered. Either way the rows are taken in whatever order the database reads them, so add an `OrderBy` when the result depends on it.
+
 #### Supported Functions (could be incomplete)
 
 The following table contains list of supported Window Functions and `LINQ To DB` representation of these functions. Function names link to the Oracle Database documentation, which covers every function in the table.
