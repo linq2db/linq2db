@@ -12,7 +12,7 @@ The landing page at `docs/source/index.md` features a tabbed demo showing C# LIN
 
 ## How to update the SQL panes
 
-`SqlDemoGenerator.cs` holds one method per tab, with the same C# as the tab, and renders it for every dialect offline: a query through `ToSqlQuery`, which never opens a connection, and an executing call through `CaptureConnection`, which records the commands instead of running them. That SQL was compared with what the same calls send to SQL Server 2022, PostgreSQL 16, MySQL 8, Oracle 23 and SQLite, and was equal. It is a reference copy and is not compiled where it lives.
+`SqlDemoGenerator.cs` holds one method per tab, with the same C# as the tab, and renders it for every dialect offline: a query through `ToSqlQuery`, which never opens a connection, and an executing call through `CaptureConnection`, which records the commands instead of running them. Two tabs were also compared with live databases, using the generator's dialect options: the Upsert tab's SQL equalled what the call sends to SQL Server 2022, PostgreSQL 16, MySQL 8, Oracle 23 and SQLite, and the Merge tab's what `.Merge()` sends to SQL Server 2022. The other tabs show `ToSqlQuery`'s output and were not run on a server. The generator is a reference copy and is not compiled where it lives.
 
 ### 1. Copy the generator into the playground
 
@@ -26,7 +26,10 @@ cp docs/tools/sql-demo/SqlDemoGenerator.cs Tests/Tests.Playground/SqlDemoGenerat
 
 ### 2. Edit the tab methods if a tab changes
 
-Keep each method's C# identical to its tab's C# pane, except Merge, which stops before the executing `.Merge()`, and Temp Table, which ends the join with `ToList()` so it runs.
+Keep each method's C# identical to its tab's C# pane, except:
+
+- Merge stops before the executing `.Merge()`.
+- Temp Table first creates `Products` (`CreateTable<Product>()`, not traced), wraps the temp table in a `using (…) { }` block where the pane has `using var tmp`, and ends the join with `ToList()` so it runs; the pane's C# shows the query without enumerating it.
 
 ### 3. Regenerate the panes
 
@@ -44,7 +47,7 @@ dotnet test --project Tests/Tests.Playground/Tests.Playground.csproj -c Testing 
   --filter "FullyQualifiedName~SqlDemoGenerator" --output detailed --test-progress
 ```
 
-`LandingPageIsCurrent` fails while any region differs from what the current linq2db generates, and on a region no tab owns; run it after a linq2db change that may alter the SQL. `TempTable` prints the executed SQLite statements for the hand-formatted Temp Table pane.
+`LandingPageIsCurrent` fails while any region differs from what the current linq2db generates, on a region no tab owns, on a `sql-demo` marker outside a well-formed region and on two regions with one id; run it after a linq2db change that may alter the SQL. Marker problems are fixed by hand: `UpdateLandingPage` refuses such a page. `TempTable` prints the executed SQLite statements for the hand-formatted Temp Table pane.
 
 ### 5. Copy the generator back and delete the playground copy
 
@@ -56,9 +59,9 @@ rm Tests/Tests.Playground/SqlDemoGenerator.cs
 ## Adding a new tab
 
 1. Add `<input type="radio" name="demo-tab" id="demo-tab-N" class="demo-radio" /><label for="demo-tab-N" class="demo-tab">…</label>` to `.demo-tabs`.
-2. Add a `.demo-panel-N` div to `.demo-panels`: the C# pane, an SQL pane holding an empty `<!-- sql-demo:<id> -->` / `<!-- /sql-demo:<id> -->` region, and a `demo-more` link to the matching article.
+2. Add a `.demo-panel-N` div to `.demo-panels`: the C# pane, an SQL pane holding an empty `<!-- sql-demo:<id> -->` / `<!-- /sql-demo:<id> -->` region (`<id>`: lowercase letters and hyphens), and a `demo-more` link to the matching article. A link written as `href="xref:<uid>"` is checked by the build but comes out with class `xref`; `main.css` styles `.demo-panel > a.xref` the same way.
 3. Add `.demo-container:has(#demo-tab-N:checked) .demo-panel-N` to the visibility rule in `docs/source/templates/custom/public/main.css`. If the new tab goes before Temp Table, renumber the tabs after it and move the two Temp Table rules (`#demo-tab-8` today) with it.
-4. Add the tab's method and a `Tab` entry with the same `<id>` to `SqlDemoGenerator.cs` (`Sql` for a query, `Execute` for a call that runs), then run `UpdateLandingPage`.
+4. Add the tab's method and a `Tab` entry with the same `<id>` to `SqlDemoGenerator.cs` (`Sql` for a query, `Execute` for a call that runs), then run `UpdateLandingPage`. A dialect that cannot run the tab is named in `UnsupportedOn`, with the note text in `Unsupported` and a phrase of the refusal's message in `UnsupportedReason`; the three go together and neither text may be blank, and the generator fails if a named dialect runs the tab after all.
 
 Adding a dialect is the same: a radio and label in `.demo-dialects`, a `Dialect` entry in the generator, and a `.demo-container:has(#demo-dialect-<id>:checked) .demo-sql-variant[data-dialect="<id>"]` line in `main.css`.
 

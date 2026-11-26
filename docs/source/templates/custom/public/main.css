@@ -2,8 +2,9 @@
 
 /* A short page has no vertical scrollbar where it takes room (Windows); reserving its gutter keeps every
    page the same width, so the navbar and centered content do not shift when moving between pages.
-   Not below 768px: there the article TOC is a Bootstrap offcanvas, whose scroll lock adds the
-   scrollbar's width as padding and would shift the page while it is open. */
+   Not below 768px, where the article TOC is a Bootstrap offcanvas: its scroll lock adds the
+   scrollbar's width as body padding, which with a reserved gutter would shift the page while it is
+   open (reasoned from Bootstrap's scroll-bar helper, not reproduced). */
 @media (min-width: 768px) {
 	html {
 		scrollbar-gutter: stable;

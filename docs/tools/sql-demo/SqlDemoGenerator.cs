@@ -231,14 +231,17 @@ namespace Tests.Playground
 		}
 
 		/// <param name="Sql">A query tab: the SQL its ToSqlQuery renders.</param>
-		/// <param name="Execute">An executing tab: the call to run against the capturing connection.</param>
+		/// <param name="Execute">An executing tab: the call to run against the capturing connection. A tab has one of the two.</param>
 		/// <param name="UnsupportedOn">Dialects that must refuse the tab; each gets <paramref name="Unsupported"/> as its note.</param>
+		/// <param name="Unsupported">The note, <c>{0}</c> being the dialect name.</param>
+		/// <param name="UnsupportedReason">Text the refusal's message must contain; any other failure propagates.</param>
 		sealed record Tab(
 			string                       Id,
-			Func<DataConnection, string>? Sql           = null,
-			Action<DataConnection>?       Execute       = null,
-			string[]?                     UnsupportedOn = null,
-			string?                       Unsupported   = null);
+			Func<DataConnection, string>? Sql               = null,
+			Action<DataConnection>?       Execute           = null,
+			string[]?                     UnsupportedOn     = null,
+			string?                       Unsupported       = null,
+			string?                       UnsupportedReason = null);
 
 		static readonly Tab[] _tabs =
 		[
@@ -247,9 +250,30 @@ namespace Tests.Playground
 			new("expression-method", ExpressionMethod),
 			new("cte",               Cte),
 			new("window-functions",  WindowFunctions),
-			new("merge",             Merge, UnsupportedOn: ["mysql", "sqlite"], Unsupported: "{0} has no MERGE statement."),
+			new("merge",             Merge,
+				UnsupportedOn     : ["mysql", "sqlite"],
+				Unsupported       : "{0} has no MERGE statement.",
+				UnsupportedReason : "provider doesn't support SQL MERGE statement"),
 			new("upsert",            Execute: Upsert),
 		];
+
+		// a tab is a query or a call, and its note comes with the dialects and the reason; a blank reason
+		// would turn every exception into the note
+		static void CheckTabs()
+		{
+			foreach (var tab in _tabs)
+			{
+				if ((tab.Sql == null) == (tab.Execute == null))
+					throw new InvalidOperationException($"Tab '{tab.Id}' needs exactly one of Sql and Execute");
+
+				var note = tab.UnsupportedOn is { Length: > 0 };
+
+				if (HasText(tab.Unsupported) != note || HasText(tab.UnsupportedReason) != note)
+					throw new InvalidOperationException($"Tab '{tab.Id}': UnsupportedOn, Unsupported and UnsupportedReason go together, the two texts not blank");
+			}
+
+			static bool HasText(string? text) => !string.IsNullOrWhiteSpace(text);
+		}
 
 		#endregion
 
@@ -258,8 +282,10 @@ namespace Tests.Playground
 		sealed record Dialect(string Id, string Name, Func<DataOptions, DataOptions> Use);
 
 		// No server is needed: ToSqlQuery never opens the connection, and an executing tab runs against
-		// CaptureConnection. The SQL equals what these calls send to SQL Server 2022, PostgreSQL 16,
-		// MySQL 8, Oracle 23 and SQLite (compared on live databases, 2026-11-26).
+		// CaptureConnection. Compared with live databases on 2026-11-26, using these dialect options: the
+		// Upsert tab's SQL equals what the call sends to SQL Server 2022, PostgreSQL 16, MySQL 8, Oracle 23
+		// and SQLite, and the Merge tab's what .Merge() sends to SQL Server 2022. The other tabs are
+		// ToSqlQuery's output and were not run on a server.
 		static readonly Dialect[] _dialects =
 		[
 			new("sqlserver",  "SQL Server", o => o.UseSqlServer ("Server=offline",       SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient)),
@@ -284,7 +310,7 @@ namespace Tests.Playground
 			{
 				Render(tab, dialect);
 			}
-			catch (LinqToDBException)
+			catch (LinqToDBException ex) when (ex.Message.Contains(tab.UnsupportedReason!, StringComparison.Ordinal))
 			{
 				return null;
 			}
@@ -388,13 +414,38 @@ namespace Tests.Playground
 
 		// index.md marks each tab's SQL pane: <!-- sql-demo:query --> ... <!-- /sql-demo:query -->
 		static readonly Regex _region = new(@"(?<open><!-- sql-demo:(?<id>[a-z-]+) -->\n)(?<body>.*?)(?<close><!-- /sql-demo:\k<id> -->)", RegexOptions.Singleline);
+		static readonly Regex _marker = new(@"<!-- /?sql-demo:");
+
+		// every marker must belong to a region _region parses, or that region would be skipped silently,
+		// and an id marks one region; both are fixed by hand, UpdateLandingPage refuses such a page
+		static string? MarkerProblems(string page)
+		{
+			var regions  = _region.Matches(page);
+			var stray    = _marker.Matches(page).Count - 2 * regions.Count;
+			var twice    = regions.GroupBy(m => m.Groups["id"].Value).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+			var problems = new List<string>();
+
+			if (stray != 0)
+				problems.Add($"{stray} <!-- sql-demo: --> marker(s) outside a parsed region (an id is lowercase letters and hyphens, and each opener needs its matching close)");
+
+			if (twice.Count > 0)
+				problems.Add($"more than one region for {string.Join(", ", twice)}");
+
+			return problems.Count == 0 ? null : string.Join("; ", problems);
+		}
 
 		/// <summary>Rewrites the SQL panes of docs/source/index.md from the current linq2db.</summary>
 		[Test, Explicit("writes docs/source/index.md")]
 		public void UpdateLandingPage()
 		{
+			CheckTabs();
+
 			var path    = FindLandingPage();
 			var page    = File.ReadAllText(path).Replace("\r\n", "\n");
+
+			if (MarkerProblems(page) is { } problems)
+				throw new InvalidOperationException(problems);
+
 			var tabs    = _tabs.ToDictionary(t => t.Id);
 			var updated = _region.Replace(page, m =>
 			{
@@ -422,9 +473,14 @@ namespace Tests.Playground
 		[Test]
 		public void LandingPageIsCurrent()
 		{
+			CheckTabs();
+
 			var page  = File.ReadAllText(FindLandingPage()).Replace("\r\n", "\n");
-			var shown = _region.Matches(page).ToDictionary(m => m.Groups["id"].Value, m => m.Groups["body"].Value);
+			var shown = _region.Matches(page).DistinctBy(m => m.Groups["id"].Value).ToDictionary(m => m.Groups["id"].Value, m => m.Groups["body"].Value);
 			var stale = new List<string>();
+
+			if (MarkerProblems(page) is { } problems)
+				stale.Add(problems);
 
 			foreach (var tab in _tabs)
 			{
@@ -437,7 +493,7 @@ namespace Tests.Playground
 			foreach (var id in shown.Keys.Except(_tabs.Select(t => t.Id)))
 				stale.Add($"{id}: region with no generator tab");
 
-			stale.ShouldBeEmpty("docs/source/index.md is out of date, run UpdateLandingPage: " + string.Join("; ", stale));
+			stale.ShouldBeEmpty("docs/source/index.md is not current (UpdateLandingPage rewrites a region that differs; markers are fixed by hand): " + string.Join("; ", stale));
 		}
 
 		static string FindLandingPage()
