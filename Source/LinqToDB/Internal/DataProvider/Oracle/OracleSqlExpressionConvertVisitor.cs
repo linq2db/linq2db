@@ -272,7 +272,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
 			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
-				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr, Precedence.Subtraction);
 
 			return base.ConvertSqlUnaryExpression(element);
 		}
