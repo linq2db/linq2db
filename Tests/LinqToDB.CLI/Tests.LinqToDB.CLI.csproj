@@ -5,6 +5,7 @@
 		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<EnableNUnitRunner>true</EnableNUnitRunner>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	</PropertyGroup>
 
 	<ItemGroup>

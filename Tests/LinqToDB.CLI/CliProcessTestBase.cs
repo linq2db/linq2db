@@ -97,7 +97,10 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				await process.WaitForExitAsync().WaitAsync(timeout).ConfigureAwait(false);
+				await process
+					.WaitForExitAsync()
+					.WaitAsync(timeout)
+					.ConfigureAwait(false);
 			}
 			catch (TimeoutException)
 			{

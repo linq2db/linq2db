@@ -45,7 +45,8 @@ namespace Tests.Scaffold
 
 			foreach (var language in Enum.GetValues<ScaffoldLanguage>())
 				foreach (var combination in combinations)
-					yield return new TestCaseData(language, combination).SetArgDisplayNames(language.ToString(), combination.Name);
+					yield return new TestCaseData(language, combination)
+						.SetArgDisplayNames(language.ToString(), combination.Name);
 		}
 
 		static TestSchema CreateSchema()
@@ -106,10 +107,14 @@ namespace Tests.Scaffold
 
 			if (combination.Equatable)
 			{
-				parent.GetInterfaces().ShouldContain(typeof(IEquatable<>).MakeGenericType(parent));
+				parent
+					.GetInterfaces()
+					.ShouldContain(typeof(IEquatable<>).MakeGenericType(parent));
 
 				if (language == ScaffoldLanguage.FSharp)
-					parent.GetAttributes<Microsoft.FSharp.Core.CustomEqualityAttribute>(false).ShouldNotBeEmpty();
+					parent
+						.GetAttributes<Microsoft.FSharp.Core.CustomEqualityAttribute>(false)
+						.ShouldNotBeEmpty();
 			}
 
 			if (combination.Metadata == MetadataSource.None)
@@ -130,8 +135,11 @@ namespace Tests.Scaffold
 				var first  = ModelSmoke.CreateRow(context, parent, 0);
 				var second = ModelSmoke.CreateRow(context, parent, 0);
 
-				ReferenceEquals(first, second).ShouldBeFalse();
-				first.Equals(second).ShouldBeTrue();
+				ReferenceEquals(first, second)
+					.ShouldBeFalse();
+				first
+					.Equals(second)
+					.ShouldBeTrue();
 			}
 		}
 	}

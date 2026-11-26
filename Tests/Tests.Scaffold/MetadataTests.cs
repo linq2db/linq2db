@@ -88,15 +88,23 @@ namespace Tests.Scaffold
 				CreateSchema(),
 				options => options.DataModel.Metadata = metadata);
 
-			model.GetType("PersonInfo").GetProperty("FirstName").ShouldNotBeNull();
+			model
+				.GetType("PersonInfo")
+				.GetProperty("FirstName")
+				.ShouldNotBeNull();
 
 			using var db = new SqliteTestDb();
 
-			ModelSmoke.Run(model, db.Options).Rows.ShouldBe(ModelSmoke.RowCount);
+			ModelSmoke
+				.Run(model, db.Options)
+				.Rows
+				.ShouldBe(ModelSmoke.RowCount);
 
 			using var command = db.Connection.CreateCommand();
 			command.CommandText = "SELECT COUNT(*) FROM person_info WHERE first_name IS NOT NULL";
-			Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture).ShouldBe(ModelSmoke.RowCount);
+			Convert
+				.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture)
+				.ShouldBe(ModelSmoke.RowCount);
 		}
 	}
 }

@@ -19,14 +19,15 @@ namespace Tests.Scaffold.Harness
 		/// <summary>
 		/// Compiles generated source. Doesn't fail on compilation errors.
 		/// </summary>
-		public static CompileResult TryCompile(GeneratedSource source, IReadOnlyCollection<string>? allowedWarnings = null, string? outputPath = null)
+		public static CompileResult TryCompile(GeneratedSource source, IReadOnlyCollection<string>? allowedWarnings = null)
 		{
 			var assemblyName = $"Gen_{Generator.ToIdentifier(source.Name)}_{source.Language}_{Guid.NewGuid():N}";
 			var files        = source.Files.Select(static f => new SourceFile(f.FileName, f.Code)).ToArray();
+			var nullable     = source.Options.CodeGeneration.EnableNullableReferenceTypes;
 
 			return source.Language == ScaffoldLanguage.CSharp
-				? CSharpCompiler.Compile(assemblyName, files, allowedWarnings, outputPath)
-				: FSharpCompiler.Compile(assemblyName, files, source.Options.CodeGeneration.EnableNullableReferenceTypes, allowedWarnings, outputPath);
+				? CSharpCompiler.Compile(assemblyName, files, allowedWarnings, languageVersions: CSharpCompiler.GeneratedCodeVersions(nullable))
+				: FSharpCompiler.Compile(assemblyName, files, nullable, allowedWarnings);
 		}
 
 		/// <summary>

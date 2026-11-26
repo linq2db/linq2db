@@ -46,7 +46,10 @@ namespace Tests.Scaffold
 
 			using var db = new SqliteTestDb();
 
-			ModelSmoke.Run(model, db.Options).Rows.ShouldBe(ModelSmoke.RowCount);
+			ModelSmoke
+				.Run(model, db.Options)
+				.Rows
+				.ShouldBe(ModelSmoke.RowCount);
 
 			var entity = model.GetType("Item");
 
@@ -62,8 +65,14 @@ namespace Tests.Scaffold
 
 				var context = new System.Reflection.NullabilityInfoContext();
 
-				context.Create(entity.GetProperty("NullableText")!).ReadState.ShouldBe(nrt ? System.Reflection.NullabilityState.Nullable    : System.Reflection.NullabilityState.Unknown);
-				context.Create(entity.GetProperty("NotNullText" )!).ReadState.ShouldBe(nrt ? System.Reflection.NullabilityState.NotNull     : System.Reflection.NullabilityState.Unknown);
+				context
+					.Create(entity.GetProperty("NullableText")!)
+					.ReadState
+					.ShouldBe(nrt ? System.Reflection.NullabilityState.Nullable    : System.Reflection.NullabilityState.Unknown);
+				context
+					.Create(entity.GetProperty("NotNullText" )!)
+					.ReadState
+					.ShouldBe(nrt ? System.Reflection.NullabilityState.NotNull     : System.Reflection.NullabilityState.Unknown);
 			}
 		}
 	}

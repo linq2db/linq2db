@@ -45,7 +45,10 @@ namespace Tests.Scaffold
 
 			using var sqlite = new SqliteTestDb("s2");
 
-			ModelSmoke.Run(model, sqlite.Options).Tables.ShouldBe(2);
+			ModelSmoke
+				.Run(model, sqlite.Options)
+				.Tables
+				.ShouldBe(2);
 
 			// extra row only in attached database: each entity must read its own table
 			sqlite.Execute("INSERT INTO \"s2\".\"T\" (\"Id\", \"Code\") VALUES (99, 'x')");
@@ -59,9 +62,14 @@ namespace Tests.Scaffold
 
 			counts.ShouldBe([ModelSmoke.RowCount, ModelSmoke.RowCount + 1]);
 
-			var sqls = model.GetTables(db).Select(t => SqlShape.GetSql((IQueryable)t.GetTable())).ToList();
+			var sqls = model
+				.GetTables(db)
+				.Select(t => SqlShape.GetSql((IQueryable)t.GetTable()))
+				.ToList();
 
-			sqls.Count(static s => s.Contains("\"s2\".", StringComparison.Ordinal) || s.Contains("[s2].", StringComparison.Ordinal)).ShouldBe(1, string.Join("\n", sqls));
+			sqls
+				.Count(static s => s.Contains("\"s2\".", StringComparison.Ordinal) || s.Contains("[s2].", StringComparison.Ordinal))
+				.ShouldBe(1, string.Join("\n", sqls));
 		}
 
 		[Test]
@@ -83,7 +91,10 @@ namespace Tests.Scaffold
 
 			using var sqlite = new SqliteTestDb("s2");
 
-			ModelSmoke.Run(model, sqlite.Options).Tables.ShouldBe(2);
+			ModelSmoke
+				.Run(model, sqlite.Options)
+				.Tables
+				.ShouldBe(2);
 		}
 
 		[Test]
@@ -119,11 +130,16 @@ namespace Tests.Scaffold
 
 			using var db = model.CreateContext(profile.CreateOfflineOptions());
 
-			var sqls = model.GetTables(db).Select(t => SqlShape.GetSql((IQueryable)t.GetTable())).ToList();
+			var sqls = model
+				.GetTables(db)
+				.Select(t => SqlShape.GetSql((IQueryable)t.GetTable()))
+				.ToList();
 
 			var qualified = provider == "SqlServer" ? "[s2].[T]" : "s2.\"T\"";
 
-			sqls.Count(s => s.Contains(qualified, StringComparison.Ordinal)).ShouldBe(1, string.Join("\n", sqls));
+			sqls
+				.Count(s => s.Contains(qualified, StringComparison.Ordinal))
+				.ShouldBe(1, string.Join("\n", sqls));
 		}
 	}
 }

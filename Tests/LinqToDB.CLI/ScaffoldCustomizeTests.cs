@@ -85,7 +85,10 @@ namespace Tests.LinqToDB.CLI
 		static void AssertCustomizedOutput(string output, string language)
 		{
 			var extension = language == "f#" ? "*.fs" : "*.cs";
-			var sources   = Directory.GetFiles(output, extension).Select(static f => new SourceFile(Path.GetFileName(f), File.ReadAllText(f))).ToArray();
+			var sources   = Directory
+				.GetFiles(output, extension)
+				.Select(static f => new SourceFile(Path.GetFileName(f), File.ReadAllText(f)))
+				.ToArray();
 
 			sources.ShouldNotBeEmpty();
 
@@ -99,7 +102,7 @@ namespace Tests.LinqToDB.CLI
 			// F# output is single file; C# output is file per class in no particular compile order requirement
 			var result = language == "f#"
 				? FSharpCompiler.Compile(name, sources, nullable: true)
-				: CSharpCompiler.Compile(name, sources);
+				: CSharpCompiler.Compile(name, sources, languageVersions: CSharpCompiler.GeneratedCodeVersions(nullable: true));
 
 			result.Success.ShouldBeTrue(result.Report());
 		}
@@ -107,9 +110,10 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public async Task TemplateApplied([Values("c#", "f#")] string language)
 		{
-			var database = CreateCliSqliteDatabase("customize", false);
-			var output   = NewDirectory("customize-out");
-			var template = Path.Combine(NewDirectory("customize-tt"), "scaffold.tt");
+			var database    = CreateCliSqliteDatabase("customize", false);
+			var output      = NewDirectory("customize-out");
+			var templateDir = NewDirectory("customize-tt");
+			var template    = Path.Combine(templateDir, "scaffold.tt");
 
 			try
 			{
@@ -124,15 +128,18 @@ namespace Tests.LinqToDB.CLI
 			finally
 			{
 				File.Delete(database);
+				Directory.Delete(output, recursive: true);
+				Directory.Delete(templateDir, recursive: true);
 			}
 		}
 
 		[Test]
 		public async Task AssemblyApplied()
 		{
-			var database = CreateCliSqliteDatabase("customize", false);
-			var output   = NewDirectory("customize-out");
-			var assembly = Path.Combine(NewDirectory("customize-dll"), "Interceptors.dll");
+			var database    = CreateCliSqliteDatabase("customize", false);
+			var output      = NewDirectory("customize-out");
+			var assemblyDir = NewDirectory("customize-dll");
+			var assembly    = Path.Combine(assemblyDir, "Interceptors.dll");
 
 			try
 			{
@@ -148,20 +155,24 @@ namespace Tests.LinqToDB.CLI
 			finally
 			{
 				File.Delete(database);
+				Directory.Delete(output, recursive: true);
+				Directory.Delete(assemblyDir, recursive: true);
 			}
 		}
 
 		[Test]
 		public async Task InterceptorCompileErrorReported()
 		{
-			var database = CreateCliSqliteDatabase("customize", false);
-			var template = Path.Combine(NewDirectory("customize-tt"), "scaffold.tt");
+			var database    = CreateCliSqliteDatabase("customize", false);
+			var templateDir = NewDirectory("customize-tt");
+			var output      = NewDirectory("customize-out");
+			var template    = Path.Combine(templateDir, "scaffold.tt");
 
 			try
 			{
 				await File.WriteAllTextAsync(template, TemplateHeader + Interceptors.Replace("entityModel.Class.Name = \"Client\";", "entityModel.Class.Name = 42;", StringComparison.Ordinal));
 
-				var result = await Scaffold(database, NewDirectory("customize-out"), template, "c#");
+				var result = await Scaffold(database, output, template, "c#");
 
 				// EXPECTED_ERROR
 				result.ExitCode.ShouldBe(-3, result.Error);
@@ -171,29 +182,43 @@ namespace Tests.LinqToDB.CLI
 			finally
 			{
 				File.Delete(database);
+				Directory.Delete(templateDir, recursive: true);
+				Directory.Delete(output, recursive: true);
 			}
 		}
 
+		const string Issue6036Failure = "#6036: template compilation error crashed the CLI";
+
 		[Test]
-		[ActiveIssue(6036, Details = "Template compilation status ignored", ErrorMessage = "Object reference not set")]
+		[ActiveIssue(6036, Details = "Template compilation status ignored", ErrorMessage = Issue6036Failure)]
 		public async Task TemplateControlBlockCompileErrorReported()
 		{
-			var database = CreateCliSqliteDatabase("customize", false);
-			var template = Path.Combine(NewDirectory("customize-tt"), "scaffold.tt");
+			var database    = CreateCliSqliteDatabase("customize", false);
+			var templateDir = NewDirectory("customize-tt");
+			var output      = NewDirectory("customize-out");
+			var template    = Path.Combine(templateDir, "scaffold.tt");
 
 			try
 			{
 				await File.WriteAllTextAsync(template, TemplateHeader + "<# int broken = \"text\"; #>\n" + Interceptors);
 
-				var result = await Scaffold(database, NewDirectory("customize-out"), template, "c#");
+				var result = await Scaffold(database, output, template, "c#");
+
+				await TestContext.Out.WriteLineAsync(result.Error);
+
+				// the known failure is matched by its own shape, not by text of CLI output: internal error (-2) with NRE
+				if (result.ExitCode == -2 && result.Error.Contains("Object reference not set", StringComparison.Ordinal))
+					Assert.Fail(Issue6036Failure);
 
 				// template compilation error is reported as T4/compilation error, not as internal error (-2)
-				result.ExitCode.ShouldBeOneOf([-3, -4], result.Error);
+				result.ExitCode.ShouldBeOneOf(-3, -4);
 				result.Error.ShouldContain("CS0029");
 			}
 			finally
 			{
 				File.Delete(database);
+				Directory.Delete(templateDir, recursive: true);
+				Directory.Delete(output, recursive: true);
 			}
 		}
 	}

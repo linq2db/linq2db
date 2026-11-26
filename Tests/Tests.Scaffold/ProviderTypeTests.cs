@@ -66,25 +66,40 @@ namespace Tests.Scaffold
 				return (Nullable.GetUnderlyingType(type) ?? type).FullName!;
 			}
 
-			TypeName("IntValue")    .ShouldBe(typeof(SqlInt32).FullName);
-			TypeName("StringValue") .ShouldBe(typeof(SqlString).FullName);
-			TypeName("GuidValue")   .ShouldBe(typeof(SqlGuid).FullName);
-			TypeName("DecimalValue").ShouldBe(typeof(SqlDecimal).FullName);
-			TypeName("DateValue")   .ShouldBe(typeof(SqlDateTime).FullName);
-			TypeName("BinaryValue") .ShouldBe(typeof(SqlBinary).FullName);
-			TypeName("BoolValue")   .ShouldBe(typeof(SqlBoolean).FullName);
-			TypeName("XmlValue")    .ShouldBe(typeof(SqlXml).FullName);
-			TypeName("Hierarchy")   .ShouldBe("Microsoft.SqlServer.Types.SqlHierarchyId");
-			TypeName("Geography")   .ShouldBe("Microsoft.SqlServer.Types.SqlGeography");
-			TypeName("Geometry")    .ShouldBe("Microsoft.SqlServer.Types.SqlGeometry");
+			TypeName("IntValue")    
+				.ShouldBe(typeof(SqlInt32).FullName);
+			TypeName("StringValue") 
+				.ShouldBe(typeof(SqlString).FullName);
+			TypeName("GuidValue")   
+				.ShouldBe(typeof(SqlGuid).FullName);
+			TypeName("DecimalValue")
+				.ShouldBe(typeof(SqlDecimal).FullName);
+			TypeName("DateValue")   
+				.ShouldBe(typeof(SqlDateTime).FullName);
+			TypeName("BinaryValue") 
+				.ShouldBe(typeof(SqlBinary).FullName);
+			TypeName("BoolValue")   
+				.ShouldBe(typeof(SqlBoolean).FullName);
+			TypeName("XmlValue")    
+				.ShouldBe(typeof(SqlXml).FullName);
+			TypeName("Hierarchy")   
+				.ShouldBe("Microsoft.SqlServer.Types.SqlHierarchyId");
+			TypeName("Geography")   
+				.ShouldBe("Microsoft.SqlServer.Types.SqlGeography");
+			TypeName("Geometry")    
+				.ShouldBe("Microsoft.SqlServer.Types.SqlGeometry");
 
 			using var db = model.CreateContext(ProviderProfile.SqlServer.CreateOfflineOptions());
 
-			SqlShape.GetSql((IQueryable)model.GetTables(db).Single().GetTable()).ShouldContain("[Hierarchy]");
+			SqlShape
+				.GetSql((IQueryable)model.GetTables(db).Single().GetTable())
+				.ShouldContain("[Hierarchy]");
 		}
 
+		const string Issue3749Failure = "#3749: Identity.Sequence not generated";
+
 		[Test]
-		[ActiveIssue(3749, Details = "Identity.Sequence not emitted as SequenceName", ErrorMessage = "SequenceName")]
+		[ActiveIssue(3749, Details = "Identity.Sequence not emitted as SequenceName", ErrorMessage = Issue3749Failure)]
 		public void PostgreSqlProviderTypes([Values] ScaffoldLanguage language)
 		{
 			var schema = ProviderProfile.PostgreSQL.CreateSchema();
@@ -116,16 +131,30 @@ namespace Tests.Scaffold
 				return (Nullable.GetUnderlyingType(type) ?? type).FullName!;
 			}
 
-			TypeName("Interval").ShouldBe("NpgsqlTypes.NpgsqlInterval");
-			TypeName("Inet")    .ShouldBe("NpgsqlTypes.NpgsqlInet");
-			TypeName("Point")   .ShouldBe("NpgsqlTypes.NpgsqlPoint");
-			TypeName("Polygon") .ShouldBe("NpgsqlTypes.NpgsqlPolygon");
+			TypeName("Interval")
+				.ShouldBe("NpgsqlTypes.NpgsqlInterval");
+			TypeName("Inet")    
+				.ShouldBe("NpgsqlTypes.NpgsqlInet");
+			TypeName("Point")   
+				.ShouldBe("NpgsqlTypes.NpgsqlPoint");
+			TypeName("Polygon") 
+				.ShouldBe("NpgsqlTypes.NpgsqlPolygon");
 
 			using var db = model.CreateContext(ProviderProfile.PostgreSQL.CreateOfflineOptions());
 
 			var descriptor = db.MappingSchema.GetEntityDescriptor(entity);
 
-			descriptor.Columns.Single(static c => c.ColumnName == "id").SequenceName.ShouldNotBeNull("SequenceName").SequenceName.ShouldBe("types_id_seq");
+			var sequence = descriptor
+				.Columns
+				.Single(static c => c.ColumnName == "id")
+				.SequenceName;
+
+			// only a missing sequence matches the pin: a wrong sequence name fails
+			sequence.ShouldNotBeNull(Issue3749Failure);
+
+			sequence
+				.SequenceName
+				.ShouldBe("types_id_seq");
 		}
 	}
 }

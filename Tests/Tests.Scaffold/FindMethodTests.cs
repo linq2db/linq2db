@@ -42,19 +42,32 @@ namespace Tests.Scaffold
 				CreateSchema(),
 				options => options.DataModel.GenerateFindExtensions = flag);
 
-			var method = ModelSmoke.FindMethods(model).ShouldHaveSingleItem();
+			var method = ModelSmoke
+				.FindMethods(model)
+				.ShouldHaveSingleItem();
 
 			var parameters = method.GetParameters();
 
-			(parameters[0].ParameterType == model.ContextType).ShouldBe(flag.HasFlag(FindTypes.OnContext));
-			parameters.Any(p => p.ParameterType == model.GetType("Item")).ShouldBe(flag.HasFlag(FindTypes.ByEntity));
-			method.Name.EndsWith("Async", StringComparison.Ordinal).ShouldBe(flag.HasFlag(FindTypes.Async));
-			method.Name.EndsWith("Query", StringComparison.Ordinal).ShouldBe(flag.HasFlag(FindTypes.Query));
+			(parameters[0].ParameterType == model.ContextType)
+				.ShouldBe(flag.HasFlag(FindTypes.OnContext));
+			parameters
+				.Any(p => p.ParameterType == model.GetType("Item"))
+				.ShouldBe(flag.HasFlag(FindTypes.ByEntity));
+			method.Name
+				.EndsWith("Async", StringComparison.Ordinal)
+				.ShouldBe(flag.HasFlag(FindTypes.Async));
+			method.Name
+				.EndsWith("Query", StringComparison.Ordinal)
+				.ShouldBe(flag.HasFlag(FindTypes.Query));
 
 			using var db = new SqliteTestDb();
 
 			// invokes method and asserts it finds row
-			ModelSmoke.Run(model, db.Options).FindMethods.Count.ShouldBe(1);
+			ModelSmoke
+				.Run(model, db.Options)
+				.FindMethods
+				.Count
+				.ShouldBe(1);
 		}
 
 		[Test]
@@ -71,14 +84,24 @@ namespace Tests.Scaffold
 					options.DataModel.OrderFindParametersByColumnOrdinal = byOrdinal;
 				});
 
-			var method = ModelSmoke.FindMethods(model).ShouldHaveSingleItem();
+			var method = ModelSmoke
+				.FindMethods(model)
+				.ShouldHaveSingleItem();
 
 			// by ordinal: primary key definition order (Id, Code); otherwise by name (code, id)
-			method.GetParameters().Skip(1).Select(static p => p.Name).ShouldBe(byOrdinal ? ["id", "code"] : ["code", "id"]);
+			method
+				.GetParameters()
+				.Skip(1)
+				.Select(static p => p.Name)
+				.ShouldBe(byOrdinal ? ["id", "code"] : ["code", "id"]);
 
 			using var db = new SqliteTestDb();
 
-			ModelSmoke.Run(model, db.Options).FindMethods.Count.ShouldBe(1);
+			ModelSmoke
+				.Run(model, db.Options)
+				.FindMethods
+				.Count
+				.ShouldBe(1);
 		}
 	}
 }

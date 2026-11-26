@@ -33,46 +33,53 @@ namespace Tests.Scaffold.Harness
 		public static IReadOnlyList<string> LanguageVersions { get; } = ["9.0", "latest"];
 
 		/// <summary>
-		/// Compiles sources (in specified order) with each of <see cref="LanguageVersions"/> to assembly and loads it, or
-		/// writes it to <paramref name="outputPath"/> without loading.
+		/// Compiles sources (in specified order) with each of <see cref="LanguageVersions"/> to assembly and loads it.
 		/// </summary>
 		/// <param name="nullable">Enables nullness checking (<c>--checknulls+</c>), as F# projects with <c>Nullable=enable</c>.</param>
-		public static CompileResult Compile(string assemblyName, IReadOnlyList<SourceFile> sources, bool nullable, IReadOnlyCollection<string>? allowedWarnings = null, string? outputPath = null)
+		public static CompileResult Compile(string assemblyName, IReadOnlyList<SourceFile> sources, bool nullable, IReadOnlyCollection<string>? allowedWarnings = null)
 		{
+			// compiler works with files: sources and assemblies are removed after load
 			var directory = Path.Combine(TestContext.CurrentContext.WorkDirectory, "scaffold-harness", assemblyName);
 			Directory.CreateDirectory(directory);
 
-			var files = sources
-				.Select(s =>
-				{
-					var path = Path.Combine(directory, s.FileName);
-					File.WriteAllText(path, s.Code);
-					return path;
-				})
-				.ToList();
-
-			var output      = outputPath ?? Path.Combine(directory, assemblyName + ".dll");
-			var diagnostics = new List<CompileDiagnostic>();
-			var emitted     = true;
-
-			for (var i = 0; i < LanguageVersions.Count; i++)
+			try
 			{
-				var langVersion = LanguageVersions[i];
-				var target      = i == 0 ? output : Path.Combine(directory, langVersion, assemblyName + ".dll");
+				var files = sources
+					.Select(s =>
+					{
+						var path = Path.Combine(directory, s.FileName);
+						File.WriteAllText(path, s.Code);
+						return path;
+					})
+					.ToList();
 
-				Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+				var output      = Path.Combine(directory, assemblyName + ".dll");
+				var diagnostics = new List<CompileDiagnostic>();
+				var emitted     = true;
 
-				var versionDiagnostics = Compile(files, target, langVersion, nullable);
+				for (var i = 0; i < LanguageVersions.Count; i++)
+				{
+					var langVersion = LanguageVersions[i];
+					var target      = i == 0 ? output : Path.Combine(directory, langVersion, assemblyName + ".dll");
 
-				diagnostics.AddRange(versionDiagnostics);
-				emitted &= versionDiagnostics.TrueForAll(static d => d.Severity != CompileDiagnosticSeverity.Error) && File.Exists(target);
+					Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+
+					var versionDiagnostics = Compile(files, target, langVersion, nullable);
+
+					diagnostics.AddRange(versionDiagnostics);
+					emitted &= versionDiagnostics.TrueForAll(static d => d.Severity != CompileDiagnosticSeverity.Error) && File.Exists(target);
+				}
+
+				var assembly = emitted
+					? AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(File.ReadAllBytes(output)))
+					: null;
+
+				return new CompileResult(sources, diagnostics, allowedWarnings ?? [], emitted, assembly);
 			}
-
-			var assembly = emitted && outputPath == null
-				? AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(File.ReadAllBytes(output)))
-				: null;
-
-			return new CompileResult(sources, diagnostics, allowedWarnings ?? [], emitted, assembly);
+			finally
+			{
+				Directory.Delete(directory, recursive: true);
+			}
 		}
 
 		static List<CompileDiagnostic> Compile(List<string> files, string output, string langVersion, bool nullable)

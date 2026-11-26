@@ -67,9 +67,12 @@ namespace Tests.Scaffold
 			schema.Procedures.Add(OutRefProcedure());
 
 			var model  = Build(nameof(ProcedureParameterDirections), language, ProviderProfile.SqlServer, schema);
-			var method = Methods(model, "OutRefTest").ShouldHaveSingleItem();
+			var method = Methods(model, "OutRefTest")
+				.ShouldHaveSingleItem();
 
-			var parameters = method.GetParameters().ToDictionary(static p => p.Name!, StringComparer.OrdinalIgnoreCase);
+			var parameters = method
+				.GetParameters()
+				.ToDictionary(static p => p.Name!, StringComparer.OrdinalIgnoreCase);
 
 			// context, 6 procedure parameters and return value
 			parameters.Count.ShouldBe(8);
@@ -108,13 +111,17 @@ namespace Tests.Scaffold
 				new VoidResult()));
 
 			var model  = Build(nameof(ProcedureResultMappedToEntity), language, ProviderProfile.SqlServer, schema, options => options.DataModel.MapProcedureResultToEntity = true);
-			var method = Methods(model, "PersonSelectByKey").ShouldHaveSingleItem();
+			var method = Methods(model, "PersonSelectByKey")
+				.ShouldHaveSingleItem();
 
-			ElementType(method.ReturnType).ShouldBe(model.GetType("Person"));
+			ElementType(method.ReturnType)
+				.ShouldBe(model.GetType("Person"));
 		}
 
 		static Type ElementType(Type type)
-			=> type.GetInterfaces().Append(type)
+			=> type
+				.GetInterfaces()
+				.Append(type)
 				.Single(static i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
 				.GetGenericArguments()[0];
 
@@ -155,8 +162,14 @@ namespace Tests.Scaffold
 			}
 			else
 			{
-				result.Success.ShouldBeTrue(string.Join("\n", result.Failures.Select(static d => d.Message)));
+				result.Success.ShouldBeTrue(result.Report());
 				source.Code.ShouldNotContain("schema load failed");
+
+				// the procedure itself is still generated
+				var model = new ScaffoldedModel(source, result.Assembly!);
+
+				Methods(model, "Broken")
+					.ShouldHaveSingleItem();
 			}
 		}
 
@@ -177,7 +190,9 @@ namespace Tests.Scaffold
 					options.DataModel.SkipProceduresWithSchemaErrors = skip;
 				});
 
-			Methods(model, "Broken").Count.ShouldBe(skip ? 0 : 1);
+			Methods(model, "Broken")
+				.Count
+				.ShouldBe(skip ? 0 : 1);
 		}
 
 		[Test]
@@ -197,8 +212,12 @@ namespace Tests.Scaffold
 					options.DataModel.GenerateProcedureAsync = async;
 				});
 
-			Methods(model, "OutRefTest")     .Count.ShouldBe(sync  ? 1 : 0);
-			Methods(model, "OutRefTestAsync").Count.ShouldBe(async ? 1 : 0);
+			Methods(model, "OutRefTest")     
+				.Count
+				.ShouldBe(sync  ? 1 : 0);
+			Methods(model, "OutRefTestAsync")
+				.Count
+				.ShouldBe(async ? 1 : 0);
 		}
 
 		static IEnumerable<TestCaseData> FunctionCases()
@@ -207,8 +226,10 @@ namespace Tests.Scaffold
 			{
 				// table and aggregate functions in non-default schema; scalar function in default schema, which SQL Server
 				// requires for scalar function calls
-				yield return new TestCaseData(language, ProviderProfile.SqlServer , "[custom].[GetParentByID](" , "[dbo].[ScalarFunction](", "[custom].[test_avg](").SetArgDisplayNames(language.ToString(), "SqlServer");
-				yield return new TestCaseData(language, ProviderProfile.PostgreSQL, "custom.\"GetParentByID\"(", "\"ScalarFunction\"("     , "custom.test_avg("    ).SetArgDisplayNames(language.ToString(), "PostgreSQL");
+				yield return new TestCaseData(language, ProviderProfile.SqlServer , "[custom].[GetParentByID](" , "[dbo].[ScalarFunction](", "[custom].[test_avg](")
+					.SetArgDisplayNames(language.ToString(), "SqlServer");
+				yield return new TestCaseData(language, ProviderProfile.PostgreSQL, "custom.\"GetParentByID\"(", "\"ScalarFunction\"("     , "custom.test_avg("    )
+					.SetArgDisplayNames(language.ToString(), "PostgreSQL");
 			}
 		}
 
@@ -250,18 +271,30 @@ namespace Tests.Scaffold
 
 			using var db = model.CreateContext(profile.CreateOfflineOptions());
 
-			var table = (IQueryable)model.GetTables(db).Single(static t => t.EntityType.Name == "Parent").GetTable();
+			var table = (IQueryable)model
+				.GetTables(db)
+				.Single(static t => t.EntityType.Name == "Parent")
+				.GetTable();
 
-			var tableFunction = Methods(model, "GetParentById").ShouldHaveSingleItem();
+			var tableFunction = Methods(model, "GetParentById")
+				.ShouldHaveSingleItem();
 			var tvfQuery      = (IQueryable)tableFunction.Invoke(tableFunction.IsStatic ? null : db, tableFunction.IsStatic ? [db, 1] : [1])!;
 
-			SqlShape.GetSql(tvfQuery).ShouldContain(tableFunctionSql);
+			SqlShape
+				.GetSql(tvfQuery)
+				.ShouldContain(tableFunctionSql);
 
-			var scalar = Methods(model, "ScalarFunction").ShouldHaveSingleItem();
-			SqlShape.GetSql(SqlShape.SelectCall(table, scalar, "ParentId")).ShouldContain(scalarFunctionSql);
+			var scalar = Methods(model, "ScalarFunction")
+				.ShouldHaveSingleItem();
+			SqlShape
+				.GetSql(SqlShape.SelectCall(table, scalar, "ParentId"))
+				.ShouldContain(scalarFunctionSql);
 
-			var aggregate = Methods(model, "TestAvg").ShouldHaveSingleItem();
-			SqlShape.GetSql(SqlShape.GroupAggregate(table, aggregate, "Value1")).ShouldContain(aggregateSql);
+			var aggregate = Methods(model, "TestAvg")
+				.ShouldHaveSingleItem();
+			SqlShape
+				.GetSql(SqlShape.GroupAggregate(table, aggregate, "Value1"))
+				.ShouldContain(aggregateSql);
 		}
 
 		[Test]
@@ -284,8 +317,12 @@ namespace Tests.Scaffold
 
 			var tuple = model.GetType("TestFunctionParametersResult");
 
-			tuple.GetProperty("Param2").ShouldNotBeNull();
-			tuple.GetProperty("Param3").ShouldNotBeNull();
+			tuple
+				.GetProperty("Param2")
+				.ShouldNotBeNull();
+			tuple
+				.GetProperty("Param3")
+				.ShouldNotBeNull();
 		}
 
 		[Test]
@@ -309,8 +346,17 @@ namespace Tests.Scaffold
 
 			using var db = model.CreateContext(sqlite.Options);
 
-			var table  = (IQueryable)model.GetTables(db).Single().GetTable();
-			var values = ((IEnumerable)SqlShape.SelectCall(table, Methods(model, "Twice").ShouldHaveSingleItem(), "Id")).Cast<object>().Select(static v => Convert.ToInt32(v, System.Globalization.CultureInfo.InvariantCulture)).OrderBy(static v => v).ToList();
+			var table  = (IQueryable)model
+				.GetTables(db)
+				.Single()
+				.GetTable();
+			var twice  = Methods(model, "Twice")
+				.ShouldHaveSingleItem();
+			var values = ((IEnumerable)SqlShape.SelectCall(table, twice, "Id"))
+				.Cast<object>()
+				.Select(static v => Convert.ToInt32(v, System.Globalization.CultureInfo.InvariantCulture))
+				.OrderBy(static v => v)
+				.ToList();
 
 			values.ShouldBe([2, 4]);
 		}

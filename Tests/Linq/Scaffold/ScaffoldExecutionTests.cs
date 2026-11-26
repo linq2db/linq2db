@@ -170,7 +170,22 @@ namespace Tests.Scaffold
 			});
 
 		static IDataContext CreateContext(ScaffoldedModel model, string context)
-			=> model.CreateContext(new DataOptions().UseConfiguration(context));
+		{
+			var options = new DataOptions()
+				.UseConfiguration(context);
+
+			return model.CreateContext(options);
+		}
+
+		static object? PropertyValue(object row, string name)
+		{
+			var value = row
+				.GetType()
+				.GetProperty(name)!
+				.GetValue(row);
+
+			return Value(value);
+		}
 
 		static MethodInfo Method(ScaffoldedModel model, string name)
 			=> model.Types
@@ -193,8 +208,12 @@ namespace Tests.Scaffold
 
 		static object? Value(object? value)
 		{
-			if (value != null && value.GetType().IsGenericType && value.GetType().GetGenericTypeDefinition() == typeof(FSharpOption<>))
-				return value.GetType().GetProperty(nameof(FSharpOption<>.Value))!.GetValue(value);
+			var type = value?.GetType();
+
+			if (type is { IsGenericType: true } && type.GetGenericTypeDefinition() == typeof(FSharpOption<>))
+				return type
+					.GetProperty(nameof(FSharpOption<>.Value))!
+					.GetValue(value);
 
 			return value;
 		}
@@ -212,13 +231,16 @@ namespace Tests.Scaffold
 			var result = method.Invoke(null, args);
 
 			if (result is IEnumerable rows and not string)
-				result = rows.Cast<object>().ToList();
+				result = rows
+					.Cast<object>()
+					.ToList();
 
 			return [result, .. args.Skip(1)];
 		}
 
+		// OutRefTest exists only in the SQL Server creation script
 		[Test]
-		public void OutRefTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] ScaffoldLanguage language)
+		public void OutRefTest([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ScaffoldLanguage language)
 		{
 			var model = SqlServerModel(language);
 
@@ -227,15 +249,21 @@ namespace Tests.Scaffold
 			// OutRefTest(id, out outputID, ref inputOutputID, str, out outputStr, ref inputOutputStr, out return)
 			var results = Invoke(Method(model, "OutRefTest"), db, 5, null, 10, "John", null, "Smith", null);
 
-			Value(results[2]).ShouldBe(5);
-			Value(results[3]).ShouldBe(15);
-			Value(results[5]).ShouldBe("John");
-			Value(results[6]).ShouldBe("JohnSmith");
-			Value(results[7]).ShouldBe(0);
+			Value(results[2])
+				.ShouldBe(5);
+			Value(results[3])
+				.ShouldBe(15);
+			Value(results[5])
+				.ShouldBe("John");
+			Value(results[6])
+				.ShouldBe("JohnSmith");
+			Value(results[7])
+				.ShouldBe(0);
 		}
 
+		// Issue1897 exists only in the SQL Server creation script
 		[Test]
-		public void ReturnValue([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] ScaffoldLanguage language)
+		public void ReturnValue([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ScaffoldLanguage language)
 		{
 			var model = SqlServerModel(language);
 
@@ -243,11 +271,13 @@ namespace Tests.Scaffold
 
 			var results = Invoke(Method(model, "Issue1897"), db);
 
-			Value(results[1]).ShouldBe(4);
+			Value(results[1])
+				.ShouldBe(4);
 		}
 
+		// QueryProcParameters exists only in the SQL Server creation script
 		[Test]
-		public void ProcedureRowsAndOutputs([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] ScaffoldLanguage language)
+		public void ProcedureRowsAndOutputs([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ScaffoldLanguage language)
 		{
 			var model = SqlServerModel(language);
 
@@ -255,13 +285,18 @@ namespace Tests.Scaffold
 
 			var results = Invoke(Method(model, "QueryProcParameters"), db, 10, null, null);
 
-			((IList)results[0]!).Count.ShouldBe(db.GetTable<Model.Person>().Count());
-			Value(results[2]).ShouldBe(11);
-			Value(results[3]).ShouldBe(12);
+			((IList)results[0]!)
+				.Count
+				.ShouldBe(db.GetTable<Model.Person>().Count());
+			Value(results[2])
+				.ShouldBe(11);
+			Value(results[3])
+				.ShouldBe(12);
 		}
 
+		// Person_SelectByKey exists only in the SQL Server creation script
 		[Test]
-		public void ProcedureResultMappedToEntity([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] ScaffoldLanguage language)
+		public void ProcedureResultMappedToEntity([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ScaffoldLanguage language)
 		{
 			var model = SqlServerModel(language);
 
@@ -269,15 +304,22 @@ namespace Tests.Scaffold
 
 			var rows = (IList)Invoke(Method(model, "PersonSelectByKey"), db, 1)[0]!;
 
-			var person = rows.Cast<object>().ShouldHaveSingleItem();
+			var person = rows
+				.Cast<object>()
+				.ShouldHaveSingleItem();
 
-			person.GetType().ShouldBe(model.GetType("Person"));
-			Value(person.GetType().GetProperty("PersonId")!.GetValue(person)).ShouldBe(1);
-			Value(person.GetType().GetProperty("FirstName")!.GetValue(person)).ShouldBe("John");
+			person
+				.GetType()
+				.ShouldBe(model.GetType("Person"));
+			PropertyValue(person, "PersonId")
+				.ShouldBe(1);
+			PropertyValue(person, "FirstName")
+				.ShouldBe("John");
 		}
 
+		// GetParentByID and TestSchema.SchemaTableFunction exist only in the SQL Server creation script
 		[Test]
-		public void TableFunctions([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] ScaffoldLanguage language, [Values("GetParentById", "SchemaTableFunction")] string function)
+		public void TableFunctions([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ScaffoldLanguage language, [Values("GetParentById", "SchemaTableFunction")] string function)
 		{
 			var model = SqlServerModel(language);
 
@@ -286,25 +328,47 @@ namespace Tests.Scaffold
 			var method = Method(model, function);
 			var query  = (IQueryable)method.Invoke(method.IsStatic ? null : db, method.IsStatic ? [db, 1] : [1])!;
 
-			var rows = query.Cast<object>().ToList();
+			var rows = query
+				.Cast<object>()
+				.ToList();
 
-			rows.Count.ShouldBe(db.GetTable<Model.Parent>().Count(static p => p.ParentID == 1));
-			rows.ShouldAllBe(r => Equals(Value(r.GetType().GetProperty("ParentId")!.GetValue(r)), 1));
+			var expected = db
+				.GetTable<Model.Parent>()
+				.Count(static p => p.ParentID == 1);
+
+			rows.Count.ShouldBe(expected);
+			rows.ShouldAllBe(static r => Equals(PropertyValue(r, "ParentId"), 1));
 		}
 
+		// ScalarFunction exists only in the SQL Server creation script
 		[Test]
-		public void ScalarFunction([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] ScaffoldLanguage language)
+		public void ScalarFunction([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ScaffoldLanguage language)
 		{
 			var model = SqlServerModel(language);
 
 			using var db = CreateContext(model, context);
 
-			var table  = (IQueryable)model.GetTables(db).Single(static t => t.EntityType.Name == "Parent").GetTable();
-			var values = SqlShape.SelectCall(table, Method(model, "ScalarFunction"), "ParentId").Cast<object?>().Select(Value).OrderBy(static v => v).ToList();
+			var table  = (IQueryable)model
+				.GetTables(db)
+				.Single(static t => t.EntityType.Name == "Parent")
+				.GetTable();
+			var values = SqlShape
+				.SelectCall(table, Method(model, "ScalarFunction"), "ParentId")
+				.Cast<object?>()
+				.Select(Value)
+				.OrderBy(static v => v)
+				.ToList();
 
-			values.ShouldBe(db.GetTable<Model.Parent>().Select(static p => (object?)p.ParentID).OrderBy(static v => v).ToList());
+			var expected = db
+				.GetTable<Model.Parent>()
+				.Select(static p => (object?)p.ParentID)
+				.OrderBy(static v => v)
+				.ToList();
+
+			values.ShouldBe(expected);
 		}
 
+		// "TestTableFunction" exists only in the PostgreSQL creation script
 		[Test]
 		public void PostgreSqlTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] ScaffoldLanguage language)
 		{
@@ -315,9 +379,14 @@ namespace Tests.Scaffold
 			var method = Method(model, "TestTableFunction");
 			var query  = (IQueryable)method.Invoke(method.IsStatic ? null : db, method.IsStatic ? [db, 5] : [5])!;
 
-			query.Cast<object>().Select(static r => Value(r.GetType().GetProperty("Param2")!.GetValue(r))).ToList().ShouldBe([5, 5]);
+			query
+				.Cast<object>()
+				.Select(static r => PropertyValue(r, "Param2"))
+				.ToList()
+				.ShouldBe([5, 5]);
 		}
 
+		// "TestScalarFunction" and "SchemaName"."fnTest" exist only in the PostgreSQL creation script
 		[Test]
 		public void PostgreSqlScalarFunctions([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] ScaffoldLanguage language, [Values("TestScalarFunction:done", "FnTest:issue2679test")] string function)
 		{
@@ -327,12 +396,21 @@ namespace Tests.Scaffold
 
 			var (name, expected) = (function.Split(':')[0], function.Split(':')[1]);
 
-			var table  = (IQueryable)model.GetTables(db).Single(static t => t.EntityType.Name == "Parent").GetTable();
-			var values = SqlShape.SelectCall(table, Method(model, name), "ParentId").Cast<object?>().Select(Value).Distinct().ToList();
+			var table  = (IQueryable)model
+				.GetTables(db)
+				.Single(static t => t.EntityType.Name == "Parent")
+				.GetTable();
+			var values = SqlShape
+				.SelectCall(table, Method(model, name), "ParentId")
+				.Cast<object?>()
+				.Select(Value)
+				.Distinct()
+				.ToList();
 
 			values.ShouldBe([expected]);
 		}
 
+		// "TestFunctionParameters" exists only in the PostgreSQL creation script
 		[Test]
 		public void PostgreSqlTupleFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] ScaffoldLanguage language)
 		{
@@ -340,17 +418,47 @@ namespace Tests.Scaffold
 
 			using var db = CreateContext(model, context);
 
-			var table = (IQueryable)model.GetTables(db).Single(static t => t.EntityType.Name == "Parent").GetTable();
+			var table = (IQueryable)model
+				.GetTables(db)
+				.Single(static t => t.EntityType.Name == "Parent")
+				.GetTable();
 
 			// "TestFunctionParameters"(param1, INOUT param2, OUT param3): SELECT param1, param2
-			var tuple = SqlShape.SelectCall(table, Method(model, "TestFunctionParameters"), "ParentId", "ParentId").Cast<object>().First();
+			// distinct arguments: a swapped or merged tuple field gives other values
+			const int second = -100;
 
-			var parentId = db.GetTable<Model.Parent>().OrderBy(static p => p.ParentID).Select(static p => p.ParentID).ToList();
+			var tuples = SqlShape
+				.SelectCall(
+					table,
+					Method(model, "TestFunctionParameters"),
+					[
+						static e => System.Linq.Expressions.Expression.PropertyOrField(e, "ParentId"),
+						static _ => System.Linq.Expressions.Expression.Constant(second),
+					])
+				.Cast<object>()
+				.ToList();
 
-			parentId.ShouldContain((int)Value(tuple.GetType().GetProperty("Param2")!.GetValue(tuple))!);
-			Value(tuple.GetType().GetProperty("Param3")!.GetValue(tuple)).ShouldBe(Value(tuple.GetType().GetProperty("Param2")!.GetValue(tuple)));
+			var param2 = tuples
+				.Select(static t => PropertyValue(t, "Param2"))
+				.OrderBy(static v => v)
+				.ToList();
+
+			var param3 = tuples
+				.Select(static t => PropertyValue(t, "Param3"))
+				.Distinct()
+				.ToList();
+
+			var parentIds = db
+				.GetTable<Model.Parent>()
+				.OrderBy(static p => p.ParentID)
+				.Select(static p => (object?)p.ParentID)
+				.ToList();
+
+			param2.ShouldBe(parentIds);
+			param3.ShouldBe([second]);
 		}
 
+		// test_avg exists only in the PostgreSQL creation script
 		[Test]
 		public void PostgreSqlAggregate([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] ScaffoldLanguage language)
 		{
@@ -358,8 +466,15 @@ namespace Tests.Scaffold
 
 			using var db = CreateContext(model, context);
 
-			var table  = (IQueryable)model.GetTables(db).Single(static t => t.EntityType.Name == "Parent").GetTable();
-			var actual = Convert.ToDouble(Value(SqlShape.GroupAggregate(table, Method(model, "TestAvg"), "Value1").Cast<object>().Single()), System.Globalization.CultureInfo.InvariantCulture);
+			var table  = (IQueryable)model
+				.GetTables(db)
+				.Single(static t => t.EntityType.Name == "Parent")
+				.GetTable();
+			var result = SqlShape
+				.GroupAggregate(table, Method(model, "TestAvg"), "Value1")
+				.Cast<object>()
+				.Single();
+			var actual = Convert.ToDouble(Value(result), System.Globalization.CultureInfo.InvariantCulture);
 
 			// test_avg is AVG over float8: NULLs ignored
 			var expected = db.GetTable<Model.Parent>()

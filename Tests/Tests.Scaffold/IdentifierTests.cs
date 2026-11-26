@@ -40,7 +40,8 @@ namespace Tests.Scaffold
 
 			foreach (var language in Enum.GetValues<ScaffoldLanguage>())
 				foreach (var nameCase in cases)
-					yield return new TestCaseData(language, nameCase).SetArgDisplayNames(language.ToString(), nameCase.Name);
+					yield return new TestCaseData(language, nameCase)
+						.SetArgDisplayNames(language.ToString(), nameCase.Name);
 		}
 
 		static void RawNames(ScaffoldOptions options)
@@ -51,6 +52,8 @@ namespace Tests.Scaffold
 		}
 
 		[TestCaseSource(nameof(NameCases))]
+		[ActiveIssue(6486, Details = "all-lowercase class name raises CS8981", Arguments = "CSharp,FSharpKeywords", ErrorMessage = "CS8981")]
+		[ActiveIssue(6486, Details = "all-lowercase class name raises CS8981", Arguments = "CSharp,NameWithSpace" , ErrorMessage = "CS8981")]
 		public void RoundTrip(ScaffoldLanguage language, NameCase nameCase)
 		{
 			var schema = ProviderProfile.SQLite.CreateSchema();
@@ -85,7 +88,10 @@ namespace Tests.Scaffold
 
 			using var db = new SqliteTestDb("class");
 
-			ModelSmoke.Run(model, db.Options).Rows.ShouldBe(ModelSmoke.RowCount);
+			ModelSmoke
+				.Run(model, db.Options)
+				.Rows
+				.ShouldBe(ModelSmoke.RowCount);
 		}
 
 		[Test]
@@ -102,21 +108,26 @@ namespace Tests.Scaffold
 			var report = ModelSmoke.Run(model, db.Options);
 
 			report.Tables.ShouldBe(2);
-			model.Types.Count(static t => t.Name.StartsWith("UserInfo", StringComparison.Ordinal)).ShouldBe(2);
+			model.Types
+				.Count(static t => t.Name.StartsWith("UserInfo", StringComparison.Ordinal))
+				.ShouldBe(2);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4831")]
 		[ActiveIssue(4831, Arguments = "CSharp", ErrorMessage = "CS0246")]
-		public void ViewNamedTable_Issue4831([Values] ScaffoldLanguage language)
+		public void ViewNamedTable([Values] ScaffoldLanguage language)
 		{
 			var schema = ProviderProfile.SQLite.CreateSchema();
 			schema.AddView(new SqlObjectName("Table"), [Col("Id", "int"), Col("Value", "text", nullable: true)]);
 
-			var model = ScaffoldHarness.Build(nameof(ViewNamedTable_Issue4831), language, ProviderProfile.SQLite, schema);
+			var model = ScaffoldHarness.Build(nameof(ViewNamedTable), language, ProviderProfile.SQLite, schema);
 
 			using var db = new SqliteTestDb();
 
-			ModelSmoke.Run(model, db.Options).Rows.ShouldBe(ModelSmoke.RowCount);
+			ModelSmoke
+				.Run(model, db.Options)
+				.Rows
+				.ShouldBe(ModelSmoke.RowCount);
 		}
 	}
 }

@@ -79,8 +79,9 @@ namespace Tests.Scaffold.Harness
 					? method.GetParameters()[0].ParameterType.GetGenericArguments()[0]
 					: UnwrapResultType(method.ReturnType);
 
+				// last row: a Find that lost its predicate returns the first inserted row
 				var table  = tables.Single(t => t.EntityType == entityType);
-				var source = rows[entityType][0];
+				var source = rows[entityType][RowCount - 1];
 				var found  = InvokeFind(method, db, table.GetTable(), source);
 
 				Assert.That(found, Is.Not.Null, $"{model}: {method.DeclaringType!.Name}.{method.Name}({string.Join(", ", method.GetParameters().Select(static p => p.ParameterType.Name))}) didn't find row");
