@@ -1559,6 +1559,33 @@ namespace Tests.Linq
 				.ShouldBe(new[] { "A" });
 		}
 
+		/// <summary>A set operation over rows with an interface-typed member still filters on its cells.</summary>
+		[Test]
+		public void FiltersAnInterfaceTypedMemberUnderConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var query = t
+				.Select(x => new { x.Category, x.Year, x.Amount })
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsRow
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			query
+				.Concat(query)
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A", "A" });
+		}
+
 		/// <summary>A result type declares the member through the dictionary interface.</summary>
 		[Test]
 		public void PivotsIntoAnInterfaceTypedMember([DataSources] string context)

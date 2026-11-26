@@ -1377,6 +1377,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (body is SqlGenericConstructorExpression genericConstructor)
 						{
+							// A dynamic column read through a type the constructed type implements is its column, as in the
+							// MemberInit branch.
+							if (member is DynamicColumnInfo { DeclaringType: { } readThrough } dynamicColumn && readThrough != genericConstructor.Type && readThrough.IsSameOrParentOf(genericConstructor.Type))
+								member = new DynamicColumnInfo(genericConstructor.Type, dynamicColumn.PropertyType, dynamicColumn.Name);
+
 							Expression? bodyExpresion = null;
 							for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 							{
