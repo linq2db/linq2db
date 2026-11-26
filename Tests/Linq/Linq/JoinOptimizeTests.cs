@@ -902,6 +902,27 @@ namespace Tests.Linq
 
 		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
 		[Test]
+		public void NonNullableOuterSourceProjectionReadsExplicitDefaultWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// An explicit default is chosen by the row-exists marker alone, so a non-nullable outer value must not be that
+			// marker: children 61-66 and 77 have no grandchildren and read -1
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p.ParentID)
+					.DefaultIfEmpty(-1)
+				select new { c.ChildID, V = v };
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
 		public void OuterAndOwnMembersReadNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
