@@ -22,7 +22,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 	/// </summary>
 	/// <remarks>
 	/// The remedy is read from <see cref="Diagnostic.Properties"/> rather than re-derived: the analyzer's
-	/// detection core is <c>internal</c> to the sibling assembly, and opening it up with
+	/// detection core is <see langword="internal"/> to the sibling assembly, and opening it up with
 	/// <c>InternalsVisibleTo</c> to serve a code fix would widen a shipped analyzer's surface for no gain.
 	/// <para>
 	/// The missing-marker rule's other remedy - implement the body - is named in the diagnostic message and
@@ -41,9 +41,11 @@ namespace LinqToDB.Analyzers.CodeFixes
 		const string ExpressionAttributeMetadataName = "LinqToDB.Sql+ExpressionAttribute";
 
 		/// <inheritdoc/>
-		public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
+		public override ImmutableArray<string> FixableDiagnosticIds =>
+		[
 			ServerSideOnlyContractAnalyzer.MissingMarkerDiagnosticId,
-			ServerSideOnlyContractAnalyzer.WrongExceptionDiagnosticId);
+			ServerSideOnlyContractAnalyzer.WrongExceptionDiagnosticId,
+		];
 
 		// A custom solution-scoped Fix-All - see ContractFixAllProvider for why neither
 		// WellKnownFixAllProviders.BatchFixer nor DocumentBasedFixAllProvider can express this fix.
@@ -644,7 +646,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 						&& TryRewriteAt(targetRoot, targetLocation, remedy, out var crossOriginal, out var crossReplacement)
 						&& crossOriginal is not null
 						&& crossReplacement is not null
-							? ImmutableArray.Create((targetDocument.Id, crossOriginal, crossReplacement))
+							? [(targetDocument.Id, crossOriginal, crossReplacement)]
 							: none;
 				}
 
@@ -656,7 +658,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 					&& TryRewrite(documentRoot, documentModel, diagnostic, out var original, out var replacement)
 					&& original is not null
 					&& replacement is not null
-						? ImmutableArray.Create((document.Id, original, replacement))
+						? [(document.Id, original, replacement)]
 						: none;
 			}
 		}

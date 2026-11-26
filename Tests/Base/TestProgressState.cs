@@ -44,11 +44,13 @@ namespace Tests
 		readonly Action<bool>?                       _publish;
 
 		long    _total;
+		bool    _totalIsUpperBound;
 		long    _started;
 		long    _completed;
 		long    _passed;
 		long    _failed;
 		long    _skipped;
+		long    _inconclusive;
 		string? _current;
 		bool    _done;
 
@@ -62,8 +64,13 @@ namespace Tests
 			_publish = publish;
 		}
 
-		/// <summary>Discovered test-case count of the run (the largest suite count wins).</summary>
+		/// <summary>Number of tests the run will execute, or an upper bound of it (see <see cref="TotalIsUpperBound"/>).</summary>
 		public long Total     { get { lock (_sync) return _total;     } }
+		/// <summary>
+		/// Whether <see cref="Total"/> is only the discovered test-case count — used when the filtered count could not
+		/// be resolved, and too large under a <c>--filter</c>.
+		/// </summary>
+		public bool TotalIsUpperBound { get { lock (_sync) return _totalIsUpperBound; } }
 		/// <summary>Tests that have entered execution.</summary>
 		public long Started   { get { lock (_sync) return _started;   } }
 		/// <summary>Tests booked with a final verdict.</summary>
@@ -74,6 +81,12 @@ namespace Tests
 		public long Failed    { get { lock (_sync) return _failed;    } }
 		/// <summary>Tests booked as skipped.</summary>
 		public long Skipped   { get { lock (_sync) return _skipped;   } }
+		/// <summary>
+		/// Tests booked as inconclusive — the bucket <see cref="ActiveIssueAttribute"/> rewrites a still-failing
+		/// known issue into. Tracked separately because the platform summary folds it into <c>skipped</c>, which
+		/// makes a known-issue case indistinguishable from a genuinely skipped one.
+		/// </summary>
+		public long Inconclusive { get { lock (_sync) return _inconclusive; } }
 		/// <summary>Most recently started test, or <see langword="null"/> once the run is done.</summary>
 		public string? Current { get { lock (_sync) return _current;  } }
 		/// <summary>Whether the run has finished.</summary>
@@ -87,13 +100,13 @@ namespace Tests
 			get { lock (_sync) return _failures.ToArray(); }
 		}
 
-		/// <summary>Raises the run total to <paramref name="testCaseCount"/> if it is larger than the current one.</summary>
-		public void SetTotal(long testCaseCount)
+		/// <summary>Sets the run total; <paramref name="isUpperBound"/> marks it as an upper bound rather than exact.</summary>
+		public void SetTotal(long testCaseCount, bool isUpperBound = false)
 		{
 			lock (_sync)
 			{
-				if (testCaseCount > _total)
-					_total = testCaseCount;
+				_total             = testCaseCount;
+				_totalIsUpperBound = isUpperBound;
 			}
 		}
 
@@ -221,27 +234,21 @@ namespace Tests
 
 			switch (status)
 			{
-				case TestStatus.Passed : _passed++;  break;
-				case TestStatus.Skipped: _skipped++; break;
+				case TestStatus.Passed      : _passed++;       break;
+				case TestStatus.Skipped     : _skipped++;      break;
+				case TestStatus.Inconclusive: _inconclusive++; break;
 				case TestStatus.Failed :
 					_failed++;
 					force = true;
 					if (_failures.Count < MaxRecentFailures)
 						_failures.Add((fullName, Trim(message)));
 					break;
-				// Inconclusive / Warning — count as completed but neither pass nor fail bucket.
+				// Warning — count as completed but in no verdict bucket.
 				default: break;
 			}
 
-			// For unfiltered runs total is exact, so completed reaching it marks the run done even if the
-			// root-suite teardown ordering surprises us.
-			if (!_done && _total > 0 && _completed >= _total)
-			{
-				_done    = true;
-				_current = null;
-				force    = true;
-			}
-
+			// Completed reaching the total does not mark the run done: fixture and assembly teardowns still run after the
+			// last test, and only MarkDone (root-suite teardown) knows they have finished.
 			Publish(force);
 		}
 
@@ -250,8 +257,9 @@ namespace Tests
 		{
 			switch (booked)
 			{
-				case TestStatus.Passed : _passed--;  break;
-				case TestStatus.Skipped: _skipped--; break;
+				case TestStatus.Passed      : _passed--;       break;
+				case TestStatus.Skipped     : _skipped--;      break;
+				case TestStatus.Inconclusive: _inconclusive--; break;
 				case TestStatus.Failed :
 					_failed--;
 

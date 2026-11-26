@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -44,6 +44,12 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class OracleTests : TestBase
 	{
+		// Shared by every Devart-scoped gate in this file. The provider cannot be reached from anywhere we run:
+		// it needs a licence key this workstation does not have, and Oracle has no GitHub-CI leg at all - so no
+		// failure has ever been harvested for these gates, and the attributes they replace carried no explanation
+		// to fall back on either.
+		const string DevartUnreachable = "no-declaration: unvalidated: the Devart provider cannot be reached - it needs a licence key this workstation does not have, and Oracle has no GitHub-CI leg - so no failure was ever harvested for this gate, and the original attribute carried no explanation.";
+
 		// Each raw-SQL call below reuses one statement text with a different parameter or return type, so
 		// every call needs its own text or the type mapping cached for an earlier one is reused. Markers
 		// are fixed per call site - or derived from what the call varies, inside helpers that run many
@@ -114,7 +120,7 @@ namespace Tests.DataProvider
 			(of course only if it is Windows machine)
 
 		*/
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -308,7 +314,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -606,20 +612,18 @@ namespace Tests.DataProvider
 #endif
 
 		[Test]
+		[NoBaselines("Server-side guid generation test")]
 		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (new DisableBaseline("Server-side guid generation test"))
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
+			using (Assert.EnterMultipleScope())
 			{
-				var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Null);
-					Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2"), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Null);
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2"), Is.EqualTo(guid));
 
-					Assert.That(conn.Execute<Guid>(PathThroughSql($"50"), DataParameter.Create("p", guid)), Is.EqualTo(guid));
-					Assert.That(conn.Execute<Guid>(PathThroughSql($"51"), new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-				}
+				Assert.That(conn.Execute<Guid>(PathThroughSql($"50"), DataParameter.Create("p", guid)), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid>(PathThroughSql($"51"), new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
 			}
 		}
 
@@ -1052,9 +1056,9 @@ namespace Tests.DataProvider
 #region Sequence
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void SequenceInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 			using var db = GetDataContext(context);
 
 			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
@@ -1068,9 +1072,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 			using var db = GetDataContext(context);
 
 			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
@@ -1191,12 +1195,12 @@ namespace Tests.DataProvider
 		/// batches split only under an explicit <see cref="BulkCopyOptions.MaxSqlLengthForBatch"/>.
 		/// </summary>
 		[Test]
+		[NoBaselines("generated statement volume is the subject of the test")]
 		public void BulkCopyMultipleRowsCrossesSqlLengthLimit(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy,
 			[Values]                                     bool                useParameters)
 		{
-			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
 			using var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy }));
 
 			var queries = new SaveQueriesInterceptor();
@@ -1280,6 +1284,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1288,6 +1293,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1296,6 +1302,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesMultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1304,6 +1311,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesMultipleRowsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1312,6 +1320,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesRowByRow(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1320,6 +1329,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesRowByRowAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1360,6 +1370,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesProviderSpecificUsingOptions(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1368,6 +1379,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesProviderSpecificUsingOptionsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1376,6 +1388,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesMultipleRowsUsingOptions(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1384,6 +1397,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesMultipleRowsUsingOptionsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1392,6 +1406,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesRowByRowUsingOptions(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1400,6 +1415,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesRowByRowUsingOptionsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1411,7 +1427,6 @@ namespace Tests.DataProvider
 		{
 			// RetrieveIdentity inlines sequence-allocated ids as literals, so the captured SQL records
 			// SEQUENCETESTSEQ state - same reason SequenceInsert/SequenceInsertWithIdentity opt out
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 
 			var data = new[]
 			{
@@ -1447,7 +1462,6 @@ namespace Tests.DataProvider
 		{
 			// RetrieveIdentity inlines sequence-allocated ids as literals, so the captured SQL records
 			// SEQUENCETESTSEQ state - same reason SequenceInsert/SequenceInsertWithIdentity opt out
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 
 			var data = new[]
 			{
@@ -1683,7 +1697,7 @@ namespace Tests.DataProvider
 		}
 
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI)]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI, Details = DevartUnreachable)]
 		[Test]
 		public void BulkCopy21ProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -1693,7 +1707,7 @@ namespace Tests.DataProvider
 		}
 
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI)]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI, Details = DevartUnreachable)]
 		[Test]
 		public async Task BulkCopy21ProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -2455,7 +2469,7 @@ namespace Tests.DataProvider
 			public DateTimeOffset DateTimeOffsetValue;
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void Issue515Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2473,7 +2487,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void Issue612Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2498,7 +2512,7 @@ namespace Tests.DataProvider
 
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2890,7 +2904,6 @@ namespace Tests.DataProvider
 					if (ReferenceEquals(x, y)) return true;
 					if (ReferenceEquals(x, null)) return false;
 					if (ReferenceEquals(y, null)) return false;
-					if (x.GetType() != y.GetType()) return false;
 					return x.Id == y.Id && x.BoolProp == y.BoolProp && x.NullableBoolProp == y.NullableBoolProp;
 				}
 
@@ -2980,7 +2993,10 @@ namespace Tests.DataProvider
 			public int BinaryDataID { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global OracleOptions.Default. While DontEscapeLowercaseIdentifiers
+		// is on, every other Oracle context emits the test schema's mixed-case names unquoted, and Oracle folds
+		// them to upper case - so concurrent tests see ORA-00942 on tables that exist.
+		[Test, NonParallelizable]
 		public void TestLowercaseIdentifiersQuotation([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
@@ -3008,7 +3024,7 @@ namespace Tests.DataProvider
 		}
 
 		// this is a sad test which shows that we need better support for parameter value bindings
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
@@ -3403,7 +3419,7 @@ namespace Tests.DataProvider
 		}
 
 		// ActiveIssue: provider reads TimeStampTZ incorrectly (offset applied twice)
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDateTimeRoundtrip([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inlineParameters)
 		{
@@ -3452,7 +3468,7 @@ namespace Tests.DataProvider
 		}
 
 		// ActiveIssue: provider reads TimeStampTZ incorrectly (offset applied twice)
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDateTimeSQL([IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool inlineParameters)
 		{
@@ -3551,8 +3567,10 @@ namespace Tests.DataProvider
 
 #endregion
 
-		[ActiveIssue(399)]
-		[Test]
+		// Asserts what #399 asked for - that packages and their members are described - rather than a count of the
+		// schema's rows. The count this test used to carry was 11 against a schema that now holds 31, so it had gone
+		// stale without the defect ever coming back; anything counting schema objects goes the same way.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/399")]
 		public void Issue399Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -3562,13 +3580,22 @@ namespace Tests.DataProvider
 				GetProcedures = true
 			});
 
-			Assert.That(schema.Procedures, Has.Count.EqualTo(11));
+			string[] packageMembers = ["TEST_FUNCTION", "TEST_PROCEDURE", "TEST_TABLE_FUNCTION"];
 
-			// This filter used by T4 generator
-			Assert.That(schema.Procedures.Where(
-				proc => proc.IsLoaded
-				|| (proc.IsFunction && !proc.IsTableFunction)
-				|| (proc.IsTableFunction && proc.ResultException != null)).Count(), Is.EqualTo(11));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(schema.Procedures.Where(p => p.PackageName == "TEST_PACKAGE1").Select(p => p.ProcedureName), Is.EquivalentTo(packageMembers));
+				Assert.That(schema.Procedures.Where(p => p.PackageName == "TEST_PACKAGE2").Select(p => p.ProcedureName), Is.EquivalentTo(packageMembers));
+			}
+
+			// This filter used by T4 generator. It keeps exactly the procedures whose result schema could be read:
+			// the ones it drops are those the provider refused to describe, which is what ResultException records.
+			Assert.That(
+				schema.Procedures.Where(
+					proc => proc.IsLoaded
+					|| (proc.IsFunction && !proc.IsTableFunction)
+					|| (proc.IsTableFunction && proc.ResultException != null)),
+				Is.EquivalentTo(schema.Procedures.Where(proc => proc.ResultException == null)));
 		}
 
 		[Table("TYPESTEST")]
@@ -3726,12 +3753,12 @@ namespace Tests.DataProvider
 				{
 					// Another devart bug: explicit + internal transaction doesn't produce error...
 					if (withTransaction && withInternalTransaction && !context.IsAnyOf(TestProvName.AllOracleDevart))
-						Assert.Throws<InvalidOperationException>(() =>
+						Assert.That(() =>
 						{
 							table.BulkCopy(
 								new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, UseInternalTransaction = withInternalTransaction },
 								Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
-						});
+						}, Throws.TypeOf<InvalidOperationException>());
 					else
 					{
 						table.BulkCopy(
@@ -4447,7 +4474,8 @@ END convert_bool;");
 		}
 		#endregion
 
-		[ActiveIssue]
+		[ActiveIssue(2365, ErrorMessage = "Assert.That(column.Length, Is.Null)",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The CLOB column comes back with a length of 22 where none is due - #2365's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2365")]
 		public void Issue2365Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -4478,7 +4506,8 @@ END convert_bool;");
 			}
 		}
 
-		[ActiveIssue(Details = "https://github.com/linq2db/linq2db/issues/1645")]
+		[ActiveIssue(1645, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Reference moved out of Details and into the attribute. The IsIn extension has no translation, so the table-valued IN parameter #1645 asks for never reaches SQL.")]
 		[Test]
 		public void TestInParameter([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -4504,9 +4533,9 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4661")]
+		[NoBaselines("big sad sql")]
 		public void BlobLiteralsLimit([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
-			using var _  = new DisableBaseline("big sad sql");
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<BlobsTable>();
 

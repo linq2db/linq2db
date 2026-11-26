@@ -1,6 +1,6 @@
 # LINQ to DB LINQPad Driver
 
-This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer, on Windows and macOS (LINQPad 9 recommended). LINQPad 5 is supported by the `.lpx` plugin published with each [release](https://github.com/linq2db/linq2db/releases). Support for older LINQPad versions is available in older driver versions.
+This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer, on Windows and macOS (LINQPad 9 recommended), with queries running on .NET 10 or newer. LINQPad 5 is supported by the `.lpx` plugin published with each [release](https://github.com/linq2db/linq2db/releases). Support for older LINQPad versions is available in older driver versions.
 
 Following databases supported:
 
@@ -10,14 +10,14 @@ Following databases supported:
 * **DuckDB**
 * **Firebird**
 * **Informix**: 64-bit LINQPad only — the LINQPad 5 `.lpx` also supports 32-bit
-* **Microsoft Access**: both OLE DB and ODBC drivers *(Windows only)*
+* **Microsoft Access**: OLE DB and ODBC drivers *(Windows only)*; managed LibRed engine on every OS, on the prerelease `LibRed.Ado` package *(not in the LINQPad 5 `.lpx`)*
 * **Microsoft SQL Server** 2005+ *(including **Microsoft SQL Azure**)*
 * **Microsoft SQL Server Compact (SQL CE)** *(Windows only)*
 * **MariaDB**
 * **MySql**
 * **Oracle**
 * **PostgreSQL**
-* **SAP HANA** *(client software must be installed, supports both Native and ODBC providers)*
+* **SAP HANA**: both Native and ODBC providers *(ODBC needs the SAP HANA ODBC driver installed; with the LINQPad 5 `.lpx`, Native needs the SAP HANA client installed; not available in an ARM64 LINQPad on Windows, as SAP ships no Windows ARM64 client)*
 * **SAP/Sybase ASE**
 * **SQLite**
 * **YDB**
@@ -50,7 +50,7 @@ component and reproduces its terms.
 
 ## macOS
 
-Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. Everything else uses the macOS build of its client, including IBM DB2 and Informix. SQL Server spatial values (`geometry`, `geography`, `hierarchyid`) are handled by the managed [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) implementation, as Microsoft's package ships its native spatial library for Windows only.
+Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. Everything else uses the macOS build of its client, including IBM DB2 and Informix. The SAP HANA native provider uses the macOS build of its client too, but is untested on macOS. SQL Server spatial values (`geometry`, `geography`, `hierarchyid`) are handled by the managed [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) implementation, as Microsoft's package ships its native spatial library for Windows only.
 
 ## Troubleshooting
 

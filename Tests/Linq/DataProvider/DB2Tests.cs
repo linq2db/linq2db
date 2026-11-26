@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Text;
@@ -898,7 +898,8 @@ namespace Tests.DataProvider
 			public static readonly Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]
+		[ActiveIssue(SkipForNonLinqService = true, ErrorMessage = "Assert.That(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]), Is.True)",
+			Details = "no-issue: RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]
 		[Test]
 		public void TestTimespanAndTimeValues([IncludeDataSources(true, ProviderName.DB2)] string context, [Values] bool useParameters)
 		{

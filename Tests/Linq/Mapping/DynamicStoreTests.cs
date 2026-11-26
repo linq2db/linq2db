@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -748,8 +748,8 @@ namespace Tests.Mapping
 				var obj = new GetterSetterVsStorageMethodsConflict { Id = 5 };
 				obj.Values.Add("Name", "test_name");
 
-				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
-				Assert.Throws<LinqToDBException>(() => db.GetTable<GetterSetterVsStorageMethodsConflict>().ToList());
+				Assert.That(() => db.Insert(obj), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => db.GetTable<GetterSetterVsStorageMethodsConflict>().ToList(), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 
@@ -887,8 +887,8 @@ namespace Tests.Mapping
 				var obj = new MultipleGetterSetterMethods { Id = 5 };
 				obj.Values.Add("Name", "test_name");
 
-				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
-				Assert.Throws<LinqToDBException>(() => db.GetTable<MultipleGetterSetterMethods>().ToList());
+				Assert.That(() => db.Insert(obj), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => db.GetTable<MultipleGetterSetterMethods>().ToList(), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 
@@ -907,8 +907,8 @@ namespace Tests.Mapping
 				var obj = new NoGetterSetterMethods { Id = 5 };
 				obj.Values.Add("Name", "test_name");
 
-				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
-				Assert.Throws<LinqToDBException>(() => db.GetTable<NoGetterSetterMethods>().ToList());
+				Assert.That(() => db.Insert(obj), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => db.GetTable<NoGetterSetterMethods>().ToList(), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 
@@ -992,7 +992,8 @@ namespace Tests.Mapping
 		}
 
 		#region Issue 2953
-		[ActiveIssue]
+		[ActiveIssue(2953, ErrorMessage = "Assert.That(result[0].Properties.ContainsKey(\"FirstName\"), Is.True)",
+			Details = "dynamic columns are not populated through this path, so the property bag comes back without them - #2953's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
 		public void Issue2953Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -1008,7 +1009,8 @@ namespace Tests.Mapping
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(2953, ErrorMessage = "Assert.That(result[0].Properties.ContainsKey(\"FirstName\"), Is.True)",
+			Details = "as Issue2953Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
 		public void Issue2953Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

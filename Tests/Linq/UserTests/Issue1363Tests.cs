@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -18,12 +18,21 @@ namespace Tests.UserTests
 			[Column("optional_field")] public Guid? Optional { get; set; }
 		}
 
-		[ActiveIssue("Unsupported INSERT syntax", Configurations = new[]
-		{
-			TestProvName.AllAccess,
-			ProviderName.SqlCe,
-			TestProvName.AllSybase,
-		})]
+		// Not attributed to #1363: that is what the fixture tests, not why this gate exists. #1363 is "Use of null
+		// value for parameter of subquery makes it ignore non-null values on next calls", which is unrelated to
+		// the INSERT syntax these providers reject.
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+			ErrorMessage = "The name 'required_field' is illegal in this context",
+			Details = "no-issue: Sybase rejects a column reference where it wants a constant. SqlCe was dropped from this gate - it passes, direct and remote.")]
+		[ActiveIssue(Configurations = [ProviderName.AccessAceOleDb, ProviderName.AccessAceOdbc],
+			ErrorMessage = "Query input must contain at least one table or query",
+			Details = "no-issue: both ACE drivers reject it with the same sentence, so one fragment covers OleDb and ODBC alike.")]
+		[ActiveIssue(Configuration = ProviderName.AccessJetOdbc, ErrorTypeName = "System.Data.Odbc.OdbcException",
+			ErrorMessage = "Reserved error (|); there is no message for this error.",
+			Details = "no-issue: as the ACE half, but Jet reports the same rejection without a message of its own.")]
+		[ActiveIssue(Configuration = ProviderName.AccessJetOleDb, ErrorTypeName = "System.Data.OleDb.OleDbException",
+			ErrorMessage = "Unspecified error",
+			Details = "no-issue: as the Jet ODBC half, in the OleDb driver's wording.")]
 		[Test]
 		public void TestInsert([DataSources(TestProvName.AllSqlServer2005, TestProvName.AllClickHouse)] string context)
 		{

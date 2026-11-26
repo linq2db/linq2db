@@ -92,13 +92,18 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public bool? CanBeNullSource(ISqlTableSource source)
 		{
+			return CanBeNullSource(source, alwaysMatchingIsInner: false);
+		}
+
+		bool? CanBeNullSource(ISqlTableSource source, bool alwaysMatchingIsInner)
+		{
 			if (ReferenceEquals(JoinSource, source))
 				return null;
 
 			for (var index = Queries.Length - 1; index >= 0; index--)
 			{
 				var q     = Queries[index];
-				var local = CanBeNullInternal(q, source);
+				var local = CanBeNullInternal(q, source, alwaysMatchingIsInner);
 				if (local != null)
 					return local;
 			}
@@ -109,7 +114,7 @@ namespace LinqToDB.Internal.SqlQuery
 		readonly NullabilityContext?               _parentContext;
 		readonly Dictionary<ISqlExpression, bool>? _nullabilityOverrides;
 
-		bool? CanBeNullInternal(SelectQuery? query, ISqlTableSource source)
+		bool? CanBeNullInternal(SelectQuery? query, ISqlTableSource source, bool alwaysMatchingIsInner)
 		{
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 			if (query == null)
@@ -118,7 +123,15 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			_nullabilityCache ??= new();
-			return _nullabilityCache.IsNullableSource(query, source, JoinSource, _transformationInfo);
+			return _nullabilityCache.IsNullableSource(query, source, JoinSource, _transformationInfo, alwaysMatchingIsInner);
+		}
+
+		// An aggregate without GROUP BY joined with no condition - as a correlated aggregate is - always yields its row, and a count is
+		// never NULL: the flag SelectQuery.CanBeNullable reads when the aggregate is a subquery.
+		bool IsNeverNullAggregate(SqlColumn column)
+		{
+			return column.Expression is SqlExtendedFunction { CanBeNullInAggregationQuery: false }
+				&& CanBeNullSource(column.Parent!, alwaysMatchingIsInner: true) == false;
 		}
 
 		/// <summary>
@@ -140,11 +153,11 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				_visitedColumns ??= new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 
-				// if column comes from nullable subquery - column is always nullable
+				// if column comes from nullable subquery - column is always nullable, unless it is a count its row always carries
 				if (column.Parent != null)
 				{
 					if (CanBeNullSource(column.Parent) == true)
-						return true;
+						return !IsNeverNullAggregate(column);
 
 					if (column.Parent.HasSetOperators)
 					{
@@ -232,7 +245,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		sealed class NullabilityCache
 		{
-			Dictionary<(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? joindeSource), bool?>? _nullabilityInfo;
+			Dictionary<(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? joindeSource, bool alwaysMatchingIsInner), bool?>? _nullabilityInfo;
 
 			/// <summary>
 			/// Returns nullability status of <paramref name="source"/> in specific <paramref name="inQuery"/>.
@@ -244,18 +257,18 @@ namespace LinqToDB.Internal.SqlQuery
 			/// <item><see langword="null"/>: <paramref name="source"/> is not reachable/available in <paramref name="inQuery"/>.</item>
 			/// </list>
 			/// </returns>
-			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? joinedTable, SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo)
+			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? joinedTable, SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo, bool alwaysMatchingIsInner)
 			{
 				_nullabilityInfo ??= new();
 
-				var key = (inQuery, source, joinedTable);
+				var key = (inQuery, source, joinedTable, alwaysMatchingIsInner);
 
-				if (_nullabilityInfo.TryGetValue((inQuery, source, joinedTable), out var result))
+				if (_nullabilityInfo.TryGetValue((inQuery, source, joinedTable, alwaysMatchingIsInner), out var result))
 				{
 					return result;
 				}
 
-				result = IsNullableSourceCalculator(inQuery, source, joinedTable);
+				result = IsNullableSourceCalculator(inQuery, source, joinedTable, alwaysMatchingIsInner);
 
 				if (result == null && transformationInfo != null)
 				{
@@ -264,7 +277,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if ((!ReferenceEquals(oldSource, source) || !ReferenceEquals(oldInQuery, inQuery)) && oldInQuery is SelectQuery oldInQuerySelect && oldSource != null)
 					{
-						result = IsNullableSource(oldInQuerySelect, oldSource, joinedTable, transformationInfo);
+						result = IsNullableSource(oldInQuerySelect, oldSource, joinedTable, transformationInfo, alwaysMatchingIsInner);
 					}
 				}
 
@@ -273,7 +286,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return result;
 			}
 
-			bool? IsNullableSourceCalculator(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? joinedTable)
+			bool? IsNullableSourceCalculator(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? joinedTable, bool alwaysMatchingIsInner)
 			{
 				if (inQuery == source)
 					return false;
@@ -319,7 +332,7 @@ namespace LinqToDB.Internal.SqlQuery
 							{
 								applyNullable = true;
 							}
-							else if (join.JoinType is JoinType.Left or JoinType.OuterApply)
+							else if (join.JoinType is JoinType.Left or JoinType.OuterApply && !(alwaysMatchingIsInner && AlwaysMatches(join)))
 							{
 								stack.Push((join.Table, true));
 								continue;
@@ -334,6 +347,15 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				return null;
+			}
+
+			// A join without a condition to a query that yields exactly one row - an aggregate without GROUP BY or HAVING, as
+			// SelectQuery.CanBeNullable reads it - always matches, so it extends nothing with NULLs.
+			static bool AlwaysMatches(SqlJoinedTable join)
+			{
+				return join.Condition.IsTrue
+					&& join.Table.Source is SelectQuery { IsLimited: false, HasSetOperators: false, HasGroupBy: false, HasHaving: false } query
+					&& QueryHelper.IsAggregationQuery(query);
 			}
 		}
 	}

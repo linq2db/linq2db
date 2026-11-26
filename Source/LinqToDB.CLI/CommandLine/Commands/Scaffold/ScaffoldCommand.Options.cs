@@ -93,6 +93,7 @@ JSON file example:
 					null,
 					false,
 					new (false, false, nameof(DatabaseType.Access),          "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, false, nameof(DatabaseType.AccessLibRed),    "MS Access using the managed LibRed engine (no driver install)"),
 					new (false, false, nameof(DatabaseType.DB2),             "IBM DB2 LUW or z/OS"                                       ),
 					new (false, false, nameof(DatabaseType.Firebird),        "Firebird"                                                  ),
 					new (false, false, nameof(DatabaseType.Informix),        "IBM Informix"                                              ),
@@ -122,7 +123,7 @@ JSON file example:
 					@"Allows user to specify path to database provider for some databases.
 Supported databases:
 - SQL Server Compact Edition : value is a full path to System.Data.SqlServerCe.dll assembly from Private folder of SQL CE installation
-- SAP HANA                   : value is a full path to Sap.Data.Hana.Core.v2.1.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Net.v8.0.dll assembly from HDB client installation folder
+- SAP HANA                   : value is a full path to Sap.Data.Hana.Core.v2.1.dll, Sap.Data.Hana.Net.v6.0.dll, Sap.Data.Hana.Net.v8.0.dll or (.NET 10+) Sap.Data.Hana.Net.v10.0.dll assembly from HDB client installation folder
 - IBM DB2 and Informix       : value is a full path to IBM.Data.DB2.Core.dll assembly in DB2 provider folder",
 					null,
 					null,
@@ -1929,6 +1930,7 @@ string // also you can put aggregate function name as string directly to list
 		private enum DatabaseType
 		{
 			Access,
+			AccessLibRed,
 			DB2,
 			Firebird,
 			Informix,

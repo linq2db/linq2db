@@ -140,16 +140,11 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
+				Assert.That(() => sp.GetSchema(db, new GetSchemaOptions()
 				{
 					GetTables = false,
-				}))!;
-
-				Assert.That(ex, Is.InstanceOf<InvalidOperationException>());
-				Assert.That(
-					ex.Message,
-					Does.Contain("requires the command to have a transaction")
-				);
+				}),
+					Throws.InstanceOf<InvalidOperationException>().With.Message.Contains("requires the command to have a transaction"));
 			}
 		}
 
@@ -163,13 +158,11 @@ namespace Tests.UserTests
 
 				var sp = db.DataProvider.GetSchemaProvider();
 
-				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
+				Assert.That(() => sp.GetSchema(db, new GetSchemaOptions()
 				{
 					GetTables = false,
-				}))!;
-
-				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
-				Assert.That(ex.Message, Is.EqualTo("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false"));
+				}),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false"));
 			}
 		}
 	}

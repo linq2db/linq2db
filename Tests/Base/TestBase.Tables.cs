@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -19,247 +20,168 @@ namespace Tests
 			return DataCache<LinqDataTypes>.Get(context);
 		}
 
-		private   List<LinqDataTypes>?      _types;
-		protected IEnumerable<LinqDataTypes> Types
-		{
-			get
-			{
-				if (_types == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_types = db.Types.ToList();
+		#region Reference data
 
-				return _types;
-			}
+		// One snapshot per process, captured by the default provider's CreateDatabase before its readiness
+		// latch opens; readers on other lanes wait on that latch rather than read the default DB mid-write.
+		static volatile ReferenceData? _referenceData;
+		static readonly Lock           _referenceDataSync = new();
+
+		/// <summary>
+		/// Captures the reference-data snapshot when <paramref name="context"/> is the default configuration.
+		/// Called by the default provider's <c>CreateDatabase</c> once its scripts have run.
+		/// </summary>
+		protected static void CaptureReferenceData(string context)
+		{
+			if (string.Equals(context, TestConfiguration.DefaultProvider, StringComparison.OrdinalIgnoreCase))
+				_referenceData = ReferenceData.Load(context);
 		}
 
-		private   List<LinqDataTypes2>? _types2;
-		protected List<LinqDataTypes2> Types2
+		static ReferenceData Data
 		{
 			get
 			{
-				if (_types2 == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_types2 = db.Types2.ToList();
+				var data = _referenceData;
 
-				return _types2;
-			}
-		}
+				if (data != null)
+					return data;
 
-		#region Person Model
-		private   List<Person>?       _person;
-		protected IEnumerable<Person> Person
-		{
-			get
-			{
-				if (_person == null)
+				if (ParallelExecutionEnabled && TestConfiguration.DefaultProvider is { } provider)
 				{
-					InitPatientPerson();
+					CustomTestContext.EnsureDatabaseReady(provider);
+
+					data = _referenceData;
+
+					if (data != null)
+						return data;
 				}
 
-				return _person!;
+				// no capture in this run: serial run, CreateDatabase filtered out, or a host without it
+				lock (_referenceDataSync)
+					return _referenceData ??= ReferenceData.Load(TestConfiguration.DefaultProvider);
 			}
 		}
 
-		private   List<Patient>? _patient;
-		protected List<Patient> Patient
+		sealed class ReferenceData
 		{
-			get
+			public readonly List<LinqDataTypes>          Types;
+			public readonly List<LinqDataTypes2>         Types2;
+			public readonly List<Person>                 Person;
+			public readonly List<Patient>                Patient;
+			public readonly List<Doctor>                 Doctor;
+			public readonly List<Parent>                 Parent;
+			public readonly List<Parent1>                Parent1;
+			public readonly List<Parent4>                Parent4;
+			public readonly List<Parent5>                Parent5;
+			public readonly List<Child>                  Child;
+			public readonly List<GrandChild>             GrandChild;
+			public readonly List<GrandChild1>            GrandChild1;
+			public readonly List<InheritanceParentBase>  InheritanceParent;
+			public readonly List<InheritanceChildBase>   InheritanceChild;
+			public readonly List<ParentInheritanceBase>  ParentInheritance;
+			public readonly List<ParentInheritanceValue> ParentInheritanceValue;
+			public readonly List<ParentInheritance1>     ParentInheritance1;
+			public readonly List<ParentInheritanceBase4> ParentInheritance4;
+
+			public static ReferenceData Load(string? configuration)
 			{
-				if (_patient == null)
-				{
-					InitPatientPerson();
-				}
-
-				return _patient!;
-			}
-		}
-
-		private   List<Doctor>? _doctor;
-		protected List<Doctor> Doctor
-		{
-			get
-			{
-				if (_doctor == null)
-				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_doctor = db.Doctor.ToList();
-				}
-
-				return _doctor;
-			}
-		}
-		#endregion
-
-		#region Parent/Child Model
-
-		// The Parent/Parent1/Parent5/Child/GrandChild/GrandChild1 lists form one cross-referenced
-		// in-memory graph (Parent.Children -> Child.Parent -> ...). They used to be built piecemeal by
-		// each getter, publishing a half-built backing field before wiring associations to break the
-		// cycle - safe serially, racy once test cases of a shared fixture run concurrently (the parallel
-		// test execution work, #5614): a second case could observe a list whose elements aren't wired yet.
-		//
-		// Build the whole graph once in EnsureModel under a double-checked lock: the volatile _modelLoaded
-		// flag keeps the lock off the hot path (taken only until the graph is built), and the wiring reads
-		// the backing fields directly so it never re-enters the getters.
-		readonly Lock     _modelSync = new();
-		private  volatile bool _modelLoaded;
-
-		void EnsureModel()
-		{
-			if (_modelLoaded)
-				return;
-
-			lock (_modelSync)
-			{
-				if (_modelLoaded)
-					return;
-
 				using (new DisableLogging())
 				using (new DisableBaseline("Default Database"))
-				using (var db = new TestDataConnection())
-				{
-					db.Child.Delete(c => c.ParentID >= 1000);
+				using (var db = configuration != null ? new TestDataConnection(configuration) : new TestDataConnection())
+					return new ReferenceData(db);
+			}
 
-					_parent      = db.Parent     .ToList();
-					_child       = db.Child      .ToList();
-					_grandChild  = db.GrandChild .ToList();
-					_grandChild1 = db.GrandChild1.ToList();
+			ReferenceData(TestDataConnection db)
+			{
+				db.Child.Delete(c => c.ParentID >= 1000);
 
-					db.Close();
-				}
+				Types             = db.Types            .ToList();
+				Types2            = db.Types2           .ToList();
+				Person            = db.Person           .ToList();
+				Patient           = db.Patient          .ToList();
+				Doctor            = db.Doctor           .ToList();
+				Parent            = db.Parent           .ToList();
+				Child             = db.Child            .ToList();
+				GrandChild        = db.GrandChild       .ToList();
+				GrandChild1       = db.GrandChild1      .ToList();
+				InheritanceParent = db.InheritanceParent.ToList();
+				InheritanceChild  = db.InheritanceChild .LoadWith(_ => _.Parent).ToList();
 
-				_parent1 = _parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+				foreach (var p in Person)
+					p.Patient = Patient.SingleOrDefault(ps => p.ID == ps.PersonID);
 
-				foreach (var p in _parent)
+				foreach (var p in Patient)
+					p.Person = Person.Single(ps => ps.ID == p.PersonID);
+
+				Parent1 = Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+
+				foreach (var p in Parent)
 				{
 					p.ParentTest    = p;
-					p.Children      = _child     .Where(c => c.ParentID == p.ParentID).ToList();
-					p.GrandChildren = _grandChild.Where(c => c.ParentID == p.ParentID).ToList();
+					p.Children      = Child     .Where(c => c.ParentID == p.ParentID).ToList();
+					p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
 					p.Types         = Types.FirstOrDefault(t => t.ID == p.ParentID);
 				}
 
-				foreach (var ch in _child)
+				foreach (var ch in Child)
 				{
-					ch.Parent        = _parent .Single(p => p.ParentID == ch.ParentID);
-					ch.Parent1       = _parent1.Single(p => p.ParentID == ch.ParentID);
+					ch.Parent        = Parent .Single(p => p.ParentID == ch.ParentID);
+					ch.Parent1       = Parent1.Single(p => p.ParentID == ch.ParentID);
 					ch.ParentID2     = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
-					ch.GrandChildren = _grandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
+					ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
 				}
 
-				foreach (var ch in _grandChild)
-					ch.Child = _child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+				foreach (var ch in GrandChild)
+					ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
 
-				foreach (var ch in _grandChild1)
+				foreach (var ch in GrandChild1)
 				{
-					ch.Parent = _parent1.Single(p => p.ParentID == ch.ParentID);
-					ch.Child  = _child  .Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+					ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
+					ch.Child  = Child  .Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
 				}
 
-				_parent5 = _parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+				Parent4 = Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList();
+				Parent5 = Parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
 
-				foreach (var p in _parent5)
-					p.Children = _parent5.Where(c => c.Value1 == p.ParentID).ToList();
+				foreach (var p in Parent5)
+					p.Children = Parent5.Where(c => c.Value1 == p.ParentID).ToList();
 
-				_modelLoaded = true;
-			}
-		}
-
-		private   List<Parent>?      _parent;
-		protected IEnumerable<Parent> Parent           { get { EnsureModel(); return _parent!;      } }
-
-		private   List<Parent1>?      _parent1;
-		protected IEnumerable<Parent1> Parent1         { get { EnsureModel(); return _parent1!;     } }
-
-		private   List<Parent4>? _parent4;
-		protected List<Parent4> Parent4 => _parent4 ??= Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList();
-
-		private   List<Parent5>? _parent5;
-		protected List<Parent5> Parent5                { get { EnsureModel(); return _parent5!;     } }
-
-		protected List<Child>?      _child;
-		protected IEnumerable<Child> Child             { get { EnsureModel(); return _child!;       } }
-
-		private   List<GrandChild>?      _grandChild;
-		protected IEnumerable<GrandChild> GrandChild   { get { EnsureModel(); return _grandChild!;  } }
-
-		private   List<GrandChild1>?      _grandChild1;
-		protected IEnumerable<GrandChild1> GrandChild1 { get { EnsureModel(); return _grandChild1!; } }
-		#endregion
-
-		#region Inheritance Parent/Child Model
-
-		private   List<InheritanceParentBase>? _inheritanceParent;
-		protected List<InheritanceParentBase> InheritanceParent
-		{
-			get
-			{
-				if (_inheritanceParent == null)
-				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_inheritanceParent = db.InheritanceParent.ToList();
-				}
-
-				return _inheritanceParent;
-			}
-		}
-
-		private   List<InheritanceChildBase>? _inheritanceChild;
-		protected List<InheritanceChildBase> InheritanceChild
-		{
-			get
-			{
-				if (_inheritanceChild == null)
-				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
-				}
-
-				return _inheritanceChild;
-			}
-		}
-
-		private   List<ParentInheritanceBase>?      _parentInheritance;
-		protected IEnumerable<ParentInheritanceBase> ParentInheritance
-		{
-			get
-			{
-				_parentInheritance ??= Parent.Select(p =>
+				ParentInheritance = Parent.Select(p =>
 						p.Value1 == null ? new ParentInheritanceNull { ParentID = p.ParentID } :
 						p.Value1.Value == 1 ? new ParentInheritance1 { ParentID = p.ParentID, Value1 = p.Value1.Value } :
 						 (ParentInheritanceBase)new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
 					).ToList();
 
-				return _parentInheritance;
-			}
-		}
+				ParentInheritanceValue = ParentInheritance.OfType<ParentInheritanceValue>().ToList();
+				ParentInheritance1     = ParentInheritance.OfType<ParentInheritance1>().ToList();
 
-		private   List<ParentInheritanceValue>? _parentInheritanceValue;
-		protected List<ParentInheritanceValue> ParentInheritanceValue => _parentInheritanceValue ??=
-					ParentInheritance.OfType<ParentInheritanceValue>().ToList();
-
-		private   List<ParentInheritance1>? _parentInheritance1;
-		protected List<ParentInheritance1> ParentInheritance1 =>
-			_parentInheritance1 ??=
-				ParentInheritance.OfType<ParentInheritance1>().ToList();
-
-		private   List<ParentInheritanceBase4>? _parentInheritance4;
-		protected List<ParentInheritanceBase4> ParentInheritance4 =>
-			_parentInheritance4 ??= Parent
+				ParentInheritance4 = Parent
 					.Where(p => p.Value1.HasValue && (p.Value1.Value == 1 || p.Value1.Value == 2))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
 												new ParentInheritance24 { ParentID = p.ParentID }
-				).ToList();
+					).ToList();
+			}
+		}
+
+		protected IEnumerable<LinqDataTypes>          Types                  => Data.Types;
+		protected List<LinqDataTypes2>                Types2                 => Data.Types2;
+		protected IEnumerable<Person>                 Person                 => Data.Person;
+		protected List<Patient>                       Patient                => Data.Patient;
+		protected List<Doctor>                        Doctor                 => Data.Doctor;
+		protected IEnumerable<Parent>                 Parent                 => Data.Parent;
+		protected IEnumerable<Parent1>                Parent1                => Data.Parent1;
+		protected List<Parent4>                       Parent4                => Data.Parent4;
+		protected List<Parent5>                       Parent5                => Data.Parent5;
+		protected IEnumerable<Child>                  Child                  => Data.Child;
+		protected IEnumerable<GrandChild>             GrandChild             => Data.GrandChild;
+		protected IEnumerable<GrandChild1>            GrandChild1            => Data.GrandChild1;
+		protected List<InheritanceParentBase>         InheritanceParent      => Data.InheritanceParent;
+		protected List<InheritanceChildBase>          InheritanceChild       => Data.InheritanceChild;
+		protected IEnumerable<ParentInheritanceBase>  ParentInheritance      => Data.ParentInheritance;
+		protected List<ParentInheritanceValue>        ParentInheritanceValue => Data.ParentInheritanceValue;
+		protected List<ParentInheritance1>            ParentInheritance1     => Data.ParentInheritance1;
+		protected List<ParentInheritanceBase4>        ParentInheritance4     => Data.ParentInheritance4;
 		#endregion
 
 		#region Northwind
@@ -467,29 +389,6 @@ namespace Tests
 		}
 
 		#endregion
-
-		void InitPatientPerson()
-		{
-			if (_patient == null || _person == null)
-			{
-				using (new DisableLogging())
-				using (new DisableBaseline("Default Database"))
-				using (var db = new TestDataConnection())
-				{
-					var persons  = db.Person.ToList();
-					var patients = db.Patient.ToList();
-
-					foreach (var p in persons)
-						p.Patient = patients.SingleOrDefault(ps => p.ID == ps.PersonID);
-
-					foreach (var p in patients)
-						p.Person = persons.Single(ps => ps.ID == p.PersonID);
-
-					_patient = patients;
-					_person = persons;
-				}
-			}
-		}
 
 		static class DataCache<T>
 			where T : class

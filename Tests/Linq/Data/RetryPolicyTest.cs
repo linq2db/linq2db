@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,12 +89,12 @@ namespace Tests.Data
 		public void TestRetryPolicy([DataSources(false)] string context)
 		{
 			var ret = new Retry();
-			Assert.Throws<TestException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataConnection(context, retryPolicy: ret);
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 				db.GetTable<FakeClass>().ToList();
-			});
+			}, Throws.TypeOf<TestException>());
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
@@ -103,12 +103,12 @@ namespace Tests.Data
 		public void RetryPolicyOptions1([DataSources(false)] string context)
 		{
 			var ret = new Retry();
-			Assert.Throws<TestException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 				db.GetTable<FakeClass>().ToList();
-			});
+			}, Throws.TypeOf<TestException>());
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
@@ -117,12 +117,12 @@ namespace Tests.Data
 		public void RetryPolicyOptions2([DataSources(false)] string context)
 		{
 			var ret = new Retry();
-			Assert.Throws<TestException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 				db.GetTable<FakeClass>().ToList();
-			});
+			}, Throws.TypeOf<TestException>());
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
@@ -260,7 +260,8 @@ namespace Tests.Data
 		#region Issue 3431
 
 		// issue reproduced on Open for MySqlConnector
-		[ActiveIssue]
+		[ActiveIssue(3431, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Cannot Open when State is Connecting.",
+			Details = "the retry policy reopens a connection that is already opening - #3431's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
 		public void Issue3431Test1([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
 		{
@@ -276,7 +277,8 @@ namespace Tests.Data
 			db.Person.ToArray();
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3431, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Cannot Open when State is Connecting.",
+			Details = "as Issue3431Test1, through the async path.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
 		public async Task Issue3431Test2([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
 		{

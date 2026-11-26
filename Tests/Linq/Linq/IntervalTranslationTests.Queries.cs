@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -169,10 +169,12 @@ namespace Tests.Linq
 		/// Access has no 64-bit integer parameter, so its provider maps one to a 32-bit parameter and narrows the
 		/// value with a checked cast. Anything above <see cref="int.MaxValue"/> throws while the parameter is being
 		/// bound - before the statement executes, and before it reaches the trace, so the log says nothing about
-		/// which query failed. A comparison is reconciled in ticks, and 2147483647 ticks is three minutes and
-		/// thirty-four seconds, so every bound in these tests is far over the line.
+		/// which query failed. A comparison against a column declared in ticks is reconciled in ticks, and
+		/// 2147483647 ticks is three minutes and thirty-four seconds, so any longer bound reaching one as a
+		/// parameter is over the line. A seconds-unit column lowers the same bound to seconds and stays well
+		/// under it, and a bound written into the statement is never bound at all.
 		/// <para>
-		/// Not an interval defect, and gated rather than declared for that reason: a plain captured <c>long</c>
+		/// Not an interval defect, and gated rather than declared for that reason: a plain captured <see langword="long"/>
 		/// compared against an ordinary integer column throws exactly the same way, with no duration anywhere. It
 		/// is also not declarable as a refusal - what escapes is a raw <see cref="OverflowException"/> rather than
 		/// one of ours, and the failure follows the <em>value</em>, not the shape of the query: the same comparison
@@ -181,8 +183,9 @@ namespace Tests.Linq
 		/// </remarks>
 		const string AccessLongParameterOverflow =
 			"The ODBC provider maps a 64-bit integer parameter to a 32-bit one and narrows it with a checked cast, so "
-			+ "any value above int.MaxValue throws OverflowException as the parameter is bound. A duration comparison "
-			+ "travels in ticks, where int.MaxValue is three and a half minutes, so any longer bound fails. The OleDb "
+			+ "any value above int.MaxValue throws OverflowException as the parameter is bound. A comparison against a "
+			+ "column declared in ticks travels in ticks, where int.MaxValue is three and a half minutes, so any longer "
+			+ "bound reaching one as a parameter fails. The OleDb "
 			+ "branch does not narrow, so it is not gated. Not an interval defect - a plain long compared against an "
 			+ "int column throws identically. See issue 5748.";
 
@@ -368,7 +371,9 @@ namespace Tests.Linq
 		/// <c>Min</c> and <c>Max</c> put the lowered arithmetic inside an aggregate, which is where a provider that
 		/// renders the difference as a multi-part expression is most likely to object.
 		/// </remarks>
-		[ActiveIssue(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders], Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access, on Informix and on SQL Server 2014-minus, all three giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
+		[ActiveIssue(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders],
+			ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "There is no method 'AggregateExecute' on type 'LinqToDB.LinqExtensions' that matches the specified arguments",
+			Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access and on Informix, both giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
 		[Test]
 		public void AggregatesOverADifference([DataSources(false)] string context)
 		{
@@ -392,6 +397,37 @@ namespace Tests.Linq
 			row.Min.ShouldBe(shorter);
 			row.Max.ShouldBe(longer);
 			row.TotalMin.ShouldBe(shorter.TotalMinutes + longer.TotalMinutes);
+		}
+
+		/// <summary>
+		/// A sprint whose planning is spent before any of its tasks starts.
+		/// </summary>
+		[Table]
+		sealed class SprintRow
+		{
+			[PrimaryKey] public int    Id              { get; set; }
+			[Column]     public double PlanningMinutes { get; set; }
+		}
+
+		/// <summary>
+		/// A sum over a difference of no rows adds nothing.
+		/// </summary>
+		/// <remarks>
+		/// In SQL the sum of no rows is <c>NULL</c>, so the arithmetic around it has to see the zero the aggregate is
+		/// coalesced to.
+		/// </remarks>
+		[Test]
+		public void SumOverADifferenceOfNoRowsAddsNothing([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db      = GetDataContext(context, BuildSchema());
+			using var sprints = db.CreateLocalTable(new[] { new SprintRow { Id = 1, PlanningMinutes = 30 } });
+			using var tasks   = db.CreateLocalTable<BudgetedTaskRow>();
+
+			var spent = sprints
+				.Select(s => s.PlanningMinutes + tasks.Sum(r => (r.FinishedOn - r.StartedOn).TotalMinutes))
+				.Single();
+
+			spent.ShouldBe(30);
 		}
 
 		/// <summary>
@@ -432,10 +468,17 @@ namespace Tests.Linq
 		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
 		/// that matched everything or nothing.
 		/// </remarks>
-		[ActiveIssue(5776, Details = ContainsSkipsIntervalTranslation)]
+		[ActiveIssue(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
+			Details = "no-declaration: " + ContainsSkipsIntervalTranslation + " Measured five ways: an IConvertible cast on SQLite, 'Operand type clash: time is incompatible with bigint' on SQL Server, a DuckDB INTERVAL-vs-BIGINT binder error, a Sybase VARCHAR-to-BIGINT conversion refusal, and 'No mapping exists from DbType Time' on SqlCe.")]
+		[ActiveIssue(5776, Configurations = [TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana],
+			Details = "no-declaration: unvalidated: " + ContainsSkipsIntervalTranslation + " Not measured - these have no container running here.")]
+		[ActiveIssue(5776, Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}True{1}but was",
+			Details = ContainsSkipsIntervalTranslation + " Measured on LibRed as a silent miss of the sequence Contains: its candidate binds as DbType.Time against a tick count. The IN-list half answers correctly.")]
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
-		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		// Access refuses this one through the conversion rather than by member name: unlike its siblings it never
+		// gets as far as asking the difference for a tick total. The difference-unsupported providers land in the
+		// same place on this shape - the candidates are never lowered far enough to reach the by-name refusal.
+		[ThrowsCannotBeConverted(NoTickTotalProviders + "," + UnsupportedDifferenceProviders)]
 		public void ContainsOverADifference([DataSources(false)] string context)
 		{
 			var wanted = new[] { TimeSpan.FromHours(1), TimeSpan.FromHours(3) };
@@ -475,7 +518,17 @@ namespace Tests.Linq
 		/// values. Making them equal would let a branch that took another branch's conversion pass unnoticed.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5796, Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
+		// One attribute per provider family: the four reject the mixed set operation in four different places -
+		// DuckDB and YDB while typing the column, DB2 while matching the branches, MySQL only after the value comes
+		// back and fails to parse as a TimeSpan.
+		[ActiveIssue(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+			ErrorMessage = "Conversion Error: Unimplemented type for cast (BIGINT -> INTERVAL)", Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Uncompatible member Duration_1 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configurations = [TestProvName.AllMySql, TestProvName.AllAccessLibRed], ErrorTypeName = "System.OverflowException",
+			ErrorMessage = "The TimeSpan string '36000000000' could not be parsed", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatSurroundsADifferenceWithColumns([DataSources(false)] string context)
 		{
@@ -514,7 +567,17 @@ namespace Tests.Linq
 		/// same would make a column mix-up look identical to a correct answer.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5796, Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
+		// AllMySql dropped, unlike the sibling above: MySQL only trips when a difference sits beside ordinary
+		// columns, and this shape - two durations, no plain column - it answers correctly. Measured, all five
+		// MySQL configurations pass.
+		[ActiveIssue(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+			ErrorMessage = "Conversion Error: Unimplemented type for cast (BIGINT -> INTERVAL)", Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Uncompatible member First_2 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.OverflowException",
+			ErrorMessage = "The TimeSpan string '36000000000' could not be parsed", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatMixesTwoDurationsPerRow([DataSources(false)] string context)
 		{
@@ -622,7 +685,8 @@ namespace Tests.Linq
 		/// converted correctly but rendered with the wrong operator is still caught.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -676,7 +740,8 @@ namespace Tests.Linq
 		/// CLR agree that nothing is greater than an absent bound - that is the answer being pinned.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparisonAgainstAnOptionalValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -803,7 +868,8 @@ namespace Tests.Linq
 		/// second place the same question about the column has to be answered the same way.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparingAnAbsentDurationMatchesClr([DataSources] string context)
 		{
@@ -881,7 +947,6 @@ namespace Tests.Linq
 		/// column lifted to ticks, or the value lowered to seconds - is the provider's business.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void DeclaredDurationFollowsTheRequestForHowItTravels([DataSources(false)] string context)
 		{
@@ -1152,7 +1217,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void ContainsAcrossTwoCoarseUnitsMeetsInTheFiner([DataSources(false, TestProvName.AllAccess)] string context)
+		public void ContainsAcrossTwoCoarseUnitsMeetsInTheFiner([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var duration = TimeSpan.FromDays(2);
 
@@ -1196,7 +1261,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void ContainsAcrossASubTickUnitIsRefused([DataSources(false, TestProvName.AllAccess)] string context)
+		public void ContainsAcrossASubTickUnitIsRefused([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var duration = TimeSpan.FromSeconds(7);
 
@@ -1278,7 +1343,6 @@ namespace Tests.Linq
 		/// to survive the round trip into the statement and back into a <see cref="TimeSpan"/>.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void LocalCollectionDrivingAQueryPerValueKeepsEachValue([DataSources] string context)
 		{

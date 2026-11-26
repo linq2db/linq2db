@@ -64,6 +64,17 @@ let Value (db: IDataContext) =
     seed db
     (db.GetTable<OptRow>().Where(fun x -> x.Name.Value = "a").ToArray()).Length
 
+// option .Value compared to a plain column: the option converter stores the element as is, so the two
+// columns are commensurable (row 4 only)
+let ValueComparedToColumn (db: IDataContext) =
+    use _t = db.CreateLocalTable<OptRow>()
+    seed db
+    db.Insert({ OptRow.Id = 4; Name = None; Age = Some 4 }) |> ignore
+    db.GetTable<OptRow>()
+        .Where(fun x -> x.Age.Value = x.Id)
+        .Select(fun x -> x.Id)
+        .ToArray()
+
 // standalone option .Value (projection) -> underlying column value (rows 1 and 3 -> "a","b")
 let ValueProjection (db: IDataContext) =
     use _t = db.CreateLocalTable<OptRow>()

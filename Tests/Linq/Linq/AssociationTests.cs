@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -171,9 +171,12 @@ namespace Tests.Linq
 				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p });
 		}
 
-		[ActiveIssue(5597, Configuration = TestProvName.AllYdb, Details = "YDB-only [PrimaryKey] on Parent.ParentID (added for YDB's mandatory-PK DDL requirement) is seen by the optimizer as a unique key, so grouping by the Parent entity reduces it to the PK and drops the projected Value1 column. Needs DDL-only PK handling or an optimizer fix.")]
+		// YDB excluded rather than gated: this hangs there rather than failing, and a test that never returns has no
+		// outcome to declare - on CI the hang dump kills the whole leg. The underlying gap is #5597: the YDB-only
+		// [PrimaryKey] on Parent.ParentID (added for YDB's mandatory-PK DDL requirement) is seen by the optimizer as
+		// a unique key, so grouping by the Parent entity reduces it to the PK and drops the projected Value1 column.
 		[Test]
-		public void GroupBy1([DataSources] string context)
+		public void GroupBy1([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -362,7 +365,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestTernary1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -382,7 +385,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary2([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestTernary2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -732,9 +735,9 @@ namespace Tests.Linq
 			// we want to make sure the conversion is not possible because we want to bypass
 			// that conversion if the setter value parameter type (IEnumerable<Child> in this case)
 			// does not match the member type (ChildrenContainer<Child> in this case)
-			Assert.Throws<LinqToDB.Common.LinqToDBConvertException>(() =>
+			Assert.That(() =>
 				db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
-				"List<Child> should not be convertible to ChildrenContainer<Child>");
+				Throws.TypeOf<LinqToDB.Common.LinqToDBConvertException>(), "List<Child> should not be convertible to ChildrenContainer<Child>");
 
 			var value = db.GetTable<Issue3975TestClass>().LoadWith(x => x.Children).First();
 
@@ -742,7 +745,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociation1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -762,7 +765,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -1175,7 +1178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1614Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1614Test([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<User>())
@@ -1247,7 +1250,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue1711Test1([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
@@ -1269,7 +1272,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue1711Test2([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
@@ -2067,7 +2070,8 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children != null' could not be converted to SQL.",
+			Details = "YDB swallows the correlated-subquery rejection into a generic conversion error. ClickHouse was dropped from the scope: the sweep ran it with the gate open and it did not fail, so the claim that it returns wrong results is stale.")]
 		public void ManyAssociationEmptyCheck1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2079,7 +2083,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children == null' could not be converted to SQL.",
+			Details = "as ManyAssociationEmptyCheck1, with the equality direction. ClickHouse dropped from the scope for the same reason.")]
 		public void ManyAssociationEmptyCheck2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -47,6 +47,7 @@ namespace LinqToDB.Schema
 		private readonly bool              _isMySqlOrMariaDB;
 		private readonly bool              _isAccessOleDb;
 		private readonly bool              _isAccessOdbc;
+		private readonly bool              _isAccessLibRed;
 		private readonly bool              _isSystemDataSqlite;
 		private readonly bool              _isSqlServer;
 
@@ -62,6 +63,7 @@ namespace LinqToDB.Schema
 			_isSystemDataSqlite = string.Equals(_providerName, "SQLite.Classic", StringComparison.Ordinal);
 			_isAccessOleDb      = _providerName is ProviderName.AccessJetOleDb or ProviderName.AccessAceOleDb;
 			_isAccessOdbc       = _providerName is ProviderName.AccessJetOdbc or ProviderName.AccessAceOdbc;
+			_isAccessLibRed     = string.Equals(_providerName, ProviderName.AccessLibRed, StringComparison.Ordinal);
 			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer, StringComparison.Ordinal);
 
 			// load schema from legacy API and convrt it into new model
@@ -257,12 +259,12 @@ namespace LinqToDB.Schema
 			}
 
 			// https://github.com/linq2db/linq2db/issues/1897
-			if (_isSqlServer && !proc.IsFunction && _options.EnableSqlServerReturnValue)
+			if (_isSqlServer && !proc.IsFunction && _options.EnableSqlServerReturnValue && result is VoidResult)
 			{
 				// https://docs.microsoft.com/en-us/sql/t-sql/language-elements/return-transact-sql
 				var type            = new DatabaseType("INT", 0, 0, 0);
 				_typeMappings[type] = new TypeMapping(WellKnownTypes.System.Int32, DataType.Int32);
-				parameters.Add(new Parameter("@return", null, type, false, ParameterDirection.Output));
+				result              = new ScalarResult("@return", type, false);
 			}
 
 			return (parameters, result);
@@ -360,7 +362,7 @@ namespace LinqToDB.Schema
 			if (table.IsProviderSpecific)
 			{
 				// don't load system tables. Access schema provider returns them
-				if (_isAccessOleDb || _isAccessOdbc)
+				if (_isAccessOleDb || _isAccessOdbc || _isAccessLibRed)
 					return;
 
 				throw new InvalidOperationException($"IsProviderSpecific set by schema for table {tableName}");

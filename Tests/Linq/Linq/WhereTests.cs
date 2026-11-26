@@ -215,21 +215,135 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BinaryXor([DataSources(TestProvName.AllAccess)] string context)
+		public void BinaryXor([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			TestOneJohn(from p in db.Person where (p.ID ^ 2) == 3 select p);
 		}
 
+		[ActiveIssue(6243, Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase], ErrorMessage = "Count equal to 2{0}But was:{1}0",
+			Details = "T-SQL evaluates | and ^ left to right at one level, and the XOR operand of | is emitted without parentheses. Measured on SqlCe and Sybase (CI); SQL Server has no | / ^ arm either and emits the same SQL.")]
 		[Test]
-		public void BinaryAnd([DataSources(TestProvName.AllAccess)] string context)
+		public void BinaryXorUnderOr([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (p.ID | (p.ID ^ 1)) == p.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryXorOverOr([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => ((p.ID ^ 1) | 2) == 3);
+
+			AssertQuery(query);
+		}
+
+		// Access only: BXOR sits below BAND and BOR there, so a BAND or BOR operand of BXOR, and a BAND operand of BOR, is
+		// emitted bare; the other providers' bitwise grouping is #6243's
+		[Test]
+		public void BinaryAndLeftOfXor([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => ((p.ID & 3) ^ 1) == 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryAndRightOfXor([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (p.ID ^ (p.ID & 1)) == 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryOrRightOfXor([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (p.ID ^ (p.ID | 1)) == 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryAndUnderOr([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (p.ID | (p.ID & 1)) == p.ID);
+
+			AssertQuery(query);
+		}
+
+		// Access lowers ~x to -1 - x, which needs its own grouping of a compound operand
+		[Test]
+		public void BitwiseNotKeepsOperandGrouping([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var notOfSum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID + 1)));
+
+			AssertQuery(notOfSum);
+
+			var notOfAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID & 3)));
+
+			AssertQuery(notOfAnd);
+
+			// the lowered -1 - x is emitted bare as an operand of BAND / BOR, which Access binds below -
+			var notLeftOfAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID + 1) & 3));
+
+			AssertQuery(notLeftOfAnd);
+
+			var notRightOfAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 6) & ~(p.ID + 1)));
+
+			AssertQuery(notRightOfAnd);
+
+			var notLeftOfOr = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID + 1) | 2));
+
+			AssertQuery(notLeftOfOr);
+
+			var notRightOfOr = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.ID | ~(p.ID + 1)));
+
+			AssertQuery(notRightOfOr);
+		}
+
+		[Test]
+		public void BinaryAnd([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			TestOneJohn(from p in db.Person where (p.ID & 3) == 1 select p);
 		}
 
 		[Test]
-		public void BinaryOr([DataSources(TestProvName.AllAccess)] string context)
+		public void BinaryOr([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1194,7 +1308,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(ProviderName.DB2))
 				q = q.AsQueryable().Select(t => Math.Round(t, 2));
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in Types
 				select new { Value = Math.Round(p.MoneyValue, 2) } into pp
 				where pp.Value != 0 && pp.Value != 7
@@ -1676,44 +1790,63 @@ namespace Tests.Linq
 			Assert.That(cnt, Is.EqualTo(db.Person.Count()));
 		}
 
+		sealed record InterpolatedName(string FirstName, string LastName, string FullName);
+
+		// Sybase gives an empty string back as a single space, and there is no plan to change that, so a null
+		// MiddleName reads as " " rather than "". The two tests below assert that instead of being skipped there:
+		// the query is left alone and the expected rows are rebuilt over a source that already reads that way.
+		// MiddleName is the only nullable member of Person, so it is the only place a `?? ""` can fire.
+		//
+		// The substitution cannot be hoisted into a shared variable: that makes it a parameter, linq2db sizes a
+		// string parameter from its value, and ASE types COALESCE by the parameter's declared length - so the
+		// column comes back truncated to one character. Both spellings have to stay literals.
+		static IEnumerable<Person> AsSybaseReadsThem(IEnumerable<Person> source) =>
+			source.Select(p => new Person { ID = p.ID, FirstName = p.FirstName, LastName = p.LastName, MiddleName = p.MiddleName ?? " ", Gender = p.Gender });
+
+		static IQueryable<InterpolatedName> InterpolatedNullable(IQueryable<Person> source) =>
+			from p in source
+			select new InterpolatedName(
+				$"{p.FirstName}",
+				$"{p.LastName}, {p.FirstName}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})") // it should be more tan three expressions to avoid optimization
+			into s
+			where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+			orderby s.FirstName, s.LastName
+			select s;
+
+		static IQueryable<InterpolatedName> InterpolatedCoalesce(IQueryable<Person> source) =>
+			from p in source
+			select new InterpolatedName(
+				$"{p.FirstName ?? ""}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})") // it should be more tan three expressions to avoid optimization
+			into s
+			where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+			orderby s.FirstName, s.LastName
+			select s;
+
 		[Test]
-		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationTestsNullable([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			var query =
-					from p in db.Person
-					select new
-					{
-						FirstName = $"{p.FirstName}",
-						LastName  = $"{p.LastName }, {p.FirstName}",
-						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
-					} into s
-					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
-					orderby s.FirstName, s.LastName
-					select s;
+			var query = InterpolatedNullable(db.Person);
 
-			AssertQuery(query);
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				AreEqual(InterpolatedNullable(AsSybaseReadsThem(Person).AsQueryable()).ToList(), query.ToList());
+			else
+				AssertQuery(query);
 		}
 
 		[Test]
-		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationCoalesce([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			var query =
-					from p in db.Person
-					select new
-					{
-						FirstName = $"{p.FirstName ?? ""}",
-						LastName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""}",
-						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
-					} into s
-					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
-					orderby s.FirstName, s.LastName
-					select s;
+			var query = InterpolatedCoalesce(db.Person);
 
-			AssertQuery(query);
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				AreEqual(InterpolatedCoalesce(AsSybaseReadsThem(Person).AsQueryable()).ToList(), query.ToList());
+			else
+				AssertQuery(query);
 		}
 
 		[Test]
@@ -2119,7 +2252,7 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue_SubQueryFilter3([DataSources(
 			TestProvName.AllClickHouse,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllSapHana,
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllOracle,
@@ -2219,7 +2352,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Issue_Filter_Checked([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
@@ -2544,7 +2677,7 @@ namespace Tests.Linq
 		public void PredicateOptimization_Subquery([DataSources(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllMariaDB,
 			TestProvName.AllMySql57,
 			TestProvName.AllDB2,
@@ -2598,6 +2731,60 @@ namespace Tests.Linq
 
 			var result1 = query1.ToArray();
 			var result2 = query2.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6304")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void InlineArrayMinMax([DataSources(
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllNativeAccess,
+			TestProvName.AllMariaDB,
+			TestProvName.AllMySql57,
+			TestProvName.AllDB2,
+			TestProvName.AllFirebird5Plus,
+			TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var max = db.Person
+				.Where(p => new[] { p.ID, 2 }.Max() == 2)
+				.Select(p => p.ID)
+				.ToList();
+
+			var min = db.Person
+				.Where(p => new[] { p.ID, 2 }.Min() == 2)
+				.Select(p => p.ID)
+				.ToList();
+
+			max
+				.OrderBy(i => i)
+				.ShouldBe([1, 2]);
+
+			min
+				.OrderBy(i => i)
+				.ShouldBe([2, 3, 4]);
+		}
+
+		// A top-level OR in WHERE is printed one operand per line, the layout users snapshot in their own SQL baselines.
+		[Test]
+		public void TopLevelOrPrintsOneOperandPerLine([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p =>
+					p.FirstName  == "John"      ||
+					p.LastName   == "Pupkin"    ||
+					p.MiddleName == "Ivanovich" ||
+					p.ID         == 4);
+
+			query
+				.ToSqlQuery()
+				.Sql
+				.Split('\n')
+				.Count(line => line.TrimEnd().EndsWith(" OR", StringComparison.Ordinal))
+				.ShouldBe(3);
 		}
 
 	}

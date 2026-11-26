@@ -456,6 +456,28 @@ namespace Tests.xUpdate
 			act.ShouldThrow<LinqToDBException>();
 		}
 
+		[Test]
+		public void Single_UpsertEmulationPolicy_NonPkMatch_AlignedBranches_Emulates(
+			// SAP HANA is the only provider that requires aligned Insert/Update branches for its native
+			// UPSERT (IsInsertOrUpdateRequiresAlignedBranches). A fluent Upsert with aligned branches but a
+			// NON-PK match key must take the UPDATE->INSERT emulation: HANA's native UPSERT ... WITH PRIMARY
+			// KEY matches on the table PK and would silently ignore the requested non-PK key. Locks the
+			// WillEmulateInsertOrUpdate broadening (MatchKeysDivergeFromPrimaryKey) onto the fluent Upsert path.
+			[IncludeDataSources(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context,
+				o => o.WithOptions<LinqOptions>(lo => lo with { UpsertEmulationPolicy = UpsertEmulationPolicy.Throw }));
+			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 5 } });
+
+			// Aligned branches (bare whole-object upsert) + a non-PK match key (Name; the PK is Id) forces the
+			// UPDATE->INSERT emulation on an aligned-branch provider, so it throws under the opt-in Throw policy.
+			Action act = () =>
+				table.Upsert(new UpsertRow { Id = 2, Name = "seed", Version = 6 }, u => u
+					.Match((t, s) => t.Name == s.Name));
+
+			act.ShouldThrow<LinqToDBException>();
+		}
+
 		#endregion
 
 		#region Query-cache parameterisation smoke tests

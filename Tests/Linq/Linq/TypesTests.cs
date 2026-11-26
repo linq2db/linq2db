@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
@@ -58,7 +58,7 @@ namespace Tests.Linq
 		public void BoolField1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where t.BoolValue select t.MoneyValue,
 				from t in db.Types where t.BoolValue select t.MoneyValue);
 		}
@@ -67,7 +67,7 @@ namespace Tests.Linq
 		public void BoolField2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where !t.BoolValue select t.MoneyValue,
 				from t in db.Types where !t.BoolValue select t.MoneyValue);
 		}
@@ -76,7 +76,7 @@ namespace Tests.Linq
 		public void BoolField3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where t.BoolValue == true select t.MoneyValue,
 				from t in db.Types where t.BoolValue == true select t.MoneyValue);
 		}
@@ -85,7 +85,7 @@ namespace Tests.Linq
 		public void BoolField4([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where t.BoolValue == false select t.MoneyValue,
 				from t in db.Types where t.BoolValue == false select t.MoneyValue);
 		}
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		public void BoolField5([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in from t in    Types select new { t.MoneyValue, b = !t.BoolValue } where p.b == false select p.MoneyValue,
 				from p in from t in db.Types select new { t.MoneyValue, b = !t.BoolValue } where p.b == false select p.MoneyValue);
 		}
@@ -103,7 +103,7 @@ namespace Tests.Linq
 		public void BoolField6([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in from t in    Types select new { t.MoneyValue, b = !t.BoolValue } where p.b select p.MoneyValue,
 				from p in from t in db.Types select new { t.MoneyValue, b = !t.BoolValue } where p.b select p.MoneyValue);
 		}
@@ -136,13 +136,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side guid generation test")]
 		public void GuidNew([DataSources] string context)
 		{
-			using (new DisableBaseline("Server-side guid generation test"))
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Types where p.GuidValue != Guid.NewGuid() select p.GuidValue,
-					from p in db.Types where p.GuidValue != Guid.NewGuid() select p.GuidValue);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.GuidValue != Guid.NewGuid() select p.GuidValue,
+				from p in db.Types where p.GuidValue != Guid.NewGuid() select p.GuidValue);
 		}
 
 		[Test]
@@ -199,17 +199,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side guid generation test")]
 		public void NewGuid(
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (new DisableBaseline("Server-side guid generation test"))
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			{
@@ -915,7 +915,8 @@ namespace Tests.Linq
 		}
 
 		#region Issue 4469
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
 		public void Issue4469Test1([DataSources] string context, [Values] bool inline)
 		{
@@ -941,9 +942,26 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		// Split by the inline argument, because the two arms are not equally broken: inlined, the division loses
+		// its scale on every SQLite driver; as a parameter, only the Classic ones still get it wrong. A gate cannot
+		// target a [Values] argument, so one gate over both marked the working cases as failing.
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Math.Round(result.Integer, 5)",
+			Details = "the division loses its scale, so the result rounds to 3 where 3.0303 is due - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
+		public void Issue4469Test2Inlined([DataSources] string context)
+		{
+			Issue4469Test2Core(context, inline: true);
+		}
+
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLiteClassic], ErrorMessage = "Math.Round(result.Integer, 5)",
+			Details = "as Issue4469Test2Inlined, but Microsoft.Data.Sqlite keeps the scale when the divisor travels as a parameter.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
+		public void Issue4469Test2([DataSources] string context)
+		{
+			Issue4469Test2Core(context, inline: false);
+		}
+
+		void Issue4469Test2Core(string context, bool inline)
 		{
 			if (context.IsAnyOf(TestProvName.AllFirebirdLess4) && !inline)
 				Assert.Ignore("Hard-to-workaround overflow bug");

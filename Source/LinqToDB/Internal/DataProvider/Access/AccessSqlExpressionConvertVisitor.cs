@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public override bool CanLowerIntervalPart => true;
 
 		/// <summary>
-		/// No tick count from Access at all.
+		/// No tick count from Jet or ACE at all (see <see cref="IsTickArithmeticSupported"/>).
 		/// </summary>
 		/// <remarks>
 		/// <c>DateDiff</c> hands back a 32-bit count, and scaling seconds to ticks overflows it after about three
@@ -77,8 +77,14 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
-			return null;
+			return IsTickArithmeticSupported ? base.ElapsedTicks(element) : null;
 		}
+
+		/// <summary>
+		/// Whether this engine can count and shift in a unit fine enough, and wide enough, to carry a tick count - which
+		/// Jet and ACE cannot, for the reasons <see cref="ElapsedTicks"/> and <see cref="LowerTemporalArithmetic"/> give.
+		/// </summary>
+		protected virtual bool IsTickArithmeticSupported => false;
 
 		/// <inheritdoc />
 		/// <remarks>
@@ -88,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public override bool CanLowerIntervalShift => false;
 
 		/// <summary>
-		/// No shift by an interval either, for the reason <see cref="ElapsedTicks"/> gives.
+		/// No shift by an interval on Jet or ACE either, for the reason <see cref="ElapsedTicks"/> gives.
 		/// </summary>
 		/// <remarks>
 		/// The amount reaches a shift as a tick count whatever it was built from, and that is the one number Access
@@ -101,7 +107,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			return null;
+			return IsTickArithmeticSupported ? base.LowerTemporalArithmetic(element) : null;
 		}
 
 		const string DateDiffFunction = "DateDiff";
@@ -129,9 +135,80 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// an anchor past the end turns the remainder negative - a sign the modulo keeps, answering -20 where 40 was
 		/// meant.
 		/// </para>
+		/// <para>
+		/// An operand that can be <see langword="null"/> is replaced by a fixed date before any of this, and the result
+		/// is made <see langword="null"/> from the operands themselves. Access refuses a null that <c>DateAdd</c> or
+		/// <c>DateDiff</c> derived with "Data type mismatch in criteria expression" as soon as it is passed on - to the
+		/// comparison the anchor correction makes, to the next count, even to <c>IS NULL</c> - while a null read from a
+		/// column passes. So no count and no anchor may ever see one, whatever the unit.
+		/// </para>
+		/// <para>
+		/// Whether an operand can be null is asked twice: of the bare operand without the query's own predicates, and
+		/// in the query, which knows what an outer join makes nullable. A filter on <c>.Value</c> marks the operand as
+		/// not null and carries an <c>IS NOT NULL</c> beside the member, but Access evaluates both sides of an
+		/// <c>AND</c>, so the member still meets the null row. For the same
+		/// reason the substitution is written with Access's own <c>IIF</c> and <c>IsNull</c> functions: a condition
+		/// and an <c>IS NULL</c> would be folded back to the bare column on the strength of that predicate.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
+			bool MayBeNull(ISqlExpression operand)
+			{
+				return operand.CanBeNullable(NullabilityContext)
+					|| QueryHelper.UnwrapNullablity(operand).CanBeNullable(NullabilityContext.NonQuery);
+			}
+
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression nullableDifference)
+			{
+				var startNullable = MayBeNull(nullableDifference.Start);
+				var endNullable   = MayBeNull(nullableDifference.End);
+
+				if (startNullable || endNullable)
+				{
+					var dateType = Factory.GetDbDataType(nullableDifference.Start);
+
+					ISqlPredicate IsNull(ISqlExpression operand)
+					{
+						return Factory.IsNullPredicate(SqlNullabilityExpression.ApplyNullability(QueryHelper.UnwrapNullablity(operand), true));
+					}
+
+					// Any date would do: a result from it is discarded below.
+					ISqlExpression NotNull(ISqlExpression operand, bool nullable)
+					{
+						if (!nullable)
+							return operand;
+
+						// Functions the optimizer leaves alone rather than a condition and an IS NULL: beside the
+						// IS NOT NULL a filter on .Value carries, those are folded back to the bare column.
+						return new SqlFunction(dateType, "IIF", canBeNull: false,
+							new SqlFunction(Factory.GetDbDataType(typeof(bool)), "IsNull", canBeNull: false, operand) { DoNotOptimize = true },
+							Factory.Value(dateType, new DateTime(1899, 12, 30)),
+							operand) { DoNotOptimize = true };
+					}
+
+					var guarded = new SqlIntervalDifferenceExpression(
+						NotNull(nullableDifference.Start, startNullable),
+						NotNull(nullableDifference.End,   endNullable),
+						nullableDifference.Type,
+						nullableDifference.IntervalType);
+
+					var lowered = LowerIntervalPart(new SqlIntervalPartExpression(guarded, element.Unit, element.Kind, element.Type, element.Within));
+					if (lowered == null)
+						return null;
+
+					var eitherNull = new SqlSearchCondition(isOr: true);
+
+					if (startNullable)
+						eitherNull.Add(IsNull(nullableDifference.Start));
+
+					if (endNullable)
+						eitherNull.Add(IsNull(nullableDifference.End));
+
+					return Factory.Condition(eitherNull, new SqlValue(element.Type.WithSystemType(element.Type.SystemType.AsNullable()), null), lowered);
+				}
+			}
+
 			if (element.Kind == SqlIntervalPartKind.Component
 				&& element.Unit is SqlIntervalUnit.Hour or SqlIntervalUnit.Minute or SqlIntervalUnit.Second
 				&& QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
@@ -149,7 +226,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return base.LowerIntervalPart(element);
 		}
 
-		static string? DatePartName(SqlIntervalUnit unit)
+		protected virtual string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch
 			{
@@ -192,6 +269,10 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// <c>CDbl</c> is what keeps the product from overflowing in turn - Access multiplies in 32-bit integers and a
 		/// century of days is past that once scaled to seconds. A cast to a wider integer would not do: Access has none
 		/// to name, and a cast to a floating type renders as nothing here.
+		/// </para>
+		/// <para>
+		/// Neither operand is ever <see langword="null"/> here: <see cref="LowerIntervalPart"/> replaces one that can
+		/// be before counting starts.
 		/// </para>
 		/// <para>
 		/// This provider is the only one that gets here - it is the only override of
@@ -376,6 +457,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return element;
 		}
 
+		// Access dates start at 0100-01-01, and it reads #0001-01-01# back as 2001.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return RaiseDefaultDate(expression, new DateTime(100, 1, 1)) ?? base.ConvertDefaultValue(expression);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			return func switch
@@ -403,7 +490,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
 			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
-				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr, Precedence.Subtraction);
 
 			return base.ConvertSqlUnaryExpression(element);
 		}
@@ -447,11 +534,80 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			return element switch
 			{
-				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Additive - 1),
+				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Multiplicative),
 				SqlBinaryExpression(var type, var ex1, "&", var ex2) => new SqlBinaryExpression(type, ex1, "BAND", ex2, Precedence.Bitwise),
 				SqlBinaryExpression(var type, var ex1, "|", var ex2) => new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1),
+				// C# XOR only: a power reaches here as ^ too, at Precedence.Unary + 1 (MathMemberTranslator.Power).
+				// BXOR binds looser than BOR in Access, so it sits below it.
+				SqlBinaryExpression(var type, var ex1, "^", var ex2) { Precedence: Precedence.Bitwise } => new SqlBinaryExpression(type, ex1, "BXOR", ex2, Precedence.Bitwise - 2),
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
+		}
+
+		bool _isDistinctOrderBy;
+
+		// True is -1, so a boolean key sorts True first. A non-nullable key flips its direction instead of becoming an
+		// expression DISTINCT would reject (Jet accepts it parenthesized); a nullable one is negated, keeping NULL first,
+		// except under DISTINCT, where only the flip is accepted.
+		// Either way the key leaves as an int, so the second convert pass of the remote path leaves it alone.
+		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		{
+			var saved = _isDistinctOrderBy;
+
+			_isDistinctOrderBy = element.SelectQuery?.Select.IsDistinct == true;
+
+			var result = base.VisitSqlOrderByClause(element);
+
+			_isDistinctOrderBy = saved;
+
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		{
+			var isDistinct = _isDistinctOrderBy;
+			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
+
+			if (newElement.IsPositioned || !IsBooleanSortKey(newElement.Expression))
+				return newElement;
+
+			var flip = (isDistinct && !CanNegateSortKeyUnderDistinct) || !newElement.Expression.CanBeNullable(NullabilityContext);
+
+			return new SqlOrderByItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, false, newElement.NullsPosition);
+		}
+
+		/// <summary>
+		/// Whether the engine accepts a negated boolean sort key under <c>DISTINCT</c>, so a nullable key keeps NULL first
+		/// there too. Jet and ACE reject it as conflicting with <c>DISTINCT</c>.
+		/// </summary>
+		protected virtual bool CanNegateSortKeyUnderDistinct => false;
+
+		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		{
+			var newElement = (SqlWindowOrderItem)base.VisitSqlWindowOrderItem(element);
+
+			if (!IsBooleanSortKey(newElement.Expression))
+				return newElement;
+
+			var flip = !newElement.Expression.CanBeNullable(NullabilityContext);
+
+			return new SqlWindowOrderItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, newElement.NullsPosition);
+		}
+
+		// Only a Yes/No value stores True as -1; a converted or differently typed column already sorts in CLR order.
+		bool IsBooleanSortKey(ISqlExpression expr)
+		{
+			return (expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
+				&& QueryHelper.UnwrapNullablity(expr) is not (SqlValue or SqlParameter)
+				&& QueryHelper.GetColumnDescriptor(expr)?.ValueConverter == null
+				&& QueryHelper.GetDbDataType(expr, MappingSchema).DataType is DataType.Boolean or DataType.Undefined;
+		}
+
+		ISqlExpression ToSortKey(ISqlExpression expr, bool flip)
+		{
+			return flip
+				? new SqlExpression(Factory.GetDbDataType(typeof(int)), "({0})", Precedence.Unknown, expr)
+				: Factory.Negate(Factory.GetDbDataType(typeof(int?)), expr);
 		}
 	}
 }

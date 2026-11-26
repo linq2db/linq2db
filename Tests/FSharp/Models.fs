@@ -134,6 +134,20 @@ type PersonWithOptions =
 
 
 
+// static let bindings take CompilationMapping sequence numbers ahead of the record fields
+[<Table("Person", IsColumnAttributeRequired=false)>]
+type PersonWithStaticLet =
+    { [<Column("PersonID")>]
+      [<PrimaryKey>]
+      ID : int
+      [<NotNull>]
+      FirstName : string
+      [<NotNull>]
+      LastName : string }
+
+    static let unknownName = "Unknown"
+    static member UnknownName = unknownName
+
 type [<CLIMutable; Table("Person", IsColumnAttributeRequired=false)>]
     PersonCLIMutable =
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]

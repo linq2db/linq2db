@@ -4,16 +4,16 @@
 		Packaging-only project for the linq2db.LINQPad NuGet driver.
 
 		The driver assembly itself is a WPF component built by the sibling
-		`LinqToDB.LINQPad.csproj` against `net8.0-windows7.0`. This project does NOT
+		`LinqToDB.LINQPad.csproj` against `net10.0-windows7.0`. This project does NOT
 		recompile it; it only assembles the NuGet, dropping that assembly into the
-		platform-neutral `lib/net8.0/` folder and declaring a plain `net8.0`
+		platform-neutral `lib/net10.0/` folder and declaring a plain `net10.0`
 		dependency group.
 
-		Why net8.0 (not net8.0-windows7.0): LINQPad installs drivers from NuGet, and
-		on macOS/Linux NuGet rejects a `net8.0-windows7.0`-only package ("No
-		compatible assemblies found", issue #5497). Packing under `net8.0` restores
+		Why net10.0 (not net10.0-windows7.0): LINQPad installs drivers from NuGet, and
+		on macOS/Linux NuGet rejects a `net10.0-windows7.0`-only package ("No
+		compatible assemblies found", issue #5497). Packing under `net10.0` restores
 		the pre-#5279 (<= 6.1.0) layout that LINQPad on every OS can install. A plain
-		net8.0 project can't `UseWPF`, hence the split: compile in the sibling
+		net10.0 project can't `UseWPF`, hence the split: compile in the sibling
 		project, pack here.
 	-->
 	<PropertyGroup>
@@ -22,7 +22,7 @@
 		<PackageId>linq2db.LINQPad</PackageId>
 
 		<!-- override the repo-wide multi-TFM default; this is a single-TFM packaging project -->
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>net10.0</TargetFrameworks>
 
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 
@@ -48,12 +48,12 @@
 	<ItemGroup Label="Nuget">
 		<None Include="README.md" Pack="true" PackagePath="readme.md" />
 
-		<None Include="Nuget/Connection.png" Pack="true" PackagePath="lib/net8.0/Connection.png" />
-		<None Include="Nuget/FailedConnection.png" Pack="true" PackagePath="lib/net8.0/FailedConnection.png" />
+		<None Include="Nuget/Connection.png" Pack="true" PackagePath="lib/net10.0/Connection.png" />
+		<None Include="Nuget/FailedConnection.png" Pack="true" PackagePath="lib/net10.0/FailedConnection.png" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Dependencies surfaced in the package's net8.0 dependency group.
+		<!-- Dependencies surfaced in the package's net10.0 dependency group.
 
 		     Database client packages are deliberately NOT here: the driver declares them per connection from
 		     DataContextDriver.OverrideDriverDependencies (see IDatabaseProvider.GetNuGetPackages), so LINQPad
@@ -69,23 +69,24 @@
 		<PackageReference Include="linq2db4iSeries" Condition="$(DefineConstants.Contains('WITH_ISERIES'))" />
 
 		<!-- build-ordering only: build the WPF driver assembly, but don't link it
-		     (its net8.0-windows7.0 TFM is intentionally incompatible with this net8.0 project) -->
+		     (its net10.0-windows7.0 TFM is intentionally incompatible with this net10.0 project).
+		     No AdditionalProperties here: any global property the solution build does not also set would make
+		     this a second MSBuild instance of the same project+TFM, and both would race to write its deps.json. -->
 		<ProjectReference Include="LinqToDB.LINQPad.csproj"
 		                  ReferenceOutputAssembly="false"
 		                  SkipGetTargetFrameworkProperties="true"
-		                  SetTargetFramework="TargetFramework=net8.0-windows7.0"
-		                  AdditionalProperties="GenerateLpxArtifacts=false" />
+		                  SetTargetFramework="TargetFramework=net10.0-windows7.0" />
 	</ItemGroup>
 
-	<!-- Pull the net8.0-windows7.0 driver assembly into the platform-neutral lib/net8.0 folder. -->
+	<!-- Pull the net10.0-windows7.0 driver assembly into the platform-neutral lib/net10.0 folder. -->
 	<Target Name="_AddLinqPadDriverToPackage" BeforeTargets="_GetPackageFiles">
 		<MSBuild Projects="LinqToDB.LINQPad.csproj"
 		         Targets="GetTargetPath"
-		         Properties="TargetFramework=net8.0-windows7.0;Configuration=$(Configuration);GenerateLpxArtifacts=false">
+		         Properties="TargetFramework=net10.0-windows7.0;Configuration=$(Configuration)">
 			<Output TaskParameter="TargetOutputs" ItemName="_LinqPadDriverAssembly" />
 		</MSBuild>
 		<ItemGroup>
-			<None Include="@(_LinqPadDriverAssembly)" Pack="true" PackagePath="lib/net8.0/" />
+			<None Include="@(_LinqPadDriverAssembly)" Pack="true" PackagePath="lib/net10.0/" />
 		</ItemGroup>
 	</Target>
 

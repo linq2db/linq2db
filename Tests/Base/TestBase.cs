@@ -179,6 +179,9 @@ namespace Tests
 			// establish a fresh per-test context before anything in setup/test can log
 			CustomTestContext.Begin(isRemote, provider);
 
+			if (NoBaselinesAttribute.AppliesTo(test))
+				CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
+
 			// Under parallel execution, wait until this provider's database has been created
 			// (CreateDatabase runs off-lane and signals readiness). A serial run skips this; providers
 			// that get no CreateDatabase case are pre-marked ready in TestsInitialization, so only
@@ -186,17 +189,10 @@ namespace Tests
 			if (ParallelExecutionEnabled && provider != null)
 			{
 				if (!NUnitUtils.IsCreateDatabase(test))
-				{
-					var signaled = CustomTestContext.AwaitDatabaseReady(provider);
-
-					// Backstop: if the wait timed out (no CreateDatabase ever signalled it), release the
-					// other waiters so they don't each pay the full timeout — one wait per provider, not per test.
-					if (!signaled)
-						CustomTestContext.MarkDatabaseReady(provider);
-				}
+					CustomTestContext.EnsureDatabaseReady(provider);
 			}
 
-			// SequentialAccess for the SqlServer.SA provider is now a per-context option set in the
+			// SequentialAccess for the SqlServer.CS provider is a per-context option set in the
 			// GetDataConnection/GetDataContext factory, so parallel lanes don't share a process-global toggle.
 		}
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -108,7 +108,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
-			var options = base.ProviderSetup(provider, connectionString, optionsBuilder).Options;
+			var options = base.ProviderSetup(provider, connectionString, optionsBuilder, useNodaTime: true).Options;
 			using var db = options.CreateLinqToDBConnection();
 		}
 
@@ -267,9 +267,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-#if NET8_0_OR_GREATER
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
-#endif
 		[Test]
 		public void TestGlobalQueryFilters([EFDataSources] string provider, [Values] bool enableFilter)
 		{
@@ -301,8 +298,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-#if EF10
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+#if EF10_OR_GREATER
 		[Test]
 		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
 		{
@@ -317,7 +313,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
 		[Test]
 		public void TestIgnoreQueryFilters_ByKey([EFDataSources] string provider)
 		{
@@ -334,7 +329,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldContain(p => p.Discontinued);
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
 		[Test]
 		public void TestIgnoreQueryFilters_All_StillWorks([EFDataSources] string provider)
 		{
@@ -349,7 +343,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
 		[Test]
 		public void TestIgnoreQueryFilters_Empty_IsNoOp([EFDataSources] string provider)
 		{
@@ -491,17 +484,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);
 			ctx.Database.EnsureCreated();
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products.ToLinqToDB().ToArray();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products
 					.Where(so => so.ProductId == -1)
 					.Delete();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 		}
 
 		[Test]
@@ -679,7 +672,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider);
 
 			var id = 1;
+			// EF Core 11 obsoletes FromSqlInterpolated in favour of FromSql; it is still callable, and
+			// this test exists to cover what users call, so it keeps testing it until EF removes it.
+#pragma warning disable CS0618 // Type or member is obsolete
 			var query = ctx.Categories.FromSqlInterpolated($"SELECT * FROM [dbo].[Categories] WHERE CategoryId = {id}");
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			var efResult = await query.AsNoTracking().ToArrayAsyncEF();
 			var linq2dbResult = await query.ToArrayAsyncLinqToDB();
@@ -691,15 +688,26 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider);
 
 			var id = 1;
+#pragma warning disable CS0618 // Type or member is obsolete
 			var query = from c1 in ctx.Categories
 						from c2 in ctx.Categories.FromSqlInterpolated($"SELECT * FROM [dbo].[Categories] WHERE CategoryId = {id}")
 						select c2;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			var efResult = await query.AsNoTracking().ToArrayAsyncEF();
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
 		}
 
-		[ActiveIssue("Delete with limit translation not yet implemented", Configurations = [TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL])]
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllSQLite,
+			ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "syntax error")]
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllPostgreSQL,
+			ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42601: syntax error at or near")]
+		// No ErrorTypeName for the MySQL family: the same failure surfaces as MySqlConnector.MySqlException on
+		// net8.0+ and MySql.Data.MySqlClient.MySqlException on net462, so the message is the stable part.
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMySqlServer,
+			ErrorMessage = "Every derived table must have its own alias")]
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMariaDB,
+			ErrorMessage = "You have an error in your SQL syntax")]
 		[Test]
 		public async Task TestDeleteFrom([EFDataSources] string provider)
 		{
@@ -810,11 +818,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var query = from p in ctx.Products
 							select SQLServerNorthwindContext.ProcessLong(commandExecutionTime);
 
-				var exception = Assert.Throws<Microsoft.Data.SqlClient.SqlException>(() =>
+				Assert.That(() =>
 					{
 						var result = query.ToLinqToDB().First();
-					})!;
-				Assert.That(timeoutErrorCode, Is.EqualTo(exception.Number));
+					},
+					Throws.TypeOf<Microsoft.Data.SqlClient.SqlException>().With.Property(nameof(Microsoft.Data.SqlClient.SqlException.Number)).EqualTo(timeoutErrorCode));
 			}
 			finally
 			{
@@ -840,10 +848,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 #if !NETFRAMEWORK
 		[Test]
+		[NoBaselines("Use of DateTime.UtcNow")]
 		public void TestTemporalTables([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
-			using var _ = new DisableBaseline("Use of DateTime.UtcNow");
 
 			var query1 = ctx.Products.TemporalAsOf(DateTime.UtcNow);
 			var query2 = ctx.Products.TemporalFromTo(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow);

@@ -274,5 +274,54 @@ namespace Tests.UserTests
 				.ToArray()
 				.ShouldBe(new[] { (1, 1, "A", 0), (1, 2, "A", 1), (1, 3, "A", 2), (2, 2, "B", 0), (2, 3, "B", 1), (3, 3, "C", 0) });
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5683 - the anchor projects a differing-but-assignable type")]
+		public void RecursiveCteWithDerivedAnchor([RecursiveCteContextSource] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var parts = db.CreateLocalTable(new[]
+			{
+				new Part { Id = 1, Name = "A" },
+				new Part { Id = 2, Name = "B" },
+				new Part { Id = 3, Name = "C" },
+			});
+			using var refs = db.CreateLocalTable(new[]
+			{
+				new Reference { Id = 1, ParentId = 1, ReferenceId = 2 },
+				new Reference { Id = 2, ParentId = 2, ReferenceId = 3 },
+			});
+
+			var anchor = parts
+				.Select(x => (Hierarchy)new DerivedHierarchy
+				{
+					RootPartSortField = x.Name,
+					RootPartId        = x.Id,
+					HierarchyLevel    = 0,
+					PartId            = x.Id
+				});
+
+			var partCte = db.GetCte<Hierarchy>(partHierarchy =>
+				anchor.Concat(
+					partHierarchy.InnerJoin(
+						refs,
+						(cte, reference) => reference.ParentId == cte.PartId,
+						(cte, reference) => new Hierarchy
+						{
+							RootPartSortField = cte.RootPartSortField,
+							RootPartId        = cte.RootPartId,
+							PartId            = reference.ReferenceId,
+							HierarchyLevel    = cte.HierarchyLevel + 1
+						})));
+
+			var result = parts
+				.InnerJoin(partCte, (me, cte) => me.Id == cte.PartId, (me, id) => new { id.RootPartId, id.RootPartSortField, id.HierarchyLevel, me })
+				.ToList();
+
+			result
+				.Select(x => (x.RootPartId, x.me.Id, SortField: (string)x.RootPartSortField!, x.HierarchyLevel))
+				.OrderBy(x => (x.RootPartId, x.Id))
+				.ToArray()
+				.ShouldBe(new[] { (1, 1, "A", 0), (1, 2, "A", 1), (1, 3, "A", 2), (2, 2, "B", 0), (2, 3, "B", 1), (3, 3, "C", 0) });
+		}
 	}
 }

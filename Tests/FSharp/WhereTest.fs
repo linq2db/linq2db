@@ -33,6 +33,14 @@ let LoadSingle (db : IDataContext) =
     })
 
 
+let LoadSingleWithStaticLet (db : IDataContext) =
+    let person =
+        db.GetTable<PersonWithStaticLet>()
+            .First(fun p -> p.ID = 1)
+
+    Assert.That(person.FirstName, Is.EqualTo "John")
+    Assert.That(person.LastName, Is.EqualTo "Pupkin")
+
 let LoadSinglesWithPatient (db : IDataContext) =
     let persons = db.GetTable<Person>().LoadWith( fun x -> x.Patient)
     let johnId = 1
@@ -201,6 +209,26 @@ let RecordProjectionAll (db : IDataContext) =
     Assert.That(john.FirstName, Is.EqualTo "John")
     Assert.That(john.LastName, Is.EqualTo "Pupkin")
     Assert.That(john.MiddleName, Is.EqualTo "ибн Алёша")
+
+let RecordProjectionWithStaticLet (db : IDataContext) =
+    let persons = query {
+        for p in db.GetTable<Person>() do
+        select {
+            PersonWithStaticLet.ID = p.ID
+            FirstName = p.FirstName
+            LastName = p.LastName
+        }
+    }
+
+    let john = query {
+        for p in persons do
+        where (p.LastName = "Pupkin" && p.FirstName = "John")
+        exactlyOne
+    }
+
+    Assert.That(john.ID, Is.EqualTo 1)
+    Assert.That(john.FirstName, Is.EqualTo "John")
+    Assert.That(john.LastName, Is.EqualTo "Pupkin")
 
 let RecordComplexProjection (db : IDataContext) =
     let persons = query {

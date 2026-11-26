@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,7 +23,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-//	[Order(10000)]
 	public class UpdateTests : TestBase
 	{
 		[Test]
@@ -483,7 +482,8 @@ namespace Tests.xUpdate
 			.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
 		}
 
-		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Can't set NULL or optional value to not null column",
+			Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		[Test]
 		public void Update14([DataSources] string context)
 		{
@@ -945,7 +945,7 @@ namespace Tests.xUpdate
 		public void UpdateAssociation5(
 			[DataSources(
 				false,
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
@@ -1166,7 +1166,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateSkipTakeNotOrdered(
 			[DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer2012Plus // needs fake order by for FETCH
@@ -1200,7 +1200,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateSkipTakeOrdered(
 			[DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase
 			)]
@@ -1261,7 +1261,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateSetSelect([DataSources(
-			TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
+			TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1324,7 +1324,11 @@ namespace Tests.xUpdate
 
 		// looks like managed provider handle null bit parameters as false, because it doesn't fail
 		// maybe we need to do the same for unmanaged
-		[ActiveIssue(Configurations = new[] { ProviderName.Sybase, TestProvName.AllYdb }, Details = "Sybase: AseException : Null value is not allowed in BIT TYPE. YDB: rejects arithmetic on operands with mismatched decimal facets (Decimal(6,2) vs Decimal(22,9)); fixable by aligning decimal precision/scale, postponed (YDB: linq2db #5591).")]
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Cannot calculate with different decimals: Decimal(6,2) != Decimal(22,9)",
+			Details = "YDB rejects arithmetic on operands with mismatched decimal facets. Fixable by aligning precision and scale, postponed.")]
+		[ActiveIssue(Configuration = ProviderName.Sybase, ErrorMessage = "Null value is not allowed in BIT TYPE",
+			Details = "unvalidated: ProviderName.Sybase is the netfx-only native provider, so this case does not exist on net10.0 and the declared failure is carried over from the gate's own prose rather than harvested.")]
 		[Test]
 		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
 		{
@@ -1398,7 +1402,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Failed to convert type: Struct<'MoneyValue'",
+			Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
 		[Test]
 		public void UpdateWithTypeConversion([DataSources] string context)
 		{
@@ -1542,7 +1547,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinOld([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
@@ -1584,7 +1589,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoin([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
@@ -1626,7 +1631,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinDifferentTableOld([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
@@ -1670,7 +1675,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinDifferentTable([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
@@ -1952,6 +1957,27 @@ namespace Tests.xUpdate
 			}
 		}
 
+		sealed class AlignedSetData
+		{
+			[Column]              public int     Id    { get; set; }
+			[Column(Length = 50)] public string? Value { get; set; }
+		}
+
+		[Test]
+		public void TestSetValueExprWithAlignment([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new AlignedSetData { Id = 1, Value = "T1" } });
+
+			var str = "zz";
+
+			table
+				.Set(x => $"{x.Value,30} = {str}")
+				.Update();
+
+			table.Single().Value.ShouldBe(str);
+		}
+
 		[Test]
 		public void TestSetValueExpr2(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context, [Values("zz", "yy")] string str)
@@ -2138,8 +2164,9 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			var query = db.Person.AsUpdatable();
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
-			Assert.That(ex.Message, Is.EqualTo("Update query has no setters defined."));
+			Assert.That(
+				() => query.Update(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Update query has no setters defined."));
 		}
 
 		[Test]

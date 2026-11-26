@@ -1,37 +1,43 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue356Tests : TestBase
 	{
-		// test depends on data order from db
-		// fails at least for SAP HANA for this reason
+		// Take(10) without ORDER BY: the server picks which rows come back,
+		// so the check accepts any 10 distinct rows of the full expected set
 		[Test]
-		public void Test1Unsorted([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllDuckDB)] string context)
+		public void Test1Unsorted([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var resultUnion = db.Child.Union(db.Child).Distinct();
 			var result = db.Parent
 					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new { x.ParentID, z.ChildID }))
-					.Take(10);
+					.Take(10)
+					.ToList();
 
 			var expectedUnion = Child.Union(Child).Distinct();
 			var expected = Parent
 					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new { x.ParentID, z.ChildID }))
-					.Take(10);
+					.ToList();
 
-			AreEqual(expected, result, src => src.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID));
+			result.Count.ShouldBe(Math.Min(10, expected.Count));
+			result.ShouldBeUnique();
+			result.ShouldBeSubsetOf(expected);
 		}
 
 		// Test without sorting order dependency
 		// Generated SQL not supported by Access
 		[Test]
-		public void Test1([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllAccess)] string context)
+		public void Test1([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var resultUnion = db.Child.Union(db.Child).Distinct();
@@ -50,7 +56,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources(TestProvName.AllSybase, TestProvName.AllAccess)] string context)
+		public void Test2([DataSources(TestProvName.AllSybase, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var resultUnion = db.Child.Union(db.Child).OrderBy(_ => _.ParentID).Take(10);
@@ -69,7 +75,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test3([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void Test3([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			var resultUnion = db.Child.Union(db.Child).OrderBy(_ => _.ParentID).Skip(10).Take(10);

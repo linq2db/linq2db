@@ -95,20 +95,21 @@ namespace Tests.UserTests
 		{
 			using var db          = GetDataContext(context);
 			using var cityTable   = db.CreateLocalTable(new[] {new City3043 {Id   = 1, Name   = "City", Population = 100}});
-			using var streetTable = db.CreateLocalTable(new[] {new Street3043 {Id = 1, CityId = 1}});
-			using var houseTable  = db.CreateLocalTable(new[] {new House3043 {Id  = 1, StreetId = 1}});
-			using var personTable = db.CreateLocalTable(new[] {new Person3043 {Id = 1, HouseId = 1}});
-			using var petTable    = db.CreateLocalTable(new[] {new Pet3043 {Id = 1, PersonId = 1}});
+			using var streetTable = db.CreateLocalTable(new[] {new Street3043 {Id = 1, CityId = 1}, new Street3043 {Id = 2, CityId = 99}});
+			using var houseTable  = db.CreateLocalTable(new[] {new House3043 {Id  = 1, StreetId = 1}, new House3043 {Id  = 2, StreetId = 2}});
+			using var personTable = db.CreateLocalTable(new[] {new Person3043 {Id = 1, HouseId = 1}, new Person3043 {Id = 2, HouseId = 2}});
+			using var petTable    = db.CreateLocalTable(new[] {new Pet3043 {Id = 1, PersonId = 1}, new Pet3043 {Id = 2, PersonId = 2}});
 
 			var data = petTable
+				.OrderBy(x => x.Id)
 				.Select(x => new
 				{
 					x.Id,
 					x.House!.Street!.CityInfo
 				})
-				.First();
+				.ToList();
 
-			data.CityInfo.ShouldBe("City 100");
+			data.Select(x => (x.Id, x.CityInfo)).ShouldBe(new (int, string?)[] {(1, "City 100"), (2, " 0")});
 		}
 	}
 }

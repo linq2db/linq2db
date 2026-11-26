@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(LatestTargetFramework)</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -39,7 +39,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != GetType()) return false;
+				if (obj.GetType() != typeof(AsyncDataProjection)) return false;
 				return Equals((AsyncDataProjection)obj);
 			}
 
@@ -852,7 +852,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public void ElementFormLoadWithHonorsCancellationAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public async Task ElementFormLoadWithHonorsCancellationAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			var eager = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
 				db.Parent
@@ -872,7 +872,7 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Assert.ThatAsync(async () =>
 			{
 				try
 				{
@@ -883,9 +883,9 @@ namespace Tests.Linq
 					// normalizes TaskCanceledException, which the assert above would not match
 					throw new OperationCanceledException();
 				}
-			});
+			}, Throws.TypeOf<OperationCanceledException>());
 
-			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Assert.ThatAsync(async () =>
 			{
 				try
 				{
@@ -896,10 +896,11 @@ namespace Tests.Linq
 					// normalizes TaskCanceledException, which the assert above would not match
 					throw new OperationCanceledException();
 				}
-			});
+			}, Throws.TypeOf<OperationCanceledException>());
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3266, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "a compiled query with an async update does not translate, as #3266 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3266")]
 		public async Task Issue3266Test([DataSources(false)] string context)
 		{
