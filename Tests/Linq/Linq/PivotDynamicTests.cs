@@ -860,6 +860,44 @@ namespace Tests.Linq
 			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Y2000", 10m), ("A", "Y2010", 20m), ("B", "Y2000", 5m), ("B", "Y2010", 15m) });
 		}
 
+		/// <summary>Two pivots' cells of one name unpivot under the paths that tell them apart.</summary>
+		[Test]
+		public void UnpivotsSameNamedCellsOfTwoPivotsUnderTheirPaths([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Total = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+					Top = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Max(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Name = name, Value = value },
+					x => x.Total.Get<decimal?>("Y2000"),
+					x => x.Top.Get<decimal?>("Y2000"))
+				.ToArray()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ThenBy(r => r.Name, StringComparer.Ordinal)
+				.Select(r => (r.Key, r.Name))
+				.ToArray();
+
+			result
+				.Select(r => r.Name)
+				.Distinct()
+				.OrderBy(n => n, StringComparer.Ordinal)
+				.ShouldBe(new[] { "Top.Y2000", "Total.Y2000" });
+		}
+
 		/// <summary>The cells go into a member of an anonymous type, which cannot carry a dynamic-columns store.</summary>
 		[Test]
 		public void PivotsIntoAnAnonymousType([DataSources] string context)

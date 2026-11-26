@@ -185,8 +185,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			var read       = columns.Select(GetColumnName).ToArray();
 			var mapped     = read.Select(r => descriptor[r.path]?.ColumnName).ToArray();
 
-			// A path the mapping does not carry - a member of a projected object, a pivot cell - is named by its own member.
-			return read.Select((r, i) => mapped[i] ?? r.memberName).ToArray();
+			// A path the mapping does not carry - a member of a projected object, a pivot cell - is named by its own member,
+			// unless another column would read the same name: then the path tells them apart.
+			var named = read.Select((r, i) => mapped[i] ?? r.memberName).ToArray();
+
+			return named
+				.Select((n, i) => mapped[i] == null && named.Where((other, j) => j != i && string.Equals(other, n, StringComparison.Ordinal)).Any() ? read[i].path : n)
+				.ToArray();
 		}
 
 		static (string path, string memberName) GetColumnName(LambdaExpression column)
