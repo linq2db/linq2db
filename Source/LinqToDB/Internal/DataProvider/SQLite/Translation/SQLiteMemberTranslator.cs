@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -209,6 +210,30 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(TimeFormat), dateExpression);
 
 				return resultExpression;
+			}
+
+			// For now (#1855): SQLite's date functions read a stored offset as a shift to UTC, so a DateTimeOffset's own
+			// date and time of day are left to .NET. The two SQLite providers cannot be told apart here. A frame that is
+			// already a wall clock carries no offset and truncates as a DateTime.
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				if (CarriesAnOffset(translationContext, dateExpression))
+					return null;
+
+				return base.TranslateDateTimeOffsetTruncationToDate(translationContext, dateExpression, translationFlags);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				if (CarriesAnOffset(translationContext, dateExpression))
+					return null;
+
+				return base.TranslateDateTimeOffsetTruncationToTime(translationContext, dateExpression, translationFlags);
+			}
+
+			static bool CarriesAnOffset(ITranslationContext translationContext, ISqlExpression dateExpression)
+			{
+				return translationContext.ExpressionFactory.GetDbDataType(dateExpression).SystemType.UnwrapNullableType() == typeof(DateTimeOffset);
 			}
 
 			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)

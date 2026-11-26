@@ -538,6 +538,40 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A sum of durations declared in different units is a computed tick count with no column converter, so an
+		/// ordinary value beside it is counted in ticks too - in either order, subtracted, and compared.
+		/// </summary>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
+		public void AComputedSumCombinesWithAPlainValue([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var extra = TimeSpan.FromMinutes(5);
+			var sum   = value + value;
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			var row = t
+				.Select(r => new
+				{
+					SumPlusValue = Sql.AsSql((r.InSeconds + r.InTicks) + extra),
+					ValuePlusSum = Sql.AsSql(extra + (r.InSeconds + r.InTicks)),
+					SumLessValue = Sql.AsSql((r.InSeconds + r.InTicks) - extra),
+				})
+				.Single();
+
+			var matching = t.Count(r => r.InSeconds + r.InTicks == sum);
+
+			row.SumPlusValue.ShouldBe(sum + extra);
+			row.ValuePlusSum.ShouldBe(sum + extra);
+			row.SumLessValue.ShouldBe(sum - extra);
+			matching.ShouldBe(1);
+		}
+
+		/// <summary>
 		/// Carries the combinations <see cref="DurationsInDifferentUnitsCombineAsDurations"/> asserts, so its two
 		/// query shapes share one set of assertions.
 		/// </summary>

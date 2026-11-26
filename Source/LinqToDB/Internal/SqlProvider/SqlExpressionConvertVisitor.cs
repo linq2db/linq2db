@@ -1868,13 +1868,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// Whether this provider can render the given time zone conversion. Answered before the node is built, so a
-		/// provider that cannot express one is refused by name at translation time and a projection can still fall
-		/// back to .NET, rather than reaching the builder and throwing.
+		/// provider that cannot express one is refused by name at translation time rather than reaching the builder
+		/// and throwing.
 		/// </summary>
 		/// <remarks>
-		/// The three kinds are separate capabilities. A provider with no column type that carries an offset can often
-		/// still produce a wall-clock reading in a named zone, so it answers <see langword="true"/> for
-		/// <see cref="SqlTimeZoneConversionKind.ToWallTime"/> and <see langword="false"/> for the other two.
+		/// The three kinds are separate capabilities. A provider whose offset-carrying type keeps the instant and
+		/// nothing else can often still read the wall clock in a named zone and attach a zone to a wall clock, so it
+		/// answers <see langword="true"/> for <see cref="SqlTimeZoneConversionKind.ToWallTime"/> and
+		/// <see cref="SqlTimeZoneConversionKind.AttachZone"/> and <see langword="false"/> for
+		/// <see cref="SqlTimeZoneConversionKind.ConvertZone"/>.
 		/// </remarks>
 		public virtual bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => false;
 

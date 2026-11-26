@@ -25,15 +25,22 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			// One operator, told apart by the operand's type: over a TIMESTAMP it yields TIMESTAMPTZ, over a
 			// TIMESTAMPTZ it yields TIMESTAMP. The node's Type is the result type, never the operand's.
+			var value = TypeParameter(element.Value);
+
 			return element.Kind switch
 			{
+				// A fixed offset is taken off the wall clock and the result read as UTC: DuckDB has no AT TIME ZONE
+				// over an interval.
+				SqlTimeZoneConversionKind.AttachZone when element.Zone.SystemType == typeof(TimeSpan) || element.Zone.SystemType == typeof(TimeSpan?)
+					=> Factory.Expression(Factory.GetDbDataType(typeof(DateTimeOffset)), Precedence.Primary, "(({0} - {1}) AT TIME ZONE 'UTC')", value, element.Zone),
+
 				SqlTimeZoneConversionKind.AttachZone => AtTimeZone(Factory.GetDbDataType(typeof(DateTimeOffset))),
 				SqlTimeZoneConversionKind.ToWallTime => AtTimeZone(Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2)),
 				_                                    => null,
 			};
 
 			ISqlExpression AtTimeZone(DbDataType resultType)
-				=> Factory.Expression(resultType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone);
+				=> Factory.Expression(resultType, Precedence.Primary, "({0} AT TIME ZONE {1})", value, element.Zone);
 		}
 
 		/// <summary>

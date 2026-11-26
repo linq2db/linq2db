@@ -141,6 +141,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// a later pass elide a cast that carries the difference.
 			return element.Kind switch
 			{
+				// A fixed offset is taken off the wall clock and the result read as UTC: AT TIME ZONE over an
+				// interval does not answer the instant the offset denotes.
+				SqlTimeZoneConversionKind.AttachZone when element.Zone.SystemType == typeof(TimeSpan) || element.Zone.SystemType == typeof(TimeSpan?)
+					=> Factory.Expression(Factory.GetDbDataType(typeof(DateTimeOffset)), Precedence.Primary, "(({0} - {1}) AT TIME ZONE 'UTC')", element.Value, element.Zone),
+
 				SqlTimeZoneConversionKind.AttachZone => AtTimeZone(element, Factory.GetDbDataType(typeof(DateTimeOffset))),
 				SqlTimeZoneConversionKind.ToWallTime => AtTimeZone(element, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2)),
 				_                                    => null,

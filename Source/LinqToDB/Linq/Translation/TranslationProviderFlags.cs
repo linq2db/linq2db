@@ -17,6 +17,26 @@ namespace LinqToDB.Linq.Translation
 		{
 		}
 
+		/// <summary>Initializes a new <see cref="TranslationProviderFlags"/> that lowers no time zone conversion.</summary>
+		/// <param name="defaultNullsOrdering">The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</param>
+		/// <param name="isNullsOrderingSupported">Whether the provider supports the <c>NULLS FIRST</c>/<c>NULLS LAST</c> keyword in <c>ORDER BY</c>.</param>
+		/// <param name="canLowerIntervalDifference">Whether an elapsed date difference can be lowered to a value.</param>
+		/// <param name="canLowerIntervalPart">Whether a member of an elapsed date difference can be lowered.</param>
+		/// <param name="canLowerIntervalShift">Whether a date shifted by an interval can be lowered.</param>
+		/// <param name="intervalResolution">The finest unit the provider can resolve when measuring elapsed time.</param>
+		/// <param name="canMeasureDifferenceInTicks">Whether an elapsed date difference can become a tick count.</param>
+		public TranslationProviderFlags(
+			NullsDefaultOrdering defaultNullsOrdering,
+			bool                 isNullsOrderingSupported,
+			bool                 canLowerIntervalDifference,
+			bool                 canLowerIntervalPart,
+			bool                 canLowerIntervalShift,
+			SqlIntervalUnit      intervalResolution,
+			bool                 canMeasureDifferenceInTicks)
+			: this(defaultNullsOrdering, isNullsOrderingSupported, canLowerIntervalDifference, canLowerIntervalPart, canLowerIntervalShift, intervalResolution, canMeasureDifferenceInTicks, false, false, false, false)
+		{
+		}
+
 		/// <summary>Initializes a new <see cref="TranslationProviderFlags"/>.</summary>
 		/// <param name="defaultNullsOrdering">The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</param>
 		/// <param name="isNullsOrderingSupported">Whether the provider supports the <c>NULLS FIRST</c>/<c>NULLS LAST</c> keyword in <c>ORDER BY</c>.</param>
@@ -71,9 +91,11 @@ namespace LinqToDB.Linq.Translation
 		/// the SQL builder fail the whole query.
 		/// </summary>
 		/// <remarks>
-		/// The three kinds are separate capabilities rather than one flag: a provider with no column type that
-		/// carries an offset can still answer the wall-clock reading in a named zone, so it supports
-		/// <see cref="SqlTimeZoneConversionKind.ToWallTime"/> alone.
+		/// The three kinds are separate capabilities rather than one flag: a provider whose offset-carrying type keeps
+		/// the instant and nothing else can still read the wall clock in a named zone and attach a zone to a wall
+		/// clock, so it supports <see cref="SqlTimeZoneConversionKind.ToWallTime"/> and
+		/// <see cref="SqlTimeZoneConversionKind.AttachZone"/> but not <see cref="SqlTimeZoneConversionKind.ConvertZone"/>,
+		/// and what it attaches reads back at <c>+00:00</c>.
 		/// </remarks>
 		public bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => kind switch
 		{

@@ -182,7 +182,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
 		{
-			var zonedType = Factory.GetDbDataType(typeof(DateTimeOffset));
+			var zonedType     = Factory.GetDbDataType(typeof(DateTimeOffset));
+			var timestampType = new DbDataType(typeof(DateTime), DataType.DateTime2, null, null, 7, null);
+
+			// FROM_TZ takes only a TIMESTAMP: a DATE operand raises ORA-00932, and a bare TIMESTAMP keeps six digits.
+			var wallClock = Factory.Cast(element.Value, timestampType, true);
 
 			// Oracle takes a fixed offset wherever a zone name goes, in AT TIME ZONE and in FROM_TZ alike, so only the
 			// spelling differs from the named case below.
@@ -194,14 +198,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					return Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, asText);
 
 				if (element.Kind == SqlTimeZoneConversionKind.AttachZone)
-					return Factory.Function(zonedType, "From_Tz", element.Value, asText);
+					return Factory.Function(zonedType, "From_Tz", wallClock, asText);
 			}
 
 			return element.Kind switch
 			{
 				// FROM_TZ builds an offset-carrying value out of a plain TIMESTAMP and a zone.
 				SqlTimeZoneConversionKind.AttachZone
-					=> Factory.Function(zonedType, "From_Tz", element.Value, element.Zone),
+					=> Factory.Function(zonedType, "From_Tz", wallClock, element.Zone),
 
 				SqlTimeZoneConversionKind.ConvertZone
 					=> Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone),
@@ -210,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				// ConvertZone.
 				_ => Factory.Cast(
 					Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone),
-					Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2),
+					timestampType,
 					true),
 			};
 		}

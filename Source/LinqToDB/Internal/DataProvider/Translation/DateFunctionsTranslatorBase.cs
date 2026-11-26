@@ -146,14 +146,24 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				? SqlTimeZoneConversionKind.ConvertZone
 				: SqlTimeZoneConversionKind.AttachZone;
 
-			// Asked before the node is built: a provider that cannot lower this kind refuses by name where SQL is
-			// required, and declines quietly otherwise so a projection still answers in .NET.
+			// Asked before the node is built. Sql.AtTimeZone has no .NET answer, so it is refused by name wherever it
+			// appears; the BCL spelling declines quietly outside SQL so a projection still answers in .NET.
 			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(kind))
 			{
-				return translationFlags.HasFlag(TranslationFlags.Sql)
-					? translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_TimeZone_ZonedResult)
-					: null;
+				if (methodCall.Method.DeclaringType != typeof(Sql) && !translationFlags.HasFlag(TranslationFlags.Sql))
+					return null;
+
+				// "Read a component instead" is advice only where a wall clock can be read.
+				var message = translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime)
+					? ErrorHelper.Error_TimeZone_ZonedResult
+					: ErrorHelper.Error_TimeZone_Conversion;
+
+				return translationContext.CreateErrorExpression(methodCall, message);
 			}
+
+			// The comparison's column must not type the arguments: it would convert a captured DateTime through a
+			// DateTimeOffset column's mapping.
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var value, out var valueError))
 				return valueError;
@@ -446,7 +456,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				var declared = left ?? right!;
 
-				if (declared is not SqlIntervalDifferenceExpression)
+				// A tick count a translator computed - an offset, an earlier sum - has no column converter either.
+				if (declared is SqlIntervalExpression { Value: var stored } && QueryHelper.GetColumnDescriptor(stored) != null)
 					return null;
 			}
 
@@ -1461,6 +1472,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (expression is SqlIntervalExpression or SqlIntervalDifferenceExpression)
 				return expression;
 
+			// An interval a translator produced arrives inside whatever carried it out of a subquery, an aggregate or an
+			// outer join, which has no descriptor to read a unit off - the interval it carries says what it is.
+			if (CarriedInterval(expression) is { } carried && !ReferenceEquals(carried, expression))
+				return new SqlIntervalExpression(expression, carried.Type, carried.IntervalType);
+
 			var descriptor = QueryHelper.GetColumnDescriptor(expression);
 			var unit       = descriptor?.DurationUnit;
 			if (unit == null)
@@ -1474,6 +1490,42 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var type = descriptor!.GetDbDataType(true);
 
 			return new SqlIntervalExpression(expression, type, SqlIntervalType.ForDuration(unit.Value));
+		}
+
+		/// <summary>
+		/// The interval an expression carries through the wrappers that pass a value on unchanged: a column (of a
+		/// column), a nullable wrapper, an aggregate that answers one of its elements, a condition both of whose arms
+		/// carry the same kind of interval.
+		/// </summary>
+		static SqlIntervalExpression? CarriedInterval(ISqlExpression expression)
+		{
+			switch (expression)
+			{
+				case SqlIntervalExpression interval:
+					return interval;
+
+				case SqlColumn column:
+					return CarriedInterval(column.Expression);
+
+				case SqlNullabilityExpression nullability:
+					return CarriedInterval(nullability.SqlExpression);
+
+				case SqlExtendedFunction { ArgumentDomain: SqlArgumentDomain.Element, Arguments: [var argument] }:
+					return CarriedInterval(argument.Expression);
+
+				case SqlConditionExpression condition:
+				{
+					var whenTrue  = CarriedInterval(condition.TrueValue);
+					var whenFalse = CarriedInterval(condition.FalseValue);
+
+					return whenTrue != null && whenFalse != null && whenTrue.IntervalType == whenFalse.IntervalType
+						? whenTrue
+						: null;
+				}
+
+				default:
+					return null;
+			}
 		}
 
 		Expression? TranslateTimeSpanMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, SqlIntervalUnit unit, SqlIntervalPartKind kind, SqlIntervalUnit? within)
@@ -1658,19 +1710,24 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// <remarks>
 		/// Needed as well as the AST-level rule below, not instead of it. A conversion the provider cannot lower is
 		/// refused while the operand is being translated, so by the time a translated operand exists there is nothing
-		/// left to read a frame from - the whole expression has already fallen back to .NET. Stripping the conversion
+		/// left to read a frame from - the whole expression has already been refused. Stripping the conversion
 		/// here is what lets a component be read in a named zone on a provider that has no type able to carry that
 		/// zone's offset, which is most of them.
 		/// </remarks>
-		ISqlExpression? FrameFromZonedOperand(ITranslationContext translationContext, Expression? operand, out ISqlExpression? zone)
+		ISqlExpression? FrameFromZonedOperand(ITranslationContext translationContext, Expression? operand, out ISqlExpression? zone, out SqlTimeZoneConversionExpression? zoned)
 		{
-			zone = null;
+			zone  = null;
+			zoned = null;
 
 			if (!TryMatchZoneConversion(operand, out var call))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			if (!translationContext.TranslateToSqlExpression(call.Arguments[0].UnwrapConvert(), out var value, out _))
 				return null;
+
+			var factory = translationContext.ExpressionFactory;
 
 			// Attaching a zone and then reading the wall clock back in that same zone is the identity, so the
 			// DateTime overload contributes no conversion at all. The zone is still reported: an operation whose own
@@ -1680,7 +1737,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (!translationContext.TranslateToSqlExpression(call.Arguments[1], out var attachedZone, out _))
 					return null;
 
-				zone = ZoneOperand(translationContext, attachedZone);
+				zone  = ZoneOperand(translationContext, attachedZone);
+				zoned = new SqlTimeZoneConversionExpression(value, zone, SqlTimeZoneConversionKind.AttachZone, factory.GetDbDataType(typeof(DateTimeOffset)));
 
 				return value;
 			}
@@ -1693,8 +1751,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			zoneExpression = ZoneOperand(translationContext, zoneExpression);
 			zone           = zoneExpression;
-
-			var factory = translationContext.ExpressionFactory;
+			zoned          = new SqlTimeZoneConversionExpression(value, zoneExpression, SqlTimeZoneConversionKind.ConvertZone, factory.GetDbDataType(typeof(DateTimeOffset)));
 
 			return new SqlTimeZoneConversionExpression(
 				value,
@@ -1715,6 +1772,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			if (!TryMatchZoneConversion(operand, out var call))
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(call.Arguments[0].UnwrapConvert(), out var value, out _))
 				return null;
@@ -1747,7 +1806,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			// Expression level first: a conversion the provider cannot materialise would be refused during the
 			// operand's own translation, taking the whole member down with it.
-			var framed = FrameFromZonedOperand(translationContext, operand, out _);
+			var framed = FrameFromZonedOperand(translationContext, operand, out _, out _);
 			if (framed != null)
 				return framed;
 
@@ -1755,7 +1814,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (placeholder == null)
 				return null;
 
-			return DateTimeOffsetFrame(translationContext, placeholder.Sql, operand, translationFlags, out _, out error);
+			return DateTimeOffsetFrame(translationContext, placeholder.Sql, operand, translationFlags, out _, out _, out error);
 		}
 
 		/// <summary>
@@ -1800,22 +1859,42 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// answering a <see cref="DateTimeOffset"/> keeps the offset its .NET counterpart would.
 		/// </summary>
 		/// <remarks>
-		/// Where the frame came from a named zone, re-attaching that zone is exact. Where it came from the provider
-		/// default, only the provider knows how to get back - which is why <paramref name="original"/> is passed: an
-		/// offset-preserving provider has to read the stored offset off the operand to restore it.
+		/// Re-attaching is exact only for a fixed offset or <c>'UTC'</c>. A named zone has to be re-attached with the
+		/// offset the source had in it, which .NET keeps through the arithmetic: attaching the name again resolves
+		/// the offset at the shifted wall clock, an hour off once the shift crosses a transition. Where the frame came
+		/// from the provider default, only the provider knows how to get back - which is why
+		/// <paramref name="original"/> is passed: an offset-preserving provider has to read the stored offset off
+		/// the operand to restore it.
 		/// </remarks>
-		ISqlExpression? UnframeDateTimeOffset(ITranslationContext translationContext, ISqlExpression original, ISqlExpression framed, ISqlExpression? zone)
+		ISqlExpression? UnframeDateTimeOffset(ITranslationContext translationContext, ISqlExpression original, ISqlExpression framed, ISqlExpression? zone, SqlTimeZoneConversionExpression? zoned)
 		{
 			var factory    = translationContext.ExpressionFactory;
 			var zonedType  = factory.GetDbDataType(typeof(DateTimeOffset));
 
 			if (zone == null)
+			{
+				// The frame left a value stored without an offset where it was, so there is nothing to come back from.
+				if (QueryHelper.GetDbDataType(original, translationContext.MappingSchema).DataType != DataType.DateTimeOffset)
+					return framed;
+
 				return FromDateTimeOffsetFrame(translationContext, original, framed, zonedType);
+			}
 
 			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.AttachZone))
 				return null;
 
+			if (zoned != null && IsNamedZone(zone))
+				return FromNamedZoneFrame(translationContext, zoned, framed, zonedType);
+
 			return new SqlTimeZoneConversionExpression(framed, zone, SqlTimeZoneConversionKind.AttachZone, zonedType);
+		}
+
+		static bool IsNamedZone(ISqlExpression zone)
+		{
+			if (zone.SystemType == typeof(TimeSpan) || zone.SystemType == typeof(TimeSpan?))
+				return false;
+
+			return QueryHelper.UnwrapNullablity(zone) is not SqlValue { Value: "UTC" };
 		}
 
 		/// <summary>
@@ -1832,9 +1911,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// operand rather than a frame applied on top of an already-converted value.
 		/// </para>
 		/// </remarks>
-		ISqlExpression? DateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value, Expression? basedOn, TranslationFlags translationFlags, out ISqlExpression? zone, out SqlErrorExpression? error)
+		ISqlExpression? DateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value, Expression? basedOn, TranslationFlags translationFlags, out ISqlExpression? zone, out SqlTimeZoneConversionExpression? zoned, out SqlErrorExpression? error)
 		{
 			zone  = null;
+			zoned = null;
 			error = null;
 
 			if (QueryHelper.UnwrapNullablity(value) is SqlTimeZoneConversionExpression conversion)
@@ -1843,14 +1923,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				{
 					// Attaching a zone and then reading the wall clock back in that same zone is the identity.
 					case SqlTimeZoneConversionKind.AttachZone:
-						zone = conversion.Zone;
+						zone  = conversion.Zone;
+						zoned = conversion;
 						return conversion.Value;
 
 					// Already a wall clock. The node is what says so - the declared DbDataType cannot be trusted
 					// here, because a provider that builds its zoned "now" from a raw format string can label a
 					// wall-clock reading as offset-carrying, and framing it a second time shifts it by the zone.
 					case SqlTimeZoneConversionKind.ToWallTime:
-						zone = conversion.Zone;
+						zone  = conversion.Zone;
+						zoned = new SqlTimeZoneConversionExpression(
+							conversion.Value,
+							conversion.Zone,
+							SqlTimeZoneConversionKind.ConvertZone,
+							translationContext.ExpressionFactory.GetDbDataType(typeof(DateTimeOffset)));
 						return conversion;
 
 					case SqlTimeZoneConversionKind.ConvertZone:
@@ -1870,7 +1956,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						var factory = translationContext.ExpressionFactory;
 
-						zone = conversion.Zone;
+						zone  = conversion.Zone;
+						zoned = conversion;
 
 						return new SqlTimeZoneConversionExpression(
 							conversion.Value,
@@ -1881,9 +1968,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				}
 			}
 
-			// Only a value that actually carries an offset has a frame to be brought out of. A provider whose
-			// ZonedUtcNow already answers a zone-less wall clock - DuckDB emits now() AT TIME ZONE 'UTC' - would
-			// otherwise have that reading converted a second time, shifting it by the zone.
+			// Only a value that actually carries an offset has a frame to be brought out of: a DateTimeOffset mapped
+			// onto a column without one, or a reading that is already zone-less, would otherwise be converted a
+			// second time and shifted by the zone. UnframeDateTimeOffset makes the same test on the way back.
 			if (QueryHelper.GetDbDataType(value, translationContext.MappingSchema).DataType != DataType.DateTimeOffset)
 				return value;
 
@@ -2010,7 +2097,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				factory.Cast(minutes, longType),
 				factory.Value(longType, TimeSpan.TicksPerMinute));
 
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, ticks, memberExpression);
+			// An interval node, as the other TimeSpan producers make: a comparison then sends a captured TimeSpan as
+			// ticks too, instead of the provider's own TimeSpan type.
+			return translationContext.CreatePlaceholder(
+				translationContext.CurrentSelectQuery,
+				new SqlIntervalExpression(ticks, spanType, SqlIntervalType.ClrTimeSpan),
+				memberExpression);
 		}
 
 		/// <summary>
@@ -2025,6 +2117,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		Expression? TranslateDateTimeOffsetConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
 			if (expression is not NewExpression { Arguments.Count: 2 } newExpression)
+				return null;
+
+			if (translationContext.CanBeEvaluatedOnClient(newExpression.Arguments[0]) && translationContext.CanBeEvaluatedOnClient(newExpression.Arguments[1]))
+				return null;
+
+			// No offset survives a round trip here, so the value is left to .NET, as it always was.
+			if (RoundTripsInUtc)
 				return null;
 
 			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.AttachZone))
@@ -2107,6 +2206,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var instant = InstantFromOperand(translationContext, methodCall.Object, translationFlags);
 			if (instant == null)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var offset, out _))
 				return null;
@@ -2214,7 +2315,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.TryEvaluate<Sql.DateParts>(methodCall.Arguments[0], out var datePart))
 				return null;
 
-			var framed = FrameFromZonedOperand(translationContext, methodCall.Arguments[1], out _);
+			var framed = FrameFromZonedOperand(translationContext, methodCall.Arguments[1], out _, out _);
 
 			if (framed == null)
 			{
@@ -2223,7 +2324,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
 					return null;
 
-				framed = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Arguments[1], translationFlags, out _, out var frameError);
+				framed = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Arguments[1], translationFlags, out _, out _, out var frameError);
 				if (framed == null)
 					return frameError;
 			}
@@ -2268,7 +2369,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Object != null && translationContext.CanBeEvaluatedOnClient(methodCall.Object) && translationContext.CanBeEvaluatedOnClient(methodCall.Arguments[0]))
 				return null;
 
-			var framed = FrameFromZonedOperand(translationContext, methodCall.Object, out var zone);
+			var framed = FrameFromZonedOperand(translationContext, methodCall.Object, out var zone, out var zoned);
 			var original = framed;
 
 			if (framed == null)
@@ -2278,7 +2379,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return null;
 
 				original = datePlaceholder.Sql;
-				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Object, translationFlags, out zone, out var frameError);
+				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Object, translationFlags, out zone, out zoned, out var frameError);
 
 				if (framed == null)
 					return frameError;
@@ -2290,8 +2391,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (incrementPlaceholder == null)
 				return null;
 
-			// Can be evaluated on client side
-			if (original is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
+			// Can be evaluated on client side - unless the operand is a zone conversion, which is server-side only.
+			if (zoned == null && original is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
 				return null;
 
 			// The shift happens inside the reading frame - .NET adds to the local reading and keeps the offset - and
@@ -2301,7 +2402,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (converted == null)
 				return null;
 
-			converted = UnframeDateTimeOffset(translationContext, original!, converted, zone);
+			converted = UnframeDateTimeOffset(translationContext, original!, converted, zone, zoned);
 			if (converted == null)
 				return null;
 
@@ -2364,7 +2465,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.TryEvaluate<Sql.DateParts>(methodCall.Arguments[0], out var datepart))
 				return null;
 
-			var framed   = FrameFromZonedOperand(translationContext, methodCall.Arguments[2], out var zone);
+			var framed   = FrameFromZonedOperand(translationContext, methodCall.Arguments[2], out var zone, out var zoned);
 			var original = framed;
 
 			if (framed == null)
@@ -2374,7 +2475,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return null;
 
 				original = datePlaceholder.Sql;
-				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Arguments[2], translationFlags, out zone, out var frameError);
+				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Arguments[2], translationFlags, out zone, out zoned, out var frameError);
 
 				if (framed == null)
 					return frameError;
@@ -2386,15 +2487,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (incrementPlaceholder == null)
 				return null;
 
-			// Can be evaluated on client side
-			if (original is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
+			// Can be evaluated on client side - unless the operand is a zone conversion, which is server-side only.
+			if (zoned == null && original is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
 				return null;
 
 			var converted = TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, framed, incrementPlaceholder.Sql, datepart);
 			if (converted == null)
 				return null;
 
-			converted = UnframeDateTimeOffset(translationContext, original!, converted, zone);
+			converted = UnframeDateTimeOffset(translationContext, original!, converted, zone, zoned);
 			if (converted == null)
 				return null;
 
@@ -2696,6 +2797,24 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		protected virtual ISqlExpression? FromDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression original, ISqlExpression framed, DbDataType resultType)
 		{
 			return framed;
+		}
+
+		/// <summary>
+		/// Puts a value computed inside a named zone's reading frame back into an offset-carrying one, with the offset
+		/// <paramref name="zoned"/> has in that zone - the offset a .NET <see cref="DateTimeOffset"/> keeps through
+		/// the arithmetic.
+		/// </summary>
+		/// <param name="zoned">
+		/// The source as a conversion into the zone: <see cref="SqlTimeZoneConversionKind.ConvertZone"/> of an
+		/// instant, or <see cref="SqlTimeZoneConversionKind.AttachZone"/> of a wall clock.
+		/// </param>
+		/// <remarks>
+		/// Declines by default: each dialect spells "the offset this value has" differently, and re-attaching the
+		/// zone by name instead resolves the offset at the shifted wall clock.
+		/// </remarks>
+		protected virtual ISqlExpression? FromNamedZoneFrame(ITranslationContext translationContext, SqlTimeZoneConversionExpression zoned, ISqlExpression framed, DbDataType resultType)
+		{
+			return null;
 		}
 
 		protected virtual ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)

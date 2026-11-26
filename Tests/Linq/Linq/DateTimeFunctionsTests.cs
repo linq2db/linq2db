@@ -1172,6 +1172,34 @@ namespace Tests.Linq
 			inList.ShouldBe(0);
 		}
 
+		/// <summary>
+		/// An Oracle <c>DATE</c> column declared through its <c>DbType</c> alone, so its mapping carries no
+		/// <c>DataType</c> that says it is a <c>DATE</c>.
+		/// </summary>
+		[Table]
+		sealed class DbTypeDateRow
+		{
+			[PrimaryKey]              public int      Id    { get; set; }
+			[Column(DbType = "date")] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// Month arithmetic over such a column: the sub-second remainder ADD_MONTHS drops is read off the operand,
+		/// and the cast that reads it must not take the operand's <c>DbType</c> with it.
+		/// </summary>
+		[Test]
+		public void AddMonthsOverADbTypeDateColumn([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DbTypeDateRow { Id = 1, Value = new DateTime(2020, 1, 31, 12, 0, 0) } });
+
+			var shifted = t
+				.Select(r => Sql.AsSql(r.Value.AddMonths(1)))
+				.Single();
+
+			shifted.ShouldBe(new DateTime(2020, 2, 29, 12, 0, 0));
+		}
+
 		[Test]
 		public void AddYears([DataSources] string context)
 		{

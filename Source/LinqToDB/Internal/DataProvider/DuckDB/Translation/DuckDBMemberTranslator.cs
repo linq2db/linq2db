@@ -177,6 +177,18 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				return factory.Cast(dateExpression, dateType);
 			}
 
+			/// <summary>
+			/// The same truncation brought back to a timestamp. Typed <c>DATE</c>, a parameter it is compared with is
+			/// bound as a <c>DATE</c> too and loses its time of day, so an hour past midnight compares equal.
+			/// </summary>
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var dateType = factory.GetDbDataType(typeof(DateTime));
+
+				return factory.Cast(factory.Cast(dateExpression, dateType.WithDataType(DataType.Date)), dateType.WithDataType(DataType.DateTime2), isMandatory: true);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory  = translationContext.ExpressionFactory;
@@ -244,6 +256,32 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 					factory.Value("UTC"),
 					SqlTimeZoneConversionKind.AttachZone,
 					resultType);
+			}
+
+			/// <summary>
+			/// Re-attaches the offset the source had in the zone as a fixed one, computed from the instant.
+			/// </summary>
+			/// <remarks>
+			/// A fixed offset in the zone position keeps the next shift reading the same wall clock, as .NET does;
+			/// <c>TIMESTAMPTZ</c> has no offset to carry, so the visitor lowers it into the instant.
+			/// </remarks>
+			protected override ISqlExpression? FromNamedZoneFrame(ITranslationContext translationContext, SqlTimeZoneConversionExpression zoned, ISqlExpression framed, DbDataType resultType)
+			{
+				var factory    = translationContext.ExpressionFactory;
+				var wallType   = factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2);
+				var offsetType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+				// A ConvertZone is not lowered here; the instant it re-expresses is its operand.
+				var source = zoned.Kind == SqlTimeZoneConversionKind.ConvertZone ? zoned.Value : zoned;
+
+				var offset = factory.Expression(
+					offsetType,
+					Precedence.Primary,
+					"({0} - {1})",
+					new SqlTimeZoneConversionExpression(source, zoned.Zone,          SqlTimeZoneConversionKind.ToWallTime, wallType),
+					new SqlTimeZoneConversionExpression(source, factory.Value("UTC"), SqlTimeZoneConversionKind.ToWallTime, wallType));
+
+				return new SqlTimeZoneConversionExpression(framed, offset, SqlTimeZoneConversionKind.AttachZone, resultType);
 			}
 		}
 

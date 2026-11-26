@@ -638,6 +638,21 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				return f.Function(dateType, "DateTime::MakeTimestamp", startOf);
 			}
+
+			/// <summary>
+			/// The same chain typed as the <see cref="DateTime"/> it answers. The frame is the identity here, so the
+			/// operand is still a <see cref="DateTimeOffset"/>, and a result typed that way is read back through local time.
+			/// </summary>
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var f        = translationContext.ExpressionFactory;
+				var dateType = f.GetDbDataType(dateExpression);
+
+				var split   = f.Function(dateType, "DateTime::Split", dateExpression);
+				var startOf = f.Function(dateType, "DateTime::StartOfDay", split);
+
+				return f.Function(f.GetDbDataType(typeof(DateTime)), "DateTime::MakeTimestamp", startOf);
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase

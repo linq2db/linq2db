@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -1114,5 +1116,19 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		/// <summary>
+		/// The week of a value is read off its own wall clock, like every other part, and not off the evaluating
+		/// machine's.
+		/// </summary>
+		[Test, SetCulture("en-US")]
+		public void DatePartWeekReadsTheValuesOwnWallClock()
+		{
+			// Saturday 13 June 23:30 at -02:00 is already Sunday 14 June - the first day of week 25 - in UTC and to
+			// every machine east of it.
+			var week = Sql.DatePart(Sql.DateParts.Week, new DateTimeOffset(2020, 6, 13, 23, 30, 0, TimeSpan.FromHours(-2)));
+
+			week.ShouldBe(24);
+		}
 	}
 }

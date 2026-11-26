@@ -146,10 +146,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			/// </remarks>
 			protected override ISqlExpression? ToDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value)
 			{
-				var factory = translationContext.ExpressionFactory;
-
-				return factory.Cast(value, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2), true);
+				return translationContext.ExpressionFactory.Cast(value, TimestampType, true);
 			}
+
+			/// <summary>
+			/// <c>TIMESTAMP(7)</c> built fresh rather than derived from an operand: it holds every value .NET can, and an
+			/// operand's own type can carry a <c>DbType</c> such as <c>date</c> that the cast would then keep.
+			/// </summary>
+			static readonly DbDataType TimestampType = new(typeof(DateTime), DataType.DateTime2, null, null, 7, null);
 
 			/// <summary>
 			/// Restores the offset the operand carried, after an operation was carried out on its local reading.
@@ -171,7 +175,16 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					original,
 					factory.Value("TZH:TZM"));
 
-				return factory.Function(resultType, "From_Tz", framed, storedOffset);
+				return factory.Function(resultType, "From_Tz", factory.Cast(framed, TimestampType, true), storedOffset);
+			}
+
+			/// <summary>
+			/// The offset <paramref name="zoned"/> has in its zone is the one it carries, so this is the default frame's
+			/// way back with the zoned value as the operand.
+			/// </summary>
+			protected override ISqlExpression? FromNamedZoneFrame(ITranslationContext translationContext, SqlTimeZoneConversionExpression zoned, ISqlExpression framed, DbDataType resultType)
+			{
+				return FromDateTimeOffsetFrame(translationContext, zoned, framed, resultType);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
@@ -230,6 +243,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					// TIMESTAMP.
 					var shifted = factory.Cast(factory.Sub(dateType, addMonths, gained), dateType, isMandatory: true);
 
+					// A DATE operand has nothing below the second to lose.
+					if (dateType.DataType is DataType.Date or DataType.DateTime)
+						return shifted;
+
 					// DATE carries whole seconds, so ADD_MONTHS drops whatever was below one. The shift itself cannot
 					// change it, so it is read off the operand and put back. Built from EXTRACT rather than by
 					// subtracting the truncated value: Oracle reads a difference of two datetimes in an addition as
@@ -239,7 +256,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					var seconds = factory.Function(
 						doubleType,
 						"EXTRACT",
-						factory.Expression(doubleType, "SECOND FROM {0}", factory.Cast(dateTimeExpression, dateType.WithDataType(DataType.DateTime2), isMandatory: true)));
+						factory.Expression(doubleType, "SECOND FROM {0}", factory.Cast(dateTimeExpression, TimestampType, isMandatory: true)));
 
 					var remainder = factory.Function(
 						intervalType,
