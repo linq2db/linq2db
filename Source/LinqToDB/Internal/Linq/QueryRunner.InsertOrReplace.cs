@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.Linq
 
 				// Insert.
 				//
-				foreach (var field in sqlTable.Fields)
+				foreach (var field in GetObjectFields(sqlTable, type))
 				{
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.Linq
 				// Update.
 				//
 				var keys = (sqlTable.GetKeys(true) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields
+				var fields = GetObjectFields(sqlTable, type)
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update))
 					.Except(keys);
 

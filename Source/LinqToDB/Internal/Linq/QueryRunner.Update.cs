@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Linq
 				};
 
 				var keys = (sqlTable.GetKeys(true) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
-				var fields = sqlTable.Fields
+				var fields = GetObjectFields(sqlTable, type)
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update) && (columnFilter == null || columnFilter(obj, f.ColumnDescriptor)))
 					.Except(keys);
 

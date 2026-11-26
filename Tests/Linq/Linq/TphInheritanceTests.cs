@@ -646,6 +646,42 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table(Name = "Base")]
+		sealed class TphCodeFilterRaw
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column]     public string? Code { get; set; }
+			[Column]     public string? Name { get; set; }
+			[Column]     public int?    Age  { get; set; }
+		}
+
+		[Test]
+		public void TPH_RootInstance_WritesOwnColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TphCodeFilterBase>();
+
+			db.Insert(new TphCodeFilterBase { Id = 1, Code = "Base" });
+			db.InsertWithIdentity(new TphCodeFilterBase { Id = 2, Code = "Base" });
+			db.InsertOrReplace(new TphCodeFilterBase { Id = 3, Code = "Base" });
+
+			db.Insert(new TphCodeFilterNamed { Id = 4, Name = "Jane" });
+			db.Update(new TphCodeFilterBase { Id = 4, Code = "Base" });
+
+			var rows = db.GetTable<TphCodeFilterRaw>()
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, r.Code, r.Name, r.Age })
+				.ToArray();
+
+			rows.ShouldBe(
+			[
+				new { Id = 1, Code = (string?)"Base", Name = (string?)null,   Age = (int?)null },
+				new { Id = 2, Code = (string?)"Base", Name = (string?)null,   Age = (int?)null },
+				new { Id = 3, Code = (string?)"Base", Name = (string?)null,   Age = (int?)null },
+				new { Id = 4, Code = (string?)"Base", Name = (string?)"Jane", Age = (int?)null },
+			]);
+		}
+
 		[Test]
 		public void TPH_TernaryIsTypePredicate([DataSources(TestProvName.AllSybase)] string context, [Values] bool additionalFlag)
 		{
