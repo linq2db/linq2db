@@ -1611,7 +1611,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					var memberInType = body.Type.GetMemberEx(member);
 					if (memberInType == null)
 					{
-						if (member.DeclaringType?.IsSameOrParentOf(body.Type) == true)
+						// A dynamic column read through a type the store's owner implements - a member typed as an
+						// interface - is the owner's column.
+						if (member is DynamicColumnInfo { DeclaringType: { } readThrough } dynamicColumn && readThrough != body.Type && readThrough.IsSameOrParentOf(body.Type))
+							memberInType = new DynamicColumnInfo(body.Type, dynamicColumn.PropertyType, dynamicColumn.Name);
+						else if (member.DeclaringType?.IsSameOrParentOf(body.Type) == true)
 							memberInType = member;
 					}
 

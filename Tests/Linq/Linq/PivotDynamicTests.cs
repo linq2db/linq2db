@@ -1466,6 +1466,41 @@ namespace Tests.Linq
 			public IReadOnlyDictionary<string, object?> Cells    { get; set; } = null!;
 		}
 
+		/// <summary>
+		/// A cell of a member declared through the dictionary interface is filtered on through <c>Sql.Property</c>, or
+		/// through <see cref="PivotCells.Get{T}"/> once the member is cast back.
+		/// </summary>
+		[Test]
+		public void FiltersAnInterfaceTypedMember([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var query = t
+				.Select(x => new { x.Category, x.Year, x.Amount })
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsRow
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			query
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			query
+				.Where(r => ((PivotCells)r.Cells).Get<decimal?>("Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+		}
+
 		/// <summary>A result type declares the member through the dictionary interface.</summary>
 		[Test]
 		public void PivotsIntoAnInterfaceTypedMember([DataSources] string context)
