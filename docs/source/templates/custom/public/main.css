@@ -1,5 +1,38 @@
 .dropdown-menu { white-space:nowrap }
 
+/* A short page has no vertical scrollbar where it takes room (Windows); reserving its gutter keeps every
+   page the same width, so the navbar and centered content do not shift when moving between pages. */
+html {
+	scrollbar-gutter: stable;
+}
+
+/* Links in the landing page's indigo, AA on both backgrounds (6.3:1 on white, 7.7:1 on #212529) */
+:root,
+[data-bs-theme="light"] {
+	--bs-link-color: #4f46e5;
+	--bs-link-color-rgb: 79, 70, 229;
+	--bs-link-hover-color: #4338ca;
+	--bs-link-hover-color-rgb: 67, 56, 202;
+}
+
+[data-bs-theme="dark"] {
+	--bs-link-color: #a5b4fc;
+	--bs-link-color-rgb: 165, 180, 252;
+	--bs-link-hover-color: #c7d2fe;
+	--bs-link-hover-color-rgb: 199, 210, 254;
+}
+
+/* The footer is .text-secondary, whose #6c757d does not follow the theme: 3.3:1 on the dark body */
+[data-bs-theme="dark"] footer {
+	--bs-secondary-rgb: 173, 181, 189;
+}
+
+/* The landing sections break out to 100vw, which counts the vertical scrollbar where it takes
+   room (Windows); without this the page scrolls sideways by the scrollbar's width. */
+body:has(.landing-hero) {
+	overflow-x: clip;
+}
+
 /* Navbar logo */
 #logo {
 	height: 24px;
@@ -108,6 +141,22 @@
 	padding: 0;
 }
 
+/* added by main.js */
+.landing-copy {
+	margin-left: 0.75rem;
+	padding: 0 0.25rem;
+	border: none;
+	background: none;
+	color: inherit;
+	opacity: 0.8;
+	cursor: pointer;
+}
+
+.landing-copy:hover,
+.landing-copy:focus-visible {
+	opacity: 1;
+}
+
 /* Syntax colors */
 .code-keyword { color: #c792ea; }
 .code-type    { color: #82aaff; }
@@ -140,12 +189,18 @@
 	white-space: nowrap;
 }
 
-.demo-tabs {
+/* Two radio groups, each radio right before its label: the example tabs and the SQL dialects */
+.demo-tabs,
+.demo-dialects {
+	position: relative;
 	display: flex;
-	gap: 0;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.demo-tabs {
 	background: rgba(255,255,255,0.05);
 	border-bottom: 1px solid rgba(255,255,255,0.06);
-	flex-wrap: wrap;
 }
 
 .demo-tab {
@@ -164,46 +219,118 @@
 	color: rgba(255,255,255,0.7);
 }
 
-/* Active tab highlighting via :checked */
-#demo-tab-1:checked ~ .demo-tabs label[for="demo-tab-1"],
-#demo-tab-2:checked ~ .demo-tabs label[for="demo-tab-2"],
-#demo-tab-3:checked ~ .demo-tabs label[for="demo-tab-3"],
-#demo-tab-4:checked ~ .demo-tabs label[for="demo-tab-4"],
-#demo-tab-5:checked ~ .demo-tabs label[for="demo-tab-5"],
-#demo-tab-6:checked ~ .demo-tabs label[for="demo-tab-6"],
-#demo-tab-7:checked ~ .demo-tabs label[for="demo-tab-7"] {
+.demo-radio:checked + .demo-tab {
 	color: #a8b4ff;
 	border-bottom-color: #667eea;
 }
 
+.demo-dialects {
+	gap: 0.35rem;
+	padding: 0.5rem 1rem;
+	border-bottom: 1px solid rgba(255,255,255,0.06);
+	font-size: 0.72rem;
+}
+
+.demo-dialects-label {
+	margin-right: 0.25rem;
+	color: rgba(255,255,255,0.55);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.65rem;
+}
+
+.demo-dialect {
+	padding: 0.15rem 0.6rem;
+	border: 1px solid rgba(255,255,255,0.14);
+	border-radius: 999px;
+	color: rgba(255,255,255,0.7);
+	cursor: pointer;
+	white-space: nowrap;
+	user-select: none;
+	transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.demo-dialect:hover {
+	color: #fff;
+	border-color: rgba(255,255,255,0.3);
+}
+
+.demo-radio:checked + .demo-dialect {
+	color: #fff;
+	background: rgba(102,126,234,0.35);
+	border-color: #667eea;
+}
+
 /* Keyboard focus on the hidden radio shows on its label */
-#demo-tab-1:focus-visible ~ .demo-tabs label[for="demo-tab-1"],
-#demo-tab-2:focus-visible ~ .demo-tabs label[for="demo-tab-2"],
-#demo-tab-3:focus-visible ~ .demo-tabs label[for="demo-tab-3"],
-#demo-tab-4:focus-visible ~ .demo-tabs label[for="demo-tab-4"],
-#demo-tab-5:focus-visible ~ .demo-tabs label[for="demo-tab-5"],
-#demo-tab-6:focus-visible ~ .demo-tabs label[for="demo-tab-6"],
-#demo-tab-7:focus-visible ~ .demo-tabs label[for="demo-tab-7"] {
+.demo-radio:focus-visible + .demo-tab,
+.demo-radio:focus-visible + .demo-dialect {
 	outline: 2px solid #a8b4ff;
 	outline-offset: -2px;
 }
 
-/* Panel visibility via :checked */
-.demo-panel { display: none; }
+/* Temp Table runs on SQLite only: its tab shows a note instead of the switcher */
+.demo-dialects-note {
+	display: none;
+	color: rgba(255,255,255,0.7);
+}
 
-#demo-tab-1:checked ~ .demo-panels .demo-panel-1,
-#demo-tab-2:checked ~ .demo-panels .demo-panel-2,
-#demo-tab-3:checked ~ .demo-panels .demo-panel-3,
-#demo-tab-4:checked ~ .demo-panels .demo-panel-4,
-#demo-tab-5:checked ~ .demo-panels .demo-panel-5,
-#demo-tab-6:checked ~ .demo-panels .demo-panel-6,
-#demo-tab-7:checked ~ .demo-panels .demo-panel-7 {
+.demo-container:has(#demo-tab-7:checked) .demo-dialects > :not(.demo-dialects-note) {
+	display: none;
+}
+
+.demo-container:has(#demo-tab-7:checked) .demo-dialects-note {
+	display: inline;
+}
+
+/* Panel and dialect visibility follow the checked radios */
+.demo-panel,
+.demo-sql-variant {
+	display: none;
+}
+
+.demo-container:has(#demo-tab-1:checked) .demo-panel-1,
+.demo-container:has(#demo-tab-2:checked) .demo-panel-2,
+.demo-container:has(#demo-tab-3:checked) .demo-panel-3,
+.demo-container:has(#demo-tab-4:checked) .demo-panel-4,
+.demo-container:has(#demo-tab-5:checked) .demo-panel-5,
+.demo-container:has(#demo-tab-6:checked) .demo-panel-6,
+.demo-container:has(#demo-tab-7:checked) .demo-panel-7,
+.demo-container:has(#demo-dialect-sqlserver:checked)  .demo-sql-variant[data-dialect="sqlserver"],
+.demo-container:has(#demo-dialect-postgresql:checked) .demo-sql-variant[data-dialect="postgresql"],
+.demo-container:has(#demo-dialect-mysql:checked)      .demo-sql-variant[data-dialect="mysql"],
+.demo-container:has(#demo-dialect-oracle:checked)     .demo-sql-variant[data-dialect="oracle"],
+.demo-container:has(#demo-dialect-sqlite:checked)     .demo-sql-variant[data-dialect="sqlite"] {
 	display: block;
 }
 
+.demo-na {
+	margin: 0;
+	padding: 0.5rem 1rem 1rem;
+	font-size: 0.8rem;
+	color: rgba(255,255,255,0.7);
+}
+
+/* "<topic> in the docs →" under each example */
+.demo-more {
+	display: block;
+	padding: 0.45rem 1rem;
+	border-top: 1px solid rgba(255,255,255,0.06);
+	font-size: 0.75rem;
+	text-align: right;
+	color: #a8b4ff;
+	text-decoration: none;
+}
+
+.demo-more:hover {
+	color: #fff;
+	text-decoration: underline;
+}
+
+/* C# : SQL as their widest lines, 47 : 58 characters, so neither pane scrolls before the other has to */
 .demo-split {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: minmax(0, 47fr) minmax(0, 58fr);
 	min-height: 280px;
 }
 
@@ -258,89 +385,131 @@
 .code-comment { color: #8b93bd; font-style: italic; }
 
 /* ============================================================
-   Landing cards section
+   Supported databases strip
    ============================================================ */
-.landing-cards {
+.landing-dbs {
+	margin: 0 calc(-50vw + 50%);
+	padding: 1.75rem 2rem;
+	text-align: center;
+	border-bottom: 1px solid var(--bs-border-color);
+}
+
+.landing-dbs-title {
+	margin-bottom: 0.9rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--bs-secondary-color);
+}
+
+.landing-dbs-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5rem;
+	max-width: 1000px;
+	margin: 0 auto;
+	padding: 0;
+	list-style: none;
+}
+
+.landing-dbs-list a {
+	display: inline-block;
+	padding: 0.3rem 0.8rem;
+	border: 1px solid var(--bs-border-color);
+	border-radius: 999px;
+	font-size: 0.85rem;
+	color: var(--bs-body-color);
+	text-decoration: none;
+	transition: color 0.2s, border-color 0.2s;
+}
+
+.landing-dbs-list a:hover {
+	border-color: #667eea;
+	color: var(--bs-link-color);
+}
+
+/* ============================================================
+   Get started in three steps
+   ============================================================ */
+.landing-steps {
 	margin: 0 calc(-50vw + 50%);
 	padding: 2.5rem 0;
 	background: var(--bs-body-bg);
 }
 
-.landing-card {
+.landing-steps-title {
+	margin-bottom: 1.5rem;
+	font-size: 1.5rem;
+	font-weight: 700;
+	text-align: center;
+}
+
+.landing-steps-list {
+	padding: 0;
+	list-style: none;
+}
+
+.landing-step {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	padding: 2rem;
+	padding: 1.75rem;
+	border: 1px solid var(--bs-border-color);
 	border-radius: 1rem;
 	background: var(--bs-body-bg);
-	border: 1px solid var(--bs-border-color);
-	text-decoration: none;
-	color: var(--bs-body-color);
-	transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.landing-card:hover {
-	transform: translateY(-6px);
-	box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12);
-	border-color: #667eea;
-	color: var(--bs-body-color);
-	text-decoration: none;
-}
-
-.landing-card-icon-wrap {
-	width: 56px;
-	height: 56px;
-	display: flex;
+.landing-step-number {
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 0.75rem;
-	background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
-	margin-bottom: 1.25rem;
-	font-size: 1.5rem;
-	color: #667eea;
-}
-
-.landing-card h2 {
-	font-size: 1.25rem;
-	font-weight: 700;
-	margin-bottom: 0.5rem;
-}
-
-.landing-card p {
-	flex: 1;
-	color: var(--bs-secondary-color);
-	font-size: 0.95rem;
-	line-height: 1.6;
+	width: 2.25rem;
+	height: 2.25rem;
 	margin-bottom: 1rem;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #fff;
+	font-weight: 700;
 }
 
-/* AA contrast for 0.9rem text: #4f46e5 / #764ba2 on the light body, #a8b4ff / #c0caff on the dark one */
-.landing-card-link {
-	font-weight: 600;
+.landing-step h3 {
+	margin-bottom: 0.4rem;
+	font-size: 1.15rem;
+	font-weight: 700;
+}
+
+.landing-step p {
+	margin-bottom: 1rem;
+	font-size: 0.95rem;
+	color: var(--bs-secondary-color);
+}
+
+/* the demo's dark code look, so the code-* colors keep their contrast in both themes */
+.landing-step-code {
+	flex: 1;
+	margin: 0 0 1rem;
+	padding: 0.9rem 1rem;
+	border: none !important;
+	border-radius: 0.5rem;
+	background: #161b2e !important;
+	color: #c8cee0;
+	font-size: 0.8rem;
+	line-height: 1.6;
+	white-space: pre;
+	overflow-x: auto;
+}
+
+.landing-step-link {
 	font-size: 0.9rem;
-	color: #4f46e5;
+	font-weight: 600;
+	text-decoration: none;
 }
 
-.landing-card:hover .landing-card-link {
-	color: #764ba2;
+.landing-step-link:hover {
+	text-decoration: underline;
 }
-
-[data-bs-theme="dark"] .landing-card-link {
-	color: #a8b4ff;
-}
-
-[data-bs-theme="dark"] .landing-card:hover .landing-card-link {
-	color: #c0caff;
-}
-
-.landing-card-link .bi {
-	transition: transform 0.2s;
-}
-
-.landing-card:hover .landing-card-link .bi {
-	transform: translateX(4px);
-}
-
 /* ============================================================
    Features section
    ============================================================ */
@@ -373,6 +542,16 @@
 	font-size: 1.1rem;
 	font-weight: 700;
 	margin-bottom: 0.5rem;
+}
+
+/* a linked feature title still reads as a title */
+.landing-feature h3 a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.landing-feature h3 a:hover {
+	text-decoration: underline;
 }
 
 .landing-feature p {
@@ -412,16 +591,49 @@
    Responsive
    ============================================================ */
 
-/* The demo shows C# and SQL side by side, which takes about 830px for the widest tab
-   (ExpressionMethod's SQL, 57 characters a line). Half of the hero is that wide only from
-   about 1800px, so below that the demo goes under the text instead of scrolling sideways. */
-@media (min-width: 992px) and (max-width: 1799.98px) {
+/* The demo shows C# and SQL side by side; split 47:58 like their widest lines, that takes about
+   760px (see SqlHtml.MaxWidth in docs/tools/sql-demo). From 1220px the text keeps a 340px column
+   and the demo takes the rest; below that the hero is centered with the demo under the text
+   instead of scrolling sideways. The text sits at the top so it stays put while the demo's height
+   changes with the tab. */
+@media (min-width: 1220px) {
+	.landing-hero .row {
+		display: grid;
+		grid-template-columns: minmax(340px, 1fr) minmax(760px, 1100px);
+		align-items: start;
+	}
+
+	.landing-hero .row > .col-lg-6 {
+		width: auto;
+	}
+
+	.landing-hero .row > .col-lg-6:first-child {
+		padding-top: 2.5rem;
+	}
+}
+
+@media (min-width: 992px) and (max-width: 1219.98px) {
 	.landing-hero .row > .col-lg-6 {
 		width: 100%;
 	}
 
+	.landing-hero .row > .col-lg-6:first-child {
+		text-align: center;
+	}
+
+	.landing-hero .landing-subtitle {
+		max-width: 620px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.landing-hero .landing-actions {
+		justify-content: center;
+	}
+
 	.landing-hero .demo-container {
 		max-width: 1100px;
+		margin: 0 auto;
 	}
 }
 
@@ -446,5 +658,15 @@
 
 	.landing-actions .btn {
 		width: 100%;
+	}
+
+	/* "dotnet add package Microsoft.Data.SqlClient" fits a 375px screen */
+	.landing-step {
+		padding: 1.25rem;
+	}
+
+	.landing-step-code {
+		padding: 0.75rem;
+		font-size: 0.72rem;
 	}
 }
