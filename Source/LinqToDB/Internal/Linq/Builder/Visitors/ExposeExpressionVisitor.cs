@@ -125,11 +125,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return HandleSqlProperty(node);
 			}
 
-			if (node is { Object: { } cells, Method: { Name: nameof(PivotCells.Get), IsGenericMethod: true } } && cells.Type == typeof(PivotCells))
-			{
-				return Visit(MakeCellRead(cells, node.Arguments[0], node.Method.GetGenericArguments()[0]));
-			}
-
 			// The terminal is reached first, top-down, and consumes its chain; any other pivot call reached here has none.
 			if (PivotExpander.IsPivotCall(node))
 			{
@@ -1012,19 +1007,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			};
 		}
 
-		// A cell read through PivotCells' own members is the member access Sql.Property builds.
-		static MethodCallExpression MakeCellRead(Expression cells, Expression name, Type cellType)
-			=> Expression.Call(Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(cellType), Expression.Convert(cells, typeof(object)), name);
-
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
-			// The indexer is typed object; the conversion over it names the cell's type.
-			if (node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Operand: MethodCallExpression { Object: { } cells, Method.Name: "get_Item" } indexer }
-				&& cells.Type == typeof(PivotCells))
-			{
-				return Visit(MakeCellRead(cells, indexer.Arguments[0], node.Type));
-			}
-
 			if (node.Method != null)
 			{
 				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);

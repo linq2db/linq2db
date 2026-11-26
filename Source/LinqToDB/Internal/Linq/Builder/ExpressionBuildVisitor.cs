@@ -828,6 +828,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				return newNode;
 			}
 
+			// A bare indexer arrives where a key is unwrapped of its conversion (OrderBy).
+			if (node.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true } or { Name: "get_Item" }
+				&& TryGetPivotCellRead(node, node.Method.IsGenericMethod ? node.Method.GetGenericArguments()[0] : node.Type, out var cellRead))
+			{
+				return Visit(cellRead);
+			}
+
 			if (node.Method.DeclaringType == typeof(Sql))
 			{
 				switch (node.Method.Name)
@@ -2703,6 +2710,27 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& !node.Operand.Type.IsNullableOrReferenceType;
 		}
 
+		// A cell read where SQL is required - a filter, an ordering - is the dynamic column the pivot generated, as
+		// Sql.Property reads it. A projection keeps the in-memory read, and a receiver the client holds stays a value.
+		bool TryGetPivotCellRead(MethodCallExpression call, Type cellType, [NotNullWhen(true)] out Expression? cellRead)
+		{
+			cellRead = null;
+
+			if (_buildPurpose is not BuildPurpose.Sql
+				|| call.Object is not { } cells
+				|| cells.Type != typeof(PivotCells)
+				|| Builder.CanBeEvaluatedOnClient(cells)
+				|| !Builder.CanBeEvaluatedOnClient(call.Arguments[0]))
+				return false;
+
+			var name = Builder.EvaluateExpression<string>(call.Arguments[0]);
+			if (name == null)
+				return false;
+
+			cellRead = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), cellType, name));
+			return true;
+		}
+
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
 			// A conversion to a nullable type asks for the NULL: its operand is neither calculated on the client under the
@@ -2717,6 +2745,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (PreferClientCalculation(node))
 				return base.VisitUnary(node);
+
+			// The indexer is typed object; the conversion over it names the cell's type.
+			if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
+				&& node.Operand is MethodCallExpression { Method.Name: "get_Item" } indexer
+				&& TryGetPivotCellRead(indexer, node.Type, out var cellRead))
+			{
+				return Visit(cellRead);
+			}
 
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{

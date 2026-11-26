@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -112,9 +113,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression? accumulated = null;
 
-			foreach (var column in info.Columns)
+			var columns = info.Columns.Select(ReadCellAsColumn).ToList();
+			var names   = GetPhysicalColumnNames(columns, info.SourceType, mappingSchema);
+
+			for (var i = 0; i < columns.Count; i++)
 			{
-				var name     = GetPhysicalColumnName(column, info.SourceType, mappingSchema);
+				var column   = columns[i];
+				var name     = names[i];
 				var rowParam = Expression.Parameter(info.SourceType, "row");
 
 				var projectionBody   = info.ResultSelector.GetBody(rowParam, Expression.Constant(name), column.GetBody(rowParam));
@@ -144,14 +149,49 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
+		// A pivot cell read through PivotCells' own members becomes the dynamic-column access Sql.Property builds.
+		static LambdaExpression ReadCellAsColumn(LambdaExpression column)
+		{
+			var body     = column.Body;
+			var cellType = body.Type;
+
+			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary)
+				body = unary.Operand;
+
+			if (body is not MethodCallExpression { Object: { Type: var receiverType } cells } call
+				|| receiverType != typeof(PivotCells)
+				|| call.Arguments[0].Find(column.Parameters[0]) != null)
+				return column;
+
+			if (call.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true })
+				cellType = call.Method.GetGenericArguments()[0];
+			else if (call.Method is not { Name: "get_Item" } || ReferenceEquals(body, column.Body))
+				return column;
+
+			var name = call.Arguments[0].EvaluateExpression<string>();
+			if (name == null)
+				return column;
+
+			var access = (Expression)Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), cellType, name));
+
+			return Expression.Lambda(access.Type == column.Body.Type ? access : Expression.Convert(access, column.Body.Type), column.Parameters);
+		}
+
 		// The name column reports the physical column name, so a query reads the same names whether or not the
 		// member was renamed by the mapping.
-		static string GetPhysicalColumnName(LambdaExpression column, Type sourceType, MappingSchema mappingSchema)
+		static string[] GetPhysicalColumnNames(IReadOnlyList<LambdaExpression> columns, Type sourceType, MappingSchema mappingSchema)
 		{
-			var (path, memberName) = GetColumnName(column);
+			var descriptor = mappingSchema.GetEntityDescriptor(sourceType);
+			var read       = columns.Select(GetColumnName).ToArray();
+			var mapped     = read.Select(r => descriptor[r.path]?.ColumnName).ToArray();
 
-			// A path the mapping does not carry - a member of a projected object, a pivot cell - is named by its own member.
-			return mappingSchema.GetEntityDescriptor(sourceType)[path]?.ColumnName ?? memberName;
+			// A path the mapping does not carry - a member of a projected object, a pivot cell - is named by its own member,
+			// unless another column would read the same name: then the path tells them apart.
+			var named = read.Select((r, i) => mapped[i] ?? r.memberName).ToArray();
+
+			return named
+				.Select((n, i) => mapped[i] == null && named.Where((other, j) => j != i && string.Equals(other, n, StringComparison.Ordinal)).Any() ? read[i].path : n)
+				.ToArray();
 		}
 
 		static (string path, string memberName) GetColumnName(LambdaExpression column)
