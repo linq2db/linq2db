@@ -904,6 +904,70 @@ namespace Tests.Linq
 				.ShouldBe(new[] { "A", "B" });
 		}
 
+		/// <summary>
+		/// Where SQL is required, <see cref="PivotCells.Get{T}"/> reads the cell's column converted to <c>T</c>, not the
+		/// in-memory default a projection reads for a cell of another type.
+		/// </summary>
+		[Test]
+		public void AGetInASqlPositionReadsTheCellAsItsType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			pivoted
+				.Where(r => r.Cells.Get<int>("Y2010") == 20)
+				.Select(r => r.Key)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			pivoted
+				.Select(r => r.Cells.Get<int>("Y2010"))
+				.Distinct()
+				.ToList()
+				.OrderBy(v => v)
+				.ShouldBe(new[] { 15, 20 });
+		}
+
+		/// <summary>Where SQL is required, a name no cell carries is a named error rather than a getter that throws later.</summary>
+		[Test]
+		public void AnAbsentCellNameInASqlPositionIsNamed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			var expected = Message(ErrorHelper.Pivot.Error_PivotCellNotFound, "Y2099");
+
+			Assert.That(
+				() => pivoted.Where(r => r.Cells.Get<decimal?>("Y2099") > 1).ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+
+			Assert.That(
+				() => pivoted.Select(r => r.Cells.Get<decimal?>("Y2099")).Distinct().ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+		}
+
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
 		[Test]
 		public void UnpivotsTheCellsUnderTheirOwnNames([DataSources] string context)

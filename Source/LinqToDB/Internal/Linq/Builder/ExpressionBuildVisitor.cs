@@ -832,7 +832,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (node.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true } or { Name: "get_Item" }
 				&& TryGetPivotCellRead(node, node.Method.IsGenericMethod ? node.Method.GetGenericArguments()[0] : node.Type, out var cellRead))
 			{
-				return Visit(cellRead);
+				return cellRead;
 			}
 
 			if (node.Method.DeclaringType == typeof(Sql))
@@ -2727,7 +2727,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (name == null)
 				return false;
 
-			cellRead = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), cellType, name));
+			// The cell is read as its own column and converted to the type the read names, as a cast over the indexer is.
+			var access     = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), typeof(object), name));
+			var translated = Visit(cellType == typeof(object) ? access : Expression.Convert(access, cellType));
+
+			// A name no cell carries, or cells that are not the pivot's own, have no column to read.
+			cellRead = translated is SqlPlaceholderExpression
+				? translated
+				: new SqlErrorExpression(call, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, name), cellType);
+
 			return true;
 		}
 
@@ -2751,7 +2759,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& node.Operand is MethodCallExpression { Method.Name: "get_Item" } indexer
 				&& TryGetPivotCellRead(indexer, node.Type, out var cellRead))
 			{
-				return Visit(cellRead);
+				return cellRead;
 			}
 
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)

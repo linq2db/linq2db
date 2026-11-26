@@ -19,11 +19,15 @@ namespace LinqToDB
 	/// A result type can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/>. That view follows the
 	/// dictionary contract: its indexer throws <see cref="KeyNotFoundException"/> for a name no cell carries, where
 	/// <c>cells[name]</c> on this type returns <see langword="null"/>. Read as <see langword="dynamic"/>, a name no cell
-	/// carries throws the runtime binder's exception. Where a query needs SQL - a filter, an ordering, an unpivot column -
-	/// <c>row.Cells.Get&lt;decimal?&gt;("Y2010")</c> and <c>(decimal?)row.Cells["Y2010"]</c> read the cell's column, typed as
-	/// written, when the member is typed <see cref="PivotCells"/>; a projection reads the materialized cells as documented
-	/// on each member. A member typed <see cref="IReadOnlyDictionary{TKey,TValue}"/> reaches the interface's indexer, which is
-	/// not translated; <c>Sql.Property&lt;decimal?&gt;(row.Cells, "Y2010")</c> reads the column either way.
+	/// carries throws the runtime binder's exception.
+	/// <para>
+	/// Where a query needs SQL - a filter, an ordering, a grouping key, <c>Distinct</c>, an aggregate, an unpivot column -
+	/// <c>row.Cells.Get&lt;decimal?&gt;("Y2010")</c> and <c>(decimal?)row.Cells["Y2010"]</c> read the cell's column, converted to
+	/// the type the read names, when the member is typed <see cref="PivotCells"/>; a name no cell carries is an error there.
+	/// A plain projection reads the materialized cells as documented on each member. A member typed
+	/// <see cref="IReadOnlyDictionary{TKey,TValue}"/> reaches the interface's indexer, which is not translated: cast it,
+	/// <c>((PivotCells)row.Cells).Get&lt;decimal?&gt;("Y2010")</c>, or read it as <c>Sql.Property&lt;decimal?&gt;(row.Cells, "Y2010")</c>.
+	/// </para>
 	/// </remarks>
 	[SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "named for its pivot role; the dictionary view is secondary")]
 	public sealed class PivotCells : DynamicObject, IReadOnlyDictionary<string, object?>
