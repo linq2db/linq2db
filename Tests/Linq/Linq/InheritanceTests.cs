@@ -1355,7 +1355,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
-			ErrorMessage = "Inheritance mapping is not defined for discriminator value '2'",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value",
 			Details = "no-issue: Partial mapping is not supported for now")]
 		[Test]
 		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)

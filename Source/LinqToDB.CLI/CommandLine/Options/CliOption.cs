@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.Json;
 
 using LinqToDB.CommandLine.Commands;
@@ -39,6 +40,24 @@ namespace LinqToDB.CommandLine.Options
 		/// it does not support.
 		/// </summary>
 		public TargetLanguages Languages { get; init; } = TargetLanguages.All;
+
+		/// <summary>
+		/// For an option that doesn't apply to F#: the value F# generation always uses (see
+		/// <c>Scaffolder</c> language feature adjustments). Specifying exactly this value together with
+		/// <c>--target-language f#</c> is accepted; any other value is rejected. When <see langword="null"/>, the
+		/// option is rejected for F# with any value.
+		/// </summary>
+		public object? FSharpValue { get; init; }
+
+		/// <summary>
+		/// <see cref="FSharpValue"/> as it is written on the command line.
+		/// </summary>
+		public string? FSharpValueText => FSharpValue switch
+		{
+			null   => null,
+			bool b => b ? "true" : "false",
+			var v  => Convert.ToString(v, CultureInfo.InvariantCulture),
+		};
 
 		/// <summary>
 		/// Parse option value(s) using CLI arguments.

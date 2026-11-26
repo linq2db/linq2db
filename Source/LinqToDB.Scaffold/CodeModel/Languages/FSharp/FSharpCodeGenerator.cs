@@ -1979,6 +1979,10 @@ namespace LinqToDB.CodeModel
 						else
 							remainingName.InsertRange(0, type.Namespace!);
 
+						// F# resolves a partial namespace only through an opened namespace, not through the enclosing one
+						// as C# does, so a needed qualifier is always the whole path
+						var fullPath = remainingName.ToList();
+
 						while (!_languageProvider.FullNameEqualityComparer.Equals(remainingName, scope))
 						{
 							// A scope may be absent from the map when a type was lifted out of its original
@@ -2007,7 +2011,7 @@ namespace LinqToDB.CodeModel
 
 						if (renderedParts != null)
 						{
-							foreach (var part in renderedParts)
+							foreach (var part in fullPath)
 							{
 								WriteIdentifier(part.Name);
 								Write('.');
