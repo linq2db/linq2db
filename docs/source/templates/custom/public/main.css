@@ -397,13 +397,13 @@ body:has(.landing-hero) {
    ============================================================ */
 .landing-dbs {
 	margin: 0 calc(-50vw + 50%);
-	padding: 1.75rem 2rem;
+	padding: 1.1rem 2rem;
 	text-align: center;
 	border-bottom: 1px solid var(--bs-border-color);
 }
 
 .landing-dbs-title {
-	margin-bottom: 0.9rem;
+	margin-bottom: 0.4rem;
 	font-size: 0.8rem;
 	font-weight: 600;
 	text-transform: uppercase;
@@ -415,27 +415,34 @@ body:has(.landing-hero) {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	gap: 0.5rem;
-	max-width: 1000px;
+	row-gap: 0.2rem;
+	max-width: 1320px;
 	margin: 0 auto;
 	padding: 0;
 	list-style: none;
+	font-size: 0.95rem;
+}
+
+.landing-dbs-list li {
+	white-space: nowrap;
+}
+
+/* separators trail the names, so a wrapped line ends with one instead of starting with it */
+.landing-dbs-list li:not(:last-child)::after {
+	content: "·";
+	content: "·" / "";
+	margin: 0 0.6rem;
+	color: var(--bs-secondary-color);
 }
 
 .landing-dbs-list a {
-	display: inline-block;
-	padding: 0.3rem 0.8rem;
-	border: 1px solid var(--bs-border-color);
-	border-radius: 999px;
-	font-size: 0.85rem;
 	color: var(--bs-body-color);
 	text-decoration: none;
-	transition: color 0.2s, border-color 0.2s;
 }
 
 .landing-dbs-list a:hover {
-	border-color: #667eea;
 	color: var(--bs-link-color);
+	text-decoration: underline;
 }
 
 /* ============================================================
