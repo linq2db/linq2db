@@ -104,51 +104,51 @@ FROM
 
 #### Supported Functions (could be incomplete)
 
-The following table contains list of supported Window Functions and `LINQ To DB` representation of these functions. Function names link to the PostgreSQL documentation, or to the Oracle documentation for functions PostgreSQL does not have.
+The following table contains list of supported Window Functions and `LINQ To DB` representation of these functions. Function names link to the Oracle Database documentation, which covers every function in the table.
 
-Function                                                                                                                                     | Linq To DB Extension
--------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------
-[AVG](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-TABLE)                                            | `Sql.Window.Average()`
-[CORR](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                                | `Sql.Window.Corr()`
-[COUNT](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-TABLE)                                          | `Sql.Window.Count()`, `Sql.Window.LongCount()`
-[COVAR_POP](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                           | `Sql.Window.CovarPop()`
-[COVAR_SAMP](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                          | `Sql.Window.CovarSamp()`
-[CUME_DIST](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                            | `Sql.Window.CumeDist()`
-[DENSE_RANK](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                           | `Sql.Window.DenseRank()`
-[FIRST](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/FIRST.html)                                                      | `Sql.Window.[AggregateFunction](expr, w => w.KeepFirst().OrderBy(...))`
-[FIRST_VALUE](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                          | `Sql.Window.FirstValue()`
-[LAG](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                                  | `Sql.Window.Lag()`
-[LAST](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/LAST.html)                                                        | `Sql.Window.[AggregateFunction](expr, w => w.KeepLast().OrderBy(...))`
-[LAST_VALUE](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                           | `Sql.Window.LastValue()`
-[LEAD](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                                 | `Sql.Window.Lead()`
-[MAX](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-TABLE)                                            | `Sql.Window.Max()`
-[MEDIAN](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/MEDIAN.html)                                                    | `Sql.Window.Median()`
-[MIN](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-TABLE)                                            | `Sql.Window.Min()`
-[NTH_VALUE](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                            | `Sql.Window.NthValue()`
-[NTILE](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                                | `Sql.Window.NTile()`
-[PERCENT_RANK](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                         | `Sql.Window.PercentRank()`
-[PERCENTILE_CONT](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-ORDEREDSET-TABLE)                               | `Sql.Window.PercentileCont()`
-[PERCENTILE_DISC](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-ORDEREDSET-TABLE)                               | `Sql.Window.PercentileDisc()`
-[RANK](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                                 | `Sql.Window.Rank()`
-[RATIO_TO_REPORT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/RATIO_TO_REPORT.html)                                  | `Sql.Window.RatioToReport()`
-[REGR_ (Linear Regression) Functions](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE) |
-[REGR_SLOPE](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                          | `Sql.Window.RegrSlope()`
-[REGR_INTERCEPT](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                      | `Sql.Window.RegrIntercept()`
-[REGR_COUNT](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                          | `Sql.Window.RegrCount()`
-[REGR_R2](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                             | `Sql.Window.RegrR2()`
-[REGR_AVGX](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                           | `Sql.Window.RegrAvgX()`
-[REGR_AVGY](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                           | `Sql.Window.RegrAvgY()`
-[REGR_SXX](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.RegrSXX()`
-[REGR_SYY](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.RegrSYY()`
-[REGR_SXY](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.RegrSXY()`
-[ROW_NUMBER](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                           | `Sql.Window.RowNumber()`
-[STDDEV](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                              | `Sql.Window.StdDev()`
-[STDDEV_POP](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                          | `Sql.Window.StdDevPop()`
-[STDDEV_SAMP](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                         | `Sql.Window.StdDevSamp()`
-[SUM](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-TABLE)                                            | `Sql.Window.Sum()`
-[VAR_POP](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                             | `Sql.Window.VarPop()`
-[VAR_SAMP](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.VarSamp()`
-[VARIANCE](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.Variance()`
+Function                                                                                                                                          | Linq To DB Extension
+------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------
+[AVG](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/AVG.html)                                                               | `Sql.Window.Average()`
+[CORR](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/CORR.html)                                                             | `Sql.Window.Corr()`
+[COUNT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/COUNT.html)                                                           | `Sql.Window.Count()`, `Sql.Window.LongCount()`
+[COVAR_POP](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/COVAR_POP.html)                                                   | `Sql.Window.CovarPop()`
+[COVAR_SAMP](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/COVAR_SAMP.html)                                                 | `Sql.Window.CovarSamp()`
+[CUME_DIST](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/CUME_DIST.html)                                                   | `Sql.Window.CumeDist()`
+[DENSE_RANK](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/DENSE_RANK.html)                                                 | `Sql.Window.DenseRank()`
+[FIRST](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/FIRST.html)                                                           | `Sql.Window.[AggregateFunction](expr, w => w.KeepFirst().OrderBy(...))`
+[FIRST_VALUE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/FIRST_VALUE.html)                                               | `Sql.Window.FirstValue()`
+[LAG](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/LAG.html)                                                               | `Sql.Window.Lag()`
+[LAST](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/LAST.html)                                                             | `Sql.Window.[AggregateFunction](expr, w => w.KeepLast().OrderBy(...))`
+[LAST_VALUE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/LAST_VALUE.html)                                                 | `Sql.Window.LastValue()`
+[LEAD](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/LEAD.html)                                                             | `Sql.Window.Lead()`
+[MAX](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/MAX.html)                                                               | `Sql.Window.Max()`
+[MEDIAN](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/MEDIAN.html)                                                         | `Sql.Window.Median()`
+[MIN](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/MIN.html)                                                               | `Sql.Window.Min()`
+[NTH_VALUE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/NTH_VALUE.html)                                                   | `Sql.Window.NthValue()`
+[NTILE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/NTILE.html)                                                           | `Sql.Window.NTile()`
+[PERCENT_RANK](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/PERCENT_RANK.html)                                             | `Sql.Window.PercentRank()`
+[PERCENTILE_CONT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/PERCENTILE_CONT.html)                                       | `Sql.Window.PercentileCont()`
+[PERCENTILE_DISC](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/PERCENTILE_DISC.html)                                       | `Sql.Window.PercentileDisc()`
+[RANK](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/RANK.html)                                                             | `Sql.Window.Rank()`
+[RATIO_TO_REPORT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/RATIO_TO_REPORT.html)                                       | `Sql.Window.RatioToReport()`
+[REGR_ (Linear Regression) Functions](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html) |
+[REGR_SLOPE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                          | `Sql.Window.RegrSlope()`
+[REGR_INTERCEPT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                      | `Sql.Window.RegrIntercept()`
+[REGR_COUNT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                          | `Sql.Window.RegrCount()`
+[REGR_R2](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                             | `Sql.Window.RegrR2()`
+[REGR_AVGX](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                           | `Sql.Window.RegrAvgX()`
+[REGR_AVGY](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                           | `Sql.Window.RegrAvgY()`
+[REGR_SXX](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                            | `Sql.Window.RegrSXX()`
+[REGR_SYY](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                            | `Sql.Window.RegrSYY()`
+[REGR_SXY](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/REGR_-Linear-Regression-Functions.html)                            | `Sql.Window.RegrSXY()`
+[ROW_NUMBER](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/ROW_NUMBER.html)                                                 | `Sql.Window.RowNumber()`
+[STDDEV](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/STDDEV.html)                                                         | `Sql.Window.StdDev()`
+[STDDEV_POP](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/STDDEV_POP.html)                                                 | `Sql.Window.StdDevPop()`
+[STDDEV_SAMP](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/STDDEV_SAMP.html)                                               | `Sql.Window.StdDevSamp()`
+[SUM](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/SUM.html)                                                               | `Sql.Window.Sum()`
+[VAR_POP](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/VAR_POP.html)                                                       | `Sql.Window.VarPop()`
+[VAR_SAMP](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/VAR_SAMP.html)                                                     | `Sql.Window.VarSamp()`
+[VARIANCE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/VARIANCE.html)                                                     | `Sql.Window.Variance()`
 
 [LISTAGG](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/LISTAGG.html) has no `Sql.Window` equivalent. To concatenate strings, use `string.Join` over a group, e.g. `string.Join(", ", g.OrderBy(x => x.Id).Select(x => x.Name))`, which is translated to `LISTAGG(...) WITHIN GROUP (ORDER BY ...)` on Oracle.
 
