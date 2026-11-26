@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -331,6 +332,48 @@ namespace Tests.Linq
 
 			Assert.That(res, Has.Length.EqualTo(1));
 			Assert.That(res[0].ID, Is.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6429")]
+		public void AnyOverNullLocalCollectionBehindNullCheck([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			List<string>? names = null;
+			int[]?        ids   = null;
+
+			AssertQuery(
+				db.Person
+					.Where(p => names == null || names.Any(n => n == p.FirstName)));
+
+			AssertQuery(
+				db.Person
+					.Where(p => names != null && names.Any(n => n == p.FirstName)));
+
+			AssertQuery(
+				db.Person
+					.Where(p => names == null || !names.Any(n => n == p.FirstName)));
+
+			AssertQuery(
+				db.Person
+					.Where(p => ids == null || ids.Any(i => i == p.ID)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6429")]
+		public void AnyOverLocalCollectionAlternatingWithNull([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(FilterByNames(null));
+			AssertQuery(FilterByNames(["John"]));
+			AssertQuery(FilterByNames(null));
+			AssertQuery(FilterByNames(["Tester", "Jane"]));
+
+			IQueryable<Person> FilterByNames(List<string>? names)
+			{
+				return db.Person
+					.Where(p => names == null || names.Any(n => n == p.FirstName));
+			}
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
