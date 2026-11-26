@@ -4,7 +4,7 @@ A window function computes a value for each row from a set of rows related to it
 
 In `LINQ To DB` window functions are methods of the static `Sql.Window` property. Each method takes the function arguments followed by a lambda that describes the `OVER` clause.
 
-> The legacy `Sql.Ext.[Function]().Over()...ToValue()` chain, declared in [AnalyticFunctions.cs](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/AnalyticFunctions.cs), is superseded by `Sql.Window` and produces the same SQL. The [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) analyzer reports it and offers a code fix that migrates it.
+> The legacy `Sql.Ext.[Function]().Over()...ToValue()` chain, declared in [AnalyticFunctions.cs](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/AnalyticFunctions.cs), is superseded by `Sql.Window`. Both produce the same SQL, but some result types differ: `Sql.Ext.NTile(4)` is `int` where `Sql.Window.NTile` is `long`, and `Sql.Ext.Average<double>(...)` reads a `NULL` average as `0` where `Sql.Window.Average` over a nullable column returns `null`. The [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) analyzer reports it and offers a code fix that migrates it.
 
 ## A First Example
 
@@ -245,7 +245,7 @@ These functions take their modifiers at the start of the lambda, before the wind
 
 ## Aggregate Modifiers: Filter and Distinct
 
-Aggregate functions accept `Filter(condition)`, which limits the rows the aggregate sees, as the first call of the lambda. Where the database has no `FILTER (WHERE ...)` clause - everywhere but PostgreSQL and DuckDB - the condition moves inside the aggregate:
+Aggregate functions accept `Filter(condition)`, which limits the rows the aggregate sees, as the first call of the lambda. Where the database has no `FILTER (WHERE ...)` clause - everywhere but PostgreSQL, DuckDB and Access (LibRed) - the condition moves inside the aggregate:
 
 ```cs
 var q =
@@ -524,15 +524,15 @@ Not every database in the list has every function and clause. The complete pictu
 | `NTile`, `PercentRank`, `CumeDist` | all but Firebird 3; `CumeDist` also not on ClickHouse |
 | `ROWS` frames | all but Firebird 3 |
 | `RANGE` frames | all but Firebird 3, SAP HANA and YDB |
-| `GROUPS` frames, frame `EXCLUDE` | PostgreSQL, SQLite, DuckDB |
-| `Distinct()` | Oracle, ClickHouse, DuckDB |
-| `IgnoreNulls()` | Oracle, SQL Server 2022+, DuckDB, DB2, Informix; on YDB for `FirstValue` / `LastValue` / `NthValue` only |
-| `FromLast()` | Oracle, DB2, Firebird 3+ |
+| `GROUPS` frames, frame `EXCLUDE` | PostgreSQL, SQLite, DuckDB, Access (LibRed) |
+| `Distinct()` | Oracle, ClickHouse, DuckDB, Access (LibRed) |
+| `IgnoreNulls()` | Oracle, SQL Server 2022+, DuckDB, DB2, Informix, Access (LibRed); on YDB for `FirstValue` / `LastValue` / `NthValue` only |
+| `FromLast()` | Oracle, DB2, Firebird 3+, Access (LibRed) |
 | `KeepFirst()` / `KeepLast()` | Oracle |
 | `Median` | Oracle, MariaDB, DuckDB, DB2, SAP HANA |
-| `Sql.Window.PercentileCont` / `PercentileDisc` | Oracle, SQL Server, MariaDB, SAP HANA |
-| `g.PercentileCont` / `g.PercentileDisc` over a group | Oracle, PostgreSQL, DuckDB, DB2 |
+| `Sql.Window.PercentileCont` / `PercentileDisc` | Oracle, SQL Server, MariaDB, SAP HANA, Access (LibRed) |
+| `g.PercentileCont` / `g.PercentileDisc` over a group | Oracle, PostgreSQL, DuckDB, DB2, Access (LibRed) |
 | `g.Rank(value, ...)` and the other hypothetical-set forms | Oracle, PostgreSQL |
-| `REGR_*` | Oracle, PostgreSQL, DuckDB, DB2 |
-| `Filter(...)` | all; native on PostgreSQL and DuckDB, emulated elsewhere |
+| `REGR_*` | Oracle, PostgreSQL, DuckDB, DB2, Access (LibRed) |
+| `Filter(...)` | all; native on PostgreSQL, DuckDB and Access (LibRed), emulated elsewhere |
 | `Sql.NullsPosition` | all; emulated where the database has no `NULLS FIRST` / `NULLS LAST` |
