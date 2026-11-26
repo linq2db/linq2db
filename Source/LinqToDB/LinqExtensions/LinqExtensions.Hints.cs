@@ -334,6 +334,14 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <remarks>
+		/// On Oracle, only FOR UPDATE clauses on the outermost SELECT are accepted. Other subquery hints
+		/// throw LinqToDBException instead of being ignored. Nested queries (including LoadWith nesting),
+		/// CTE bodies, set operations, DISTINCT, grouping and aggregates cannot be locked.
+		/// Skip and ordered row limits are unsupported; SKIP LOCKED rejects any row limit, including First and Single.
+		/// Other locking modes support simple unordered limits using ROWNUM. Root INSERT, UPDATE and DELETE
+		/// omit the clause and use their own row locks.
+		/// </remarks>
 		/// <returns>Query source with hints.</returns>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
@@ -358,6 +366,14 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
+		/// <remarks>
+		/// On Oracle, only FOR UPDATE clauses on the outermost SELECT are accepted. Other subquery hints
+		/// throw LinqToDBException instead of being ignored. Nested queries (including LoadWith nesting),
+		/// CTE bodies, set operations, DISTINCT, grouping and aggregates cannot be locked.
+		/// Skip and ordered row limits are unsupported; SKIP LOCKED rejects any row limit, including First and Single.
+		/// Other locking modes support simple unordered limits using ROWNUM. Root INSERT, UPDATE and DELETE
+		/// omit the clause and use their own row locks.
+		/// </remarks>
 		/// <returns>Query source with hints.</returns>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
@@ -387,6 +403,14 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <remarks>
+		/// On Oracle, only FOR UPDATE clauses on the outermost SELECT are accepted. Other subquery hints
+		/// throw LinqToDBException instead of being ignored. Nested queries (including LoadWith nesting),
+		/// CTE bodies, set operations, DISTINCT, grouping and aggregates cannot be locked.
+		/// Skip and ordered row limits are unsupported; SKIP LOCKED rejects any row limit, including First and Single.
+		/// Other locking modes support simple unordered limits using ROWNUM. Root INSERT, UPDATE and DELETE
+		/// omit the clause and use their own row locks.
+		/// </remarks>
 		/// <returns>Table-like query source with hints.</returns>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]

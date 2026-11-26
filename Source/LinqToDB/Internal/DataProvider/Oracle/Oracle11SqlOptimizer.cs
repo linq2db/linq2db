@@ -21,6 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			OracleForUpdateHelper.PrepareRootQuery(statement, mappingSchema);
 			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 
 			switch (statement.QueryType)
@@ -171,18 +172,25 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			statement = base.FixSetOperationValues(mappingSchema, statement);
 
-			statement.VisitParentFirst(mappingSchema, static (mappingSchema, e) =>
+			statement.VisitParentFirst((mappingSchema, root: statement.SelectQuery), static (context, e) =>
 			{
-				if (e is SelectQuery { HasSetOperators: true } query)
+				if (e is not SelectQuery query)
+					return true;
+
+				// Both Oracle optimizers already visit every query here before rewriting paging or DML.
+				if (query.SqlQueryExtensions is { Count: > 0 } extensions && !ReferenceEquals(query, context.root))
+					OracleForUpdateHelper.ValidateNestedQuery(extensions);
+
+				if (query.HasSetOperators)
 				{
 					IEnumerable<List<SqlColumn>> setsColumns = [query.Select.Columns, .. query.SetOperators.Select(o => o.SelectQuery.Select.Columns)];
 
 					for (var i = 0; i < query.Select.Columns.Count; i++)
 					{
-						if (mappingSchema.HasInconsistentCharset(setsColumns.Select(cols => cols[i].Expression)))
+						if (context.mappingSchema.HasInconsistentCharset(setsColumns.Select(cols => cols[i].Expression)))
 						{
 							foreach (var cols in setsColumns)
-								cols[i].Expression = mappingSchema.FixCharset(cols[i].Expression);
+								cols[i].Expression = context.mappingSchema.FixCharset(cols[i].Expression);
 						}
 					}
 				}

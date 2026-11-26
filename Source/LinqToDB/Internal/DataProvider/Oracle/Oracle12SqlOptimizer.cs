@@ -17,6 +17,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			OracleForUpdateHelper.PrepareRootQuery(statement, mappingSchema);
 			CorrectOutputTables(statement);
 
 			switch (statement.QueryType)

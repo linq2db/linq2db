@@ -7,3 +7,12 @@ LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11Ma
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11MappingSchema.PostgreSQL11MappingSchema() -> void
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema.PostgreSQL12MappingSchema() -> void
+const LinqToDB.DataProvider.Oracle.OracleHints.ForUpdate = "FOR UPDATE" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.NoWait = "NOWAIT" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.SkipLocked = "SKIP LOCKED" -> string!
+static LinqToDB.DataProvider.Oracle.OracleHints.Wait(int seconds) -> string!
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlBuilderBase.BuildSubQueryExtensions(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> void
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateNoWaitHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateSkipLockedHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateWaitHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, int seconds, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!

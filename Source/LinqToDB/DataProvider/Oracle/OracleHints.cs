@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 using JetBrains.Annotations;
 
@@ -9,6 +10,7 @@ using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -157,6 +159,204 @@ namespace LinqToDB.DataProvider.Oracle
 				return string.Format(CultureInfo.InvariantCulture, "CONTAINERS(DEFAULT_PDB_HINT='{0}')", hint);
 			}
 		}
+
+		// https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/SELECT.html#GUID-CFA006CA-6FF1-4972-821E-6996142A51C6
+		//
+		/// <summary>Locks the selected rows until the transaction ends.</summary>
+		public const string ForUpdate  = "FOR UPDATE";
+		/// <summary>Fails immediately when a selected row is already locked.</summary>
+		public const string NoWait     = "NOWAIT";
+		/// <summary>Skips rows that are already locked by another transaction.</summary>
+		public const string SkipLocked = "SKIP LOCKED";
+
+		/// <summary>Returns a WAIT locking clause for use with a generic subquery hint.</summary>
+		/// <param name="seconds">Maximum number of seconds to wait for a row lock.</param>
+		/// <returns>The SQL locking wait clause.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">The wait is negative.</exception>
+		public static string Wait(int seconds)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(seconds);
+			return string.Format(CultureInfo.InvariantCulture, "WAIT {0}", seconds);
+		}
+
+		#region Row locking
+
+		sealed class ForUpdateColumnsAttribute : SqlQueryDependentAttribute
+		{
+			public override Expression PrepareForCache(Expression expression, LinqToDB.Expressions.IExpressionEvaluator evaluator)
+			{
+				// Keep selectors as quoted lambdas for QueryExtensionBuilder, including captured arrays.
+				if (expression is not NewArrayExpression && evaluator.CanBeEvaluated(expression)
+					&& evaluator.Evaluate(expression) is LambdaExpression[] columns)
+					return Expression.NewArrayInit(expression.Type.GetElementType()!, columns);
+				return expression;
+			}
+		}
+
+		internal sealed class ForUpdateHintExtensionBuilder : ISqlQueryExtensionBuilder
+		{
+			void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+				stringBuilder.Append(ForUpdate);
+				var count = (int)((SqlValue)sqlQueryExtension.Arguments["columns.Count"]).Value!;
+				for (var i = 0; i < count; i++)
+				{
+					var column = sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"columns.{i}")];
+					var field = QueryHelper.UnwrapNullablity(column);
+					while (field is SqlColumn nested)
+						field = QueryHelper.UnwrapNullablity(nested.Expression);
+					if (field is not SqlField)
+						throw new LinqToDBException("Oracle FOR UPDATE OF requires mapped column selectors.");
+
+					stringBuilder.Append(i == 0 ? " OF " : ", ");
+					sqlBuilder.BuildExpression(stringBuilder, column, true);
+				}
+
+				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
+				if (hint.Length > 0)
+					stringBuilder.Append(' ').Append(hint);
+			}
+		}
+
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.SubQueryHint, typeof(ForUpdateHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		static IOracleSpecificQueryable<TSource> ForUpdateSubQueryHint<TSource>(
+			IOracleSpecificQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
+			[ForUpdateColumns] params Expression<Func<TSource, object?>>[] columns)
+			where TSource : notnull
+		{
+			var currentSource = source.ProcessIQueryable();
+			return new OracleSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(null,
+					MethodHelper.GetMethodInfo(ForUpdateSubQueryHint, source, hint, columns),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(Expression<Func<TSource, object?>>), columns))));
+		}
+
+		/// <summary>Adds a <c>FOR UPDATE</c> row-locking clause to the query.</summary>
+		/// <remarks>
+		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
+		/// grouping and aggregates cannot be locked. Simple unordered Take/First/Single queries
+		/// use ROWNUM; ordered row limiting and Skip are not supported with row locks.
+		/// LoadWith may nest the hinted query and is then rejected by the outermost SELECT restriction.
+		/// A subsequent INSERT, UPDATE or DELETE omits the clause and uses that statement's own locks.
+		/// </remarks>
+		/// <typeparam name="TSource">Query record type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="columns">Optional mapped columns for OF, for example <c>r => r.Id</c>.
+		/// In a join, select a column of the table to lock, for example <c>r => r.Parent.Id</c>.
+		/// Without columns, Oracle locks rows of every selected table.</param>
+		/// <returns>The query with the row-locking clause.</returns>
+		/// <exception cref="LinqToDBException">The query shape or a column selector does not support row locking.</exception>
+		[ExpressionMethod(nameof(ForUpdateHintImpl))]
+		public static IOracleSpecificQueryable<TSource> ForUpdateHint<TSource>(
+			this IOracleSpecificQueryable<TSource> source,
+			params Expression<Func<TSource, object?>>[] columns)
+			where TSource : notnull
+		{
+			return ForUpdateSubQueryHint(source, string.Empty, columns);
+		}
+		static Expression<Func<IOracleSpecificQueryable<TSource>, Expression<Func<TSource, object?>>[], IOracleSpecificQueryable<TSource>>> ForUpdateHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (source, columns) => ForUpdateSubQueryHint(source, string.Empty, columns);
+		}
+
+		/// <summary>Adds a <c>FOR UPDATE NOWAIT</c> row-locking clause to the query.</summary>
+		/// <remarks>
+		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
+		/// grouping and aggregates cannot be locked. Simple unordered Take/First/Single queries
+		/// use ROWNUM; ordered row limiting and Skip are not supported with row locks.
+		/// LoadWith may nest the hinted query and is then rejected by the outermost SELECT restriction.
+		/// A subsequent INSERT, UPDATE or DELETE omits the clause and uses that statement's own locks.
+		/// </remarks>
+		/// <typeparam name="TSource">Query record type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="columns">Optional mapped columns for OF, for example <c>r => r.Id</c>.
+		/// In a join, select a column of the table to lock, for example <c>r => r.Parent.Id</c>.
+		/// Without columns, Oracle locks rows of every selected table.</param>
+		/// <returns>The query with the row-locking clause.</returns>
+		/// <exception cref="LinqToDBException">The query shape or a column selector does not support row locking.</exception>
+		[ExpressionMethod(nameof(ForUpdateNoWaitHintImpl))]
+		public static IOracleSpecificQueryable<TSource> ForUpdateNoWaitHint<TSource>(
+			this IOracleSpecificQueryable<TSource> source,
+			params Expression<Func<TSource, object?>>[] columns)
+			where TSource : notnull
+		{
+			return ForUpdateSubQueryHint(source, NoWait, columns);
+		}
+		static Expression<Func<IOracleSpecificQueryable<TSource>, Expression<Func<TSource, object?>>[], IOracleSpecificQueryable<TSource>>> ForUpdateNoWaitHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (source, columns) => ForUpdateSubQueryHint(source, NoWait, columns);
+		}
+
+		/// <summary>Adds a <c>FOR UPDATE SKIP LOCKED</c> row-locking clause to the query.</summary>
+		/// <remarks>
+		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
+		/// grouping, aggregates and Skip are not supported. LoadWith may nest the hinted query and is then rejected.
+		/// Row limiting (Take, First, FirstOrDefault, Single and SingleOrDefault) throws LinqToDBException:
+		/// Oracle limits candidate rows before skipping locks, which could hide available unlocked rows.
+		/// Queries without a row limit are supported.
+		/// A subsequent INSERT, UPDATE or DELETE omits this clause and uses the statement's own locks.
+		/// </remarks>
+		/// <typeparam name="TSource">Query record type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="columns">Optional mapped columns for OF, for example <c>r => r.Id</c>.
+		/// In a join, select a column of the table to lock, for example <c>r => r.Parent.Id</c>.
+		/// Without columns, Oracle locks rows of every selected table.</param>
+		/// <returns>The query with the row-locking clause.</returns>
+		/// <exception cref="LinqToDBException">The query shape or a column selector does not support row locking.</exception>
+		[ExpressionMethod(nameof(ForUpdateSkipLockedHintImpl))]
+		public static IOracleSpecificQueryable<TSource> ForUpdateSkipLockedHint<TSource>(
+			this IOracleSpecificQueryable<TSource> source,
+			params Expression<Func<TSource, object?>>[] columns)
+			where TSource : notnull
+		{
+			return ForUpdateSubQueryHint(source, SkipLocked, columns);
+		}
+		static Expression<Func<IOracleSpecificQueryable<TSource>, Expression<Func<TSource, object?>>[], IOracleSpecificQueryable<TSource>>> ForUpdateSkipLockedHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (source, columns) => ForUpdateSubQueryHint(source, SkipLocked, columns);
+		}
+
+		/// <summary>Adds a <c>FOR UPDATE WAIT</c> row-locking clause to the query.</summary>
+		/// <remarks>
+		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
+		/// grouping and aggregates cannot be locked. Simple unordered Take/First/Single queries
+		/// use ROWNUM; ordered row limiting and Skip are not supported with row locks.
+		/// LoadWith may nest the hinted query and is then rejected by the outermost SELECT restriction.
+		/// A subsequent INSERT, UPDATE or DELETE omits the clause and uses that statement's own locks.
+		/// </remarks>
+		/// <typeparam name="TSource">Query record type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="columns">Optional mapped columns for OF, for example <c>r => r.Id</c>.
+		/// In a join, select a column of the table to lock, for example <c>r => r.Parent.Id</c>.
+		/// Without columns, Oracle locks rows of every selected table.</param>
+		/// <param name="seconds">Maximum wait in seconds; must be nonnegative.</param>
+		/// <exception cref="ArgumentOutOfRangeException">The wait is negative.</exception>
+		/// <returns>The query with the row-locking clause.</returns>
+		/// <exception cref="LinqToDBException">The query shape or a column selector does not support row locking.</exception>
+		[ExpressionMethod(nameof(ForUpdateWaitHintImpl))]
+		public static IOracleSpecificQueryable<TSource> ForUpdateWaitHint<TSource>(
+			this IOracleSpecificQueryable<TSource> source,
+			[SqlQueryDependent] int seconds,
+			params Expression<Func<TSource, object?>>[] columns)
+			where TSource : notnull
+		{
+			return ForUpdateSubQueryHint(source, Wait(seconds), columns);
+		}
+		static Expression<Func<IOracleSpecificQueryable<TSource>, int, Expression<Func<TSource, object?>>[], IOracleSpecificQueryable<TSource>>> ForUpdateWaitHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (source, seconds, columns) => ForUpdateSubQueryHint(source, Wait(seconds), columns);
+		}
+
+		#endregion
 
 		#region OracleSpecific Hints
 

@@ -651,6 +651,26 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			}
 		}
 
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
+		{
+			if (statement is SqlSelectStatement && statement.SelectQuery?.SqlQueryExtensions is { } extensions
+				&& extensions.Exists(e => e.Scope == Sql.QueryExtensionScope.SubQueryHint))
+			{
+				if (statement.ParentStatement != null)
+					throw new LinqToDBException(OracleForUpdateHelper.NestedQueryError);
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+					prefix += StringBuilder.ToString(len, StringBuilder.Length - len);
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
+			}
+		}
+
 		protected override void FinalizeBuildQuery(SqlStatement statement)
 		{
 			base.FinalizeBuildQuery(statement);
