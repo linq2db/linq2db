@@ -1,8 +1,9 @@
 # Documentation site
 
 Sources of <https://linq2db.github.io>: articles, table of contents and the docfx configuration under
-`source/`, API reference generated from the projects under `Source/`. The Contributing article includes
-the repository's `CONTRIBUTING.md`. The home page's SQL demo is maintained with `tools/sql-demo/`.
+`source/`, API reference generated from the projects under `Source/`. The Get Started overview and the
+Contributing article include the repository's `README.md` and `CONTRIBUTING.md`. The home page's SQL demo
+is maintained with `tools/sql-demo/`.
 
 ## Building locally
 
@@ -18,7 +19,7 @@ the built assembly) and runs docfx. Open `.build/docs/_site/index.html`, or serv
 
 ## Publishing
 
-`.github/workflows/docs.yml` builds the site on every pull request that touches `docs/`,
+`.github/workflows/docs.yml` builds the site on every pull request that touches `docs/`, `README.md`,
 `CONTRIBUTING.md`, the build settings it depends on (`global.json`, `Directory.Build.props`,
 `Directory.Packages.props`, `Source/**/Directory.Build.props`, `Source/Analyzers.Common.props`) or the
 workflow itself, and publishes it to `linq2db/linq2db.github.io` when a (non-prerelease) GitHub release
