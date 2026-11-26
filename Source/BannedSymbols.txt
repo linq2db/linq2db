@@ -11,8 +11,16 @@ T:System.Data.IDbConnection;Use DbConnection class instead of ADO.NET interfaces
 T:System.Data.IDbDataAdapter;Use DbDataAdapter class instead of ADO.NET interfaces
 T:System.Data.IDbDataParameter;Use DbParameter class instead of ADO.NET interfaces
 T:System.Data.IDbTransaction;Use DbTransaction class instead of ADO.NET interfaces
-T:System.ThreadStaticAttribute;don't do it
+T:System.ThreadStaticAttribute;thread-local state breaks across await. Allowed only as a synchronous re-entrancy guard, under a scoped pragma with a justification. AsyncLocal is not a substitute: it flows into tasks the code starts
 M:System.Linq.Expressions.Expression.Property(System.Linq.Expressions.Expression,System.Reflection.MethodInfo); use overload with PropertyInfo parameter
+
+// Invariant checks must hold in Release: throw, or drop the check
+M:System.Diagnostics.Debug.Assert(System.Boolean); compiled out of Release builds, throw InvalidOperationException instead
+M:System.Diagnostics.Debug.Assert(System.Boolean,System.String); compiled out of Release builds, throw InvalidOperationException instead
+M:System.Diagnostics.Debug.Assert(System.Boolean,System.String,System.String); compiled out of Release builds, throw InvalidOperationException instead
+M:System.Diagnostics.Debug.Assert(System.Boolean,System.String,System.String,System.Object[]); compiled out of Release builds, throw InvalidOperationException instead
+M:System.Diagnostics.Debug.Assert(System.Boolean,System.Diagnostics.Debug.AssertInterpolatedStringHandler@); compiled out of Release builds, throw InvalidOperationException instead
+M:System.Diagnostics.Debug.Assert(System.Boolean,System.Diagnostics.Debug.AssertInterpolatedStringHandler@,System.Diagnostics.Debug.AssertInterpolatedStringHandler@); compiled out of Release builds, throw InvalidOperationException instead
 
 // Better to throw using ThrowIfCancellationRequested
 P:System.Threading.CancellationToken.IsCancellationRequested; prefer to throw instead
