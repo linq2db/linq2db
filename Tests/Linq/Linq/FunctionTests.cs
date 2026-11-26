@@ -633,7 +633,7 @@ namespace Tests.Linq
 				{
 					g.Key,
 					Sum         = g.Sum(x => x.ChildID + g.Key),
-					SumOfMapped = g.Sum(x => x.ChildID + g.Key),
+					SumOfMapped = g.Sum(x => x.ChildID + Math.Abs(g.Key)),
 				},
 				from c in db.Child
 				group c by c.ChildID % 3 into g
@@ -641,7 +641,7 @@ namespace Tests.Linq
 				{
 					g.Key,
 					Sum         = g.MySum(x => x.ChildID + g.Key),
-					SumOfMapped = g.MySum(x => x.ChildID + Coalesce(g.Key, 0)),
+					SumOfMapped = g.MySum(x => x.ChildID + Abs(g.Key)),
 				});
 
 			AreEqual(
@@ -812,6 +812,9 @@ namespace Tests.Linq
 
 		[Sql.Function("COALESCE", ServerSideOnly = true)]
 		static int Coalesce(int? value, int defaultValue) => throw new ServerSideOnlyException(nameof(Coalesce));
+
+		[Sql.Function("Abs", ServerSideOnly = true)]
+		static int Abs(int value) => throw new ServerSideOnlyException(nameof(Abs));
 	}
 
 	public static class SqlLite
