@@ -508,7 +508,7 @@ namespace Tests.Scaffold
 		}
 
 		// all generated types share one `namespace rec` scope, so references to framework types shadowed by entity names
-		// (including names of namespace segments) must be qualified until unambiguous
+		// (including names of namespace segments) must be qualified, with the whole path
 		[Test]
 		public void ShadowedTypeReferencesQualified()
 		{
@@ -539,8 +539,8 @@ namespace Tests.Scaffold
 			{
 				Assert.That(source, Does.Contain("type TestDataContext (options : LinqToDB.DataOptions<TestDataContext>) ="));
 				Assert.That(source, Does.Contain("inherit LinqToDB.Data.DataConnection(options.Options)"));
-				Assert.That(source, Does.Contain("LinqToDB.Data.DataParameter(\"@value\", FSharp.Core.Option.toNullable(value), DataType.Int32)"));
-				Assert.That(source, Does.Contain(": Threading.Tasks.Task<IEnumerable<ProcResult>> ="));
+				Assert.That(source, Does.Contain("LinqToDB.Data.DataParameter(\"@value\", Microsoft.FSharp.Core.Option.toNullable(value), DataType.Int32)"));
+				Assert.That(source, Does.Contain(": System.Threading.Tasks.Task<IEnumerable<ProcResult>> ="));
 				Assert.That(source, Does.Contain("(table : LinqToDB.ITable<Task>, id : int)"));
 			}
 		}
@@ -682,6 +682,201 @@ namespace Tests.Scaffold
 			}
 		}
 
+		// F# resolves a partial namespace (`Model.Person`) only through an opened namespace, so a reference the C# rules
+		// qualify partially is written with its whole path; a generated type named like the root segment does not shadow it
+		[TestCase(false)]
+		[TestCase(true )]
+		public void CrossSchemaAssociationFullyQualified(bool rootNamedType)
+		{
+			var options = FSharpOptions();
+			options.CodeGeneration.Namespace        = "My.Model";
+			options.DataModel.GenerateSchemaAsType  = true;
+
+			var intType = new DatabaseType("int", null, null, null);
+
+			List<Table> tables =
+			[
+				new Table(new SqlObjectName("Person", Schema: "dbo")  , null, [new Column("Id", null, intType, false, true, true, 0)], null, new PrimaryKey(null, ["Id"])),
+				new Table(new SqlObjectName("Person", Schema: "other"), null, [new Column("Id", null, intType, false, true, true, 0), new Column("MainId", null, intType, true, true, true, 1)], null, new PrimaryKey(null, ["Id"])),
+			];
+
+			if (rootNamedType)
+				tables.Add(new Table(new SqlObjectName("My", Schema: "dbo"), null, [new Column("Id", null, intType, false, true, true, 0)], null, new PrimaryKey(null, ["Id"])));
+
+			var source = GenerateSource(
+				options,
+				extraTables : tables,
+				foreignKeys :
+				[
+					new ForeignKey("FK_other_Person_Main", new SqlObjectName("Person", Schema: "other"), new SqlObjectName("Person", Schema: "dbo"), [new ForeignKeyColumnMapping("MainId", "Id")]),
+				]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Not.Contain(": Model.Person"));
+				Assert.That(source, Does.Contain(": My.Model.Person"));
+			}
+		}
+
+		// a framework type shadowed by an entity name: `Generic.List<…>` is not resolvable in F#
+		[Test]
+		public void ShadowedFrameworkTypeFullyQualified()
+		{
+			var options = FSharpOptions();
+			options.DataModel.AssociationCollectionType = "System.Collections.Generic.List<>";
+
+			var intType = new DatabaseType("int", null, null, null);
+
+			var source = GenerateSource(
+				options,
+				extraTables :
+				[
+					new Table(new SqlObjectName("List", Schema: "dbo"), null, [new Column("Id", null, intType, false, true, true, 0)], null, new PrimaryKey(null, ["Id"])),
+					new Table(new SqlObjectName("Item", Schema: "dbo"), null, [new Column("Id", null, intType, false, true, true, 0), new Column("ListId", null, intType, false, true, true, 1)], null, new PrimaryKey(null, ["Id"])),
+				],
+				foreignKeys :
+				[
+					new ForeignKey("FK_Item_List", new SqlObjectName("Item", Schema: "dbo"), new SqlObjectName("List", Schema: "dbo"), [new ForeignKeyColumnMapping("ListId", "Id")]),
+				]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Not.Match(@"[^.]Generic\.List<"));
+				Assert.That(source, Does.Contain("System.Collections.Generic.List<"));
+			}
+		}
+
+		// expression position: a call through a framework type shadowed by an entity name
+		[Test]
+		public void ShadowedFrameworkTypeInExpressionFullyQualified()
+		{
+			var options = FSharpOptions();
+			options.Schema.LoadedObjects |= SchemaObjects.StoredProcedure;
+
+			var intType = new DatabaseType("int", null, null, null);
+
+			// an output parameter is read back through Converter.ChangeTypeTo
+			var procedure = new StoredProcedure(
+				new SqlObjectName("TestProcedure", Schema: "dbo"),
+				null,
+				[new Parameter("@total", null, intType, true, LinqToDB.Schema.ParameterDirection.InputOutput)],
+				null,
+				null,
+				new VoidResult());
+
+			var source = GenerateSource(
+				options,
+				columns    : [new Column("Id", null, intType, false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]),
+				tableName  : "Converter",
+				procedures : [procedure]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Not.Match(@"[^.]Common\.Converter\.ChangeTypeTo"));
+				Assert.That(source, Does.Contain("LinqToDB.Common.Converter.ChangeTypeTo"));
+			}
+		}
+
+		// identifiers the generator writes into a body, which a parameter of the same name would shadow, and FSharp.Core
+		// union cases, active patterns and exceptions, which a parameter name reads as a pattern
+		[TestCase("this"      )]
+		[TestCase("task"      )]
+		[TestCase("raise"     )]
+		[TestCase("box"       )]
+		[TestCase("unbox"     )]
+		[TestCase("ignore"    )]
+		[TestCase("enum"      )]
+		[TestCase("Unchecked" )]
+		[TestCase("Some"      )]
+		[TestCase("None"      )]
+		[TestCase("ValueSome" )]
+		[TestCase("ValueNone" )]
+		[TestCase("Ok"        )]
+		[TestCase("Error"     )]
+		[TestCase("Choice1Of2")]
+		[TestCase("Choice7Of7")]
+		[TestCase("Failure"   )]
+		[TestCase("KeyValue"  )]
+		[TestCase("Lazy"      )]
+		[TestCase("Null"      )]
+		[TestCase("NonNull"   )]
+		[TestCase("MatchFailureException")]
+		public void ParameterNamedLikeGeneratedIdentifierRenamed(string name)
+		{
+			var options = FSharpOptions();
+			options.Schema.LoadedObjects                   |= SchemaObjects.StoredProcedure;
+			options.DataModel.GenerateProcedureAsync        = true;
+			options.DataModel.ProcedureParameterNameOptions = new() { Casing = NameCasing.None };
+
+			var intType = new DatabaseType("int", null, null, null);
+
+			// an output parameter makes the async wrapper a `task { }` expression
+			var procedure = new StoredProcedure(
+				new SqlObjectName("TestProcedure", Schema: "dbo"),
+				null,
+				[
+					new Parameter("@" + name, null, intType, true, LinqToDB.Schema.ParameterDirection.Input),
+					new Parameter("@total"  , null, intType, true, LinqToDB.Schema.ParameterDirection.InputOutput),
+				],
+				null,
+				null,
+				new VoidResult());
+
+			TableFunction[] tableFunctions =
+			[
+				new(new SqlObjectName("RowsFunction", Schema: "dbo"), null, [new Parameter("@" + name, null, intType, true, LinqToDB.Schema.ParameterDirection.Input)], null, [new ResultColumn("Id", intType, false)]),
+			];
+
+			ScalarFunction[] scalarFunctions =
+			[
+				new(new SqlObjectName("IntFunction", Schema: "dbo"), null, [new Parameter("@" + name, null, intType, true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, intType, true)),
+			];
+
+			var procedureSource = GenerateSource(
+				options,
+				columns    : [new Column("Id", null, intType, false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]),
+				procedures : [procedure]);
+
+			var functionOptions = FSharpOptions();
+			functionOptions.DataModel.ProcedureParameterNameOptions = new() { Casing = NameCasing.None };
+
+			var functionSource = GenerateFunctionSource(functionOptions, scalarFunctions: scalarFunctions, tableFunctions: tableFunctions);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(procedureSource, Does.Contain("task {"));
+				Assert.That(procedureSource, Does.Not.Match($@"[(,] *{name} : "));
+				Assert.That(procedureSource, Does.Match($@"[(,] *{name}1 : "));
+				Assert.That(functionSource , Does.Contain("raise (InvalidOperationException"));
+				Assert.That(functionSource , Does.Contain("member this.RowsFunction"));
+				Assert.That(functionSource , Does.Not.Match($@"[(,] *{name} : "));
+				Assert.That(functionSource , Does.Match($@"[(,] *{name}1 : "));
+			}
+		}
+
+		// `_` is a wildcard pattern, not an identifier
+		[Test]
+		public void ColumnNamedUnderscoreRenamed()
+		{
+			var options = FSharpOptions();
+			options.DataModel.EntityColumnPropertyNameOptions = new() { Casing = NameCasing.None };
+
+			var intType = new DatabaseType("int", null, null, null);
+
+			var source = GenerateSource(
+				options,
+				columns    : [new Column("Id", null, intType, false, true, true, 0), new Column("_", null, intType, true, true, true, 1)],
+				primaryKey : new PrimaryKey(null, ["Id"]));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Not.Match(@"[\s>] *_ : "));
+				Assert.That(source, Does.Match(@"[\s>] *_1 : "));
+			}
+		}
+
 		static ScaffoldOptions FSharpOptions()
 		{
 			var options = ScaffoldOptions.Default();
@@ -692,15 +887,15 @@ namespace Tests.Scaffold
 			return options;
 		}
 
-		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, string tableName = "TestTable", string tableSchema = "dbo", IReadOnlyCollection<Table>? extraTables = null, ConvertCodeModelVisitor[]? converters = null)
+		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, string tableName = "TestTable", string tableSchema = "dbo", IReadOnlyCollection<Table>? extraTables = null, ConvertCodeModelVisitor[]? converters = null, IReadOnlyCollection<ForeignKey>? foreignKeys = null)
 		{
-			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey, tableSchema: tableSchema, tableName: tableName, extraTables: extraTables, converters: converters));
+			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey, tableSchema: tableSchema, tableName: tableName, extraTables: extraTables, converters: converters, foreignKeys: foreignKeys));
 		}
 
-		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, ILanguageProvider? language = null, string tableSchema = "dbo", string tableName = "TestTable", IReadOnlyCollection<Table>? extraTables = null, ConvertCodeModelVisitor[]? converters = null)
+		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, ILanguageProvider? language = null, string tableSchema = "dbo", string tableName = "TestTable", IReadOnlyCollection<Table>? extraTables = null, ConvertCodeModelVisitor[]? converters = null, IReadOnlyCollection<ForeignKey>? foreignKeys = null)
 		{
 			var scaffolder = new Scaffolder(language ?? LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
-			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey, tableSchema, tableName, extraTables ?? []);
+			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey, tableSchema, tableName, extraTables ?? [], foreignKeys: foreignKeys);
 			var dataModel  = scaffolder.LoadDataModel(schema, TestTypeMappingProvider.Instance);
 
 			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
@@ -720,7 +915,7 @@ namespace Tests.Scaffold
 
 		// nullable int / string scalar functions (one overloaded by parameter type) unless `scalarFunctions` replaces them,
 		// a table function and an aggregate over a nullable column, in schema `functionSchema`
-		static string GenerateFunctionSource(ScaffoldOptions options, string functionSchema = "dbo", ScalarFunction[]? scalarFunctions = null)
+		static string GenerateFunctionSource(ScaffoldOptions options, string functionSchema = "dbo", ScalarFunction[]? scalarFunctions = null, TableFunction[]? tableFunctions = null)
 		{
 			options.Schema.LoadedObjects |= SchemaObjects.ScalarFunction | SchemaObjects.TableFunction | SchemaObjects.AggregateFunction;
 
@@ -734,7 +929,7 @@ namespace Tests.Scaffold
 				new(new SqlObjectName("TextFunction", Schema: functionSchema), null, [new Parameter("@value", null, textType, true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, textType, true)),
 			];
 
-			TableFunction[] tableFunctions =
+			tableFunctions ??=
 			[
 				new(new SqlObjectName("RowsFunction", Schema: functionSchema), null, [new Parameter("@id", null, intType, true, LinqToDB.Schema.ParameterDirection.Input)], null, [new ResultColumn("Id", intType, false)]),
 			];
@@ -773,7 +968,7 @@ namespace Tests.Scaffold
 				=> string.Equals(identifier.Name, from, StringComparison.Ordinal) ? new CodeIdentifier(to, false) : identifier;
 		}
 
-		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema, string tableName, IReadOnlyCollection<Table> extraTables, IReadOnlyCollection<ScalarFunction>? scalarFunctions = null, IReadOnlyCollection<TableFunction>? tableFunctions = null, IReadOnlyCollection<AggregateFunction>? aggregateFunctions = null) : ISchemaProvider
+		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema, string tableName, IReadOnlyCollection<Table> extraTables, IReadOnlyCollection<ScalarFunction>? scalarFunctions = null, IReadOnlyCollection<TableFunction>? tableFunctions = null, IReadOnlyCollection<AggregateFunction>? aggregateFunctions = null, IReadOnlyCollection<ForeignKey>? foreignKeys = null) : ISchemaProvider
 		{
 			IEnumerable<Table> ISchemaProvider.GetTables()
 			{
@@ -785,7 +980,7 @@ namespace Tests.Scaffold
 			}
 
 			IEnumerable<View>              ISchemaProvider.GetViews()              => [];
-			IEnumerable<ForeignKey>        ISchemaProvider.GetForeignKeys()        => [];
+			IEnumerable<ForeignKey>        ISchemaProvider.GetForeignKeys()        => foreignKeys ?? [];
 			IEnumerable<StoredProcedure>   ISchemaProvider.GetProcedures(bool withSchema, bool safeSchemaOnly) => procedures;
 			IEnumerable<TableFunction>     ISchemaProvider.GetTableFunctions()     => tableFunctions ?? [];
 			IEnumerable<ScalarFunction>    ISchemaProvider.GetScalarFunctions()    => scalarFunctions ?? [];

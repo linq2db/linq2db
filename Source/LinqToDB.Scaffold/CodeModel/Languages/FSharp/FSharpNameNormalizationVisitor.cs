@@ -57,6 +57,25 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		private ISet<string>?                          _moduleTypeNames;
 
+		/// <summary>
+		/// Names a parameter or local variable must not take: identifiers the code generator writes into member bodies
+		/// and signatures, which such a name would shadow, and auto-opened FSharp.Core union cases, active patterns and
+		/// exceptions, which F# reads as a pattern in parameter position.
+		/// </summary>
+		private static readonly string[] _reservedLocalNames =
+		[
+			"this", "task", "raise", "box", "unbox", "ignore", "enum", "Unchecked",
+			"Some", "None", "ValueSome", "ValueNone", "Ok", "Error",
+			"Choice1Of2", "Choice2Of2",
+			"Choice1Of3", "Choice2Of3", "Choice3Of3",
+			"Choice1Of4", "Choice2Of4", "Choice3Of4", "Choice4Of4",
+			"Choice1Of5", "Choice2Of5", "Choice3Of5", "Choice4Of5", "Choice5Of5",
+			"Choice1Of6", "Choice2Of6", "Choice3Of6", "Choice4Of6", "Choice5Of6", "Choice6Of6",
+			"Choice1Of7", "Choice2Of7", "Choice3Of7", "Choice4Of7", "Choice5Of7", "Choice6Of7", "Choice7Of7",
+			"Failure", "KeyValue", "Lazy", "Null", "NonNull", "NullV", "NonNullV", "NonNullQuick",
+			"MatchFailureException",
+		];
+
 		public FSharpNameNormalizationVisitor(ILanguageProvider languageProvider)
 		{
 			_languageProvider = languageProvider;
@@ -72,7 +91,7 @@ namespace LinqToDB.CodeModel
 			// when we inherit context - we create context copy to avoid parent context pollution
 			var parentContext = _parametersAndVariables;
 
-			_parametersAndVariables = CreateNewNamesSet(parentContext);
+			_parametersAndVariables = parentContext == null ? CreateLocalNamesSet() : CreateNewNamesSet(parentContext);
 
 			base.Visit(method);
 
@@ -133,7 +152,7 @@ namespace LinqToDB.CodeModel
 			}
 
 			// as we don't have local methods yet, we don't need to save/reuse method contexts
-			_parametersAndVariables = CreateNewNamesSet();
+			_parametersAndVariables = CreateLocalNamesSet();
 			base.Visit(method);
 			_parametersAndVariables = null;
 		}
@@ -147,7 +166,7 @@ namespace LinqToDB.CodeModel
 		protected override void Visit(CodeTypeInitializer cctor)
 		{
 			// actually variables only in this case, as static constructor has no parameters
-			_parametersAndVariables = CreateNewNamesSet();
+			_parametersAndVariables = CreateLocalNamesSet();
 			base.Visit(cctor);
 			_parametersAndVariables = null;
 		}
@@ -155,7 +174,7 @@ namespace LinqToDB.CodeModel
 		protected override void Visit(CodeConstructor ctor)
 		{
 			// don't check for overloads as we cannot do anything to fix them
-			_parametersAndVariables = CreateNewNamesSet();
+			_parametersAndVariables = CreateLocalNamesSet();
 			base.Visit(ctor);
 			_parametersAndVariables = null;
 		}
@@ -176,14 +195,14 @@ namespace LinqToDB.CodeModel
 
 			if (property.Getter != null)
 			{
-				_parametersAndVariables = CreateNewNamesSet();
+				_parametersAndVariables = CreateLocalNamesSet();
 				VisitList(property.Getter);
 				_parametersAndVariables = null;
 			}
 
 			if (property.Setter != null)
 			{
-				_parametersAndVariables = CreateNewNamesSet();
+				_parametersAndVariables = CreateLocalNamesSet();
 				// register pre-defined "value" parameter for setter
 				_parametersAndVariables.Add("value");
 				VisitList(property.Setter);
@@ -310,8 +329,8 @@ namespace LinqToDB.CodeModel
 
 			// counter to use in name for conflict resolution
 			var cnt = 0;
-			// repeat until non-empty unique name generated
-			while (fullName.Length == 0 || scopeNames.Contains(fullName))
+			// repeat until non-empty unique name generated; `_` is a wildcard pattern, not an identifier
+			while (fullName.Length == 0 || string.Equals(identifierName, "_", StringComparison.Ordinal) || scopeNames.Contains(fullName))
 			{
 				// generate base name only if we need to generate new name
 				identifierName = baseName ??= GetBaseIdentifierName(name.Name, name.FixOptions, name.Position);
@@ -415,6 +434,19 @@ namespace LinqToDB.CodeModel
 				baseName = "_";
 
 			return baseName;
+		}
+
+		/// <summary>
+		/// Create names set for a new parameters and local variables scope.
+		/// </summary>
+		private ISet<string> CreateLocalNamesSet()
+		{
+			var names = CreateNewNamesSet();
+
+			foreach (var name in _reservedLocalNames)
+				names.Add(name);
+
+			return names;
 		}
 
 		/// <summary>

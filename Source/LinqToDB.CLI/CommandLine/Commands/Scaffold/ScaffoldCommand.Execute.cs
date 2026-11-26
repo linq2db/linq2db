@@ -50,11 +50,18 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			if (language == LanguageProviders.FSharp)
 			{
 				var hasUnsupported = false;
-				foreach (var specified in options.Keys)
+				foreach (var option in options)
 				{
-					if (!specified.Languages.HasFlag(TargetLanguages.FSharp))
+					var specified = option.Key;
+
+					// a C#-only option is accepted with the value F# generation uses anyway
+					if (!specified.Languages.HasFlag(TargetLanguages.FSharp) && (specified.FSharpValue == null || !Equals(option.Value, specified.FSharpValue)))
 					{
-						await environment.Error.WriteLineAsync($"Option '--{specified.Name}' is not supported for target language F#.").ConfigureAwait(false);
+						var message = specified.FSharpValue == null
+							? $"Option '--{specified.Name}' is not supported for target language F#."
+							: $"Option '--{specified.Name}' accepts only value '{specified.FSharpValueText}' for target language F#.";
+
+						await environment.Error.WriteLineAsync(message).ConfigureAwait(false);
 						hasUnsupported = true;
 					}
 				}

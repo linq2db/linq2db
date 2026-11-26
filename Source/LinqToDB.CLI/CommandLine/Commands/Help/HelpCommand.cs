@@ -315,6 +315,9 @@ namespace LinqToDB.CommandLine.Commands.Help
 					option.Languages == TargetLanguages.CSharp ? "C#" :
 					option.Languages == TargetLanguages.FSharp ? "F#" :
 					"C#, F#";
+				if (option.FSharpValueText != null)
+					languages += $" (F#: {option.FSharpValueText} only)";
+
 				environment.Out.WriteLine("{0}   Supported in: {1}", indent, languages);
 			}
 

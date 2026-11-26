@@ -263,8 +263,9 @@ F# generation emits idiomatic code:
   column itself, NULL included (`Option.toNullable` / `Option.toObj` are not translated yet,
   [#6452](https://github.com/linq2db/linq2db/issues/6452));
 - a single generated `.fs` file per run (F# has no partial types and uses order-sensitive compilation);
-- with `--nrt true`, nullable reference members carry an F# 9 `| null` annotation (compile with
-  `<Nullable>enable</Nullable>`); with `--nrt false` they are plain, unannotated references.
+- with `--nrt true` (the default), nullable reference members carry an F# 9 `| null` annotation, so the output
+  needs F# 9 (.NET 9 SDK or later); `<Nullable>enable</Nullable>` turns the nullness checks on but is not required to
+  compile it. With `--nrt false` they are plain, unannotated references and the output uses no F# 9 nullness syntax.
 
 Generated F# records rely on the `linq2db.FSharp` package: the consuming application must call
 `DataOptions.UseFSharp()` so that records and `option`-typed columns materialize correctly.
@@ -282,7 +283,9 @@ qualify such types itself.
 Some options apply to C# only (partial classes / methods, entity base class, association extension methods,
 data context constructor selection, multi-file output, xml-doc warning suppression, procedure schema error
 directives); the `help scaffold` output shows a `Supported in:` line for such options, and specifying one together
-with `--target-language f#` is rejected. F# generation is not available in T4 template mode (`-t t4`).
+with `--target-language f#` is rejected, unless the value is the one F# generation always uses (e.g.
+`--single-file true`, `--partial-entities false`), which the `Supported in:` line names. F# generation is not
+available in T4 template mode (`-t t4`).
 
 ## Licensing
 

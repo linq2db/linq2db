@@ -316,7 +316,7 @@ Customization using compiled assembly has several requirements:
 					null,
 					!_defaultOptions.CodeGeneration.ClassPerFile,
 					!_t4ModeOptions.CodeGeneration.ClassPerFile)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = true };
 
 			/// <summary>
 			/// Single-file generation mode option.
@@ -533,7 +533,7 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					_defaultOptions.DataModel.EntityClassIsPartial,
 					_t4ModeOptions.DataModel.EntityClassIsPartial)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Generate <see cref="DataType"/> values on entity columns mappings option.
@@ -679,7 +679,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.GenerateInitDataContextMethod,
 					_t4ModeOptions.DataModel.GenerateInitDataContextMethod)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Generate StaticInitDataContext partial method on data context class option.
@@ -694,7 +694,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,
 					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Default data context contructor generation option.
@@ -709,7 +709,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.HasDefaultConstructor,
 					_t4ModeOptions.DataModel.HasDefaultConstructor)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Data context contructor with configuration parameter generation option.
@@ -724,7 +724,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.HasConfigurationConstructor,
 					_t4ModeOptions.DataModel.HasConfigurationConstructor)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Data context contructor with non-generic options parameter generation option.
@@ -739,7 +739,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor,
 					_t4ModeOptions.DataModel.HasUntypedOptionsConstructor)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Data context contructor with generic options parameter generation option.
@@ -754,7 +754,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor,
 					_t4ModeOptions.DataModel.HasTypedOptionsConstructor)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = true };
 
 			/// <summary>
 			/// Data context class name option.
@@ -844,7 +844,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.GenerateAssociationExtensions,
 					_t4ModeOptions.DataModel.GenerateAssociationExtensions)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Type of association return type for association back reference with many cardinality option.
@@ -912,7 +912,7 @@ static class CustomFluentExtensions
 					null,
 					_defaultOptions.DataModel.GenerateProceduresSchemaError,
 					_t4ModeOptions.DataModel.GenerateProceduresSchemaError)
-					{ Languages = TargetLanguages.CSharp };
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Skip mapping generation for stored procedure with schema load error option.
