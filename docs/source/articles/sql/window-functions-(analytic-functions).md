@@ -71,6 +71,37 @@ FROM
 		INNER JOIN [Child] [c_1] ON [p].[ParentID] = [c_1].[ParentID]
 ```
 
+#### Reusing a Window Definition
+
+When several functions use the same window, define it once with `Sql.Window.DefineWindow` and pass it to each function with `UseWindow`. `DefineWindow` takes the same partitioning, ordering and frame calls as the function lambdas.
+
+```c#
+var q =
+	from p in db.Parent
+	join c in db.Child on p.ParentID equals c.ParentID
+	let wnd = Sql.Window.DefineWindow(w => w
+		.PartitionBy(p.ParentID)
+		.OrderBy(c.ChildID))
+	select new
+	{
+		RowNumber = Sql.Window.RowNumber(w => w.UseWindow(wnd)),
+		Sum       = Sql.Window.Sum(c.ChildID, w => w.UseWindow(wnd)),
+		Lag       = Sql.Window.Lag(c.ChildID, w => w.UseWindow(wnd)),
+	};
+```
+
+`UseWindow` takes the place of the partitioning, ordering and frame calls, so nothing can follow it; function modifiers such as `Distinct()` or `IgnoreNulls()` go before it. The definition is written out in every `OVER` clause, so the query produces the same SQL as one that repeats the window in each function:
+
+```sql
+SELECT
+	ROW_NUMBER() OVER (PARTITION BY [p].[ParentID] ORDER BY [c_1].[ChildID]),
+	SUM([c_1].[ChildID]) OVER (PARTITION BY [p].[ParentID] ORDER BY [c_1].[ChildID]),
+	LAG([c_1].[ChildID]) OVER (PARTITION BY [p].[ParentID] ORDER BY [c_1].[ChildID])
+FROM
+	[Parent] [p]
+		INNER JOIN [Child] [c_1] ON [p].[ParentID] = [c_1].[ParentID]
+```
+
 #### Supported Functions (could be incomplete)
 
 The following table contains list of supported Window Functions and `LINQ To DB` representation of these functions. Function names link to the PostgreSQL documentation, or to the Oracle documentation for functions PostgreSQL does not have.
@@ -101,15 +132,15 @@ Function                                                                        
 [RANK](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                                 | `Sql.Window.Rank()`
 [RATIO_TO_REPORT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/RATIO_TO_REPORT.html)                                  | `Sql.Window.RatioToReport()`
 [REGR_ (Linear Regression) Functions](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE) |
-REGR_SLOPE                                                                                                                                   | `Sql.Window.RegrSlope()`
-REGR_INTERCEPT                                                                                                                               | `Sql.Window.RegrIntercept()`
-REGR_COUNT                                                                                                                                   | `Sql.Window.RegrCount()`
-REGR_R2                                                                                                                                      | `Sql.Window.RegrR2()`
-REGR_AVGX                                                                                                                                    | `Sql.Window.RegrAvgX()`
-REGR_AVGY                                                                                                                                    | `Sql.Window.RegrAvgY()`
-REGR_SXX                                                                                                                                     | `Sql.Window.RegrSXX()`
-REGR_SYY                                                                                                                                     | `Sql.Window.RegrSYY()`
-REGR_SXY                                                                                                                                     | `Sql.Window.RegrSXY()`
+[REGR_SLOPE](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                          | `Sql.Window.RegrSlope()`
+[REGR_INTERCEPT](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                      | `Sql.Window.RegrIntercept()`
+[REGR_COUNT](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                          | `Sql.Window.RegrCount()`
+[REGR_R2](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                             | `Sql.Window.RegrR2()`
+[REGR_AVGX](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                           | `Sql.Window.RegrAvgX()`
+[REGR_AVGY](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                           | `Sql.Window.RegrAvgY()`
+[REGR_SXX](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.RegrSXX()`
+[REGR_SYY](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.RegrSYY()`
+[REGR_SXY](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                            | `Sql.Window.RegrSXY()`
 [ROW_NUMBER](https://www.postgresql.org/docs/current/functions-window.html#FUNCTIONS-WINDOW-TABLE)                                           | `Sql.Window.RowNumber()`
 [STDDEV](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                              | `Sql.Window.StdDev()`
 [STDDEV_POP](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)                          | `Sql.Window.StdDevPop()`
