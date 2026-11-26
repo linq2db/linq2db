@@ -972,6 +972,43 @@ namespace Tests.Linq
 				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
 		}
 
+		/// <summary>
+		/// Where SQL is required, a read SQL cannot translate is a named error: a type with no scalar mapping, and an absent
+		/// name in a grouping key.
+		/// </summary>
+		[Test]
+		public void ACellReadSqlCannotTranslateIsNamed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			Assert.That(
+				() => pivoted
+					.Where(r => r.Cells.Get<Uri>("Y2010") != null)
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
+
+			var absent = Message(ErrorHelper.Pivot.Error_PivotCellNotFound, "Y2099");
+
+			Assert.That(
+				() => pivoted
+					.GroupBy(r => r.Cells.Get<decimal?>("Y2099"))
+					.Select(g => g.Count())
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(absent));
+		}
+
 		/// <summary>The conversions an unpivot column writes over a cell read are kept.</summary>
 		[Test]
 		public void UnpivotKeepsTheConversionsOverACellRead([DataSources] string context)

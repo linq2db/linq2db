@@ -197,6 +197,7 @@
 			public const string Error_PivotValueEmptyName           = "Pivot value '{0}' produced an empty column name.";
 			public const string Error_PivotDuplicateName            = "Duplicate pivot column name '{0}'.";
 			public const string Error_PivotCellNotFound             = "No pivot cell is named '{0}'.";
+			public const string Error_PivotCellType                 = "Pivot cell '{0}' cannot be read as '{1}' where SQL is required.";
 		}
 	}
 }

@@ -2727,6 +2727,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (name == null)
 				return false;
 
+			// Critical, so a grouping key or an aggregate reports it rather than the read's own failure.
+			if (cellType != typeof(object) && !MappingSchema.IsScalarType(cellType))
+			{
+				cellRead = new SqlErrorExpression(call, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellType, name, cellType), cellType, true);
+				return true;
+			}
+
 			// The cell is read as its own column and converted to the type the read names, as a cast over the indexer is.
 			var access     = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), typeof(object), name));
 			var translated = Visit(cellType == typeof(object) ? access : Expression.Convert(access, cellType));
@@ -2734,7 +2741,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// A name no cell carries, or cells that are not the pivot's own, have no column to read.
 			cellRead = translated is SqlPlaceholderExpression
 				? translated
-				: new SqlErrorExpression(call, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, name), cellType);
+				: new SqlErrorExpression(call, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, name), cellType, true);
 
 			return true;
 		}
