@@ -18,7 +18,9 @@ stages:
 #######################
 # A new test-all run supersedes every older test run on the PR, so it cancels them. Per-db runs and
 # pushes cancel nothing (autoCancel: false above): a per-db run is not a superset, and a push may not
-# touch anything testable. tests-comment.yml does the same for the GitHub half of the run.
+# touch anything testable. tests-comment.yml cancels the same builds within seconds of the comment;
+# this job is the fallback for when it cannot (AZURE_DEVOPS_PAT unset or expired), since it waits for an
+# agent and on a saturated pool runs hours late.
 # A bare `/azp run` would queue every definition at once and let this cancel its own siblings.
   - ${{ if eq(variables['Build.DefinitionName'], 'test-all') }}:
     - job: cancel_superseded

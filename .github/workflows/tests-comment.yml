@@ -140,9 +140,9 @@ jobs:
             -f description='Running on GitHub Actions' \
             -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
-  # A test-all run supersedes every older run on the PR, whatever its surface, so it cancels them - the
-  # same rule testing.yml's cancel_superseded applies on Azure. A per-db run cancels nothing, and a push
-  # starts nothing here. Older only, by run id: a run that started late must never cancel a newer one.
+  # A test-all run supersedes every older run on the PR, whatever its surface, so it cancels them on both
+  # CIs. A per-db run cancels nothing, and a push starts nothing here. Older only: a run that started late
+  # must never cancel a newer one.
   cancel_superseded:
     needs: authorize
     if: needs.authorize.outputs.go == 'true' && needs.authorize.outputs.surface == '[all]'
@@ -162,6 +162,44 @@ jobs:
             gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/cancel" --silent \
               || echo "::warning::could not cancel run $id"
           done
+
+      # testing.yml's cancel_superseded does the same from inside the Azure run, but it waits for an
+      # agent like every other job, so on a saturated pool it cancels hours late. This one runs within
+      # seconds. Older means queued before this comment: the test-all build the same comment queues
+      # comes after it, so does a bare `/azp run`'s whole batch.
+      - name: Cancel older Azure test runs
+        continue-on-error: true
+        shell: pwsh
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+          NUMBER: ${{ github.event.issue.number }}
+          COMMENTED: ${{ github.event.comment.created_at }}
+        run: |
+          if (-not $Env:AZURE_DEVOPS_PAT) { '::warning::AZURE_DEVOPS_PAT is not set - Azure runs are left to testing.yml'; exit 0 }
+          $base    = 'https://dev.azure.com/linq2db/linq2db/_apis/build/builds'
+          $auth    = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(':' + $Env:AZURE_DEVOPS_PAT))
+          $headers = @{ Authorization = "Basic $auth" }
+          $branch  = [uri]::EscapeDataString("refs/pull/$Env:NUMBER/merge")
+          # Margin against clock skew between the two services: sparing an old run is harmless, cancelling
+          # the new one is not.
+          $cutoff  = [DateTimeOffset]::Parse($Env:COMMENTED).AddSeconds(-30)
+
+          $builds = (Invoke-RestMethod -Headers $headers -Uri "${base}?branchName=$branch&statusFilter=inProgress,notStarted,postponed&api-version=7.1").value
+          $stale  = @($builds | Where-Object { $_.definition.name -like 'test-*' -and [DateTimeOffset]$_.queueTime -lt $cutoff })
+          if (-not $stale) { 'No superseded Azure test runs'; exit 0 }
+
+          $failed = 0
+          foreach ($b in $stale) {
+            try {
+              Invoke-RestMethod -Method Patch -Headers $headers -ContentType 'application/json' -Body '{"status":"cancelling"}' `
+                -Uri "$base/$($b.id)?api-version=7.1" | Out-Null
+              "cancelled Azure $($b.definition.name) build $($b.id)"
+            } catch {
+              $failed++
+              "::warning::could not cancel Azure $($b.definition.name) build $($b.id): $($_.Exception.Message)"
+            }
+          }
+          if ($failed) { exit 1 }
 
   tests:
     needs: authorize
