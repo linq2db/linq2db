@@ -1209,6 +1209,14 @@ namespace Tests.Linq
 			optional
 				.ToArray()
 				.ShouldBeEmpty();
+
+			// The same value compared beside a date the query computes, in one statement.
+			table
+				.Where(r => Sql.Between(value, r.Day, high) || value >= r.Stamp.Date)
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([1, 2]);
 		}
 
 		// A NULL client value or bound leaves Between unknown, and its negation too, as SQL's BETWEEN.
@@ -1255,11 +1263,15 @@ namespace Tests.Linq
 				.ToArray()
 				.ShouldBeEmpty();
 
-			table
-				.Where(r => !Sql.Between(value, r.Day, none))
-				.Select(r => r.Id)
-				.ToArray()
-				.ShouldBeEmpty();
+			// MySQL 5.7 answers `x NOT BETWEEN dateColumn AND NULL` TRUE where x is not below the column; MySQL 8 does not.
+			if (!context.IsAnyOf(TestProvName.AllMySql57))
+			{
+				table
+					.Where(r => !Sql.Between(value, r.Day, none))
+					.Select(r => r.Id)
+					.ToArray()
+					.ShouldBeEmpty();
+			}
 
 			table
 				.Where(r => !Sql.Between(none!.Value, r.Day, high))
@@ -1267,11 +1279,14 @@ namespace Tests.Linq
 				.ToArray()
 				.ShouldBeEmpty();
 
-			table
-				.Where(r => !Sql.Between(some, r.Day, none!.Value))
-				.Select(r => r.Id)
-				.ToArray()
-				.ShouldBeEmpty();
+			if (!context.IsAnyOf(TestProvName.AllMySql57))
+			{
+				table
+					.Where(r => !Sql.Between(some, r.Day, none!.Value))
+					.Select(r => r.Id)
+					.ToArray()
+					.ShouldBeEmpty();
+			}
 
 			table
 				.OrderBy(r => r.Id)
@@ -1414,9 +1429,9 @@ namespace Tests.Linq
 			];
 		}
 
-		// System.Data.SQLite cannot bind a TimeSpan parameter.
+		// System.Data.SQLite cannot bind a TimeSpan parameter, SQL CE and SQL Server 2005 have no type for one, Oracle none for the column.
 		[Test]
-		public void BetweenOfTimeColumn([DataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void BetweenOfTimeColumn([DataSources(TestProvName.AllSQLiteClassic, TestProvName.AllSqlCe, TestProvName.AllSqlServer2005, TestProvName.AllOracle)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(BetweenTimeRow.Data);
