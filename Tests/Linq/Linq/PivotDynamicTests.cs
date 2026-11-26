@@ -1128,6 +1128,47 @@ namespace Tests.Linq
 			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Top.Y2000", 30m), ("A", "Total.Y2000", 40m), ("B", "Top.Y2000", 5m), ("B", "Total.Y2000", 5m) });
 		}
 
+		sealed class InterfaceCellsPair
+		{
+			public string                               Category { get; set; } = null!;
+			public IReadOnlyDictionary<string, object?> Total    { get; set; } = null!;
+			public IReadOnlyDictionary<string, object?> Top      { get; set; } = null!;
+		}
+
+		/// <summary>Same-named cells read through a cast of interface-typed members unpivot under the members' paths.</summary>
+		[Test]
+		public void UnpivotsCastInterfaceMembersUnderTheirPaths([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsPair
+				{
+					Category = g.Key,
+					Total    = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+					Top      = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Max(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Category, Name = name, Value = value },
+					x => ((PivotCells)x.Total).Get<decimal?>("Y2000"),
+					x => ((PivotCells)x.Top).Get<decimal?>("Y2000"))
+				.ToArray()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.ThenBy(r => r.Name, StringComparer.Ordinal)
+				.Select(r => (r.Category, r.Name, r.Value))
+				.ToArray();
+
+			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Top.Y2000", 30m), ("A", "Total.Y2000", 40m), ("B", "Top.Y2000", 5m), ("B", "Total.Y2000", 5m) });
+		}
+
 		/// <summary>The cells go into a member of an anonymous type, which cannot carry a dynamic-columns store.</summary>
 		[Test]
 		public void PivotsIntoAnAnonymousType([DataSources] string context)

@@ -216,11 +216,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			// A complex column is keyed by its full member path, as the entity descriptor keys it.
 			var memberName = member.Member.Name;
 			var path       = memberName;
+			var receiver   = member.Expression;
 
-			while (member.Expression is MemberExpression parent)
+			// A cast receiver - ((PivotCells)x.Cells).Get<T>(name) over an interface-typed member - keeps its path.
+			while (true)
 			{
-				member = parent;
-				path   = member.Member.Name + "." + path;
+				while (receiver is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } cast)
+					receiver = cast.Operand;
+
+				if (receiver is not MemberExpression parent)
+					break;
+
+				path     = parent.Member.Name + "." + path;
+				receiver = parent.Expression;
 			}
 
 			return (path, memberName);
