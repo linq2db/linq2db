@@ -1202,8 +1202,8 @@ WHERE
 			[PrimaryKey] public int Id { get; set; }
 		}
 
-		[Test]
-		public void Issue3525ConvertInQuery([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3525")]
+		public void AssociationQueryExpressionWithSqlConvert([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db           = GetDataContext(context);
 			using var history      = db.CreateLocalTable<PropertyHistory>();
@@ -1218,17 +1218,16 @@ WHERE
 				.ToList();
 		}
 
-		#region Issue 4596
-		sealed class Issue4596Form
+		sealed class ConditionalOrderForm
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public char C1 { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(ItemsImpl))]
-			public IEnumerable<Issue4596Item> Items { get; set; } = default!;
+			public IEnumerable<ConditionalOrderItem> Items { get; set; } = default!;
 
-			internal static Expression<Func<Issue4596Form, IDataContext, IQueryable<Issue4596Item>>> ItemsImpl()
-				=> (p, db) => db.GetTable<Issue4596Item>()
+			internal static Expression<Func<ConditionalOrderForm, IDataContext, IQueryable<ConditionalOrderItem>>> ItemsImpl()
+				=> (p, db) => db.GetTable<ConditionalOrderItem>()
 				.Where(x => x.FormId == p.Id)
 				.OrderBy(x => p.C1 == 'T' ? x.OrderIndex : 0)
 				.ThenBy(x => p.C1 != 'T' ? x.Name1 : "")
@@ -1236,7 +1235,7 @@ WHERE
 				.ThenBy(x => p.C1 != 'T' ? x.Name3 : "");
 		}
 
-		sealed class Issue4596Item
+		sealed class ConditionalOrderItem
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public int FormId { get; set; }
@@ -1247,18 +1246,16 @@ WHERE
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4596")]
-		public void Issue4596Test([DataSources] string context)
+		public void LoadWithAssociationWithConditionalOrderByOnCharColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue4596Form>();
-			using var t2 = db.CreateLocalTable<Issue4596Item>();
+			using var t1 = db.CreateLocalTable<ConditionalOrderForm>();
+			using var t2 = db.CreateLocalTable<ConditionalOrderItem>();
 
 			t1.LoadWith(x => x.Items).FirstOrDefault();
 		}
-		#endregion
 
-		#region Issue 4723
-		class Issue4723Table1
+		class StringAssociationOwner
 		{
 			[PrimaryKey] public int Id { get; set; }
 
@@ -1268,48 +1265,48 @@ WHERE
 			[ExpressionMethod(nameof(ExpressionMethodImpl), IsColumn = true)]
 			public string? ExpressionMethod { get; set; }
 
-			private static Expression<Func<Issue4723Table1, IDataContext, IQueryable<string?>>> AssociationImpl()
+			private static Expression<Func<StringAssociationOwner, IDataContext, IQueryable<string?>>> AssociationImpl()
 			{
-				return (e, db) => db.GetTable<Issue4723Table2>().Where(se => se.Id == e.Id)
+				return (e, db) => db.GetTable<StringAssociationValue>().Where(se => se.Id == e.Id)
 					.Select(o => o.Value)
 					.Take(1);
 			}
 
-			private static Expression<Func<Issue4723Table1, IDataContext, string?>> ExpressionMethodImpl()
+			private static Expression<Func<StringAssociationOwner, IDataContext, string?>> ExpressionMethodImpl()
 			{
-				return (e, db) => db.GetTable<Issue4723Table2>().Where(se => se.Id == e.Id)
+				return (e, db) => db.GetTable<StringAssociationValue>().Where(se => se.Id == e.Id)
 					.Select(o => o.Value)
 					.FirstOrDefault();
 			}
 
-			public static Issue4723Table1[] TestData =
+			public static StringAssociationOwner[] TestData =
 			[
-				new Issue4723Table1() { Id = 1 }
+				new StringAssociationOwner() { Id = 1 }
 			];
 		}
 
-		class Issue4723Table2
+		class StringAssociationValue
 		{
 			[PrimaryKey]
 			public int Pk { get; set; }
 			public int Id { get; set; }
 			public string? Value { get; set; }
 
-			public static Issue4723Table2[] TestData =
+			public static StringAssociationValue[] TestData =
 			[
-				new Issue4723Table2() { Pk = 1, Id = 1, Value = "Value 1" },
-				new Issue4723Table2() { Pk = 2, Id = 1, Value = "Value 1" }, // same value to simplify assertion
-				new Issue4723Table2() { Pk = 3, Id = 2, Value = "Value 2" },
+				new StringAssociationValue() { Pk = 1, Id = 1, Value = "Value 1" },
+				new StringAssociationValue() { Pk = 2, Id = 1, Value = "Value 1" }, // same value to simplify assertion
+				new StringAssociationValue() { Pk = 3, Id = 2, Value = "Value 2" },
 			];
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
-		public void Issue4723Test1_Association([DataSources] string context)
+		public void LoadWithScalarStringAssociation([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
-			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+			using var t1 = db.CreateLocalTable(StringAssociationOwner.TestData);
+			using var t2 = db.CreateLocalTable(StringAssociationValue.TestData);
 
 			var records = t1.LoadWith(x => x.Association).ToArray();
 
@@ -1324,11 +1321,11 @@ WHERE
 
 		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
-		public void Issue4723Test1Test_NoJoinDuplicates([DataSources] string context)
+		public void ScalarStringAssociationNoDuplicateJoins([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
-			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+			using var t1 = db.CreateLocalTable(StringAssociationOwner.TestData);
+			using var t2 = db.CreateLocalTable(StringAssociationValue.TestData);
 
 			var query = t1.Where(x => x.Association != null && x.Association != "unknown").Select(x => new { x.Id, x1 = x.Association, x2 = x.Association });
 
@@ -1349,11 +1346,11 @@ WHERE
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
-		public void Issue4723Test_ExpressionMethod([DataSources] string context)
+		public void ScalarStringAssociationWithExpressionMethodColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
-			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+			using var t1 = db.CreateLocalTable(StringAssociationOwner.TestData);
+			using var t2 = db.CreateLocalTable(StringAssociationValue.TestData);
 
 			var records = t1.ToArray();
 
@@ -1365,6 +1362,295 @@ WHERE
 				Assert.That(records[0].ExpressionMethod, Is.EqualTo("Value 1"));
 			}
 		}
-		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1965")]
+		public void QueryExpressionAssociationNullComparison([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ChipcardPerson>())
+			using (db.CreateLocalTable<Chipcard>())
+			{
+				var q = db.GetTable<Chipcard>().LoadWith(c => c.PersonData);
+	
+				var result = q.Where(ka => ka.PersonData != null).ToList();			}
+		}
+
+		[Table("ChipcardPerson")]
+		public class ChipcardPerson
+		{
+			[Column]
+			public int Id {get; set;}
+			[Column]
+			public string? Name {get; set;}
+			[Column]
+			public int Age {get; set;}
+		}
+
+		[Table("Chipcard")]
+		public class Chipcard
+		{
+			[Column]
+			public int PersonId {get; set;}
+			[Column]
+			public DateTime ValidationEnd {get; set;}	
+	
+//			[Association(ThisKey="PersonId", OtherKey="Id", CanBeNull=true, Relationship=Relationship.ManyToOne, KeyName="FK_CHIPCARD")]
+//			public Person PersonData {get; set;}
+	
+			[Association(QueryExpressionMethod = nameof(Chipcard_Person), CanBeNull = true)]
+			public ChipcardPerson? PersonData {get; set;}
+	
+			public static Expression<Func<Chipcard, IDataContext, IQueryable<ChipcardPerson>>> Chipcard_Person()
+			{
+				return (c, db) => db.GetTable<ChipcardPerson>().Where(p => p.Id == c.PersonId);
+			}
+		}
+
+		// https://stackoverflow.com/questions/58738542
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1968")]
+		public void LoadWithAssociationUsingQueryExpressionOverCollection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<AssocUniversity>())
+			using (db.CreateLocalTable<AssocFaculty>())
+			using (db.CreateLocalTable<AssocSubject>())
+			{
+				db.Insert(new AssocUniversity()
+				{
+					Id = 1,
+					Location = "location",
+					Name = "name"
+				});
+
+				db.Insert(new AssocFaculty()
+				{
+					Id = 1,
+					Code = "code",
+					Contract = 1,
+					Direction = "direction",
+					FacultyName = "faculty name",
+					Grant = 1,
+					UniversityId = 1
+				});
+
+				db.Insert(new AssocSubject()
+				{
+					FacultyId = 1,
+					FirstSubject = "first",
+					SecondSubject = "second",
+					SubjectId = 1,
+					ThirdSubject = "third"
+				});
+
+				var result = db.GetTable<AssocUniversity>()
+					.LoadWith(x => x.Faculties)
+					.LoadWith(m => m.Subjects).ToList();
+
+				Assert.That(result, Has.Count.EqualTo(1));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(result[0].Faculties, Has.Count.EqualTo(1));
+					Assert.That(result[0].Subjects, Has.Count.EqualTo(1));
+				}
+			}
+		}
+
+		public class AssocUniversity
+		{
+			public AssocUniversity()
+			{
+			}
+
+			[Column] public int Id { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public string? Location { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = nameof(AssocFaculty.UniversityId), CanBeNull = true)]
+			public ICollection<AssocFaculty> Faculties { get; set; } = null!;
+
+			public static Expression<Func<AssocUniversity, IDataContext, IQueryable<AssocSubject>>> Expression()
+			{
+				return (u, db) => db.GetTable<AssocSubject>()
+					.Where(x => u.Faculties.Any(m => m.Id == x.FacultyId));
+			}
+
+			[Association(QueryExpressionMethod = nameof(Expression))]
+			public ICollection<AssocSubject> Subjects { get; set; } = null!;
+		}
+
+		public class AssocFaculty
+		{
+			[Column] public int Id { get; set; }
+			[Column] public string? Code { get; set; }
+			[Column] public string? FacultyName { get; set; }
+			[Column] public string? Direction { get; set; }
+			[Column] public int Grant { get; set; }
+			[Column] public int Contract { get; set; }
+			[Column] public int? UniversityId { get; set; }
+
+			[Association(ThisKey = "UniversityId", OtherKey = "Id", CanBeNull = true)]
+			public AssocUniversity? University { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = "FacultyId", CanBeNull = true)]
+			public AssocSubject? Subject { get; set; }
+		}
+
+		public class AssocSubject
+		{
+			[Column] public int SubjectId { get; set; }
+			[Column] public string? FirstSubject { get; set; }
+			[Column] public string? SecondSubject { get; set; }
+			[Column] public string? ThirdSubject { get; set; }
+			[Column] public int? FacultyId { get; set; }
+
+			[Association(ThisKey = "FacultyId", OtherKey = "Id", CanBeNull = false)]
+			public AssocFaculty Faculty { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1974")]
+		public void LoadWithAssociationsNullWhenNoMatch([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []
+			{
+				new AssocNullablePerson{ID = 1, Name = "Person1"}, 
+				new AssocNullablePerson{ID = 2, Name = "Person2"} 
+			}))
+			using (db.CreateLocalTable(new []
+			{
+				new AssocNullableArticle{ID = "Article", PersonId = 2}, 
+			}))
+			{
+				var items = db.GetTable<AssocNullablePerson>().LoadWith(p => p.Bought).LoadWith(p => p.BoughtQuery).ToArray();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(items[0].Bought, Is.Null);
+					Assert.That(items[0].BoughtQuery, Is.Null);
+
+					Assert.That(items[1].Bought!.ID, Is.EqualTo("Article"));
+					Assert.That(items[1].BoughtQuery!.ID, Is.EqualTo("Article"));
+				}
+			}
+		}
+
+		public class AssocNullablePerson
+		{
+			[Column]
+			public int ID {get; set;}
+
+			[Column]
+			public string? Name {get; set;}
+
+			[Association(QueryExpressionMethod = nameof(ArticleExpr), CanBeNull = true)]
+			public AssocNullableArticle? BoughtQuery {get; set; }
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(AssocNullableArticle.PersonId), CanBeNull = true)]
+			public AssocNullableArticle? Bought {get; set; }
+
+			public static Expression<Func<AssocNullablePerson, IDataContext, IQueryable<AssocNullableArticle>>> ArticleExpr()
+			{
+				return (p, db) => db.GetTable<AssocNullableArticle>().Where(a => a.PersonId == p.ID);
+			}
+		}
+
+		public class AssocNullableArticle
+		{
+			[Column]
+			public string? ID {get; set;}
+
+			[Column]
+			public int PersonId {get; set;}
+
+			[Column]
+			public double Price {get; set;}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1979")]
+		public void DerivedTypeFilterViaJoinSubqueryAny([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<TaggingTag>())
+			using (db.CreateLocalTable<TaggingBase>())
+			using (db.CreateLocalTable<TaggableIssue>())
+			{
+				var tagFilter = from ti in db.GetTable<TaggingOfIssue>()
+								join t in db.GetTable<TaggingTag>() on ti.TagId equals t.Id
+								where t.Name == "Visu"
+								select ti;
+
+				var query = from i in db.GetTable<TaggableIssue>()
+							where tagFilter.Where(t => t.TaggableId == i.Id).Any()
+							select i;
+
+				query.ToList();
+			}
+
+		}
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1979")]
+		public void QueryExpressionAssociationOnDerivedTypeInAnyFilter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<TaggingTag>())
+			using (db.CreateLocalTable<TaggingBase>())
+			using (db.CreateLocalTable<TaggableIssue>())
+			{
+				var query = from i in db.GetTable<TaggableIssue>()
+							where i.Tagging.Any(x => x.Tag.Name == "Visu")
+							select i;
+
+				query.ToList();
+			}
+		}
+
+		[Table]
+		public class TaggableIssue
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(TaggingImpl))]
+			public List<TaggingOfIssue> Tagging { get; set; } = null!;
+
+			public static Expression<Func<TaggableIssue, IDataContext, IQueryable<TaggingOfIssue>>> TaggingImpl()
+			{
+				return (y, db) => db.GetTable<TaggingOfIssue>().Where(_ => y.Id == _.TaggableId);
+			}
+		}
+
+		[Table]
+		[InheritanceMapping(Code = "Issue", Type = typeof(TaggingOfIssue))]
+		public class TaggingBase
+		{
+			[PrimaryKey]                     public long    Id           { get; set; }
+			[Column]                         public int     TagId        { get; set; }
+			[Column]                         public int     TaggableId   { get; set; }
+			[Column(IsDiscriminator = true)] public string? TaggableType { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(TagImpl))]
+			public TaggingTag Tag { get; set; } = null!;
+
+			public static Expression<Func<TaggingBase, IDataContext, IQueryable<TaggingTag>>> TagImpl()
+			{
+				return (y, db) => db.GetTable<TaggingTag>().Where(_ => y.TagId == _.Id).Take(1);
+			}
+		}
+
+		[Table]
+		public class TaggingOfIssue : TaggingBase
+		{
+			[Association(QueryExpressionMethod = nameof(IssueImpl))]
+			public TaggableIssue Issue { get; set; } = null!;
+
+			public static Expression<Func<TaggingOfIssue, IDataContext, IQueryable<TaggableIssue>>> IssueImpl()
+			{
+				return (y, db) => db.GetTable<TaggableIssue>().Where(_ => y.TaggableId == _.Id).Take(1);
+			}
+		}
+
+		[Table]
+		public class TaggingTag
+		{
+			[Column] public long    Id   { get; set; }
+			[Column] public string? Name { get; set; }
+		}
 	}
 }

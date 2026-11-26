@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -8,7 +9,10 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1481,6 +1485,628 @@ namespace Tests.Linq
 				.Stages
 				.Select(st => st.Id)
 				.ShouldBe(new[] { 200 });
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2161")]
+		public void LoadWithOnInheritanceMappedEntityCommandCount([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<DiscriminatedOrder>(new []{new DiscriminatedOrderType1() { OrderId = 1, OrderName = "Order1" }}))
+			using (db.CreateLocalTable<DiscriminatedOrderDetail>(new []{new DiscriminatedOrderDetail() { OrderDetailId = 100, OrderId = 1, Title = "Detail1" }}))
+			{
+				var interceptor = new EagerLoadCommandCounter();
+				db.AddInterceptor(interceptor);
+				var query = db.GetTable<DiscriminatedOrder>().LoadWith(o => o.Details).Where(o => o.OrderId == 1);
+				var order = query.FirstOrDefault();
+
+				// A First/Single over an eager LoadWith batches the main query and the eager query into one combined
+				// multi-result-set command — when the UseCombinedCommands policy switch is on (off by default in 6.x) AND
+				// the provider supports multi-statement batches + multiple result sets. Otherwise, and on remote contexts,
+				// they still run as two separate commands.
+				interceptor.Count.ShouldBe(db.UsesCombinedEagerLoading() ? 1 : 2);
+			}
+		}
+
+		public enum DiscriminatedOrderKind
+		{
+			Type1,Type2
+		}
+
+		[InheritanceMapping(Code = DiscriminatedOrderKind.Type1, Type = typeof(DiscriminatedOrderType1))]
+		[InheritanceMapping(Code = DiscriminatedOrderKind.Type2, Type = typeof(DiscriminatedOrderType2))]
+		public class DiscriminatedOrder
+		{
+			[PrimaryKey]
+			public int OrderId { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public DiscriminatedOrderKind OrderType { get; set; }
+			public string? OrderName { get; set; }
+
+			[Association(ThisKey = nameof(OrderId), OtherKey = nameof(DiscriminatedOrderDetail.OrderId))]
+			public IEnumerable<DiscriminatedOrderDetail> Details { get; set; } = null!;
+		}
+
+		public class DiscriminatedOrderType1 : DiscriminatedOrder;
+		public class DiscriminatedOrderType2 : DiscriminatedOrder;
+
+		public class DiscriminatedOrderDetail
+		{
+			[PrimaryKey]
+			public int OrderDetailId { get; set; }
+
+			public string? Title { get; set; }
+
+			public int OrderId { get; set; }
+		}
+
+		sealed class EagerLoadCommandCounter : CommandInterceptor
+		{
+			public int Count { get; private set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				Count++;
+				return command;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2474")]
+		public void LoadWithQueryExpressionMethodAssociation([IncludeDataSources(TestProvName.AllSQLite)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<QueryAssociationDetail>())
+			using (db.CreateLocalTable<QueryAssociationStatusData>())
+			using (db.CreateLocalTable<QueryAssociationCash>())
+			{
+				var q = from n in db.GetTable<QueryAssociationDetail>()
+						.LoadWith(n => n.Status)
+					where n.StatusType == 2
+					select n;
+				_ = q.ToList();
+			}
+		}
+
+		[Table(Name = "STATUS_DATA")]
+		public class QueryAssociationStatusData
+		{
+			[Column("STATUS_TYPE_ID")]
+			[PrimaryKey(0)]
+			[NotNull]
+			public int StatusTypeId { get; set; }
+
+			[Column]
+			[PrimaryKey(1)]
+			[NotNull]
+			public string NR { get; set; } = null!;
+		}
+
+		[Table(Name = "DETAIL")]
+		public class QueryAssociationDetail
+		{
+			[Column]
+			[PrimaryKey]
+			[NotNull]
+			public int ID { get; set; }
+
+			[Column("TYP_STATUS")]
+			[NotNull]
+			public int StatusType { get; set; }
+
+			[Column]
+			[NotNull]
+			public string NR { get; set; } = null!;
+
+			[Column]
+			[NotNull]
+			public DateTime DATUM { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(StatusDataDataExpr), CanBeNull = true)]
+			public QueryAssociationStatusData Status { get; set; } = null!;
+
+			[ExpressionMethod(nameof(CashExistsExpr), IsColumn = true)]
+			public bool HasCash { get; set; }
+
+			public static Expression<Func<QueryAssociationDetail, IDataContext, bool>> CashExistsExpr()
+			{
+				return (n, db) => db.GetTable<QueryAssociationCash>().Any(u => u.IdDetail == n.ID);
+			}
+
+			public static Expression<Func<QueryAssociationDetail, IDataContext, IQueryable<QueryAssociationStatusData>>> StatusDataDataExpr()
+			{
+				return (n, db) => db.GetTable<QueryAssociationStatusData>().Where(c => c.StatusTypeId == n.StatusType && c.NR == n.NR);
+			}
+		}
+
+		[Table(Name = "CASH")]
+		public class QueryAssociationCash
+		{
+			[Column("ID_DETAIL")]
+			[NotNull]
+			public int IdDetail { get; set; }
+
+			[Column("ID_TEXT")]
+			[NotNull]
+			public int IdText { get; set; }
+
+			[Column]
+			[NotNull]
+			public decimal Fee { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2642")]
+		public void LoadWithCombinedWithJoinFilterAndOrderBy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<LoadWithMail>())
+			using (db.CreateLocalTable<LoadWithMailAttachment>())
+			using (db.CreateLocalTable<LoadWithIir>())
+			{
+				var query = from p in db.GetTable<LoadWithMail>().LoadWith(c => c.Attachments)
+					join i in db.GetTable<LoadWithIir>() on p.Id equals i.Id
+					where p.AddTime > TestData.DateTime
+					orderby p.AddTime
+					select p;
+
+				var result = query
+					.ToArray();
+			}
+		}
+
+		[Table("mails")]
+		sealed class LoadWithMail
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column]
+			public DateTime AddTime { get; set; }
+			[Association(ThisKey = "Id", OtherKey = "EmailId")]
+			public IEnumerable<LoadWithMailAttachment> Attachments { get; set; } = null!;
+		}
+
+		[Table("EmailAttachments")]
+		sealed class LoadWithMailAttachment
+		{
+			[Column]
+			public int Id { get; set; }
+			[Column]
+			public int EmailId { get; set; }
+			[Column]
+			public string Data { get; set; } = null!;
+		}
+
+		[Table("IIRs")]
+		sealed class LoadWithIir
+		{
+			[Column]
+			public int Id { get; set; }
+		}
+
+#nullable disable
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2596")]
+		public void LoadWithCyclicAssociationsDoesNotLoop([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t01 = db.CreateLocalTable<BillingPriceList>();
+			using var t02 = db.CreateLocalTable<BillingProduct>();
+			using var t03 = db.CreateLocalTable<BillingAccessTariff>();
+			using var t04 = db.CreateLocalTable<BillingCountryState>();
+			using var t05 = db.CreateLocalTable<BillingCommunity>();
+			using var t06 = db.CreateLocalTable<BillingCountry>();
+			using var t07 = db.CreateLocalTable<BillingPendingState>();
+			using var t08 = db.CreateLocalTable<BillingTypeBMeasures>();
+			using var t09 = db.CreateLocalTable<BillingTown>();
+			using var t10 = db.CreateLocalTable<BillingInvoiceLine>();
+			using var t11 = db.CreateLocalTable<BillingAccountTax>();
+			using var t12 = db.CreateLocalTable<BillingInvTaxLine>();
+			using var t13 = db.CreateLocalTable<BillingInvoice>();
+			using var t14 = db.CreateLocalTable<BillingMeasureSource>();
+			using var t15 = db.CreateLocalTable<BillingTypeAMeasures>();
+			using var t16 = db.CreateLocalTable<BillingStreetType>();
+			using var t17 = db.CreateLocalTable<BillingServicePoint>();
+			using var t18 = db.CreateLocalTable<BillingProductUnit>();
+			using var t19 = db.CreateLocalTable<BillingContract>();
+			using var t20 = db.CreateLocalTable<BillingCustomInvoice>();
+			using var t21 = db.CreateLocalTable<BillingCustomInvLine>();
+
+			var query = db
+					.GetTable<BillingCustomInvoice>()
+					.LoadWith(i => i.Invoice)
+					.LoadWith(i => i.Invoice.Rectifying)
+					.LoadWith(i => i.Invoice.RefundBy)
+					.LoadWith(i => i.Invoice.PendingState)
+					.LoadWith(i => i.Invoice.Lines)
+					.LoadWith(i => i.Invoice.Lines.First().ProductUnit)
+					.LoadWith(i => i.Invoice.Lines.First().Product)
+					.LoadWith(i => i.Invoice.TaxLines)
+					.LoadWith(i => i.Invoice.TaxLines.First().Tax)
+					.LoadWith(i => i.Contract)
+					.LoadWith(i => i.AccessTariff)
+					.LoadWith(i => i.ServicePoint)
+					.LoadWith(i => i.ServicePoint.Town)
+					.LoadWith(i => i.ServicePoint.Town.State.Community)
+					.LoadWith(i => i.ServicePoint.StreetType)
+					.LoadWith(i => i.InvoiceLines)
+					.LoadWith(i => i.TypeAMeasures)
+					.LoadWith(i => i.TypeAMeasures.First().Source)
+					.LoadWith(i => i.TypeAMeasures.First().PreviousSource)
+					.LoadWith(i => i.TypeBMeasures)
+					.LoadWith(i => i.PriceList)
+					.Where(f => f.Id == 1);
+
+			query.ToArray();
+		}
+
+		public abstract class BillingBaseEntity
+		{
+			[Column, PrimaryKey, Identity] public int Id { get; set; } // integer
+		}
+
+		[Table]
+		public class BillingCustomInvoice : BillingBaseEntity
+		{
+			[Column, NotNull] public int ContractId { get; set; } // integer
+
+			[Column, NotNull] public int InvoiceId { get; set; } // integer
+
+			[Column, NotNull] public int ServicePointId { get; set; } // integer
+
+			[Column, NotNull] public int AccessTariffId { get; set; } // integer
+
+			[Association(ThisKey = "InvoiceId", OtherKey = "Id", CanBeNull = false)]
+			public BillingInvoice Invoice { get; set; }
+
+			[Association(ThisKey = "ServicePointId", OtherKey = "Id", CanBeNull = false)]
+			public BillingServicePoint ServicePoint { get; set; }
+
+			[Association(ThisKey = "ContractId", OtherKey = "Id", CanBeNull = false)]
+			public BillingContract Contract { get; set; }
+
+			[Association(ThisKey = "AccessTariffId", OtherKey = "Id", CanBeNull = false)]
+			public BillingAccessTariff AccessTariff { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
+			public ICollection<BillingCustomInvLine> InvoiceLines { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
+			public ICollection<BillingTypeAMeasures> TypeAMeasures { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
+			public ICollection<BillingTypeBMeasures> TypeBMeasures { get; set; }
+
+			[Column, NotNull] public int PriceListId { get; set; } // integer
+
+			[Association(ThisKey = "PriceListId", OtherKey = "Id", CanBeNull = true)]
+			public BillingPriceList PriceList { get; set; }
+		}
+
+		[Table]
+		public class BillingCustomInvLine : BillingBaseEntity
+		{
+			[Column, NotNull] public int CustomInvoiceId { get; set; }
+		}
+
+		[Table]
+		public class BillingContract : BillingBaseEntity;
+
+		[Table]
+		public class BillingProductUnit : BillingBaseEntity;
+
+		[Table]
+		public class BillingServicePoint : BillingBaseEntity
+		{
+			[Column, NotNull] public int TownId { get; set; }
+
+			[Column, NotNull] public int StreetTypeId { get; set; }
+
+			[Association(ThisKey = "TownId", OtherKey = "Id", CanBeNull = true)]
+			public BillingTown Town { get; set; }
+
+			[Association(ThisKey = "StreetTypeId", OtherKey = "Id", CanBeNull = true)]
+			public BillingStreetType StreetType { get; set; }
+		}
+
+		[Table]
+		public class BillingStreetType : BillingBaseEntity;
+
+		[Table]
+		public class BillingTypeAMeasures : BillingBaseEntity
+		{
+			/// <summary>
+			/// Factura
+			/// </summary>
+			[Column, NotNull] public int CustomInvoiceId { get; set; }
+
+			[Column, NotNull] public int MeasuresSourceId { get; set; }
+
+			[Column, NotNull] public int PreviousSourceId { get; set; }
+
+			[Association(ThisKey = "MeasuresSourceId", OtherKey = "Id", CanBeNull = true)]
+			public BillingMeasureSource Source { get; set; }
+
+			[Association(ThisKey = "PreviousSourceId", OtherKey = "Id", CanBeNull = true)]
+			public BillingMeasureSource PreviousSource { get; set; }
+		}
+
+		[Table]
+		public class BillingMeasureSource : BillingBaseEntity;
+
+		[Table]
+		public class BillingInvoice : BillingBaseEntity
+		{
+			/// <summary>
+			/// BillingInvoice Lines
+			/// </summary>
+			[Association(ThisKey = "Id", OtherKey = "InvoiceId", CanBeNull = true)]
+			public ICollection<BillingInvoiceLine> Lines { get; set; }
+
+			/// <summary>
+			/// Tax Lines
+			/// </summary>
+			[Association(ThisKey = "Id", OtherKey = "InvoiceId", CanBeNull = true)]
+			public ICollection<BillingInvTaxLine> TaxLines { get; set; }
+
+			[Column, Nullable] public int PendingStateId { get; set; }
+
+			[Association(ThisKey = "PendingStateId", OtherKey = "Id", CanBeNull = true)]
+			public BillingPendingState PendingState { get; set; }
+
+			[Column, Nullable] public int? RectifyingInvoiceId { get; set; }
+
+			[Association(ThisKey = "RectifyingInvoiceId", OtherKey = "Id", CanBeNull = true)]
+			public BillingInvoice Rectifying { get; set; }
+
+			[Column, Nullable] public int? RefundByInvoiceId { get; set; }
+
+			[Association(ThisKey = "RefundByInvoiceId", OtherKey = "Id", CanBeNull = true)]
+			public BillingInvoice RefundBy { get; set; }
+		}
+
+		[Table]
+		public class BillingInvTaxLine : BillingBaseEntity
+		{
+			[Column, Nullable] public int InvoiceId { get; set; } // integer
+
+			[Column, Nullable] public int? TaxId { get; set; } // integer
+
+			[Association(ThisKey = "TaxId", OtherKey = "Id", CanBeNull = false)]
+			public BillingAccountTax Tax { get; set; }
+		}
+
+		[Table]
+		public class BillingAccountTax : BillingBaseEntity;
+
+		[Table]
+		public class BillingInvoiceLine : BillingBaseEntity
+		{
+			[Column, Nullable] public int? ProductUnitId { get; set; } // integer
+			[Column, Nullable] public int? InvoiceId { get; set; } // integer
+			[Column, Nullable] public int? ProductId { get; set; } // integer
+
+			[Association(ThisKey = "ProductUnitId", OtherKey = "Id", CanBeNull = true)]
+			public BillingProductUnit ProductUnit { get; set; }
+
+			[Association(ThisKey = "ProductId", OtherKey = "Id", CanBeNull = true)]
+			public BillingProduct Product { get; set; }
+		}
+
+		[Table]
+		public class BillingTown : BillingBaseEntity
+		{
+			[Column, Nullable] public int? StateId { get; set; } // integer
+
+			[Association(ThisKey = "StateId", OtherKey = "Id", CanBeNull = true)]
+			public BillingCountryState State { get; set; }
+		}
+
+		[Table]
+		public class BillingCountryState : BillingBaseEntity
+		{
+			[Column, NotNull] public int CountryId { get; set; } // integer
+			[Column, Nullable] public int? AutonomousCommunityId { get; set; } // integer
+
+			[Association(ThisKey = "AutonomousCommunityId", OtherKey = "Id", CanBeNull = true)]
+			public BillingCommunity Community { get; set; }
+
+			[Association(ThisKey = "CountryId", OtherKey = "Id", CanBeNull = true)]
+			public BillingCountry Country { get; set; }
+		}
+
+		[Table]
+		public class BillingCommunity : BillingBaseEntity;
+
+		[Table]
+		public class BillingCountry : BillingBaseEntity;
+
+		[Table]
+		public class BillingPendingState : BillingBaseEntity;
+
+		[Table]
+		public class BillingTypeBMeasures : BillingBaseEntity
+		{
+			[Column, NotNull] public int CustomInvoiceId { get; set; }
+		}
+
+		[Table]
+		public class BillingAccessTariff : BillingBaseEntity;
+
+		[Table]
+		public class BillingProduct : BillingBaseEntity;
+
+		[Table]
+		public class BillingPriceList : BillingBaseEntity;
+
+#nullable restore
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3230")]
+		public void InheritedAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new InheritedGrandParent[]{new(){ID = 1}}))
+			using (db.CreateLocalTable(new InheritedParent[]{new(){ID = 1, GrandParentID = 1}}))
+			using (db.CreateLocalTable(new InheritedChild[]{new(){ID = 1, ParentID = 1}}))
+			{
+				var items1 = db.GetTable<InheritedChild>()
+					.LoadWith(p => p.Parent)
+					.LoadWith(p => p.Parent!.GrandParent)
+					.ToList();
+
+				items1.Count.ShouldBe(1);
+				items1[0].Parent?.GrandParent.ShouldNotBeNull();
+
+				var items2 = db.GetTable<InheritedChildViewModel>()
+					.LoadWith(p => p.Parent)
+					.LoadWith(p => p.Parent!.GrandParent)
+					.ToList();				
+
+				items2.Count.ShouldBe(1);
+				items2[0].Parent?.GrandParent.ShouldNotBeNull();
+			}
+		}
+
+		[Table("InheritedGrandParent")]
+		public class InheritedGrandParent
+		{
+			[Column] public int ID { get; set; }
+		}
+
+		[Table("InheritedParent")]
+		public class InheritedParent
+		{
+			[Column]                                                  public int          ID            { get; set; }
+			[Column]                                                  public int          GrandParentID { get; set; }
+			[Association(ThisKey = "GrandParentID", OtherKey = "ID")] public InheritedGrandParent? GrandParent   { get; set; }
+		}
+
+		[Table("InheritedChild")]
+		public class InheritedChild
+		{
+			[Column]                                             public int     ID       { get; set; }
+			[Column]                                             public int     ParentID { get; set; }
+			[Association(ThisKey = "ParentID", OtherKey = "ID")] public InheritedParent? Parent   { get; set; }
+		}
+
+		public class InheritedChildViewModel : InheritedChild;
+
+		private static EntityMappingBuilder<T> MapGuidObject<T>(FluentMappingBuilder builder, string tableName)
+			where T : LoadWithGuidObject
+		{
+			return builder.Entity<T>()
+				.HasTableName(tableName)
+				.HasPrimaryKey(x => x.Id)
+				.Ignore(x => x.IsNew);
+		}
+
+		private static MappingSchema GetLoadWithMappingSchema()
+		{
+			var result  = new MappingSchema();
+			var builder = new FluentMappingBuilder(result);
+
+			// other entities
+
+			MapGuidObject<LoadWithCategoryGroup>(builder, "t_category_groups")
+				.Property(x => x.Id).HasColumnName("Id").HasDataType(DataType.Guid)
+				.Property(x => x.TelegramBotName).HasColumnName("TelegramBotName")
+				.Property(x => x.GroupIcon).HasColumnName("GroupIcon")
+				.Association(x => x.Categories, x => x.Id, x => x.CategoryGroupId);
+
+			MapGuidObject<LoadWithDialogCategory>(builder, "t_dialog_categories")
+				.Property(x => x.Id).HasColumnName("Id").HasDataType(DataType.Guid)
+				.Property(x => x.Category).HasColumnName("Category")
+				.Property(x => x.CategoryGroupId).HasColumnName("CategoryGroupId").HasDataType(DataType.Guid)
+				.Association(x => x.CategoryGroup, x => x.CategoryGroupId, x => x.Id);
+
+			MapGuidObject<LoadWithCallMeta>(builder, "t_call_metas")
+				.Property(x => x.Id).HasColumnName("Id").HasDataType(DataType.Guid)
+				// a lot of simple scalar fields
+				.Association(x => x.CallRecord!, x => x.Id, x => x.Id)
+				.Association(x => x.CallTranscription!, x => x.Id, x => x.Id)
+				.Association(x => x.DialogCategory, x => x.DialogCategoryId, x => x.Id);
+
+			builder.Build();
+
+			return result;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3926")]
+		public void LoadWithAfterFilterByAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var ms = GetLoadWithMappingSchema();
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<LoadWithCategoryGroup>())
+			using (db.CreateLocalTable<LoadWithDialogCategory>())
+			using (db.CreateLocalTable<LoadWithCallRecord>())
+			using (db.CreateLocalTable<LoadWithCallTranscription>())
+			using (db.CreateLocalTable<LoadWithCallMeta>())
+			{
+				var query = db.GetTable<LoadWithCallMeta>()
+					.Where(x => x.DialogCategory.CategoryGroup.TelegramBotName == new { ProfileId = 1, Category = "Some", Count = 2 }.Category)
+					.LoadWith(x => x.DialogCategory.CategoryGroup)
+					.LoadWith(x => x.CallTranscription)
+					.LoadWith(x => x.CallRecord)
+					.OrderByDescending(x => x.ProfileId).Take(new { ProfileId = 1, Category = "Some", Count = 2 }.Count);
+
+				_ = query.ToList();
+
+				var selectQuery = query.GetSelectQuery();
+
+				selectQuery.Select.Columns.Any(c =>
+					(c.Expression is SqlField field) && field.Name == "TelegramBotName").ShouldBeTrue();
+			}
+		}
+
+		public abstract class LoadWithBaseObject
+		{
+			public abstract bool IsNew { get; }
+		}
+
+		public abstract class LoadWithGuidObject: LoadWithBaseObject
+		{
+			public Guid Id { get; internal set; }
+
+			protected LoadWithGuidObject()
+			{
+				Id = Guid.Empty;
+			}
+
+			public override bool IsNew => Id == Guid.Empty;
+		}
+
+		public class LoadWithCallMeta : LoadWithGuidObject
+		{
+			public int ProfileId { get; set; }
+			// a lot of simple scalar attributes
+
+			public LoadWithCallRecord?        CallRecord        { get; set; }
+			public LoadWithCallTranscription? CallTranscription { get; set; }
+
+			public Guid?           DialogCategoryId { get; set; }
+			public LoadWithDialogCategory DialogCategory   { get; set; } = null!;
+		}
+
+		public class LoadWithCallRecord : LoadWithGuidObject;
+
+		public class LoadWithCallTranscription : LoadWithGuidObject;
+
+		public class LoadWithDialogCategory: LoadWithGuidObject
+		{
+			public string Category { get; set; } = null!;
+
+			public Guid CategoryGroupId { get; set; }
+
+			public LoadWithCategoryGroup CategoryGroup { get; set; } = null!;
+		}
+
+		public class LoadWithCategoryGroup: LoadWithGuidObject
+		{
+			public string GroupIcon { get; set; } = null!;
+
+			public string TelegramBotName { get; set; } = null!;
+
+			public List<LoadWithDialogCategory> Categories { get; set; } = null!;
 		}
 	}
 }

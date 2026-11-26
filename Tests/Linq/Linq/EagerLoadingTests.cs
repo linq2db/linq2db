@@ -1320,7 +1320,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		#region issue 1862
 		[Table]
 		public partial class Blog
 		{
@@ -1401,8 +1400,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
-		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1862")]
+		public void NestedCollectionProjectionsOrdered([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var blog = db.CreateLocalTable(Blog.Data);
@@ -1470,9 +1469,7 @@ namespace Tests.Linq
 				Assert.That(result.Blog[0].Posts[3].Tags[0].Name, Is.EqualTo("SqlKata"));
 			}
 		}
-		#endregion
 
-		#region issue 2196
 		public class EventScheduleItemBase
 		{
 			public EventScheduleItemBase()
@@ -1564,8 +1561,8 @@ namespace Tests.Linq
 			public int? TicketNumberId        { get; set; }
 		}
 
-		[Test]
-		public void Issue2196([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2196")]
+		public void ProjectedNestedCollectionWithAssociation([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(EventScheduleItem.Items))
@@ -1593,9 +1590,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Persons, Has.Count.EqualTo(1));
 			}
 		}
-		#endregion
 
-		#region issue 2307
 		[Table]
 		sealed class AttendanceSheet
 		{
@@ -1641,8 +1636,8 @@ namespace Tests.Linq
 			public int AttendanceSheetId;
 		}
 
-		[Test]
-		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2307")]
+		public void GroupJoinProjectedToConstructedList([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var sheets = db.CreateLocalTable(AttendanceSheet.Items);
@@ -1658,38 +1653,35 @@ namespace Tests.Linq
 
 			query.ToList();
 		}
-		#endregion
-
-		#region issue 3128
 
 		[Table]
-		sealed class UserIssue3128
+		sealed class LoadAsTableUser
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(UserDetailsIssue3128.UserId), CanBeNull = true)]
-			public UserDetailsIssue3128? Details { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(LoadAsTableUserDetails.UserId), CanBeNull = true)]
+			public LoadAsTableUserDetails? Details { get; set; }
 		}
 
 		[Table]
-		sealed class UserDetailsIssue3128
+		sealed class LoadAsTableUserDetails
 		{
 			[PrimaryKey] public int UserId { get; set; }
 			[Column] public int Age { get; set; }
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3128")]
 		public void TableExpressionAfterLoadWithTable([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<UserIssue3128>())
-			using (db.CreateLocalTable<UserDetailsIssue3128>())
+			using (db.CreateLocalTable<LoadAsTableUser>())
+			using (db.CreateLocalTable<LoadAsTableUserDetails>())
 			{
-				db.Insert(new UserIssue3128 { Id = 10 });
-				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new LoadAsTableUser { Id = 10 });
+				db.Insert(new LoadAsTableUserDetails { UserId = 10, Age = 18 });
 
-				var result = db.GetTable<UserIssue3128>()
+				var result = db.GetTable<LoadAsTableUser>()
 					.LoadWithAsTable( _ => _.Details)
 					.WithTableExpression("{0} {1}")
 					.ToList();
@@ -1698,17 +1690,17 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3128")]
 		public void TableExpressionFirst([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<UserIssue3128>())
-			using (db.CreateLocalTable<UserDetailsIssue3128>())
+			using (db.CreateLocalTable<LoadAsTableUser>())
+			using (db.CreateLocalTable<LoadAsTableUserDetails>())
 			{
-				db.Insert(new UserIssue3128 { Id = 10 });
-				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new LoadAsTableUser { Id = 10 });
+				db.Insert(new LoadAsTableUserDetails { UserId = 10, Age = 18 });
 
-				var result = db.GetTable<UserIssue3128>()
+				var result = db.GetTable<LoadAsTableUser>()
 					.WithTableExpression("{0} {1}")
 					.LoadWithAsTable( _ => _.Details)
 					.ToList();
@@ -1717,53 +1709,50 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3128")]
 		public void WithTableAttributeMethods([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<UserIssue3128>())
-			using (db.CreateLocalTable<UserDetailsIssue3128>())
+			using (db.CreateLocalTable<LoadAsTableUser>())
+			using (db.CreateLocalTable<LoadAsTableUserDetails>())
 			{
-				db.Insert(new UserIssue3128 { Id = 10 });
-				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+				db.Insert(new LoadAsTableUser { Id = 10 });
+				db.Insert(new LoadAsTableUserDetails { UserId = 10, Age = 18 });
 
-				db.Person.Where(p => db.GetTable<UserIssue3128>()
+				db.Person.Where(p => db.GetTable<LoadAsTableUser>()
 					.LoadWithAsTable(_ => _.Details)
 					.SchemaName(null).Count() > 0).ToList();
 			}
 		}
-		#endregion
-
-		#region Issue 3664
 
 		[Table]
-		public class Test3664
+		public class LoadWithFilterRecord
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Test3664Item.TestId))]
-			public List<Test3664Item> Items { get; set; } = null!;
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(LoadWithFilterRecordItem.TestId))]
+			public List<LoadWithFilterRecordItem> Items { get; set; } = null!;
 		}
 
 		[Table]
-		public class Test3664Item
+		public class LoadWithFilterRecordItem
 		{
 			[PrimaryKey] public int Id     { get; set; }
 			[Column    ] public int TestId { get; set; }
 		}
 
-		[Test]
-		public void Issue3664Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3664")]
+		public void LoadWithFilterUsingChangingVariable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			using var records = db.CreateLocalTable<Test3664>();
-			db.Insert(new Test3664() { Id = 1 });
+			using var records = db.CreateLocalTable<LoadWithFilterRecord>();
+			db.Insert(new LoadWithFilterRecord() { Id = 1 });
 
 			using var items = db.CreateLocalTable(new[]
 			{
-				new Test3664Item() { Id = 11, TestId = 1 },
-				new Test3664Item() { Id = 12, TestId = 1 }
+				new LoadWithFilterRecordItem() { Id = 11, TestId = 1 },
+				new LoadWithFilterRecordItem() { Id = 12, TestId = 1 }
 			});
 
 			var id = 11;
@@ -1789,21 +1778,18 @@ namespace Tests.Linq
 
 			Assert.That(result[0].Items[0].Id, Is.EqualTo(12));
 		}
-		#endregion
-
-		#region Issue 3806
 
 		[Table(IsColumnAttributeRequired = false)]
-		public class Issue3806Table
+		public class LoadWithJoinTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue3806ItemTable.AssociationKey))]
-			public IEnumerable<Issue3806ItemTable> Items { get; set; } = null!;
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(LoadWithJoinItemTable.AssociationKey))]
+			public IEnumerable<LoadWithJoinItemTable> Items { get; set; } = null!;
 		}
 
 		[Table(IsColumnAttributeRequired = false)]
-		public class Issue3806ItemTable
+		public class LoadWithJoinItemTable
 		{
 			[PrimaryKey] public int Id             { get; set; }
 			[Column    ] public int Value          { get; set; }
@@ -1812,8 +1798,8 @@ namespace Tests.Linq
 
 		[ActiveIssue(3806, ErrorMessage = "Assert.That(queries.Queries, Has.Count.EqualTo(1))",
 			Details = "the association is fetched as a second query instead of an inner join - #3806's subject.")]
-		[Test]
-		public void Issue3806Test([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3806")]
+		public void LoadWithAssociationSingleQuery([DataSources(false)] string context)
 		{
 			var queries = new SaveQueriesInterceptor();
 			using var db = GetDataContext(context);
@@ -1824,78 +1810,73 @@ namespace Tests.Linq
 
 			db.AddInterceptor(queries);
 
-			using var table = db.CreateLocalTable<Issue3806Table>();
-			using var items = db.CreateLocalTable<Issue3806ItemTable>();
+			using var table = db.CreateLocalTable<LoadWithJoinTable>();
+			using var items = db.CreateLocalTable<LoadWithJoinItemTable>();
 
 			queries.Queries.Clear();
 			table.LoadWith(a => a.Items).Where(a => a.Id != 0).ToList();
 
 			Assert.That(queries.Queries, Has.Count.EqualTo(1));
 		}
-		#endregion
-
-		#region Issue 3799
 
 		[Table]
-		public class Test3799Item
+		public class RecursiveChildrenItem
 		{
 			[PrimaryKey     ] public int    Id       { get; set; }
 			[Column         ] public int?   ParentId { get; set; }
 			[Column, NotNull] public string Name     { get; set; } = null!;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId), CanBeNull = true)]
-			public IEnumerable<Test3799Item> Children { get; set; } = null!;
+			public IEnumerable<RecursiveChildrenItem> Children { get; set; } = null!;
 
-			public static Test3799Item[] TestData = new[]
+			public static RecursiveChildrenItem[] TestData = new[]
 			{
-				new Test3799Item() { Id = 1, ParentId = null, Name = "root"      },
-				new Test3799Item() { Id = 2, ParentId = 1   , Name = "child 1"   },
-				new Test3799Item() { Id = 3, ParentId = 2   , Name = "child 1.1" },
-				new Test3799Item() { Id = 4, ParentId = 2   , Name = "child 1.2" },
-				new Test3799Item() { Id = 5, ParentId = 1   , Name = "child 2"   },
-				new Test3799Item() { Id = 6, ParentId = 5   , Name = "child 2.1" },
-				new Test3799Item() { Id = 7, ParentId = 5   , Name = "child 2.1" },
+				new RecursiveChildrenItem() { Id = 1, ParentId = null, Name = "root"      },
+				new RecursiveChildrenItem() { Id = 2, ParentId = 1   , Name = "child 1"   },
+				new RecursiveChildrenItem() { Id = 3, ParentId = 2   , Name = "child 1.1" },
+				new RecursiveChildrenItem() { Id = 4, ParentId = 2   , Name = "child 1.2" },
+				new RecursiveChildrenItem() { Id = 5, ParentId = 1   , Name = "child 2"   },
+				new RecursiveChildrenItem() { Id = 6, ParentId = 5   , Name = "child 2.1" },
+				new RecursiveChildrenItem() { Id = 7, ParentId = 5   , Name = "child 2.1" },
 			};
 		}
 
-		public sealed class Test3799FirstChildModel
+		public sealed class FirstChildProjection
 		{
 			public string              Name          { get; set; } = null!;
 			public IEnumerable<string> ChildrenNames { get; set; } = null!;
 
-			internal static Expression<Func<Test3799Item, Test3799FirstChildModel>> Selector = item => new Test3799FirstChildModel
+			internal static Expression<Func<RecursiveChildrenItem, FirstChildProjection>> Selector = item => new FirstChildProjection
 			{
 				Name          = item.Name,
 				ChildrenNames = item.Children.AsQueryable().Select(x => x.Name).ToList(),
 			};
 		}
 
-		public sealed class Test3799ItemModel
+		public sealed class ItemWithFirstChildProjection
 		{
 			public string                   Name       { get; set; } = null!;
-			public Test3799FirstChildModel? FirstChild { get; set; }
+			public FirstChildProjection? FirstChild { get; set; }
 
-			internal static Expression<Func<Test3799Item, Test3799ItemModel>> Selector = item => new Test3799ItemModel()
+			internal static Expression<Func<RecursiveChildrenItem, ItemWithFirstChildProjection>> Selector = item => new ItemWithFirstChildProjection()
 			{
 				Name       = item.Name,
-				FirstChild = item.Children.AsQueryable().Select(Test3799FirstChildModel.Selector).FirstOrDefault(),
+				FirstChild = item.Children.AsQueryable().Select(FirstChildProjection.Selector).FirstOrDefault(),
 			};
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3799")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Issue3799Test([DataSources] string context)
+		public void NestedSelectorWithAsQueryableChildren([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable<Test3799Item>(Test3799Item.TestData);
+			using var table = db.CreateLocalTable<RecursiveChildrenItem>(RecursiveChildrenItem.TestData);
 
-			var result = table.Select(Test3799ItemModel.Selector).ToList();
+			var result = table.Select(ItemWithFirstChildProjection.Selector).ToList();
 		}
-		#endregion
 
-		#region Issue 4057
-		[Test]
-		public async Task Issue4057_Async([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4057")]
+		public async Task LoadWithKeepConnectionAliveAsync([DataSources] string context)
 		{
 			DataOptions options;
 
@@ -1926,8 +1907,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue4057_Sync([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4057")]
+		public void LoadWithKeepConnectionAliveSync([DataSources] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))
@@ -1958,8 +1939,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public async Task Issue4057_Async_ExplicitTransaction([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4057")]
+		public async Task LoadWithKeepConnectionAliveAsyncExplicitTransaction([DataSources] string context)
 		{
 			DataOptions options;
 
@@ -1993,8 +1974,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue4057_Sync_ExplicitTransaction([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4057")]
+		public void LoadWithKeepConnectionAliveSyncExplicitTransaction([DataSources] string context)
 		{
 			DataOptions options;
 			using (var db = GetDataContext(context))
@@ -2027,10 +2008,9 @@ namespace Tests.Linq
 					.FirstOrDefault(x => x.ParentID == 3);
 			}
 		}
-		#endregion
 
-		[Test]
-		public void Issue4060([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4060")]
+		public void LoadWithAfterConcat([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2040,7 +2020,6 @@ namespace Tests.Linq
 				.ToList();
 		}
 
-		#region Issue 3226
 		[Table]
 		sealed class Item
 		{
@@ -2061,7 +2040,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
-		public void Issue3226Test1([DataSources] string context)
+		public void OrderByAssociationSum([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Item>();
@@ -2078,7 +2057,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
-		public void Issue3226Test2([DataSources] string context)
+		public void SelectAssociationAsEnumerableProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Item>();
@@ -2096,7 +2075,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
-		public void Issue3226Test3([DataSources] string context)
+		public void OrderByAssociationSumWithAsEnumerableProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Item>();
@@ -2115,7 +2094,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
-		public void Issue3226Test4([DataSources] string context)
+		public void OrderByNullableAssociationSumWithAsEnumerableProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Item>();
@@ -2131,7 +2110,6 @@ namespace Tests.Linq
 				})
 				.ToList();
 		}
-		#endregion
 
 		abstract class EntityBase
 		{
@@ -3175,9 +3153,8 @@ namespace Tests.Linq
 			}
 		}
 
-		#region Issue 4497
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
-		public void Issue4497Test1([DataSources(false)] string context)
+		public void LeftJoinRightKeyFilterKeepsNullCheck([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3194,7 +3171,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
-		public void Issue4497Test2([DataSources(false)] string context)
+		public void LoadWithAssociationFilterKeepsNullCheck([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3206,47 +3183,45 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain("LEFT JOIN"));
 			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
 		}
-		#endregion
 
-		#region Issue 4585
 		// As ComplexTests.Issue4139Test: the fragment starts after the per-run TableContext id.
 		[ActiveIssue(4585, ErrorTypeName = "LinqToDB.LinqToDBException",
-			ErrorMessage = "Issue4585Table).Nested' is not an association.",
+			ErrorMessage = "FluentInheritanceDerived).Nested' is not an association.",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The fluently-mapped nested association is not recognised as one.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4585")]
-		public void Issue4585Test([DataSources] string context)
+		public void FluentInheritanceWithNestedAssociation([DataSources] string context)
 		{
 			var fluentMappingBuilder = new FluentMappingBuilder(new MappingSchema());
 
 			fluentMappingBuilder
-				.Entity<Issue4585TableNested>()
+				.Entity<FluentInheritanceNested>()
 				.Property(x => x.Id).IsPrimaryKey()
 				.Property(x => x.Code);
 
 			fluentMappingBuilder
-				.Entity<Issue4585TableBase>()
-				.Inheritance(x => x.TypeId, HierarchyType.Type1, typeof(Issue4585Table))
+				.Entity<FluentInheritanceBase>()
+				.Inheritance(x => x.TypeId, HierarchyType.Type1, typeof(FluentInheritanceDerived))
 				.Property(t => t.Data).HasColumnName("data")
 				.Property(t => t.Id).IsPrimaryKey()
 				.Property(t => t.TypeId).IsDiscriminator()
 				.Build();
 
-			fluentMappingBuilder.Entity<Issue4585Table>()
+			fluentMappingBuilder.Entity<FluentInheritanceDerived>()
 				.Property(x => x.SomeField)
 				.Property(x => x.NestedTypeId)
 				.Association(x => x.Nested, x => x.NestedTypeId, x => x!.Id);
 
 			using var db = GetDataContext(context, fluentMappingBuilder.MappingSchema);
 
-			using var table = db.CreateLocalTable<Issue4585TableBase>();
-			using var table1 = db.CreateLocalTable<Issue4585TableNested>();
+			using var table = db.CreateLocalTable<FluentInheritanceBase>();
+			using var table1 = db.CreateLocalTable<FluentInheritanceNested>();
 
-			var list      = db.GetTable<Issue4585Table>()
+			var list      = db.GetTable<FluentInheritanceDerived>()
 				.LoadWith(x => x.Nested)
 				.ToList();
 		}
 
-		class Issue4585TableBase
+		class FluentInheritanceBase
 		{
 			public int Id { get; set; }
 			public string Data { get; set; } = null!;
@@ -3259,33 +3234,31 @@ namespace Tests.Linq
 			Type2 = 1
 		}
 
-		sealed class Issue4585Table : Issue4585TableBase
+		sealed class FluentInheritanceDerived : FluentInheritanceBase
 		{
 			public string? SomeField { get; set; }
 			public int? NestedTypeId { get; set; }
-			public Issue4585TableNested? Nested { get; set; }
+			public FluentInheritanceNested? Nested { get; set; }
 		}
 
-		sealed class Issue4585TableNested
+		sealed class FluentInheritanceNested
 		{
 			public int Id { get; set; }
 			public string Code { get; set; } = null!;
 		}
-		#endregion
 
-		#region Issue 3140
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
-		public void Issue3140Test1([DataSources(false)] string context)
+		public void NestedProjectionSingleSelectAndJoin([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var t1 = db.CreateLocalTable<Issue3140Parent>();
-			using var t2 = db.CreateLocalTable<Issue3140Child>();
+			using var t1 = db.CreateLocalTable<NestedProjectionParent>();
+			using var t2 = db.CreateLocalTable<NestedProjectionChild>();
 
 			var query = from p in t1
-						select new Issue3140Parent()
+						select new NestedProjectionParent()
 						{
 							Id = p.Id,
-							Child = new Issue3140Child()
+							Child = new NestedProjectionChild()
 							{
 								Id = p.Child!.Id,
 								Name = p.Child!.Name,
@@ -3304,16 +3277,16 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
-		public void Issue3140Test2([DataSources(false)] string context)
+		public void LoadWithProjectionSingleSelectAndJoin([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var t1 = db.CreateLocalTable<Issue3140Parent>();
-			using var t2 = db.CreateLocalTable<Issue3140Child>();
+			using var t1 = db.CreateLocalTable<NestedProjectionParent>();
+			using var t2 = db.CreateLocalTable<NestedProjectionChild>();
 
 			var query = t1
 				.LoadWith(
 					p => p.Child,
-					c => c.Select(x => new Issue3140Child() { Id = x.Id, Name = x.Name }));
+					c => c.Select(x => new NestedProjectionChild() { Id = x.Id, Name = x.Name }));
 
 			query.ToArray();
 
@@ -3326,25 +3299,23 @@ namespace Tests.Linq
 			}
 		}
 
-		sealed class Issue3140Parent
+		sealed class NestedProjectionParent
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public int ChildId { get; set; }
-			[Association(ThisKey = nameof(ChildId), OtherKey = nameof(Issue3140Child.Id))] public Issue3140Child? Child { get; set; }
+			[Association(ThisKey = nameof(ChildId), OtherKey = nameof(NestedProjectionChild.Id))] public NestedProjectionChild? Child { get; set; }
 		}
 
-		sealed class Issue3140Child
+		sealed class NestedProjectionChild
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public string? Name { get; set; }
 		}
-		#endregion
 
-		#region Issue 4588
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
-		public void Issue4588Test([DataSources(false)] string context)
+		public void LoadWithThenLoadSkipTake([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Order>();
@@ -3389,7 +3360,6 @@ namespace Tests.Linq
 			public DateTime Date { get; set; }
 			public bool IsActive { get; set; }
 		}
-		#endregion
 
 		#region Issue : CTE cloning
 
@@ -3604,25 +3574,23 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Issue 4797
-
 		[Table]
-		public class Issue4797Parent
+		public class CircularLoadWithParent
 		{
 			[Column]
 			public int Id { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4797Child.ParentId))]
-			public Issue4797Child[]? Children { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CircularLoadWithChild.ParentId))]
+			public CircularLoadWithChild[]? Children { get; set; }
 
-			public static readonly Issue4797Parent[] Data =
+			public static readonly CircularLoadWithParent[] Data =
 			[
-				new Issue4797Parent() { Id = 1 }
+				new CircularLoadWithParent() { Id = 1 }
 			];
 		}
 
 		[Table]
-		public class Issue4797Child
+		public class CircularLoadWithChild
 		{
 			[Column]
 			public int Id { get; set; }
@@ -3630,22 +3598,22 @@ namespace Tests.Linq
 			[Column]
 			public int? ParentId { get; set; }
 
-			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Issue4797Parent.Id))]
-			public Issue4797Parent? Parent { get; set; }
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(CircularLoadWithParent.Id))]
+			public CircularLoadWithParent? Parent { get; set; }
 
-			public static readonly Issue4797Child[] Data =
+			public static readonly CircularLoadWithChild[] Data =
 			[
-				new Issue4797Child() { Id = 1, ParentId = 1 },
-				new Issue4797Child() { Id = 2, ParentId = 1 },
+				new CircularLoadWithChild() { Id = 1, ParentId = 1 },
+				new CircularLoadWithChild() { Id = 2, ParentId = 1 },
 			];
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4797")]
-		public void Issue4797Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LoadWithCircularAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var pt = db.CreateLocalTable(Issue4797Parent.Data);
-			using var ct = db.CreateLocalTable(Issue4797Child.Data);
+			using var pt = db.CreateLocalTable(CircularLoadWithParent.Data);
+			using var ct = db.CreateLocalTable(CircularLoadWithChild.Data);
 
 			var result = pt
 				.LoadWith(
@@ -3681,8 +3649,6 @@ namespace Tests.Linq
 			// TODO: right now we create separate objects for same record on different levels
 			// if we want to change this behavior - it makes sense to add object equality asserts
 		}
-
-		#endregion
 
 		#region LoadWith/ThenLoad on non-linq2db IQueryable source
 

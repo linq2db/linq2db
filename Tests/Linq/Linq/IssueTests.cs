@@ -20,24 +20,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class IssueTests : TestBase
 	{
-		// https://github.com/linq2db/linq2db/issues/38
-		//
-		[Test]
-		[ThrowsRequiresCorrelatedSubquery]
-		public void Issue38Test([DataSources(false)] string context)
-		{
-			using var db = GetDataContext(context);
-			AreEqual(
-				from a in Child
-				select new { Count = a.GrandChildren.Count() },
-				from a in db.Child
-				select new { Count = a.GrandChildren1.Count() });
-
-			var sql = ((TestDataConnection)db).LastQuery;
-
-			Assert.That(sql, Is.Not.Contains("INNER JOIN"));
-		}
-
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test]
@@ -76,37 +58,6 @@ namespace Tests.Linq
 				select new { p.ParentID, count = ch.Count() } into t
 				where t.count > 0
 				select t);
-		}
-
-		// https://github.com/linq2db/linq2db/issues/498
-		//
-		[Test()]
-		public void Issue498Test([DataSources] string context)
-		{
-			using var db = GetDataContext(context, o => o.UseOptimizeJoins(false));
-			var q = from x in db.Child
-					//join y in db.GrandChild on new { x.ParentID, x.ChildID } equals new { ParentID = (int)y.ParentID, ChildID = (int)y.ChildID }
-					from y in x.GrandChildren1
-					select x.ParentID;
-
-			var r = from x in q
-					group x by x
-					into g
-					select new { g.Key, Cghildren = g.Count() };
-
-			var qq = from x in Child
-					 from y in x.GrandChildren
-					 select x.ParentID;
-
-			var rr = from x in qq
-					 group x by x
-					into g
-					 select new { g.Key, Cghildren = g.Count() };
-
-			AreEqual(rr, r);
-
-			var sql = r.ToSqlQuery().Sql;
-			Assert.That(sql, Does.Contain("INNER"));
 		}
 
 		public class PersonWrapper
