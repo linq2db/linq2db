@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.Globalization;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB
@@ -43,12 +44,12 @@ namespace LinqToDB
 
 		/// <summary>Reads a cell, or <see langword="null"/> when no cell carries <paramref name="name"/>.</summary>
 		/// <param name="name">Cell name.</param>
-		public object? this[[SqlQueryDependent] string name] => Store.TryGetValue(name, out var value) ? value : null;
+		public object? this[[SqlQueryDependentValue] string name] => Store.TryGetValue(name, out var value) ? value : null;
 
 		/// <summary>Reads a cell as <typeparamref name="T"/>, or <see langword="default"/> when absent or of another type.</summary>
 		/// <typeparam name="T">Expected cell type.</typeparam>
 		/// <param name="name">Cell name.</param>
-		public T? Get<T>([SqlQueryDependent] string name) => this[name] is T value ? value : default;
+		public T? Get<T>([SqlQueryDependentValue] string name) => this[name] is T value ? value : default;
 
 		#region DynamicObject
 

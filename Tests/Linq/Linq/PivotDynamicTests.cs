@@ -802,6 +802,108 @@ namespace Tests.Linq
 				.ShouldBe(new decimal?[] { 20m, 15m });
 		}
 
+		/// <summary>
+		/// A projected cell name read from the row has no value until the query runs, so the cached query compares it as part
+		/// of the tree: the second execution reads as the first.
+		/// </summary>
+		[Test]
+		public void ARowDependentCellNameReadsOnEveryExecution([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Key);
+
+			for (var execution = 0; execution < 2; execution++)
+			{
+				pivoted
+					.Select(r => r.Cells.Get<decimal?>(r.Key == "A" ? "Y2000" : "Y2010"))
+					.ToList()
+					.ShouldBe(new decimal?[] { 10m, 15m });
+
+				pivoted
+					.Select(r => (decimal?)r.Cells[r.Key == "A" ? "Y2000" : "Y2010"])
+					.ToList()
+					.ShouldBe(new decimal?[] { 10m, 15m });
+			}
+		}
+
+		/// <summary>A changed name read through the indexer is a different query, as through <see cref="PivotCells.Get{T}"/>.</summary>
+		[Test]
+		public void ACapturedCellNameKeysAnIndexerRead([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var name = "Y2000";
+
+			List<string> Keys() => t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Where(r => (decimal?)r.Cells[name] > 12)
+				.Select(r => r.Key)
+				.ToList();
+
+			var keys = Keys();
+
+			keys.ShouldBeEmpty();
+
+			name = "Y2010";
+
+			Keys()
+				.OrderBy(k => k, StringComparer.Ordinal)
+				.ShouldBe(new[] { "A", "B" });
+		}
+
+		/// <summary>A compiled query's cell name, passed as an argument, keys the build it reuses.</summary>
+		// Compiled-query build identity is provider-agnostic.
+		[Test]
+		public void ACompiledCellNameKeysTheBuild([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var keys = CompiledQuery.Compile((IDataContext dc, string name) => dc
+				.GetTable<CategorySales>()
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Where(r => r.Cells.Get<decimal?>(name) > 12)
+				.Select(r => r.Key));
+
+			keys(db, "Y2000")
+				.ToList()
+				.ShouldBeEmpty();
+
+			keys(db, "Y2010")
+				.OrderBy(k => k)
+				.ToList()
+				.ShouldBe(new[] { "A", "B" });
+		}
+
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
 		[Test]
 		public void UnpivotsTheCellsUnderTheirOwnNames([DataSources] string context)
