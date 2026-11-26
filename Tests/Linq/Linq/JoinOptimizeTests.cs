@@ -844,5 +844,512 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		// The builder builds the guard before any provider code runs, so SQLite covers it; .LinqService takes the guarded SQL
+		// through the remote path. Access and Oracle 11 still read the enclosing value on these shapes: Oracle 11 does not
+		// NULL-extend the constant marker the guard tests, and Access keeps its old markers (see the Access-only test below).
+		[Test]
+		public void OuterSourceProjectionReadsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// The outer-joined sequence projects a value of an enclosing source. The value does not come from the joined
+			// query, so the join does not NULL-extend it: children 61-66 and 77 have no grandchildren and read null.
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p.Value1)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void NonNullableOuterSourceProjectionReadsDefaultWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// A non-nullable outer value must not serve as the row-exists marker either
+			var nullable =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => (int?)p.ParentID)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AssertQuery(nullable);
+
+			var notNullable =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p.ParentID)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AssertQuery(notNullable);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterAndOwnMembersReadNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => new { P = p.Value1, G = g.GrandChildID })
+					.DefaultIfEmpty()
+				select new
+				{
+					c.ChildID,
+					v.P,
+					v.G,
+				};
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionFiltersAsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p.Value1)
+					.DefaultIfEmpty()
+				where v == null
+				select c.ChildID;
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionCountsAsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => (int?)p.ParentID)
+					.DefaultIfEmpty()
+				group v by c.ParentID into gr
+				select new
+				{
+					gr.Key,
+					Missing = gr.Count(x => x == null),
+				};
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionGroupsAsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => (int?)p.ParentID)
+					.DefaultIfEmpty()
+				group c by v into gr
+				select new
+				{
+					gr.Key,
+					Count = gr.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterEntityProjectionIsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p)
+					.DefaultIfEmpty()
+				select new
+				{
+					c.ChildID,
+					IsMissing = v == null,
+				};
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision. Access and Oracle 11 fail differently here:
+		// they cannot convert DefaultIfEmpty().Max() over this projection to SQL, before or after the fix
+		[Test]
+		public void OuterSourceProjectionAggregatesOverEmptySequence([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var oneRow =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				select new
+				{
+					c.ChildID,
+					Max = db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.Select(g => (int?)p.ParentID)
+						.DefaultIfEmpty()
+						.Max(),
+				};
+
+			AssertQuery(oneRow);
+
+			var grouped =
+				from c in db.Child
+				join g in db.GrandChild on c.ChildID equals g.ChildID into gj
+				select new
+				{
+					c.ChildID,
+					Max = gj
+						.Select(x => (int?)c.ParentID)
+						.DefaultIfEmpty()
+						.Max(),
+				};
+
+			AssertQuery(grouped);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionThroughAssociationReadsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in p.Children
+				from v in c.GrandChildren
+					.Select(g => p.Value1)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			// AssertQuery cannot follow the associations on its expected side, so the expected rows join the model collections
+			var expected =
+				from p in Parent
+				from c in Child
+				where c.ParentID == p.ParentID
+				from v in GrandChild
+					.Where(g => g.ParentID == c.ParentID && g.ChildID == c.ChildID)
+					.Select(g => p.Value1)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AreEqual(expected, query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionThroughGroupJoinReadsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				join g in db.GrandChild on c.ChildID equals g.ChildID into gj
+				from v in gj
+					.Select(x => (int?)c.ParentID)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionThroughLeftJoinReadsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Select(g => new { g.ChildID, P = p.Value1 })
+					.LeftJoin(g => g.ChildID == c.ChildID)
+				select new { c.ChildID, v.P };
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionAfterTakeReadsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p.Value1)
+					.Take(1)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionInEagerLoadReadsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				select new
+				{
+					c.ChildID,
+					Values = db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.Select(g => p.Value1)
+						.DefaultIfEmpty()
+						.ToArray(),
+				};
+
+			AssertQuery(query);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionOrdersAsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => (int?)p.ParentID)
+					.DefaultIfEmpty()
+				orderby v ?? -1, c.ChildID
+				select c.ChildID;
+
+			// AssertQuery compares without order, so the expected order comes from the model collections
+			var expected =
+				from p in Parent
+				from c in Child
+				where c.ParentID == p.ParentID
+				from v in GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => (int?)p.ParentID)
+					.DefaultIfEmpty()
+				orderby v ?? -1, c.ChildID
+				select c.ChildID;
+
+			query
+				.ToList()
+				.ShouldBe(expected.ToList());
+		}
+
+		[Table]
+		sealed class OuterValueTarget
+		{
+			[PrimaryKey] public int  Id    { get; set; }
+			[Column    ] public int? Value { get; set; }
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
+		public void OuterSourceProjectionInsertsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<OuterValueTarget>();
+
+			var source =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from v in db.GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p.Value1)
+					.Take(1)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			source.Insert(table, r => new OuterValueTarget { Id = r.ChildID, Value = r.V });
+
+			var expected =
+				from p in Parent
+				from c in Child
+				where c.ParentID == p.ParentID
+				from v in GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => p.Value1)
+					.Take(1)
+					.DefaultIfEmpty()
+				orderby c.ChildID
+				select new { Id = c.ChildID, Value = v };
+
+			table
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, r.Value })
+				.ToList()
+				.ShouldBe(expected.ToList());
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision. Access and Oracle 11 fail differently here:
+		// they cannot convert DefaultIfEmpty().Max() over this projection to SQL, before or after the fix
+		[Test]
+		public void OuterSourceProjectionAggregatesThroughAssociation([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in p.Children
+				select new
+				{
+					c.ChildID,
+					Max = c.GrandChildren
+						.Select(g => (int?)p.ParentID)
+						.DefaultIfEmpty()
+						.Max(),
+				};
+
+			// AssertQuery cannot follow the associations on its expected side, so the expected rows join the model collections
+			var expected =
+				from p in Parent
+				from c in Child
+				where c.ParentID == p.ParentID
+				select new
+				{
+					c.ChildID,
+					Max = GrandChild
+						.Where(g => g.ParentID == c.ParentID && g.ChildID == c.ChildID)
+						.Select(g => (int?)p.ParentID)
+						.DefaultIfEmpty()
+						.Max(),
+				};
+
+			AreEqual(expected, query);
+		}
+
+		// Access only: it does not NULL-extend the constant marker, so a sequence without a non-nullable value of its own keeps
+		// the markers it always had. Only matched parents are read, because the unmatched ones still get the enclosing value there.
+		[Test]
+		public void OuterSourceProjectionKeepsMatchedRowsOnAccess([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// a matched person with a NULL MiddleName must keep the enclosing value: the nullable MiddleName cannot guard it
+			var values =
+				from p in db.Parent
+				where p.ParentID <= 4
+				from v in db.Person
+					.Where(x => x.ID == p.ParentID)
+					.Select(x => new { x.MiddleName, P = p.Value1 })
+					.DefaultIfEmpty()
+				select new { p.ParentID, v.P };
+
+			AssertQuery(values);
+
+			// ...and must not read as missing
+			var presence =
+				from p in db.Parent
+				where p.ParentID <= 4
+				from v in db.Person
+					.Where(x => x.ID == p.ParentID)
+					.Select(x => new { x.MiddleName, P = (int?)p.ParentID })
+					.DefaultIfEmpty()
+				select new
+				{
+					p.ParentID,
+					IsMissing = v == null,
+				};
+
+			AssertQuery(presence);
+		}
+
+		// SQLite and Access: a non-nullable column of the sequence's own is the marker, which Access does NULL-extend, so Access
+		// takes the fixed path here. Parents 5-7 have no person.
+		[Test]
+		public void OuterSourceProjectionGuardedByOwnNonNullableColumn([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var values =
+				from p in db.Parent
+				from v in db.Person
+					.Where(x => x.ID == p.ParentID)
+					.Select(x => new { x.ID, P = p.Value1 })
+					.DefaultIfEmpty()
+				select new { p.ParentID, v.P };
+
+			AssertQuery(values);
+		}
+
+		// SQLite and Access, as OuterSourceProjectionGuardedByOwnNonNullableColumn: the own non-nullable column is the marker
+		[Test]
+		public void OuterSourceProjectionMarkedByOwnNonNullableColumn([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// the enclosing non-nullable value comes first: it must not become the marker
+			var presence =
+				from p in db.Parent
+				from v in db.Person
+					.Where(x => x.ID == p.ParentID)
+					.Select(x => new { P = p.ParentID, x.ID })
+					.DefaultIfEmpty()
+				select new
+				{
+					p.ParentID,
+					IsMissing = v == null,
+				};
+
+			AssertQuery(presence);
+		}
 	}
 }

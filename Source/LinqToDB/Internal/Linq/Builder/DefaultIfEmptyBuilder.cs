@@ -16,11 +16,18 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable;
 
-		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence)
+		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, out bool guardsEnclosingValues)
 		{
-			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
-			var translated   = builder.BuildSqlExpression(sequence, sequenceRef);
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated, false);
+			var sequenceRef     = new ContextRefExpression(sequence.ElementType, sequence);
+			var translated      = builder.BuildSqlExpression(sequence, sequenceRef);
+			var allPlaceholders = ExpressionBuilder.CollectDistinctPlaceholders(translated, false);
+
+			// Only a value of the sequence's own query is NULL-extended by the outer join. A value of an enclosing source
+			// keeps its value on a missing row, so it cannot tell whether the row is there.
+			var ownSources   = QueryHelper.EnumerateAccessibleSources(sequence.SelectQuery).ToList();
+			var placeholders = allPlaceholders
+				.Where(p => p.SelectQuery != null && ownSources.Contains(p.SelectQuery, QueryElement.ReferenceComparer))
+				.ToList();
 
 			var nullability = NullabilityContext.GetContext(nullabilitySequence.SelectQuery);
 			var notNull = placeholders
@@ -28,14 +35,30 @@ namespace LinqToDB.Internal.Linq.Builder
 				.Cast<Expression>()
 				.ToList();
 
+			guardsEnclosingValues = true;
+
 			if (notNull.Count == 0)
 			{
 				if (builder.DataContext.SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability)
 				{
-					if (placeholders.Count == 0)
-						return null;
+					// Access does not NULL-extend the constant marker below, and a nullable marker reads a matched row holding
+					// a NULL as missing. Without a non-nullable value of its own the sequence keeps the markers it always had,
+					// enclosing values included, and they guard no enclosing value.
+					guardsEnclosingValues = false;
 
-					notNull = placeholders.Cast<Expression>().ToList();
+					notNull = allPlaceholders
+						.Where(p => !p.Sql.CanBeNullable(nullability))
+						.Take(1)
+						.Cast<Expression>()
+						.ToList();
+
+					if (notNull.Count == 0)
+					{
+						if (allPlaceholders.Count == 0)
+							return null;
+
+						notNull = allPlaceholders.Cast<Expression>().ToList();
+					}
 				}
 				else
 				{
@@ -143,6 +166,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly IBuildContext _nullabilitySequence;
 
 			ReadOnlyCollection<Expression>? _notNullConditions;
+			bool                            _guardsEnclosingValues;
 
 			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool isNullValidationDisabled)
 				: base(parent, sequence, null)
@@ -159,7 +183,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public ReadOnlyCollection<Expression> GetNotNullConditions()
 			{
-				return _notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
+				return _notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, out _guardsEnclosingValues) ?? throw new InvalidOperationException();
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -210,6 +234,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (expr is SqlPlaceholderExpression placeholder)
 					{
+						// A value of an enclosing source is not a column of this query, so the outer join does not
+						// NULL-extend it: it is read only when the markers say the row is there. Markers that cannot say
+						// so (see PrepareNoNullConditions) leave it as it is.
+						if (!ReferenceEquals(placeholder.SelectQuery, SelectQuery))
+						{
+							_notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, out _guardsEnclosingValues);
+
+							if (_notNullConditions == null || !_guardsEnclosingValues)
+								return placeholder;
+
+							var notNullTest = _notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+							return Expression.Condition(notNullTest, placeholder, new DefaultValueExpression(MappingSchema, placeholder.Type, true));
+						}
+
 						if (flags.IsExpression())
 						{
 							var nullablePlaceholder = placeholder.MakeNullable();
@@ -224,7 +263,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return placeholder;
 					}
 
-					_notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
+					_notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, out _guardsEnclosingValues);
 
 					if (_notNullConditions != null)
 					{
