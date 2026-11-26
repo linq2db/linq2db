@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
@@ -56,5 +58,47 @@ namespace Tests.Linq
 			newQueryable.ToArray();
 		}
 
+		// not mixing props and fields because GetMembers()
+		// will return all props (derived first) and then all fields (derived first)
+		public class MemberOrderingBase
+		{
+			public int Member1;
+			public int Member2;
+			public int Member3;
+		}
+
+		public class MemberOrderingDerived : MemberOrderingBase
+		{
+			public int MemberDerived1;
+			public new int Member2;
+			public int MemberDerived3;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3959")]
+		public void PublicInstanceValueMembersOrderBaseThenDerived()
+		{
+			var type = typeof(MemberOrderingDerived);
+
+			var members = type.GetPublicInstanceValueMembers();
+
+			//Console.WriteLine("Members: {0}", string.Join(", ", members.Select(m => m.Name)));
+
+			// Test returned array
+			Assert.That(members, Is.Not.Null);
+			Assert.That(members, Has.Length.EqualTo(5), $"Expected 5 returned members, found {members.Length}.");
+
+			var expected = String.Join(", ", new []
+			{ 
+				$"{nameof(MemberOrderingBase)}.{nameof(MemberOrderingBase.Member1)}",
+				$"{nameof(MemberOrderingBase)}.{nameof(MemberOrderingBase.Member3)}",
+				$"{nameof(MemberOrderingDerived)}.{nameof(MemberOrderingDerived.MemberDerived1)}",
+				$"{nameof(MemberOrderingDerived)}.{nameof(MemberOrderingDerived.Member2)}",
+				$"{nameof(MemberOrderingDerived)}.{nameof(MemberOrderingDerived.MemberDerived3)}",
+			});
+
+			var actual = String.Join(", ", members.Select(m => $"{m.DeclaringType!.Name}.{m.Name}"));
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
 	}
 }

@@ -3184,7 +3184,7 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
 		}
 
-		// As ComplexTests.Issue4139Test: the fragment starts after the per-run TableContext id.
+		// As ComplexTests.LoadWithNestedAssociationThroughComplexColumn: the fragment starts after the per-run TableContext id.
 		[ActiveIssue(4585, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "FluentInheritanceDerived).Nested' is not an association.",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The fluently-mapped nested association is not recognised as one.")]

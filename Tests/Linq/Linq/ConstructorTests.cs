@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using Shouldly;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -225,6 +228,71 @@ namespace Tests.Linq
 			var obj = table.First();
 			obj.Id.ShouldBe(5);
 			obj.Value.ShouldBe("Some");
+		}
+
+		[Table(Name = "Person")]
+		public class PersonWithPrivateConstructor
+		{
+			private PersonWithPrivateConstructor()
+			{
+			}
+
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+			[Column("PersonID", IsIdentity = true)]
+			[PrimaryKey]
+			public int ID { get; set; }
+
+			[Column]
+			public Gender Gender { get; set; }
+
+			[Column]
+			public string FirstName { get; private set; } = null!;
+
+			[Column]
+			public string MiddleName { get; set; } = null!;
+
+			[Column]
+			public string? LastName { get; set; }
+
+			public void SetFirstName(string firstName)
+			{
+				FirstName = firstName;
+			}
+
+			public static PersonWithPrivateConstructor Create()
+			{
+				return new PersonWithPrivateConstructor();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/307")]
+		public void InsertAndSelectEntityWithPrivateConstructor([DataSources] string context)
+		{
+			ResetPersonIdentity(context);
+
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				var obj = PersonWithPrivateConstructor.Create();
+				obj.SetFirstName("FirstName307");
+				obj.LastName = "LastName307";
+
+				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj.ID = id = 100;
+					db.Insert(obj);
+				}
+				else
+					id = db.InsertWithInt32Identity(obj);
+
+				var obj2 = db.GetTable<PersonWithPrivateConstructor>().First(_ => _.ID == id);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(obj2.MiddleName, Is.Null);
+					Assert.That(obj2.FirstName, Is.EqualTo(obj.FirstName));
+				}
+			}
 		}
 	}
 }
