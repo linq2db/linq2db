@@ -664,6 +664,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								: info.Argument(0)!;
 							var dataType  = factory.GetDbDataType(info.Values[0]);
 
+							// the result is text whatever the first item is: string.Join(sep, object[]) can start with a number,
+							// whose type would have the reader parse the joined text
+							if (dataType.SystemType.ToUnderlying() != typeof(string))
+								dataType = factory.GetDbDataType(typeof(string));
+
 							if (info.Values is [var singleValue])
 							{
 								singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
