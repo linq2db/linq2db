@@ -237,39 +237,36 @@ namespace LinqToDB.Mapping
 		// Inheritance roots being built on this thread: constructing the descriptors of the types they map, or running their
 		// own descriptor-created callback. A root is cached only once MappingSchema.GetEntityDescriptor's factory returns,
 		// so a callback that reads a type of the root's hierarchy is served from here instead of building the root again.
-		static readonly AsyncLocal<RootBuild?> _rootBuilds = new();
+#pragma warning disable RS0030 // re-entrancy guard for synchronous descriptor-created callbacks
+		[ThreadStatic]
+		static RootBuild? _rootBuilds;
+#pragma warning restore RS0030
 
 		internal sealed class RootBuild(EntityDescriptor root, int schemaId, RootBuild? outer)
 		{
 			public EntityDescriptor Root     { get; } = root;
 			public int              SchemaId { get; } = schemaId;
 			public RootBuild?       Outer    { get; } = outer;
-
-			// A flow a callback starts (a task, a timer) captures this entry: it must not see a build that has ended
-			// or that runs on another thread.
-			public int              ThreadId { get; } = Environment.CurrentManagedThreadId;
-			public bool             IsEnded  { get; set; }
 		}
 
 		internal static RootBuild EnterRootBuild(EntityDescriptor root, int schemaId)
 		{
-			var build = new RootBuild(root, schemaId, _rootBuilds.Value);
+			var build = new RootBuild(root, schemaId, _rootBuilds);
 
-			_rootBuilds.Value = build;
+			_rootBuilds = build;
 
 			return build;
 		}
 
 		internal static void ExitRootBuild(RootBuild build)
 		{
-			build.IsEnded     = true;
-			_rootBuilds.Value = build.Outer;
+			_rootBuilds = build.Outer;
 		}
 
 		internal static EntityDescriptor? FindRootBuild(Type rootType, int schemaId)
 		{
-			for (var build = _rootBuilds.Value; build != null; build = build.Outer)
-				if (!build.IsEnded && build.ThreadId == Environment.CurrentManagedThreadId && build.Root.ObjectType == rootType && build.SchemaId == schemaId)
+			for (var build = _rootBuilds; build != null; build = build.Outer)
+				if (build.Root.ObjectType == rootType && build.SchemaId == schemaId)
 					return build.Root;
 
 			return null;
@@ -283,7 +280,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal static bool TryGetFromRootBeingBuilt(MappingSchema mappingSchema, Type type, int schemaId, [NotNullWhen(true)] out EntityDescriptor? descriptor)
 		{
-			if (_rootBuilds.Value == null)
+			if (_rootBuilds == null)
 			{
 				descriptor = null;
 				return false;

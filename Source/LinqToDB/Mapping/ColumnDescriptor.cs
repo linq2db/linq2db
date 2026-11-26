@@ -867,12 +867,7 @@ namespace LinqToDB.Mapping
 		/// Set once, by the inheritance root while it builds its descriptor graph - before this column is
 		/// reachable by anything that could build <see cref="GetProviderValue"/>'s getter.
 		/// </summary>
-		internal void SetValueSiblings(ColumnDescriptor[] siblings)
-		{
-			Debug.Assert(_valueSiblings == null, $"Value siblings of '{MemberName}' are already set.");
-
-			_valueSiblings = siblings;
-		}
+		internal void SetValueSiblings(ColumnDescriptor[] siblings) => _valueSiblings = siblings;
 
 		/// <summary>
 		/// Extracts column value, converted to database type, from entity object.

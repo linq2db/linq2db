@@ -1757,10 +1757,11 @@ namespace Tests.Linq
 
 			var rootConcreteField    = root.Columns.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
 			var rebuiltConcreteField = rebuilt.Columns.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
+			var value                = rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 });
 
 			beta.InheritanceRoot.ShouldBeSameAs(root);
 			rebuiltConcreteField.ShouldNotBeSameAs(rootConcreteField);
-			rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 }).ShouldBe(5);
+			value.ShouldBe(5);
 		}
 
 		[Test]
@@ -1773,13 +1774,16 @@ namespace Tests.Linq
 				.Columns
 				.Single(c => c.MemberName == nameof(TphThingBeta.ConcreteField));
 
-			betaConcreteField.GetProviderValue(new TphThingBeta { ConcreteField = 4 }).ShouldBe(4);
+			var betaValue = betaConcreteField.GetProviderValue(new TphThingBeta { ConcreteField = 4 });
 
 			var rootConcreteField = ms.GetEntityDescriptor(typeof(TphThingBase))
 				.Columns
 				.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
 
-			rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 }).ShouldBe(5);
+			var rootValue = rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 });
+
+			betaValue.ShouldBe(4);
+			rootValue.ShouldBe(5);
 		}
 
 		[Test]
@@ -1876,24 +1880,29 @@ namespace Tests.Linq
 				}
 			}
 
-			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var root         = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta         = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+			var intermediate = ms.GetEntityDescriptor(typeof(TphThingIntermediate), Callback);
 
-			ms.GetEntityDescriptor(typeof(TphThingBeta), Callback).InheritanceRoot.ShouldBeSameAs(root);
-			ms.GetEntityDescriptor(typeof(TphThingIntermediate), Callback).ShouldBeSameAs(read);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			intermediate.ShouldBeSameAs(read);
 			read!.ObjectType.ShouldBe(typeof(TphThingIntermediate));
 		}
 
 		[Test]
 		public void TPH_Descriptor_RootCallback_ThrowsAfterReadingDerivedDescriptor()
 		{
-			var ms    = ColdMappingSchema();
+			var ms     = ColdMappingSchema();
 			var throws = true;
+			var built  = new List<IEntityChangeDescriptor>();
 
 			// the root's callback reads a mapped type's descriptor and then fails, once
 			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
 			{
 				if (ed.TypeAccessor.Type != typeof(TphThingBase))
 					return;
+
+				built.Add(ed);
 
 				schema.GetEntityDescriptor(typeof(TphThingBeta), Callback);
 
@@ -1907,8 +1916,43 @@ namespace Tests.Linq
 			Assert.That(() => ms.GetEntityDescriptor(typeof(TphThingBase), Callback), Throws.InvalidOperationException);
 
 			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
 
-			ms.GetEntityDescriptor(typeof(TphThingBeta), Callback).InheritanceRoot.ShouldBeSameAs(root);
+			// the failed build must not stay registered: the second request builds and caches a new root
+			built.Count.ShouldBe(2);
+			root.ShouldBeSameAs(built[1]);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+		}
+
+		[Test]
+		public void TPH_Descriptor_DerivedCallback_ThrowsWhileRootIsBuilt()
+		{
+			var ms     = ColdMappingSchema();
+			var throws = true;
+			var built  = new List<IEntityChangeDescriptor>();
+
+			// a mapped type's callback fails once, while the root constructs the descriptors of the types it maps
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type == typeof(TphThingBase))
+					built.Add(ed);
+
+				if (ed.TypeAccessor.Type == typeof(TphThingBeta) && throws)
+				{
+					throws = false;
+					throw new InvalidOperationException("Callback failed.");
+				}
+			}
+
+			Assert.That(() => ms.GetEntityDescriptor(typeof(TphThingBase), Callback), Throws.InvalidOperationException);
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			// the failed build must not stay registered: the second request builds and caches a new root
+			built.Count.ShouldBe(1);
+			root.ShouldBeSameAs(built[0]);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
 		}
 
 		[Test]
@@ -1941,10 +1985,11 @@ namespace Tests.Linq
 			}
 
 			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
 
 			read[typeof(TphThingBeta)].ShouldBeSameAs(root);
 			read[typeof(TphThingBase)].ShouldBeSameAs(root);
-			ms.GetEntityDescriptor(typeof(TphThingBeta), Callback).InheritanceRoot.ShouldBeSameAs(root);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
 		}
 
 		[Test]
@@ -1987,12 +2032,15 @@ namespace Tests.Linq
 			var alpha = ms.GetEntityDescriptor(typeof(TphThingAlpha), Callback);
 			var beta  = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
 
+			var alphaCreated = created.Count(t => t == typeof(TphThingAlpha));
+			var betaCreated  = created.Count(t => t == typeof(TphThingBeta));
+
 			alpha.InheritanceRoot.ShouldBeSameAs(root);
 			beta.InheritanceRoot.ShouldBeSameAs(root);
 			read[typeof(TphThingAlpha)].ShouldBeSameAs(alpha);
 			read[typeof(TphThingBeta)].ShouldBeSameAs(beta);
-			created.Count(t => t == typeof(TphThingAlpha)).ShouldBe(1);
-			created.Count(t => t == typeof(TphThingBeta)).ShouldBe(1);
+			alphaCreated.ShouldBe(1);
+			betaCreated.ShouldBe(1);
 		}
 
 		[Table("TphThingBeta")]
