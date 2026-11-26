@@ -658,8 +658,9 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// <see cref="PivotCells.Get{T}"/> and the indexer read a cell in a query as <c>Sql.Property</c> does, when the
-		/// member is typed <see cref="PivotCells"/>.
+		/// <see cref="PivotCells.Get{T}"/> and the indexer filter and order on a cell's column, when the member is typed
+		/// <see cref="PivotCells"/>. The filter keeps one group only by the named cell, and the ordering differs from the
+		/// grouping order, so a wrong cell or a dropped clause reads differently.
 		/// </summary>
 		[Test]
 		public void ComposesThroughTheCellsMembers([DataSources] string context)
@@ -667,7 +668,44 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.Data);
 
-			var query = t
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			var filtered = pivoted
+				.Where(r => r.Cells.Get<decimal?>("Y2010") > 16)
+				.Select(r => r.Key)
+				.ToList();
+
+			filtered.ShouldBe(new[] { "A" });
+
+			var ordered = pivoted
+				.OrderBy(r => (decimal?)r.Cells["Y2000"])
+				.Select(r => new { r.Key, Y2000 = r.Cells.Get<decimal?>("Y2000") })
+				.ToList();
+
+			ordered
+				.Select(r => (r.Key, r.Y2000))
+				.ShouldBe(new (string, decimal?)[] { ("B", 5m), ("A", 10m) });
+		}
+
+		/// <summary>A changed cell name is a different query, not a cache hit on the column the previous name read.</summary>
+		[Test]
+		public void ACapturedCellNameKeysTheQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var name = "Y2000";
+
+			List<string> Keys() => t
 				.GroupBy(x => x.Category)
 				.Select(g => new
 				{
@@ -677,17 +715,91 @@ namespace Tests.Linq
 						.Cell(rows => rows.Sum(x => x.Amount), Year)
 						.AsDictionary(),
 				})
-				.Where(r => r.Cells.Get<decimal?>("Y2010") >= 15)
-				.OrderByDescending(r => (decimal?)r.Cells["Y2010"])
-				.Select(r => new { r.Key, Y2010 = r.Cells.Get<decimal?>("Y2010") });
+				.Where(r => r.Cells.Get<decimal?>(name) > 12)
+				.Select(r => r.Key)
+				.ToList();
 
-			var result = query.ToList();
+			var keys = Keys();
+
+			keys.ShouldBeEmpty();
+
+			name = "Y2010";
+
+			Keys()
+				.OrderBy(k => k, StringComparer.Ordinal)
+				.ShouldBe(new[] { "A", "B" });
+		}
+
+		/// <summary>
+		/// Cells read back from a pivot and captured by a later query are a value: they are not mistaken for the pivot's
+		/// columns.
+		/// </summary>
+		[Test]
+		public void CapturedCellsAreAValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var row = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.ToList()
+				.Single(r => r.Key == "A");
+
+			t.Where(x => x.Amount == row.Cells.Get<decimal?>("Y2010"))
+				.Select(x => x.Id)
+				.ToList()
+				.ShouldBe(new[] { 2 });
+
+			t.Where(x => x.Amount == (decimal?)row.Cells["Y2010"])
+				.Select(x => x.Id)
+				.ToList()
+				.ShouldBe(new[] { 2 });
+		}
+
+		/// <summary>
+		/// In a projection, <see cref="PivotCells.Get{T}"/> and the indexer read the materialized cells: a name no cell
+		/// carries reads <see langword="null"/>, and a cell of another type reads <see langword="default"/>.
+		/// </summary>
+		[Test]
+		public void AProjectedCellReadKeepsItsInMemoryContract([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Key)
+				.Select(r => new
+				{
+					Absent      = r.Cells.Get<decimal?>("Y2099"),
+					AbsentIndex = (decimal?)r.Cells["Y2099"],
+					AsInt       = r.Cells.Get<int>("Y2010"),
+					AsString    = r.Cells.Get<string>("Y2010"),
+					Present     = r.Cells.Get<decimal?>("Y2010"),
+				})
+				.ToList();
 
 			result.Count.ShouldBe(2);
-			result[0].Key.ShouldBe("A");
-			result[0].Y2010.ShouldBe(20m);
-			result[1].Key.ShouldBe("B");
-			result[1].Y2010.ShouldBe(15m);
+			result.ShouldAllBe(r => r.Absent == null && r.AbsentIndex == null && r.AsInt == 0 && r.AsString == null);
+			result
+				.Select(r => r.Present)
+				.ShouldBe(new decimal?[] { 20m, 15m });
 		}
 
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
