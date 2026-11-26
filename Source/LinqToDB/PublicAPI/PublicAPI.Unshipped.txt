@@ -1,1 +1,9 @@
 ﻿#nullable enable
+*REMOVED*LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder
+*REMOVED*LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.PostgreSQLSql15Builder(LinqToDB.DataProvider.IDataProvider? provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.Internal.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.Internal.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.BuildInsertOrUpdateQuery(LinqToDB.Internal.SqlQuery.SqlInsertOrUpdateStatement! insertOrUpdate) -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.CreateSqlBuilder() -> LinqToDB.Internal.SqlProvider.ISqlBuilder!
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11MappingSchema
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11MappingSchema.PostgreSQL11MappingSchema() -> void
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema.PostgreSQL12MappingSchema() -> void
