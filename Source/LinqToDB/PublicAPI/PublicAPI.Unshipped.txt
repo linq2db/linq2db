@@ -7,5 +7,9 @@ LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11Ma
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11MappingSchema.PostgreSQL11MappingSchema() -> void
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema.PostgreSQL12MappingSchema() -> void
+LinqToDB.Linq.Translation.ITranslationContext.UsingComparisonDescriptor(System.Linq.Expressions.Expression! left, System.Linq.Expressions.Expression! right) -> System.IDisposable!
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.VisitBetweenPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Between! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlOptimizer.IsParameterDependedElement(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability, LinqToDB.Internal.SqlQuery.IQueryElement! element, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> bool
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.VisitBetweenPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Between! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlOptimizer.IsParameterDependedElement(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability, LinqToDB.Internal.SqlQuery.IQueryElement! element, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> bool
+static LinqToDB.Internal.SqlQuery.QueryHelper.ConvertBetweenToComparisons(LinqToDB.Internal.SqlQuery.SqlPredicate.Between! between) -> LinqToDB.Internal.SqlQuery.SqlSearchCondition!

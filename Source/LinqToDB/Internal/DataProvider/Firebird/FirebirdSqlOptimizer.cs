@@ -108,7 +108,25 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				WrapParametersVisitor.WrapFlags.InFunctionParameters |
 				WrapParametersVisitor.WrapFlags.InBinary);
 
+			// Firebird finds no type for a parameter value of BETWEEN whose low bound is a parameter too, and Firebird 2.5 none
+			// for one of NOT BETWEEN whose high bound is (-804, data type unknown). Cast here, before the run decides parameter
+			// dependence, the value's cast is sized by each execution.
+			statement.VisitAll(static e =>
+			{
+				if (e is SqlPredicate.Between between
+					&& IsQueryParameter(between.Expr1)
+					&& (IsQueryParameter(between.Expr2) || (between.IsNot && IsQueryParameter(between.Expr3))))
+				{
+					between.Expr1 = QueryHelper.EnsureParameterCast(QueryHelper.UnwrapNullablity(between.Expr1));
+				}
+			});
+
 			return statement;
+
+			static bool IsQueryParameter(ISqlExpression expression)
+			{
+				return QueryHelper.UnwrapNullablity(expression) is SqlParameter { IsQueryParameter: true };
+			}
 		}
 
 		#endregion

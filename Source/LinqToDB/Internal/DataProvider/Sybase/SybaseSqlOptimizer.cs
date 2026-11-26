@@ -18,6 +18,25 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return new SybaseSqlExpressionConvertVisitor(allowModify);
 		}
 
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (base.IsParameterDependedElement(nullability, element, dataOptions, mappingSchema))
+				return true;
+
+			// Dependence is decided on the BETWEEN, before the convert visitor writes it as its comparisons, so it is asked of
+			// those comparisons: one of two client values would otherwise be folded only where parameter values are at hand.
+			if (element is SqlPredicate.Between between && SybaseSqlExpressionConvertVisitor.LowersBetween(between, mappingSchema))
+			{
+				foreach (var comparison in QueryHelper.ConvertBetweenToComparisons(between).Predicates)
+				{
+					if (base.IsParameterDependedElement(nullability, comparison, dataOptions, mappingSchema))
+						return true;
+				}
+			}
+
+			return false;
+		}
+
 		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.QueryType is QueryType.Update or QueryType.Delete)

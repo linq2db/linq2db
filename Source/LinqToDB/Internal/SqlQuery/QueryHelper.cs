@@ -2182,6 +2182,27 @@ namespace LinqToDB.Internal.SqlQuery
 			return expression is SqlParameter parameter ? new SqlParameterCastExpression(parameter) : expression;
 		}
 
+		/// <summary>
+		/// Writes <paramref name="between"/> as its two comparisons with SQL's NULL semantics: <c>x &gt;= low AND x &lt;= high</c>,
+		/// and for <c>NOT BETWEEN</c> <c>x &lt; low OR x &gt; high</c>.
+		/// </summary>
+		/// <remarks>
+		/// The negated form carries no enclosing <c>NOT</c>: a comparison of two client values is folded per execution, a NULL
+		/// operand to FALSE, which a <c>NOT</c> around the comparisons would turn into TRUE where <c>NOT BETWEEN</c> is unknown.
+		/// </remarks>
+		/// <param name="between">The predicate to write as comparisons.</param>
+		/// <returns>The comparisons, joined by AND, or by OR for <c>NOT BETWEEN</c>.</returns>
+		public static SqlSearchCondition ConvertBetweenToComparisons(SqlPredicate.Between between)
+		{
+			return between.IsNot
+				? new SqlSearchCondition(true)
+					.AddLess(between.Expr1, between.Expr2, CompareNulls.LikeSql)
+					.AddGreater(between.Expr1, between.Expr3, CompareNulls.LikeSql)
+				: new SqlSearchCondition()
+					.AddGreaterOrEqual(between.Expr1, between.Expr2, CompareNulls.LikeSql)
+					.AddLessOrEqual(between.Expr1, between.Expr3, CompareNulls.LikeSql);
+		}
+
 		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutUnknownErased)
 		{
 			if (expr is ISqlPredicate predicate)

@@ -4,6 +4,7 @@ using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
@@ -314,15 +315,20 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			var newElement = base.VisitBetweenPredicate(predicate);
 
-			if (newElement is SqlPredicate.Between between
-				&& (   IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr1, MappingSchema))
-					|| IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr2, MappingSchema))
-					|| IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr3, MappingSchema))))
-			{
-				return Visit(Optimize(NotifyReplaced(ConvertBetweenPredicate(between), between)));
-			}
+			if (newElement is SqlPredicate.Between between && LowersBetween(between, MappingSchema))
+				return Visit(Optimize(NotifyReplaced(QueryHelper.ConvertBetweenToComparisons(between), between)));
 
 			return newElement;
+		}
+
+		/// <summary>
+		/// Whether <paramref name="between"/> is written as its two comparisons: an operand of a date or timestamp type.
+		/// </summary>
+		internal static bool LowersBetween(SqlPredicate.Between between, MappingSchema mappingSchema)
+		{
+			return IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr1, mappingSchema))
+				|| IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr2, mappingSchema))
+				|| IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr3, mappingSchema));
 
 			// A time of day stays a BETWEEN of its text: its comparisons cast it to Time, which keeps only the hour (#6410).
 			static bool IsDateOrTimestamp(DbDataType dbDataType)

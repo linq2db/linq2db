@@ -928,15 +928,56 @@ namespace Tests.Linq
 
 			var value   = 42;
 			var elapsed = TimeSpan.FromSeconds(42);
-			var minimum = TimeSpan.FromSeconds(5);
+			// Access sends a Money parameter as text, so two of them compare as text: 10 and 42 order alike either way.
+			var minimum = TimeSpan.FromSeconds(10);
 			var maximum = TimeSpan.FromSeconds(10);
 
+			int?      nullableValue = 42;
+			TimeSpan? longer        = TimeSpan.FromSeconds(150);
+			TimeSpan? limit         = TimeSpan.FromSeconds(130);
+			TimeSpan? none          = null;
+
+			// Access reads the bounds of a BETWEEN in either order, so only rows whose bounds are in order are asked.
 			table
+				.Where(r => r.Id <= 2)
 				.Where(r => Sql.NotBetween(elapsed, r.Elapsed, maximum))
 				.OrderBy(r => r.Id)
 				.Select(r => r.Id)
 				.ToArray()
+				.ShouldBe([1, 2]);
+
+			table
+				.Where(r => Sql.NotBetween(longer, r.Elapsed, limit))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
 				.ShouldBe([1, 2, 3, 4]);
+
+			table
+				.Where(r => Sql.Between(nullableValue, 5, r.High))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([3, 4]);
+
+			// A NULL value leaves each of them unknown. Asked one by one: `A || !A` is reduced to true before it is run.
+			table
+				.Where(r => Sql.Between(none, r.Elapsed, limit))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => Sql.NotBetween(none, r.Elapsed, limit))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => !Sql.Between(none, r.Elapsed, limit))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
 
 			table
 				.Where(r => Sql.Between(elapsed, minimum, r.Elapsed))
@@ -1119,6 +1160,245 @@ namespace Tests.Linq
 						.ToArray());
 		}
 
+		// A value written beside a date column as `low` answers as its `>=` / `<=` do; beside an optional row's missing column the
+		// negation stays unknown, as SQL's NOT BETWEEN.
+		[Test]
+		public void BetweenOfValueBesideDateColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenDayRow.Data);
+
+			var value = new DateTime(2020, 1, 2, 12, 0, 0);
+			var high  = new DateTime(2020, 1, 2, 6, 0, 0);
+			var later = new DateTime(2020, 1, 3);
+
+			var rows =
+				(
+					from r in table
+					from d in table.Where(d => d.Id == r.Id - 1).DefaultIfEmpty()
+					orderby r.Id
+					select new
+					{
+						Low             = Sql.Between(value, r.Day, high),
+						LowCompared     = value >= r.Day && value <= high,
+						Outside         = Sql.NotBetween(value, r.Day, high),
+						OutsideCompared = value < r.Day || value > high,
+						Columns         = Sql.Between(value, r.Day, r.Stamp),
+						ColumnsCompared = value >= r.Day && value <= r.Stamp,
+						Optional        = !Sql.Between(value, d!.Day, later) ? "a" : "b",
+					}
+				)
+				.ToArray();
+
+			rows.Length.ShouldBe(2);
+			rows.ShouldAllBe(r =>
+				r.Low        == r.LowCompared
+				&& r.Outside == r.OutsideCompared
+				&& r.Columns == r.ColumnsCompared);
+
+			rows
+				.Select(r => r.Optional)
+				.ShouldBe(["b", "b"]);
+
+			var optional =
+				from r in table
+				from d in table.Where(d => d.Id == r.Id - 1).DefaultIfEmpty()
+				where !Sql.Between(value, d!.Day, later)
+				select r.Id;
+
+			optional
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
+		// A NULL client value or bound leaves Between unknown, and its negation too, as SQL's BETWEEN.
+		[Test]
+		public void BetweenOfNullValueBesideDateColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenDayRow.Data);
+
+			DateTime? none  = null;
+			DateTime? value = new DateTime(2020, 1, 2, 12, 0, 0);
+			DateTime? later = new DateTime(2020, 1, 3);
+			var       high  = new DateTime(2020, 1, 3);
+			var       some  = new DateTime(2020, 1, 2, 12, 0, 0);
+
+			// Asked one by one: `A || !A` is reduced to true before it is run.
+			table
+				.Where(r => Sql.Between(none, r.Day, later))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => Sql.NotBetween(none, r.Day, later))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => Sql.NotBetween(none, r.Stamp, later))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => !Sql.Between(none, r.Day, later))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => !Sql.Between(none, r.Stamp, later))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => !Sql.Between(value, r.Day, none))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => !Sql.Between(none!.Value, r.Day, high))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.Where(r => !Sql.Between(some, r.Day, none!.Value))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			table
+				.OrderBy(r => r.Id)
+				.Select(r => !Sql.Between(none, r.Day, later) ? "a" : "b")
+				.ToArray()
+				.ShouldBe(["b", "b"]);
+		}
+
+		// Which type the value of a Between is given is engine behaviour, the same on every provider.
+		[Test]
+		public void BetweenValueTyping([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var days    = db.CreateLocalTable(BetweenDayRow.Data);
+			using var elapsed = db.CreateLocalTable(BetweenConvertedRow.Data);
+
+			var value   = new DateTime(2020, 1, 2, 12, 0, 0);
+			var low     = new DateTime(2020, 1, 1);
+			var seconds = TimeSpan.FromSeconds(42);
+			var maximum = TimeSpan.FromSeconds(100);
+
+			// Both pairs type the value alike: as the date column.
+			ParameterOf(days.Where(r => Sql.Between(value, r.Day, r.Day)), nameof(value))
+				.DataType
+				.ShouldBe(DataType.Date);
+
+			// One bound is converted: the value and the other client bound are written in its form, as seconds.
+			var converted = elapsed.Where(r => Sql.Between(seconds, r.Elapsed, maximum));
+
+			ParameterOf(converted, nameof(seconds))
+				.Value
+				.ShouldBe(42L);
+			ParameterOf(converted, nameof(maximum))
+				.Value
+				.ShouldBe(100L);
+
+			// The pairs disagree and no bound is converted: the value is written untyped, not as the date column.
+			ParameterOf(days.Where(r => Sql.Between(value, low, r.Day)), nameof(value))
+				.DataType
+				.ShouldNotBe(DataType.Date);
+
+			static DataParameter ParameterOf<T>(IQueryable<T> query, string name)
+			{
+				return query
+					.ToSqlQuery()
+					.Parameters
+					.Single(p => p.Name == name);
+			}
+		}
+
+		[Table]
+		sealed class BetweenParameterRow
+		{
+			[PrimaryKey]                         public int     Id     { get; set; }
+			[Column(Length = 10)]                public string  Name   { get; set; } = null!;
+			[Column(Precision = 10, Scale = 4)]  public decimal Amount { get; set; }
+
+			public static readonly BetweenParameterRow[] Data =
+			[
+				new() { Id = 1, Name = "a", Amount = 1.5m    },
+				new() { Id = 2, Name = "b", Amount = 2.25m   },
+				new() { Id = 3, Name = "c", Amount = 3.125m  },
+				new() { Id = 4, Name = "d", Amount = 4.0625m },
+			];
+		}
+
+		// A value and a low bound that are both parameters, beside a column high bound; the bounds are in order on every row.
+		[Test]
+		public void BetweenOfParameterValueAndBound([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var value = 3;
+			var low   = 0;
+
+			AssertQuery(
+				db.Parent
+					.Where(p => Sql.Between(value, low, p.ParentID))
+					.Select(p => p.ParentID));
+
+			AssertQuery(
+				db.Parent
+					.Where(p => Sql.NotBetween(value, low, p.ParentID))
+					.Select(p => p.ParentID));
+		}
+
+		// Firebird types such a value by a cast built from the value itself, so a longer string or a finer decimal in the next
+		// execution of the same query must not be cut to the first one's type.
+		[Test]
+		public void BetweenOfParameterValueAndBoundRepeated([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenParameterRow.Data);
+
+			NamesFrom(table, "c")
+				.ShouldBe([3, 4]);
+			NamesFrom(table, "cc")
+				.ShouldBe([4]);
+
+			AmountsFrom(table, 2.5m)
+				.ShouldBe([3, 4]);
+			AmountsFrom(table, 3.1251m)
+				.ShouldBe([4]);
+
+			static int[] NamesFrom(ITable<BetweenParameterRow> table, string value)
+			{
+				var low = "a";
+
+				return table
+					.Where(r => Sql.Between(value, low, r.Name))
+					.OrderBy(r => r.Id)
+					.Select(r => r.Id)
+					.ToArray();
+			}
+
+			static int[] AmountsFrom(ITable<BetweenParameterRow> table, decimal value)
+			{
+				var low = 0m;
+
+				return table
+					.Where(r => Sql.Between(value, low, r.Amount))
+					.OrderBy(r => r.Id)
+					.Select(r => r.Id)
+					.ToArray();
+			}
+		}
+
 		[Table]
 		sealed class BetweenTimeRow
 		{
@@ -1136,7 +1416,7 @@ namespace Tests.Linq
 
 		// System.Data.SQLite cannot bind a TimeSpan parameter.
 		[Test]
-		public void BetweenOfTimeColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		public void BetweenOfTimeColumn([DataSources(TestProvName.AllSQLiteClassic)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(BetweenTimeRow.Data);
@@ -1172,12 +1452,15 @@ namespace Tests.Linq
 			var rows =
 				(
 					from r in table
+					let maxDay = table
+						.Where(x => x.Id == r.Id)
+						.Max(x => x.Day)
 					select new
 					{
-						InRange         = Sql.Between(table.Where(x => x.Id == r.Id).Max(x => x.Day), low, high),
-						InRangeCompared = table.Where(x => x.Id == r.Id).Max(x => x.Day) >= low && table.Where(x => x.Id == r.Id).Max(x => x.Day) <= high,
-						Outside         = Sql.NotBetween(table.Where(x => x.Id == r.Id).Max(x => x.Day), low, high),
-						OutsideCompared = table.Where(x => x.Id == r.Id).Max(x => x.Day) < low || table.Where(x => x.Id == r.Id).Max(x => x.Day) > high,
+						InRange         = Sql.Between(maxDay, low, high),
+						InRangeCompared = maxDay >= low && maxDay <= high,
+						Outside         = Sql.NotBetween(maxDay, low, high),
+						OutsideCompared = maxDay < low || maxDay > high,
 					}
 				)
 				.ToArray();

@@ -4,6 +4,7 @@ using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
@@ -143,18 +144,21 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		{
 			var newElement = base.VisitBetweenPredicate(predicate);
 
-			if (newElement is SqlPredicate.Between between)
-			{
-				var valueType = QueryHelper.GetDbDataType(between.Expr1, MappingSchema);
-
-				if (   ComparesDateWithTimestamp(valueType, QueryHelper.GetDbDataType(between.Expr2, MappingSchema))
-					|| ComparesDateWithTimestamp(valueType, QueryHelper.GetDbDataType(between.Expr3, MappingSchema)))
-				{
-					return Visit(Optimize(NotifyReplaced(ConvertBetweenPredicate(between), between)));
-				}
-			}
+			if (newElement is SqlPredicate.Between between && LowersBetween(between, MappingSchema))
+				return Visit(Optimize(NotifyReplaced(QueryHelper.ConvertBetweenToComparisons(between), between)));
 
 			return newElement;
+		}
+
+		/// <summary>
+		/// Whether <paramref name="between"/> is written as its two comparisons: a date beside a timestamp in either pair.
+		/// </summary>
+		internal static bool LowersBetween(SqlPredicate.Between between, MappingSchema mappingSchema)
+		{
+			var valueType = QueryHelper.GetDbDataType(between.Expr1, mappingSchema);
+
+			return ComparesDateWithTimestamp(valueType, QueryHelper.GetDbDataType(between.Expr2, mappingSchema))
+				|| ComparesDateWithTimestamp(valueType, QueryHelper.GetDbDataType(between.Expr3, mappingSchema));
 
 			static bool ComparesDateWithTimestamp(DbDataType left, DbDataType right)
 			{

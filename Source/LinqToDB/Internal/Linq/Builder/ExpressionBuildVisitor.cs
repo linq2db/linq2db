@@ -260,10 +260,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// Types what is built within as a comparison between <paramref name="left"/> and <paramref name="right"/> types its
-		/// operands. When <paramref name="left"/> is also compared with <paramref name="otherRight"/> and only that pair finds a
-		/// column that stores values in a form of its own, both pairs are written in that form.
+		/// operands.
 		/// </summary>
-		internal IDisposable UsingComparisonDescriptor(IBuildContext? buildContext, Expression left, Expression right, Expression? otherRight)
+		internal IDisposable UsingComparisonDescriptor(IBuildContext? buildContext, Expression left, Expression right)
 		{
 			SuggestedDescriptor suggested;
 
@@ -272,14 +271,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			using (UsingBuildPurpose(BuildPurpose.Sql))
 			{
 				suggested = SuggestColumnDescriptor(left, right);
-
-				if (suggested.Descriptor == null && otherRight != null)
-				{
-					var other = SuggestColumnDescriptor(left, otherRight);
-
-					if (other.Descriptor is { ValueConverter: not null })
-						suggested = other;
-				}
 			}
 
 			return UsingSuggestedDescriptor(suggested);
@@ -5903,7 +5894,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		sealed class TranslationContext : ITranslationContext, IComparedValueTranslationContext
+		sealed class TranslationContext : ITranslationContext
 		{
 			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
@@ -6131,9 +6122,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visitor.UsingColumnDescriptor(columnDescriptor);
 			}
 
-			public IDisposable UsingComparisonDescriptor(Expression left, Expression right, Expression? otherRight)
+			public IDisposable UsingComparisonDescriptor(Expression left, Expression right)
 			{
-				return Visitor.UsingComparisonDescriptor(CurrentContext, left, right, otherRight);
+				return Visitor.UsingComparisonDescriptor(CurrentContext, left, right);
 			}
 
 			public IDisposable UsingCurrentAggregationContext(Expression basedOn)
