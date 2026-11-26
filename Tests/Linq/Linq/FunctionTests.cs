@@ -621,6 +621,54 @@ namespace Tests.Linq
 				});
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void CustomAggregateOfRowAndComputedKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from c in Child
+				group c by c.ChildID % 3 into g
+				select new
+				{
+					g.Key,
+					Sum         = g.Sum(x => x.ChildID + g.Key),
+					SumOfMapped = g.Sum(x => x.ChildID + g.Key),
+				},
+				from c in db.Child
+				group c by c.ChildID % 3 into g
+				select new
+				{
+					g.Key,
+					Sum         = g.MySum(x => x.ChildID + g.Key),
+					SumOfMapped = g.MySum(x => x.ChildID + Coalesce(g.Key, 0)),
+				});
+
+			AreEqual(
+				from c in Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.Sum(x => x.ChildID + g.Key.ParentID) },
+				from c in db.Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.MySum(x => x.ChildID + g.Key.ParentID) });
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void CustomAggregateOfRowAndComputedKeyWithGroupFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from c in Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				where g.Count() != 2
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.Sum(x => x.ChildID + g.Key.ParentID) },
+				from c in db.Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				where Sql.NotBetween(g.Count(), 2, 2)
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.MySum(x => x.ChildID + g.Key.ParentID) });
+		}
+
 		[Test]
 		public void GetValueOrDefault([DataSources] string context)
 		{

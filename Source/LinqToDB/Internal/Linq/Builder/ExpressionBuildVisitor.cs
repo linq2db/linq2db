@@ -1346,18 +1346,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// A function of the grouping's rows is calculated by the GROUP BY query, and its arguments are nested up to that query:
 			// nested up to the grouping's own query, which reads the GROUP BY query as a subquery, an argument would be a column of
-			// the GROUP BY query read from inside it. A per-row lambda reads a row of the grouping, not the grouping, so its body is
-			// built in the grouping's element context, as an extension chain over a grouping builds it. An argument reads the
+			// the GROUP BY query read from inside it. A per-row lambda reads a row of the grouping, not the grouping, so its
+			// parameter is the grouping's element, while its body is built in the GROUP BY query: built in the element's query, a
+			// key it reads would be a column of the GROUP BY query read from inside the element's subquery. An argument reads the
 			// grouping itself, not the select wrapper above it: read through the wrapper, a key is a column of the GROUP BY query.
 			SelectQuery?                   argumentsQuery = null;
-			IBuildContext?                 rowContext     = null;
 			GroupByBuilder.GroupByContext? grouping       = null;
 
 			if (readsGroupRows && rootContext is GroupByBuilder.GroupByContext groupBy)
 			{
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 				argumentsQuery  = rootSelectQuery;
-				rowContext      = groupBy.Element;
 				grouping        = groupBy;
 			}
 
@@ -1373,18 +1372,26 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
-				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, rowContext, argumentsQuery, grouping, translatedToSql, argumentsAreOperands),
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, argumentsQuery, grouping, translatedToSql, argumentsAreOperands),
 					Builder.DataContext,
 					Builder,
 					rootSelectQuery,
 					expr,
 					static (context, e, descriptor, inline) =>
 					{
-						var argumentContext = context.rowContext != null && e.UnwrapConvertToObject().Unwrap() is LambdaExpression
-							? context.rowContext
-							: context.context;
+						var argumentContext = context.context;
+						var argument        = e;
 
-						var argument = context.grouping != null ? ReadGroupingDirectly(e, context.grouping) : e;
+						if (context.grouping != null)
+						{
+							argument = ReadGroupingDirectly(argument, context.grouping);
+
+							if (argument.UnwrapConvertToObject().Unwrap() is LambdaExpression lambda)
+							{
+								argument        = lambda.GetBody(new ContextRefExpression(lambda.Parameters[0].Type, context.grouping.Element));
+								argumentContext = context.grouping.SubQuery;
+							}
+						}
 
 						var result = context.buildVisitor.ConvertToExtensionSql(argumentContext, argument, descriptor, inline, context.argumentsQuery);
 
