@@ -3900,6 +3900,70 @@ namespace Tests.Linq
 			Query<ValueTuple<int>>.CacheMissCount.ShouldBe(beforeAgain);
 		}
 
+		// A cached stream batch reads what its parts capture at each Execute. The handle takes the first part or the second, a
+		// callback the other; the order of the kinds is part of the cached query.
+		[Test, QueryCacheTest]
+		public async Task StreamBatchesReuseTheCachedQuery(
+			// SQLite reads the streams from the batch's reader, SqlCe and remote from queries of their own.
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context,
+			[Values] bool handleFirst,
+			[Values] bool isAsync,
+			[Values(1, 2)] int iteration)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			// The batch's result type, a tuple of the streams' sources, is internal to the engine.
+			var source    = typeof(QueryBatchStream<>).Assembly
+				.GetType("LinqToDB.Internal.Linq.QueryBatchStreamSource`1", throwOnError: true)!
+				.MakeGenericType(typeof(BatchItem));
+			var batchType = typeof(ValueTuple<,>).MakeGenericType(source, source);
+
+			var above = iteration == 1 ? 2 : 5;
+
+			await using var batch = db.CreateQueryBatch();
+
+			Expression<Func<IQueryable<BatchItem>>> first = () => items
+				.Where(i => i.Id > above)
+				.OrderBy(i => i.Id);
+			Expression<Func<IQueryable<BatchItem>>> second = () => items
+				.Where(i => i.Id > above + 1)
+				.OrderBy(i => i.Id);
+
+			var received = new List<int>();
+
+			QueryBatchStream<BatchItem> handle;
+
+			if (handleFirst)
+			{
+				handle = batch.AddStreamRequest(first);
+				batch.AddStreamRequest(second, item => received.Add(item.Id));
+			}
+			else
+			{
+				batch.AddStreamRequest(first, item => received.Add(item.Id));
+				handle = batch.AddStreamRequest(second);
+			}
+
+			var misses = QueryCache.Default.GetMissCount(batchType);
+
+			await Run(batch, isAsync);
+
+			var read  = Ids(await ReadAll(handle, isAsync));
+			var after = QueryCache.Default.GetMissCount(batchType);
+
+			// The counter is the batch's own: a type it never built would read 0 on both sides.
+			after.ShouldBeGreaterThan(0);
+
+			if (iteration == 2)
+				after.ShouldBe(misses);
+
+			(handleFirst ? read : received.ToArray())
+				.ShouldBe(IdsAbove(above));
+			(handleFirst ? received.ToArray() : read)
+				.ShouldBe(IdsAbove(above + 1));
+		}
+
 		// The refusal comes before any command, so one provider shows it; PendingHintsAreRefused covers DbBatch and remote.
 		[Test]
 		public void PendingHintsAreRefusedAtExecute([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool oneShot)
