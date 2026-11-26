@@ -968,6 +968,33 @@ namespace Tests.Linq
 				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
 		}
 
+		/// <summary>The conversions an unpivot column writes over a cell read are kept.</summary>
+		[Test]
+		public void UnpivotKeepsTheConversionsOverACellRead([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => (int?)(decimal?)x.Cells["Y2000"])
+				.Where(u => u.Value == 10)
+				.Select(u => u.Key)
+				.ToList();
+
+			result.ShouldBe(new[] { "A" });
+		}
+
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
 		[Test]
 		public void UnpivotsTheCellsUnderTheirOwnNames([DataSources] string context)

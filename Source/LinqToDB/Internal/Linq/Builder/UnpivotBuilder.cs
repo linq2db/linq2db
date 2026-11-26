@@ -149,32 +149,49 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		// A pivot cell read through PivotCells' own members becomes the dynamic-column access Sql.Property builds.
+		// A pivot cell read through PivotCells' own members becomes the dynamic-column access Sql.Property builds. Only the
+		// node that reads the cell is replaced, so every conversion the selector writes over it is kept.
 		static LambdaExpression ReadCellAsColumn(LambdaExpression column)
 		{
-			var body     = column.Body;
-			var cellType = body.Type;
+			var         body        = column.Body;
+			Expression? overIndexer = null;
 
 			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary)
-				body = unary.Operand;
+			{
+				overIndexer = unary;
+				body        = unary.Operand;
+			}
 
 			if (body is not MethodCallExpression { Object: { Type: var receiverType } cells } call
 				|| receiverType != typeof(PivotCells)
 				|| call.Arguments[0].Find(column.Parameters[0]) != null)
 				return column;
 
+			Expression replaced;
+			Type       cellType;
+
 			if (call.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true })
+			{
+				replaced = call;
 				cellType = call.Method.GetGenericArguments()[0];
-			else if (call.Method is not { Name: "get_Item" } || ReferenceEquals(body, column.Body))
+			}
+			else if (call.Method is { Name: "get_Item" } && overIndexer != null)
+			{
+				// The indexer is typed object; the conversion directly over it names the cell's type.
+				replaced = overIndexer;
+				cellType = overIndexer.Type;
+			}
+			else
 				return column;
 
 			var name = call.Arguments[0].EvaluateExpression<string>();
 			if (name == null)
 				return column;
 
-			var access = (Expression)Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), cellType, name));
+			// The column is typed as the read names it, as Sql.Property<T> types it.
+			var access = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), cellType, name));
 
-			return Expression.Lambda(access.Type == column.Body.Type ? access : Expression.Convert(access, column.Body.Type), column.Parameters);
+			return Expression.Lambda(column.Body.Replace(replaced, access), column.Parameters);
 		}
 
 		// The name column reports the physical column name, so a query reads the same names whether or not the
