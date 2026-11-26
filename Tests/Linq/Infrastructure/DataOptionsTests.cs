@@ -1019,7 +1019,7 @@ namespace Tests.Infrastructure
 		// Assemblies compiled against linq2db 6.6 call the 22-parameter constructor and Deconstruct. Looked up by reflection,
 		// because a positional C# call would bind the current constructor through its defaults if the shim were missing.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4053")]
-		public void LinqOptionsShimFor66Signature()
+		public void LinqOptionsShimFor66Signature([Values] bool useCombinedCommands)
 		{
 			Type[] parameterTypes =
 			[
@@ -1030,15 +1030,15 @@ namespace Tests.Infrastructure
 				typeof(bool), typeof(bool), typeof(bool),
 			];
 
-			// The last three (optimizeForSequentialAccess, useDbBatch, useCombinedCommands) differ pairwise, so a shim
-			// that forwards them out of order changes the result.
+			// The last three (optimizeForSequentialAccess, useDbBatch, useCombinedCommands) are true, false and both values,
+			// so between the two cases a shim that forwards any two of them out of order changes the result.
 			object?[] arguments =
 			[
 				false, false, false, false, false, true,
 				CompareNulls.LikeClr, true, false, TimeSpan.FromHours(1), true, true,
 				true, false, false, false, UpsertEmulationPolicy.Allow,
 				EagerLoadingStrategy.Default, ImplicitCollectionLoading.Allow,
-				true, false, true,
+				true, false, useCombinedCommands,
 			];
 
 			var constructor = typeof(LinqOptions)
@@ -1050,7 +1050,7 @@ namespace Tests.Infrastructure
 
 			options.OptimizeForSequentialAccess.ShouldBeTrue();
 			options.UseDbBatch.ShouldBeFalse();
-			options.UseCombinedCommands.ShouldBeTrue();
+			options.UseCombinedCommands.ShouldBe(useCombinedCommands);
 			options.UseEagerLoadingTransaction.ShouldBeTrue();
 			options.EagerLoadingIsolationLevel.ShouldBeNull();
 
