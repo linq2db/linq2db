@@ -103,6 +103,14 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Source?.EvaluateExpression(context) is not IEnumerable source)
 				throw new LinqToDBException($"Source must be enumerable: {Source}");
 
+			return BuildRows(source);
+		}
+
+		/// <summary>
+		/// Builds the rows from an already evaluated <see cref="Source"/> value.
+		/// </summary>
+		internal List<List<ISqlExpression>> BuildRows(IEnumerable source)
+		{
 			var rows = new List<List<ISqlExpression>>();
 
 			if (ValueBuilders != null)
