@@ -314,14 +314,23 @@
 	margin-bottom: 1rem;
 }
 
+/* AA contrast for 0.9rem text: #4f46e5 / #764ba2 on the light body, #a8b4ff / #c0caff on the dark one */
 .landing-card-link {
 	font-weight: 600;
 	font-size: 0.9rem;
-	color: #667eea;
+	color: #4f46e5;
 }
 
 .landing-card:hover .landing-card-link {
 	color: #764ba2;
+}
+
+[data-bs-theme="dark"] .landing-card-link {
+	color: #a8b4ff;
+}
+
+[data-bs-theme="dark"] .landing-card:hover .landing-card-link {
+	color: #c0caff;
 }
 
 .landing-card-link .bi {
@@ -391,6 +400,12 @@
 .doc-card .card-title i {
 	margin-right: 0.5rem;
 	color: #667eea;
+}
+
+/* the title carries the card's stretched link; keep it looking like a title */
+.doc-card .card-title a {
+	color: inherit;
+	text-decoration: none;
 }
 
 /* ============================================================

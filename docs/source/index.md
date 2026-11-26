@@ -400,6 +400,7 @@ _disableContribution: true
 
 <section class="landing-features">
 <div class="container-xxl">
+<h2 class="visually-hidden">Features</h2>
 <div class="row g-4 g-lg-5">
 
 <div class="col-md-6 col-lg-3">
