@@ -185,6 +185,15 @@ namespace Tests.Linq
 				new() { Id = 4, Category = "B", Year = 2010, Amount = 15m },
 			};
 
+			// A fractional cell, so a cell read as int differs from the cell.
+			public static readonly CategorySales[] FractionalData =
+			{
+				new() { Id = 1, Category = "A", Year = 2000, Amount = 10m   },
+				new() { Id = 2, Category = "A", Year = 2010, Amount = 20.6m },
+				new() { Id = 3, Category = "B", Year = 2000, Amount = 5m    },
+				new() { Id = 4, Category = "B", Year = 2010, Amount = 15m   },
+			};
+
 			// Two rows per cell, so AVG / MIN / MAX are distinguishable from SUM.
 			public static readonly CategorySales[] MultiRowData =
 			{
@@ -911,7 +920,16 @@ namespace Tests.Linq
 		public void AGetInASqlPositionReadsTheCellAsItsType([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(CategorySales.Data);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			// The provider's own cast of the same amounts, which truncates or rounds as the cell's cast does.
+			var cast = t
+				.Where(x => x.Year == 2010)
+				.OrderBy(x => x.Category)
+				.Select(x => (int)x.Amount!.Value)
+				.ToList();
+
+			var castOfA = cast[0];
 
 			var pivoted = t
 				.GroupBy(x => x.Category)
@@ -925,7 +943,7 @@ namespace Tests.Linq
 				});
 
 			pivoted
-				.Where(r => r.Cells.Get<int>("Y2010") == 20)
+				.Where(r => r.Cells.Get<int>("Y2010") == castOfA)
 				.Select(r => r.Key)
 				.ToList()
 				.ShouldBe(new[] { "A" });
@@ -935,7 +953,14 @@ namespace Tests.Linq
 				.Distinct()
 				.ToList()
 				.OrderBy(v => v)
-				.ShouldBe(new[] { 15, 20 });
+				.ShouldBe(cast.OrderBy(v => v));
+
+			// A projection keeps the in-memory read: a decimal cell is not an int.
+			pivoted
+				.OrderBy(r => r.Key)
+				.Select(r => r.Cells.Get<int>("Y2010"))
+				.ToList()
+				.ShouldBe(new[] { 0, 0 });
 		}
 
 		/// <summary>Where SQL is required, a name no cell carries is a named error rather than a getter that throws later.</summary>
