@@ -141,11 +141,21 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			if (CompareInfo.DependentValueChecks != null)
+			return DependentValuesMatch(dataContext, matchedQueryExpressions, compiledParameters);
+		}
+
+		/// <summary>
+		/// Checks that the <see cref="SqlQueryDependentAttribute"/> arguments the main expression does not compare still have
+		/// the values the query was built for.
+		/// </summary>
+		/// <param name="compiledParameters">Arguments of a compiled query; <see langword="null"/> otherwise.</param>
+		internal bool DependentValuesMatch(IDataContext dataContext, IQueryExpressions expressions, object?[]? compiledParameters)
+		{
+			if (CompareInfo?.DependentValueChecks != null)
 			{
 				foreach (var check in CompareInfo.DependentValueChecks)
 				{
-					if (!check.Attribute.ObjectsEqual(check.Value, check.Current(matchedQueryExpressions, dataContext, compiledParameters)))
+					if (!check.Attribute.ObjectsEqual(check.Value, check.Current(expressions, dataContext, compiledParameters)))
 						return false;
 				}
 			}

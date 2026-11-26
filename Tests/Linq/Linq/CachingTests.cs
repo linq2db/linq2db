@@ -466,6 +466,48 @@ namespace Tests.Linq
 				.ShouldBe(ExpectedPersonIds(ids), "after the change");
 		}
 
+		static readonly MappingSchema _personIdFilterSchema = new FluentMappingBuilder(new MappingSchema())
+			.Entity<Person>()
+				.HasQueryFilter(p => p.ID > 1)
+			.Build()
+			.MappingSchema;
+
+		// IgnoreFilters takes its entity types as a [SqlQueryDependent] array the cached tree does not compare by value. The
+		// IQueryable keeps its query between executions all the same, and still sees the array changed in place.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentArray_QueryableKeepsQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(_personIdFilterSchema));
+
+			var types = new[] { typeof(Person) };
+			var query = db.GetTable<Person>().IgnoreFilters(types);
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(Person.Count());
+
+			var info = query.GetCompiledQueryInfo();
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(Person.Count());
+
+			query
+				.GetCompiledQueryInfo()
+				.ShouldBeSameAs(info);
+
+			types[0] = typeof(Child);
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(Person.Count(p => p.ID > 1), "after the change");
+		}
+
 		// The builder reads the values when the query is built and inlines their maximum.
 		sealed class MaxOfBuilder : Sql.IExtensionCallBuilder
 		{

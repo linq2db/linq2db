@@ -103,6 +103,7 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public readonly List<DependentValueCheck>? DependentValueChecks;
 
-		public bool IsFastComparable => DynamicAccessors == null && ComparisionFunctions == null && DependentValueChecks == null;
+		// DependentValueChecks do not count: an IQueryable that keeps its query runs them on each execution.
+		public bool IsFastComparable => DynamicAccessors == null && ComparisionFunctions == null;
 	}
 }

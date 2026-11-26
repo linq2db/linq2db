@@ -104,8 +104,9 @@ namespace LinqToDB.Internal.Linq
 				if (Info.CompiledSource is { } source)
 					return GetCompiledQuery(source, Info, ref expression);
 
-				// the context configuration (interceptors included) may have changed since the query was kept
-				if (Info.ConfigurationID == DataContext.ConfigurationID)
+				// the context configuration (interceptors included) may have changed since the query was kept, and a
+				// [SqlQueryDependent] collection may have been changed in place
+				if (Info.ConfigurationID == DataContext.ConfigurationID && Info.DependentValuesMatch(DataContext, expression, Parameters))
 				{
 					if (CompiledExpressions != null)
 					{

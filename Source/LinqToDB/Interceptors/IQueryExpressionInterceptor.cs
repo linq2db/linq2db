@@ -20,6 +20,11 @@ namespace LinqToDB.Interceptors
 	/// reused, compiled queries included. An interceptor that implements it may have its translated queries reused without
 	/// its rewrites being checked again.
 	/// </para>
+	/// <para>
+	/// Insert a value that differs between interceptor instances as a parameter - read through a member of the interceptor
+	/// or a closure - rather than as a literal: a literal gives each instance its own translated query, and a compiled
+	/// query keeps only a few of them per call site.
+	/// </para>
 	/// </remarks>
 	public interface IQueryExpressionInterceptor : IInterceptor
 	{
