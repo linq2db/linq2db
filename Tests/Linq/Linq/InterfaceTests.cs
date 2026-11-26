@@ -34,123 +34,115 @@ namespace Tests.Linq
 			var _ = q.ToList();
 		}
 
-		#region Issue 4031
 		[Table("Person")]
-		public class Issue4031BaseInternal
+		public class PersonBaseInternal
 		{
 			[Column("PersonID")] public int Id { get; set; }
 		}
 
 		[Table("Person")]
-		public class Issue4031BaseImplicit : IIssue4031
+		public class PersonBaseImplicit : IMappedId
 		{
 			[Column("PersonID")] public int Id { get; set; }
 		}
 
 		[Table("Person")]
-		public class Issue4031BaseExplicit : IIssue4031
+		public class PersonBaseExplicit : IMappedId
 		{
-			[Column("PersonID")] int IIssue4031.Id { get; set; }
+			[Column("PersonID")] int IMappedId.Id { get; set; }
 		}
 
 		[Table("Person")]
-		public class Issue4031BaseImplicitBad : IIssue4031
+		public class PersonBaseImplicitBadColumn : IMappedId
 		{
 			[Column("UNKNOWN")] public int Id { get; set; }
 		}
 
 		[Table("Person")]
-		public class Issue4031BaseExplicitBad : IIssue4031
+		public class PersonBaseExplicitBadColumn : IMappedId
 		{
-			[Column("UNKNOWN")] int IIssue4031.Id { get; set; }
+			[Column("UNKNOWN")] int IMappedId.Id { get; set; }
 		}
 
-		public class Issue4031Case01 : Issue4031BaseExternal, IIssue4031;
+		public class PersonExternalBaseWithInterface : PersonBaseExternal, IMappedId;
 
-		public class Issue4031Case02 : Issue4031BaseInternal, IIssue4031;
+		public class PersonInternalBaseWithInterface : PersonBaseInternal, IMappedId;
 
-		public class Issue4031Case03 : Issue4031BaseImplicit;
+		public class PersonInheritedImplicit : PersonBaseImplicit;
 
-		public class Issue4031Case04 : Issue4031BaseImplicit
+		public class PersonInheritedImplicitHiddenColumn : PersonBaseImplicit
 		{
 			[Column("UNKNOWN")] public new int Id { get; set; }
 		}
 
-		public class Issue4031Case05 : Issue4031BaseExplicit;
+		public class PersonInheritedExplicit : PersonBaseExplicit;
 
-		public class Issue4031Case06 : Issue4031BaseExplicit
+		public class PersonInheritedExplicitShadowColumn : PersonBaseExplicit
 		{
 			[Column("UNKNOWN")] public int Id { get; set; }
 		}
 
-		public class Issue4031Case07 : Issue4031BaseImplicit, IIssue4031;
+		public class PersonInheritedImplicitWithInterface : PersonBaseImplicit, IMappedId;
 
-		public class Issue4031Case08 : Issue4031BaseImplicit, IIssue4031
+		public class PersonInheritedImplicitWithInterfaceHiddenColumn : PersonBaseImplicit, IMappedId
 		{
 			[Column("PersonID")] public new int Id { get; set; }
 		}
 
-		public class Issue4031Case09 : Issue4031BaseImplicitBad, IIssue4031
+		public class PersonBadImplicitWithInterfaceHiddenColumn : PersonBaseImplicitBadColumn, IMappedId
 		{
 			[Column("PersonID")] public new int Id { get; set; }
 		}
 
-		public class Issue4031Case10 : Issue4031BaseExplicit, IIssue4031;
+		public class PersonInheritedExplicitWithInterface : PersonBaseExplicit, IMappedId;
 
-		public class Issue4031Case11 : Issue4031BaseExplicit, IIssue4031
+		public class PersonInheritedExplicitWithInterfacePublicColumn : PersonBaseExplicit, IMappedId
 		{
 			[Column("PersonID")] public int Id { get; set; }
 		}
 
-		public class Issue4031Case12 : Issue4031BaseExplicit, IIssue4031
+		public class PersonInheritedExplicitWithInterfaceExplicitColumn : PersonBaseExplicit, IMappedId
 		{
-			[Column("PersonID")] int IIssue4031.Id { get; set; }
+			[Column("PersonID")] int IMappedId.Id { get; set; }
 		}
 
-		public class Issue4031Case13 : Issue4031BaseImplicit, IIssue4031;
-
-		public class Issue4031Case14 : Issue4031BaseImplicitBad, IIssue4031
+		public class PersonBadImplicitWithInterfaceExplicitColumn : PersonBaseImplicitBadColumn, IMappedId
 		{
-			[Column("PersonID")] public new int Id { get; set; }
+			[Column("PersonID")] int IMappedId.Id { get; set; }
 		}
 
-		public class Issue4031Case15 : Issue4031BaseImplicitBad, IIssue4031
+		public class PersonExternalBaseWithGenericInterface : PersonBaseExternal, IMappedId<int>;
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_ExternalBaseWithInterface([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			[Column("PersonID")] int IIssue4031.Id { get; set; }
+			AssertColumnMapping<PersonExternalBaseWithInterface>(context);
 		}
 
-		public class Issue4031Case16 : Issue4031BaseExternal, IIssue4031<int>;
-
-		[Test]
-		public void Issue4031_Case01([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InternalBaseWithInterface([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case01>(context);
+			AssertColumnMapping<PersonInternalBaseWithInterface>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case02([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedImplicit([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case02>(context);
-		}
-
-		[Test]
-		public void Issue4031_Case03([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
-		{
-			Issue4031_Execute<Issue4031Case03>(context);
+			AssertColumnMapping<PersonInheritedImplicit>(context);
 		}
 
 		// unsuported case:
 		// we prefer member declared with "new" over interface implementation member for backward compatibility
 		// (see https://github.com/linq2db/linq2db/issues/4113)
-		[Test, ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL",
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031"), ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL",
 			Details = "no-issue: an accepted limitation rather than a tracked defect - the comment above records the trade-off and cites #4113 as its justification, which is background for the choice and not a bug to fix.")]
-		public void Issue4031_Case04([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void ColumnMapping_InheritedImplicitHiddenColumn([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute_TwoFields<Issue4031Case04>(context);
+			AssertColumnMappingTwoColumns<PersonInheritedImplicitHiddenColumn>(context);
 
 			using var db = GetDataContext(context);
 
-			var query = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id });
+			var query = db.GetTable<PersonBadImplicitWithInterfaceExplicitColumn>().Where(c => c.Id == -1).Select(c => new { c.Id });
 			query.ToArray();
 
 			var sql = query.ToSqlQuery().Sql;
@@ -158,20 +150,20 @@ namespace Tests.Linq
 			sql.ShouldContain("UNKNOWN", Exactly.Twice());
 		}
 
-		[Test]
-		public void Issue4031_Case05([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedExplicit([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case05>(context);
+			AssertColumnMapping<PersonInheritedExplicit>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case06([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedExplicitShadowColumn([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute_TwoFields<Issue4031Case06>(context);
+			AssertColumnMappingTwoColumns<PersonInheritedExplicitShadowColumn>(context);
 
 			using var db = GetDataContext(context);
 
-			var query = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id });
+			var query = db.GetTable<PersonBadImplicitWithInterfaceExplicitColumn>().Where(c => c.Id == -1).Select(c => new { c.Id });
 
 			var sql = query.ToSqlQuery().Sql;
 
@@ -181,62 +173,50 @@ namespace Tests.Linq
 			sql.ShouldContain("UNKNOWN", Exactly.Twice());
 		}
 
-		[Test]
-		public void Issue4031_Case07([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedImplicitWithInterface([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case07>(context);
+			AssertColumnMapping<PersonInheritedImplicitWithInterface>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case08([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedImplicitWithInterfaceHiddenColumn([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case08>(context);
+			AssertColumnMapping<PersonInheritedImplicitWithInterfaceHiddenColumn>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case09([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_BadImplicitWithInterfaceHiddenColumn([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case09>(context);
+			AssertColumnMapping<PersonBadImplicitWithInterfaceHiddenColumn>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case10([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedExplicitWithInterface([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case10>(context);
+			AssertColumnMapping<PersonInheritedExplicitWithInterface>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case11([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedExplicitWithInterfacePublicColumn([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case11>(context);
+			AssertColumnMapping<PersonInheritedExplicitWithInterfacePublicColumn>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case12([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_InheritedExplicitWithInterfaceExplicitColumn([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case12>(context);
+			AssertColumnMapping<PersonInheritedExplicitWithInterfaceExplicitColumn>(context);
 		}
 
-		[Test]
-		public void Issue4031_Case13([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_BadImplicitWithInterfaceExplicitColumn([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_Execute<Issue4031Case13>(context);
-		}
-
-		[Test]
-		public void Issue4031_Case14([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
-		{
-			Issue4031_Execute<Issue4031Case14>(context);
-		}
-
-		[Test]
-		public void Issue4031_Case15([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
-		{
-			Issue4031_Execute_TwoFields<Issue4031Case15>(context);
+			AssertColumnMappingTwoColumns<PersonBadImplicitWithInterfaceExplicitColumn>(context);
 
 			using var db = GetDataContext(context);
 
-			var query = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id });
+			var query = db.GetTable<PersonBadImplicitWithInterfaceExplicitColumn>().Where(c => c.Id == -1).Select(c => new { c.Id });
 
 			var sql = query.ToSqlQuery().Sql;
 
@@ -246,23 +226,13 @@ namespace Tests.Linq
 			sql.ShouldContain("UNKNOWN", Exactly.Twice());
 		}
 
-		[Test]
-		public void Issue4031_Case16([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4031")]
+		public void ColumnMapping_ExternalBaseWithGenericInterface([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
-			Issue4031_ExecuteT<Issue4031Case16>(context);
+			AssertColumnMappingGenericInterface<PersonExternalBaseWithGenericInterface>(context);
 		}
 
-		void Issue4031_ExecuteT<T>(string context) where T : class, IIssue4031<int>
-		{
-			using var db = GetDataContext(context);
-			db.GetTable<T>().Where(c => c.Id == -1).ToList();
-
-			var ed = db.MappingSchema.GetEntityDescriptor(typeof(T));
-			Assert.That(ed.Columns, Has.Count.EqualTo(1));
-			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
-		}
-
-		void Issue4031_Execute<T>(string context) where T : class, IIssue4031
+		void AssertColumnMappingGenericInterface<T>(string context) where T : class, IMappedId<int>
 		{
 			using var db = GetDataContext(context);
 			db.GetTable<T>().Where(c => c.Id == -1).ToList();
@@ -272,7 +242,17 @@ namespace Tests.Linq
 			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
-		void Issue4031_Execute_TwoFields<T>(string context) where T : class, IIssue4031
+		void AssertColumnMapping<T>(string context) where T : class, IMappedId
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<T>().Where(c => c.Id == -1).ToList();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(T));
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
+		}
+
+		void AssertColumnMappingTwoColumns<T>(string context) where T : class, IMappedId
 		{
 			using var db = GetDataContext(context);
 			db.GetTable<T>().Where(c => c.Id == -1).Select(c => new { c.Id }).ToList();
@@ -283,9 +263,7 @@ namespace Tests.Linq
 			Assert.That(columnNames, Does.Contain("PersonID"));
 			Assert.That(columnNames, Does.Contain("UNKNOWN"));
 		}
-		#endregion
 
-		#region Issue 3034
 		interface IA
 		{
 			int Id { get; set; }
@@ -302,8 +280,8 @@ namespace Tests.Linq
 			public string? Name { get; set; }
 		}
 
-		[Test]
-		public void Issue3034([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3034")]
+		public void UpdateThroughInheritedInterfaceMembers([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t = db.CreateLocalTable<MyTable>(new[]{ new MyTable() { Id = 1, Name = "old_name" }, new MyTable() { Id = 2, Name = "old_name" } });
@@ -324,9 +302,7 @@ namespace Tests.Linq
 				Assert.That(results[1].Name, Is.EqualTo("old_name"));
 			}
 		}
-		#endregion
 
-		#region Issue 4082
 		public interface IIdentifiable
 		{
 			int Id { get; }
@@ -339,8 +315,8 @@ namespace Tests.Linq
 			[Column    ] public string? Name { get; set; }
 		}
 
-		[Test]
-		public void Issue4082([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4082")]
+		public void FilterThroughInterfaceQueryableCast([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t = db.CreateLocalTable<UserAccount>(new[]{ new UserAccount() { Id = 1, Name = "old_name" }, new UserAccount() { Id = 2, Name = "old_name" } });
@@ -352,9 +328,7 @@ namespace Tests.Linq
 			Assert.That(results, Has.Length.EqualTo(1));
 			Assert.That(results[0].Id, Is.EqualTo(1));
 		}
-		#endregion
 
-		#region Issue 4607
 		interface IHasDeleted
 		{
 			bool Interface { get; set; }
@@ -368,7 +342,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4607")]
-		public void Issue4607Test([DataSources] string context)
+		public void InsertMemberInitWithInterfaceMemberBinding([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<SomeTable>();
@@ -394,9 +368,7 @@ namespace Tests.Linq
 				Assert.That(res.Interface, Is.False);
 			}
 		}
-		#endregion
 
-		#region Issue 4715
 		interface IExplicitInterface<T> where T: IExplicitInterface<T>
 		{
 			int ExplicitPropertyRW { get; set; }
@@ -409,22 +381,22 @@ namespace Tests.Linq
 			int ImplicitPropertyRO { get; }
 		}
 
-		class Issue4715Table : IExplicitInterface<Issue4715Table>, IImplicitInterface<Issue4715Table>
+		class ExplicitInterfaceTable : IExplicitInterface<ExplicitInterfaceTable>, IImplicitInterface<ExplicitInterfaceTable>
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public int ImplicitPropertyRW { get; set; }
 			public int ImplicitPropertyRO => 11;
-			int IExplicitInterface<Issue4715Table>.ExplicitPropertyRW { get; set; }
-			int IExplicitInterface<Issue4715Table>.ExplicitPropertyRO => 22;
+			int IExplicitInterface<ExplicitInterfaceTable>.ExplicitPropertyRW { get; set; }
+			int IExplicitInterface<ExplicitInterfaceTable>.ExplicitPropertyRO => 22;
 		}
 
-		private static MappingSchema ConfigureIssue4715Mapping()
+		private static MappingSchema ConfigureExplicitInterfaceMapping()
 		{
 			return new FluentMappingBuilder()
-				.Entity<Issue4715Table>()
+				.Entity<ExplicitInterfaceTable>()
 				// when fixed - we should have better API to configure those two columns
-				.HasAttribute(typeof(Issue4715Table).GetProperty("Tests.Linq.InterfaceTests.IExplicitInterface<Tests.Linq.InterfaceTests.Issue4715Table>.ExplicitPropertyRW", BindingFlags.NonPublic | BindingFlags.Instance)!, new ColumnAttribute("Prop3"))
-				.HasAttribute(typeof(Issue4715Table).GetProperty("Tests.Linq.InterfaceTests.IExplicitInterface<Tests.Linq.InterfaceTests.Issue4715Table>.ExplicitPropertyRO", BindingFlags.NonPublic | BindingFlags.Instance)!, new ColumnAttribute("Prop4"))
+				.HasAttribute(typeof(ExplicitInterfaceTable).GetProperty("Tests.Linq.InterfaceTests.IExplicitInterface<Tests.Linq.InterfaceTests.ExplicitInterfaceTable>.ExplicitPropertyRW", BindingFlags.NonPublic | BindingFlags.Instance)!, new ColumnAttribute("Prop3"))
+				.HasAttribute(typeof(ExplicitInterfaceTable).GetProperty("Tests.Linq.InterfaceTests.IExplicitInterface<Tests.Linq.InterfaceTests.ExplicitInterfaceTable>.ExplicitPropertyRO", BindingFlags.NonPublic | BindingFlags.Instance)!, new ColumnAttribute("Prop4"))
 				.Property(x => x.ImplicitPropertyRW).HasColumnName("Prop1")
 				.Property(x => x.ImplicitPropertyRO).HasColumnName("Prop2")
 				.Build()
@@ -432,9 +404,9 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
-		public void Issue4715TestDescriptor()
+		public void ExplicitInterfaceMembersEntityDescriptor()
 		{
-			var ed = ConfigureIssue4715Mapping().GetEntityDescriptor(typeof(Issue4715Table));
+			var ed = ConfigureExplicitInterfaceMapping().GetEntityDescriptor(typeof(ExplicitInterfaceTable));
 
 			Assert.That(ed.Columns, Has.Count.EqualTo(5));
 			using (Assert.EnterMultipleScope())
@@ -448,18 +420,18 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
-		public void Issue4715TestMapping([DataSources] string context)
+		public void ExplicitInterfaceMembersInsertAndRead([DataSources] string context)
 		{
-			using var db = GetDataContext(context, ConfigureIssue4715Mapping());
-			using var tb = db.CreateLocalTable<Issue4715Table>();
+			using var db = GetDataContext(context, ConfigureExplicitInterfaceMapping());
+			using var tb = db.CreateLocalTable<ExplicitInterfaceTable>();
 
-			var record = new Issue4715Table()
+			var record = new ExplicitInterfaceTable()
 			{
 				Id = 1,
 				ImplicitPropertyRW = 2
 			};
 
-			((IExplicitInterface<Issue4715Table>)record).ExplicitPropertyRW = 3;
+			((IExplicitInterface<ExplicitInterfaceTable>)record).ExplicitPropertyRW = 3;
 
 			db.Insert(record);
 
@@ -468,10 +440,9 @@ namespace Tests.Linq
 			{
 				Assert.That(result.Id, Is.EqualTo(1));
 				Assert.That(result.ImplicitPropertyRW, Is.EqualTo(2));
-				Assert.That(((IExplicitInterface<Issue4715Table>)result).ExplicitPropertyRW, Is.EqualTo(3));
+				Assert.That(((IExplicitInterface<ExplicitInterfaceTable>)result).ExplicitPropertyRW, Is.EqualTo(3));
 			}
 		}
-		#endregion
 
 		#region v6p2 regression
 		class ExtensionTable1 : IEntity
@@ -965,5 +936,100 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		public class MappedBackgroundTask : IMappedBackgroundTask
+		{
+			public int? ID { get; set; }
+			public int DurationID { get; set; }
+			public int DurationInterval { get; set; }
+			public int? PersonID { get; set; }
+		}
+
+		public interface IMappedBackgroundTask
+		{
+			[Column]
+			int? ID { get; set; }
+			[PrimaryKey]
+			int DurationID { get; set; }
+			[Column]
+			int DurationInterval { get; set; }
+			[Column]
+			int? PersonID { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1099")]
+		public void WhereOnInterfaceTypedQueryable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<MappedBackgroundTask>())
+			{
+				var personId = 1;
+
+				db.Insert(new MappedBackgroundTask
+				{
+					PersonID = 1,
+					DurationID = 2,
+					ID = 3,
+					DurationInterval = 4
+				});
+
+				IQueryable<IMappedBackgroundTask> tasks = db.GetTable<MappedBackgroundTask>();
+
+				var query = from task in tasks
+							where task.PersonID == personId
+							select task;
+
+				var items = query.ToList();
+
+				Assert.That(items, Has.Count.EqualTo(1));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(items[0].PersonID, Is.EqualTo(1));
+					Assert.That(items[0].DurationID, Is.EqualTo(2));
+					Assert.That(items[0].ID, Is.EqualTo(3));
+					Assert.That(items[0].DurationInterval, Is.EqualTo(4));
+				}
+			}
+		}
+
+		interface IJoinedService
+		{
+			int  Id       { get; set; }
+			int? IdClient { get; set; }
+		}
+
+		[Table]
+		public partial class JoinedServiceAdsl : IJoinedService
+		{
+			[PrimaryKey] public int  Id       { get; set; } // int
+			[Column    ] public int? IdClient { get; set; } // int
+		}
+
+		[Table]
+		public partial class JoinedServiceClient
+		{
+			[PrimaryKey] public int Id { get; set; } // int
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2939")]
+		public void JoinThroughInterfaceTypedQueryable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var services = db.CreateLocalTable<JoinedServiceAdsl>();
+			using var clients = db.CreateLocalTable<JoinedServiceClient>();
+			IQueryable<JoinedServiceClient>   q_clients  = clients;
+			IQueryable<IJoinedService> q_services = services;
+			IQueryable<JoinedServiceAdsl>     q_adsl     = services;
+
+			q_services = from adsl in q_adsl select adsl;
+
+			var q_test = (
+					from serv in q_services
+					join client in q_clients on serv.IdClient equals client.Id
+					select serv.Id
+				);
+
+			var res = q_test.ToList();
+		}
 	}
 }

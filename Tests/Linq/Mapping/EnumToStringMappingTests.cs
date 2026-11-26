@@ -9,15 +9,15 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.Mapping
 {
 	[TestFixture]
-	public class Issue2468Tests : TestBase
+	public class EnumToStringMappingTests : TestBase
 	{
 		// Register the enum ToString mappings under a dedicated configuration (not the global ""
 		// config) so they only apply to this test's MappingSchema and don't leak into the process-wide
 		// registry - which, under parallel execution, would perturb other fixtures' conversions.
-		const string CONFIG = "Issue2468Tests";
+		const string CONFIG = "EnumToStringMapping";
 
 		public enum StatusEnum
 		{
@@ -43,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		public class InventoryResourceDTO
+		public class EnumToStringTable
 		{
 			[Column]
 			public Guid Id { get; set; }
@@ -100,23 +100,23 @@ namespace Tests.UserTests
 			Expressions.MapMember(CONFIG, type, toStringMethod, lambda);
 		}
 
-		static Issue2468Tests()
+		static EnumToStringMappingTests()
 		{
 			MapEnumToString<ColorEnum>();
 			MapEnumToString<CMYKEnum>();
 			Expressions.MapMember(CONFIG, (StatusEnum v) => v.ToString(), v => MyExtensions.StatusEnumToString(v));
 		}
 
-		[Test]
-		public void Issue2468Test(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2468")]
+		public void EnumToStringMemberMappingInPredicate(
 			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 
 			var ms = new MappingSchema(CONFIG);
 			using var db = (DataConnection)GetDataContext(context, ms);
-			using var itb = db.CreateLocalTable<InventoryResourceDTO>();
-			var dto1 = new InventoryResourceDTO
+			using var itb = db.CreateLocalTable<EnumToStringTable>();
+			var dto1 = new EnumToStringTable
 			{
 				Color = ColorEnum.Blue,
 				Id = TestData.Guid1,

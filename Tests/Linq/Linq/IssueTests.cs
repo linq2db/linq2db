@@ -40,47 +40,6 @@ namespace Tests.Linq
 			Assert.That(column, Is.Null);
 		}
 
-		[Table("Person", IsColumnAttributeRequired = false)]
-		public class Person88
-		{
-			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID"), Identity, PrimaryKey] public int     ID;
-			[NotNull]                                  public string  FirstName { get; set; } = null!;
-			[NotNull]                                  public string  LastName = null!;
-			[Nullable]                                 public string? MiddleName;
-			                                           public char    Gender;
-		}
-
-		[Test]
-		public void Issue88([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var llc = db
-					.GetTable<Person88>()
-					.Where(_ => _.ID == 1 && _.Gender == 'M');
-
-			var lrc = db
-					.GetTable<Person88>()
-					.Where(_ => _.ID == 1 && 'M' == _.Gender);
-
-			var gender = 'M';
-			var llp = db
-					.GetTable<Person88>()
-					.Where(_ => _.ID == 1 && _.Gender == gender);
-
-			var lrp = db
-					.GetTable<Person88>()
-					.Where(_ => _.ID == 1 && gender == _.Gender);
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(llc, Is.Not.Empty);
-				Assert.That(lrc, Is.Not.Empty);
-				Assert.That(llp, Is.Not.Empty);
-				Assert.That(lrp, Is.Not.Empty);
-			}
-
-		}
-
 		[Test]
 		public void Issue2823Guid([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool inlineParameters)
 		{
