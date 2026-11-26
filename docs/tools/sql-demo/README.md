@@ -7,6 +7,7 @@ The landing page at `docs/source/index.md` features a tabbed demo showing C# LIN
 - **C# side**: Hand-written syntax-highlighted HTML using `<span>` classes (`code-keyword`, `code-type`, `code-string`, `code-number`, `code-comment`)
 - **SQL side**: Output of `SqlDemoGenerator.cs` (`ToSqlQuery()`, or the executed statements for Temp Table), re-indented and wrapped in the same span classes. Each SQL pane label names its dialect.
 - **Tabs**: Pure CSS — visually hidden but focusable `<input type="radio">` elements + `:checked` / `:focus-visible` sibling selectors in `main.css` (no JavaScript). The container is a `role="radiogroup"`, so keyboard users switch tabs with the arrow keys.
+- **Width**: the longest line is 57 characters (ExpressionMethod's SQL). The hero layout in `main.css` is sized for it: the demo sits beside the text from 1800px and under it below that. A longer line scrolls sideways, so shorten it or move that breakpoint.
 
 ## How to generate SQL for a new or updated tab
 

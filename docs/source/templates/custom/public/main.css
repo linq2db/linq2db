@@ -411,6 +411,20 @@
 /* ============================================================
    Responsive
    ============================================================ */
+
+/* The demo shows C# and SQL side by side, which takes about 830px for the widest tab
+   (ExpressionMethod's SQL, 57 characters a line). Half of the hero is that wide only from
+   about 1800px, so below that the demo goes under the text instead of scrolling sideways. */
+@media (min-width: 992px) and (max-width: 1799.98px) {
+	.landing-hero .row > .col-lg-6 {
+		width: 100%;
+	}
+
+	.landing-hero .demo-container {
+		max-width: 1100px;
+	}
+}
+
 @media (max-width: 991.98px) {
 	.landing-title {
 		font-size: 2.5rem;
