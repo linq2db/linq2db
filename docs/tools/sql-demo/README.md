@@ -27,7 +27,7 @@ cp docs/tools/sql-demo/SqlDemoGenerator.cs Tests/Tests.Playground/SqlDemoGenerat
 
 ### 2. Edit the tests to add or modify queries
 
-Keep each test's C# identical to its tab's C# pane.
+Keep each test's C# identical to its tab's C# pane, except Merge (stops before the executing `.Merge()`) and Temp Table (a `using` block, so the `DROP` from `Dispose` is traced).
 
 ### 3. Run the tests
 
@@ -95,7 +95,7 @@ Only whitespace, the span wrappers and whole-line `-- <n>. <step>` comments may 
 | `code-type` | Blue (#82aaff) | Type names (Product, DataConnection), SQL functions (COUNT, SUM) |
 | `code-string` | Green (#c3e88d) | String literals |
 | `code-number` | Orange (#f78c6c) | Numeric literals |
-| `code-comment` | Gray (#676e95) | Comments (// and --) |
+| `code-comment` | Gray (#8b93bd) | Comments (// and --) |
 
 ## Important: blank lines in `<pre>` blocks
 

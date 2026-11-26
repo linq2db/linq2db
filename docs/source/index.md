@@ -15,7 +15,7 @@ _disableContribution: true
 <h1 class="landing-title">Data access<br/>made <span class="landing-accent">simple</span></h1>
 <p class="landing-subtitle">The fastest LINQ database access library. A lightweight, type-safe layer between your POCO objects and your database with full SQL support.</p>
 <div class="landing-actions">
-<a href="documentation/get-started/install/index.md" class="btn btn-primary btn-lg landing-btn-primary">Get Started <i class="bi bi-arrow-right"></i></a>
+<a href="documentation/get-started/overview.md" class="btn btn-primary btn-lg landing-btn-primary">Get Started <i class="bi bi-arrow-right"></i></a>
 <a href="https://github.com/linq2db/linq2db" class="btn btn-outline-light btn-lg landing-btn-secondary"><i class="bi bi-github"></i> GitHub</a>
 </div>
 <div class="landing-install mt-4">
@@ -370,7 +370,7 @@ _disableContribution: true
 <div class="col-md-4">
 <a href="documentation/index.md" class="landing-card">
 <div class="landing-card-icon-wrap"><i class="bi bi-book"></i></div>
-<h3>Documentation</h3>
+<h2>Documentation</h2>
 <p>Installation, core concepts, SQL features, configuration guides, and best practices.</p>
 <span class="landing-card-link">Browse docs <i class="bi bi-arrow-right"></i></span>
 </a>
@@ -379,8 +379,8 @@ _disableContribution: true
 <div class="col-md-4">
 <a href="articles/index.md" class="landing-card">
 <div class="landing-card-icon-wrap"><i class="bi bi-newspaper"></i></div>
-<h3>Articles</h3>
-<p>Release notes, announcements, and news from the Linq To DB project.</p>
+<h2>Articles</h2>
+<p>Release notes.</p>
 <span class="landing-card-link">Read articles <i class="bi bi-arrow-right"></i></span>
 </a>
 </div>
@@ -388,7 +388,7 @@ _disableContribution: true
 <div class="col-md-4">
 <a href="api/linq2db/linq2db--LinqToDB.yml" class="landing-card">
 <div class="landing-card-icon-wrap"><i class="bi bi-code-slash"></i></div>
-<h3>API Reference</h3>
+<h2>API Reference</h2>
 <p>Complete API documentation for all packages, extensions, and integrations.</p>
 <span class="landing-card-link">Explore API <i class="bi bi-arrow-right"></i></span>
 </a>
@@ -405,15 +405,15 @@ _disableContribution: true
 <div class="col-md-6 col-lg-3">
 <div class="landing-feature">
 <div class="landing-feature-icon"><i class="bi bi-lightning-charge-fill"></i></div>
-<h4>High Performance</h4>
-<p>Generates optimized SQL with minimal overhead. No reflection at runtime, no heavy object tracking.</p>
+<h3>High Performance</h3>
+<p>Generates optimized SQL with minimal overhead. Materializes results with compiled expressions and does no change tracking.</p>
 </div>
 </div>
 
 <div class="col-md-6 col-lg-3">
 <div class="landing-feature">
 <div class="landing-feature-icon"><i class="bi bi-database-fill"></i></div>
-<h4>Multi-Database</h4>
+<h3>Multi-Database</h3>
 <p>SQL Server, PostgreSQL, MySQL, SQLite, Oracle, Firebird, ClickHouse, and many more.</p>
 </div>
 </div>
@@ -421,7 +421,7 @@ _disableContribution: true
 <div class="col-md-6 col-lg-3">
 <div class="landing-feature">
 <div class="landing-feature-icon"><i class="bi bi-braces"></i></div>
-<h4>Full LINQ</h4>
+<h3>Full LINQ</h3>
 <p>Type-safe queries with advanced SQL: CTEs, Window Functions, MERGE, Bulk Copy, and more.</p>
 </div>
 </div>
@@ -429,7 +429,7 @@ _disableContribution: true
 <div class="col-md-6 col-lg-3">
 <div class="landing-feature">
 <div class="landing-feature-icon"><i class="bi bi-puzzle-fill"></i></div>
-<h4>Extensible</h4>
+<h3>Extensible</h3>
 <p>EF Core integration, ASP.NET Identity, gRPC, SignalR, and HTTP remoting out of the box.</p>
 </div>
 </div>
