@@ -38,6 +38,10 @@ stages:
           $headers = @{ Authorization = 'Bearer ' + $env:SYSTEM_ACCESSTOKEN }
           $branch  = [uri]::EscapeDataString('refs/pull/' + $env:PR_NUMBER + '/merge')
           $current = [int]$env:BUILD_ID
+          # Named in the log because which build service identity the token belongs to depends on the
+          # org- and project-level job authorization scope, and that identity is the one needing the grant.
+          $identity = try { (Invoke-RestMethod -Headers $headers -Uri ($env:COLLECTION_URI + '_apis/connectionData')).authenticatedUser.providerDisplayName } catch { '<unknown>' }
+          'Running as: ' + $identity
 
           $builds = (Invoke-RestMethod -Headers $headers -Uri ($base + '?branchName=' + $branch + '&statusFilter=inProgress,notStarted,postponed&api-version=7.1')).value
           # Older only: a run that started late must never cancel a newer one.
@@ -52,7 +56,7 @@ stages:
               'Cancelled {0} build {1}' -f $b.definition.name, $b.id
             } catch {
               $failed++
-              '##vso[task.logissue type=warning]Could not cancel {0} build {1}: {2}' -f $b.definition.name, $b.id, $_.Exception.Message
+              '##vso[task.logissue type=warning]Could not cancel {0} build {1} as {2}: {3}' -f $b.definition.name, $b.id, $identity, $_.Exception.Message
             }
           }
           if ($failed) { exit 1 }
