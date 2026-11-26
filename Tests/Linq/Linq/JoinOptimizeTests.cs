@@ -1076,6 +1076,47 @@ namespace Tests.Linq
 
 		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
 		[Test]
+		public void OuterSourceProjectionAggregatesOverExplicitDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// DefaultIfEmpty(x) in a projection builds a one-row LEFT JOIN: one result per child, -1 for the children without
+			// grandchildren
+			var nullable =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				select new
+				{
+					c.ChildID,
+					Max = db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.Select(g => (int?)p.ParentID)
+						.DefaultIfEmpty(-1)
+						.Max(),
+				};
+
+			AssertQuery(nullable);
+
+			var notNullable =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				select new
+				{
+					c.ChildID,
+					Max = db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.Select(g => p.ParentID)
+						.DefaultIfEmpty(-1)
+						.Max(),
+				};
+
+			AssertQuery(notNullable);
+		}
+
+		// SQLite only, as OuterSourceProjectionReadsNullWithoutMatch: a builder decision
+		[Test]
 		public void OuterSourceProjectionThroughAssociationReadsNullWithoutMatch([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
