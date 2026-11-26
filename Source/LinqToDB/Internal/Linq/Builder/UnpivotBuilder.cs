@@ -153,12 +153,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		// node that reads the cell is replaced, so every conversion the selector writes over it is kept.
 		static LambdaExpression ReadCellAsColumn(LambdaExpression column)
 		{
-			var         body        = column.Body;
-			Expression? overIndexer = null;
+			var body        = column.Body;
+			var isConverted = false;
 
 			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary)
 			{
-				overIndexer = unary;
+				isConverted = true;
 				body        = unary.Operand;
 			}
 
@@ -167,31 +167,23 @@ namespace LinqToDB.Internal.Linq.Builder
 				|| call.Arguments[0].Find(column.Parameters[0]) != null)
 				return column;
 
-			Expression replaced;
-			Type       cellType;
+			var isGet = call.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true };
 
-			if (call.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true })
-			{
-				replaced = call;
-				cellType = call.Method.GetGenericArguments()[0];
-			}
-			else if (call.Method is { Name: "get_Item" } && overIndexer != null)
-			{
-				// The indexer is typed object; the conversion directly over it names the cell's type.
-				replaced = overIndexer;
-				cellType = overIndexer.Type;
-			}
-			else
+			// The indexer is typed object, so only a conversion over it gives the column a type.
+			if (!isGet && !(call.Method is { Name: "get_Item" } && isConverted))
 				return column;
 
 			var name = call.Arguments[0].EvaluateExpression<string>();
 			if (name == null)
 				return column;
 
-			// The column is typed as the read names it, as Sql.Property<T> types it.
-			var access = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), cellType, name));
+			// The cell is read as the pivot bound it and converted to the type the read names, as in a filter.
+			Expression access = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), typeof(object), name));
 
-			return Expression.Lambda(column.Body.Replace(replaced, access), column.Parameters);
+			if (isGet)
+				access = Expression.Convert(access, call.Type);
+
+			return Expression.Lambda(column.Body.Replace(call, access), column.Parameters);
 		}
 
 		// The name column reports the physical column name, so a query reads the same names whether or not the

@@ -2751,6 +2751,24 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			// A dynamic column read as object resolves to the cell's own type, so the conversion over it is rebuilt rather than
+			// validated against object (an Unpivot column reading a pivot cell as another type).
+			if (_buildPurpose is not BuildPurpose.Sql
+				&& node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null, Operand: MemberExpression { Member: DynamicColumnInfo } dynamicColumn }
+				&& dynamicColumn.Type == typeof(object))
+			{
+				var operand = Visit(dynamicColumn);
+
+				if (operand.Type != typeof(object))
+				{
+					return node.NodeType == ExpressionType.ConvertChecked
+						? Expression.ConvertChecked(operand, node.Type)
+						: Expression.Convert(operand, node.Type);
+				}
+
+				return node.Update(operand);
+			}
+
 			if (PreferClientCalculation(node))
 				return base.VisitUnary(node);
 

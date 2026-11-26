@@ -999,6 +999,43 @@ namespace Tests.Linq
 			result.ShouldBe(new[] { "A" });
 		}
 
+		/// <summary>An unpivot column reads a cell as the type the read names, not as the cell's own type.</summary>
+		[Test]
+		public void UnpivotConvertsACellReadToItsType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			pivoted
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2000"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new[] { ("A", 10), ("B", 5) });
+
+			pivoted
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => (int?)x.Cells["Y2000"])
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new (string, int?)[] { ("A", 10), ("B", 5) });
+		}
+
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
 		[Test]
 		public void UnpivotsTheCellsUnderTheirOwnNames([DataSources] string context)
