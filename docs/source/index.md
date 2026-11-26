@@ -386,7 +386,7 @@ _disableContribution: true
 </div>
 
 <div class="col-md-4">
-<a href="api/linq2db/index.md" class="landing-card">
+<a href="api/linq2db/linq2db--LinqToDB.yml" class="landing-card">
 <div class="landing-card-icon-wrap"><i class="bi bi-code-slash"></i></div>
 <h3>API Reference</h3>
 <p>Complete API documentation for all packages, extensions, and integrations.</p>
