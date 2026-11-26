@@ -310,6 +310,16 @@
 					"documentation/cli-help.txt",
 					".nojekyll"
 				]
+			},
+			{
+				// Redirect stubs: one page per article that moved from articles/ to documentation/, so the
+				// old URLs keep working. Plain HTML copied as is (a `redirect_url` page would drop the
+				// #anchor); `src` keeps them out of the real articles/ folder, they are published under
+				// articles/ all the same.
+				"files": [
+					"articles/**/*.html"
+				],
+				"src": "redirects"
 			}
 		],
 		"dest": "../../.build/docs/_site",
