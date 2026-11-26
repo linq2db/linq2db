@@ -87,9 +87,13 @@ namespace LinqToDB.Internal.SqlProvider
 			// the whole-query convert - once execution parameter values are available - so the convert converts
 			// each value (e.g. parameterizes the query-parameter values the merge-source type check inspects)
 			// and the builder later renders already-converted rows without converting anything itself.
-			if (element.Rows == null && element.ValueBuilders != null && EvaluationContext.ParameterValues != null)
+			// A source that is not enumerable (a null collection) is left unmaterialized: the table can sit in a
+			// branch this same traversal folds away (`list == null || list.Any(...)`), and a table that survives
+			// still reports the missing source when it is rendered.
+			if (element.Rows == null && element.ValueBuilders != null && EvaluationContext.ParameterValues != null
+				&& element.Source?.EvaluateExpression(EvaluationContext) is IEnumerable sourceValue)
 			{
-				var materialized = element.BuildRows(EvaluationContext).ToList();
+				var materialized = element.BuildRows(sourceValue);
 
 				switch (GetVisitMode(element))
 				{
