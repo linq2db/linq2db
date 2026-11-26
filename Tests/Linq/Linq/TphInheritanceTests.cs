@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -1811,6 +1812,187 @@ namespace Tests.Linq
 				.ToArray();
 
 			types.ShouldBe([2]);
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootCallback_ReadsDerivedDescriptor()
+		{
+			var ms    = ColdMappingSchema();
+			var depth = 0;
+
+			EntityDescriptor? read = null;
+
+			// a descriptor-created callback that, for the root, reads a mapped type's descriptor
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type != typeof(TphThingBase))
+					return;
+
+				// bounded for the test; unguarded, the recursion ends in a StackOverflowException
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read = schema.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			read.ShouldBeSameAs(beta);
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootCallback_ReadsUnmappedIntermediateDescriptor()
+		{
+			var ms    = ColdMappingSchema();
+			var depth = 0;
+
+			EntityDescriptor? read = null;
+
+			// TphThingIntermediate is a type of the hierarchy that the root does not map
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type != typeof(TphThingBase))
+					return;
+
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read = schema.GetEntityDescriptor(typeof(TphThingIntermediate), Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+
+			ms.GetEntityDescriptor(typeof(TphThingBeta), Callback).InheritanceRoot.ShouldBeSameAs(root);
+			ms.GetEntityDescriptor(typeof(TphThingIntermediate), Callback).ShouldBeSameAs(read);
+			read!.ObjectType.ShouldBe(typeof(TphThingIntermediate));
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootCallback_ThrowsAfterReadingDerivedDescriptor()
+		{
+			var ms    = ColdMappingSchema();
+			var throws = true;
+
+			// the root's callback reads a mapped type's descriptor and then fails, once
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type != typeof(TphThingBase))
+					return;
+
+				schema.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+				if (throws)
+				{
+					throws = false;
+					throw new InvalidOperationException("Callback failed.");
+				}
+			}
+
+			Assert.That(() => ms.GetEntityDescriptor(typeof(TphThingBase), Callback), Throws.InvalidOperationException);
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+
+			ms.GetEntityDescriptor(typeof(TphThingBeta), Callback).InheritanceRoot.ShouldBeSameAs(root);
+		}
+
+		[Test]
+		public void TPH_Descriptor_Callbacks_ReadRootDescriptor()
+		{
+			var ms    = ColdMappingSchema();
+			var depth = 0;
+			var read  = new Dictionary<Type, EntityDescriptor>();
+
+			// the callbacks of a mapped type and of the root itself read the root's descriptor
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				var type = ed.TypeAccessor.Type;
+
+				if (type != typeof(TphThingBeta) && type != typeof(TphThingBase))
+					return;
+
+				// bounded for the test; unguarded, the recursion ends in a StackOverflowException
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read[type] = schema.GetEntityDescriptor(typeof(TphThingBase), Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+
+			read[typeof(TphThingBeta)].ShouldBeSameAs(root);
+			read[typeof(TphThingBase)].ShouldBeSameAs(root);
+			ms.GetEntityDescriptor(typeof(TphThingBeta), Callback).InheritanceRoot.ShouldBeSameAs(root);
+		}
+
+		[Test]
+		public void TPH_Descriptor_DerivedCallback_ReadsSiblingDescriptor()
+		{
+			var ms      = ColdMappingSchema();
+			var depth   = 0;
+			var created = new List<Type>();
+			var read    = new Dictionary<Type, EntityDescriptor>();
+
+			// Alpha is built before Beta: Alpha's callback reads a sibling not built yet, Beta's one already built
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				var type = ed.TypeAccessor.Type;
+
+				created.Add(type);
+
+				var sibling = type == typeof(TphThingAlpha) ? typeof(TphThingBeta)
+					: type == typeof(TphThingBeta) ? typeof(TphThingAlpha)
+					: null;
+
+				if (sibling == null)
+					return;
+
+				// bounded for the test; unguarded, the recursion ends in a StackOverflowException
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read[sibling] = schema.GetEntityDescriptor(sibling, Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root  = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var alpha = ms.GetEntityDescriptor(typeof(TphThingAlpha), Callback);
+			var beta  = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			alpha.InheritanceRoot.ShouldBeSameAs(root);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			read[typeof(TphThingAlpha)].ShouldBeSameAs(alpha);
+			read[typeof(TphThingBeta)].ShouldBeSameAs(beta);
+			created.Count(t => t == typeof(TphThingAlpha)).ShouldBe(1);
+			created.Count(t => t == typeof(TphThingBeta)).ShouldBe(1);
 		}
 
 		[Table("TphThingBeta")]

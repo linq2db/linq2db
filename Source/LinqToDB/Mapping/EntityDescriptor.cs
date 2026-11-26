@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Reflection;
@@ -231,6 +232,120 @@ namespace LinqToDB.Mapping
 
 			descriptor = null;
 			return false;
+		}
+
+		// Inheritance roots being built on this thread: constructing the descriptors of the types they map, or running their
+		// own descriptor-created callback. A root is cached only once MappingSchema.GetEntityDescriptor's factory returns,
+		// so a callback that reads a type of the root's hierarchy is served from here instead of building the root again.
+		static readonly AsyncLocal<RootBuild?> _rootBuilds = new();
+
+		internal sealed class RootBuild(EntityDescriptor root, int schemaId, RootBuild? outer)
+		{
+			public EntityDescriptor Root     { get; } = root;
+			public int              SchemaId { get; } = schemaId;
+			public RootBuild?       Outer    { get; } = outer;
+
+			// A flow a callback starts (a task, a timer) captures this entry: it must not see a build that has ended
+			// or that runs on another thread.
+			public int              ThreadId { get; } = Environment.CurrentManagedThreadId;
+			public bool             IsEnded  { get; set; }
+		}
+
+		internal static RootBuild EnterRootBuild(EntityDescriptor root, int schemaId)
+		{
+			var build = new RootBuild(root, schemaId, _rootBuilds.Value);
+
+			_rootBuilds.Value = build;
+
+			return build;
+		}
+
+		internal static void ExitRootBuild(RootBuild build)
+		{
+			build.IsEnded     = true;
+			_rootBuilds.Value = build.Outer;
+		}
+
+		internal static EntityDescriptor? FindRootBuild(Type rootType, int schemaId)
+		{
+			for (var build = _rootBuilds.Value; build != null; build = build.Outer)
+				if (!build.IsEnded && build.ThreadId == Environment.CurrentManagedThreadId && build.Root.ObjectType == rootType && build.SchemaId == schemaId)
+					return build.Root;
+
+			return null;
+		}
+
+		/// <summary>
+		/// Returns the descriptor of <paramref name="type"/> when it is a root being built on this thread, or a type that such
+		/// a root maps - that is, a descriptor-created callback the root invokes reads it. The root is not cached yet, and
+		/// while it constructs the descriptors of the types it maps its graph is not complete either, so the descriptor must
+		/// not be cached.
+		/// </summary>
+		internal static bool TryGetFromRootBeingBuilt(MappingSchema mappingSchema, Type type, int schemaId, [NotNullWhen(true)] out EntityDescriptor? descriptor)
+		{
+			if (_rootBuilds.Value == null)
+			{
+				descriptor = null;
+				return false;
+			}
+
+			if (FindRootBuild(type, schemaId) is { } self)
+			{
+				descriptor = self;
+				return true;
+			}
+
+			if (FindInheritanceRootType(mappingSchema, type) is { } rootType
+				&& FindRootBuild(rootType, schemaId) is { } root)
+			{
+				if (root._memberBuild is { } build)
+				{
+					if (root._inheritanceMappings.Any(m => m.Type == type))
+					{
+						descriptor = root.BuildMember(build, type);
+						return true;
+					}
+				}
+				else if (root.TryGetInheritanceMember(type, out descriptor))
+				{
+					return true;
+				}
+			}
+
+			descriptor = null;
+			return false;
+		}
+
+		// The state of InitInheritanceMapping while this root constructs the descriptors of the types it maps.
+		sealed class MemberBuild(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
+		{
+			public Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated { get; } = onEntityDescriptorCreated;
+			public Dictionary<Type, EntityDescriptor>              Members                   { get; } = new();
+		}
+
+		MemberBuild? _memberBuild;
+
+		// Ends the root's member construction, when InitInheritanceMapping returns or throws.
+		readonly struct RootBuildScope(EntityDescriptor root, RootBuild build) : IDisposable
+		{
+			public void Dispose()
+			{
+				root._memberBuild = null;
+				ExitRootBuild(build);
+			}
+		}
+
+		EntityDescriptor BuildMember(MemberBuild build, Type type)
+		{
+			if (!build.Members.TryGetValue(type, out var ed))
+			{
+				ed = new EntityDescriptor(MappingSchema, type, build.OnEntityDescriptorCreated, inheritanceRoot: this);
+				build.Members.Add(type, ed);
+
+				(build.OnEntityDescriptorCreated ?? MappingSchema.EntityDescriptorCreatedCallback)?.Invoke(MappingSchema, ed);
+			}
+
+			return ed;
 		}
 
 		void InitQueryFilters()
@@ -558,20 +673,21 @@ namespace LinqToDB.Mapping
 			// and a cached descriptor is already reachable by other threads, which may have built lambdas from its state
 			// and may be building them right now. Graphs built here are private until this constructor returns; the cache
 			// hands out the mapped types' descriptors from the root's graph (see MappingSchema.GetEntityDescriptor).
-			var members  = new Dictionary<Type, EntityDescriptor>();
-			var callback = onEntityDescriptorCreated ?? MappingSchema.EntityDescriptorCreatedCallback;
+			var build  = _memberBuild = new MemberBuild(onEntityDescriptorCreated);
+			var merged = new HashSet<Type>();
+
+			using var scope = new RootBuildScope(this, EnterRootBuild(this, ((IConfigurationID)MappingSchema).ConfigurationID));
 
 			Dictionary<ColumnDescriptor, List<ColumnDescriptor>>? valueSiblings = null;
 
 			foreach (var m in _inheritanceMappings)
 			{
 				// a type mapped under several discriminator codes is merged once
-				if (m.Type == ObjectType || members.ContainsKey(m.Type))
+				if (m.Type == ObjectType || !merged.Add(m.Type))
 					continue;
 
-				var ed = new EntityDescriptor(MappingSchema, m.Type, onEntityDescriptorCreated, inheritanceRoot: this);
-				callback?.Invoke(MappingSchema, ed);
-				members.Add(m.Type, ed);
+				// already built when a descriptor-created callback read it - see TryGetFromRootBeingBuilt
+				var ed = BuildMember(build, m.Type);
 
 				foreach (var cd in ed.Columns)
 				{
@@ -617,7 +733,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			_inheritanceMembers        = members;
+			_inheritanceMembers        = build.Members;
 			_inheritanceSiblingColumns = siblingColumns == null ? [] : [.. siblingColumns];
 
 			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)

@@ -1870,8 +1870,18 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated = null)
 		{
-			var ed = EntityDescriptorsCache.GetOrCreate(
-				(entityType: type, ((IConfigurationID)this).ConfigurationID),
+			var key = (entityType: type, schemaId: ((IConfigurationID)this).ConfigurationID);
+
+			if (EntityDescriptorsCache.TryGetValue(key, out var ed))
+				return ed;
+
+			// A descriptor-created callback that an inheritance root being built invokes reads the root or a type the root
+			// maps: it gets the descriptor from the root's graph, which is not cached until the root is.
+			if (EntityDescriptor.TryGetFromRootBeingBuilt(this, type, key.schemaId, out var member))
+				return member;
+
+			return EntityDescriptorsCache.GetOrCreate(
+				key,
 				(mappingSchema: this, callback: onEntityDescriptorCreated ?? EntityDescriptorCreatedCallback),
 				static (o, context) =>
 				{
@@ -1880,18 +1890,38 @@ namespace LinqToDB.Mapping
 					// A type mapped by an inheritance root is built by that root, as a part of the root's complete
 					// descriptor graph (see EntityDescriptor.InitInheritanceMapping), so it is never handed out before
 					// its hierarchy-level state is set. Its descriptor-created callback was invoked by the root.
+					//
+					// While the root is being built, the types it maps never reach this factory (see above), and a type of
+					// its hierarchy it does not map is built on its own: asking for the root would build it again.
 					if (EntityDescriptor.FindInheritanceRootType(context.mappingSchema, o.Key.entityType) is { } rootType
-						&& context.mappingSchema.GetEntityDescriptor(rootType, context.callback).TryGetInheritanceMember(o.Key.entityType, out var member))
+						&& EntityDescriptor.FindRootBuild(rootType, o.Key.schemaId) == null
+						&& context.mappingSchema.GetEntityDescriptor(rootType, context.callback).TryGetInheritanceMember(o.Key.entityType, out var rootMember))
 					{
-						return member;
+						return rootMember;
 					}
 
 					var edNew = new EntityDescriptor(context.mappingSchema, o.Key.entityType, context.callback);
-					context.callback?.Invoke(context.mappingSchema, edNew);
+
+					if (context.callback != null && ReferenceEquals(edNew.InheritanceRoot, edNew))
+					{
+						var build = EntityDescriptor.EnterRootBuild(edNew, o.Key.schemaId);
+
+						try
+						{
+							context.callback(context.mappingSchema, edNew);
+						}
+						finally
+						{
+							EntityDescriptor.ExitRootBuild(build);
+						}
+					}
+					else
+					{
+						context.callback?.Invoke(context.mappingSchema, edNew);
+					}
+
 					return edNew;
 				});
-
-			return ed;
 		}
 
 		/// <summary>
