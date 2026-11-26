@@ -225,8 +225,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToLinqToDB()
 				.ToArray();
 
-			pivoted.Length.ShouldBe(ctx.Products.Select(p => p.SupplierId).Distinct().Count());
+			var suppliers = ctx.Products
+				.Select(p => p.SupplierId)
+				.Distinct()
+				.Count();
+
+			var products = ctx.Products.Count();
+
+			pivoted.Length.ShouldBe(suppliers);
 			pivoted.ShouldAllBe(r => r.Cells.Store.Count == 2);
+			pivoted
+				.Sum(r => r.Cells.Get<int>("False") + r.Cells.Get<int>("True"))
+				.ShouldBe(products);
 
 			Action withoutLinqToDB = () => pivotQuery.ToArray();
 

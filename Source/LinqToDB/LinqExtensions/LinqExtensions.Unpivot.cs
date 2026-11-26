@@ -27,7 +27,7 @@ namespace LinqToDB
 		/// <typeparam name="TValue">Common type of the unpivoted columns.</typeparam>
 		/// <typeparam name="TResult">Result record type.</typeparam>
 		/// <param name="source">Source query.</param>
-		/// <param name="resultSelector">Projection over the source row, the unpivoted column's name, and its value.</param>
+		/// <param name="resultSelector">Projection over the source row, the unpivoted column's name, and its value. The name is the column's mapped name; a column the mapping does not carry - a member of a projected object, a pivot cell - is named by its member or cell name, or by its member path (<c>Total.Y2000</c>) when another unpivoted column would read the same name.</param>
 		/// <param name="column">First column to unpivot (at least one is required).</param>
 		/// <param name="columns">Additional columns to unpivot.</param>
 		/// <returns>Query producing one row per (source-row, unpivoted column).</returns>
@@ -50,7 +50,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">Result record type.</typeparam>
 		/// <param name="source">Source query.</param>
 		/// <param name="nulls">Whether rows with a NULL value cell are excluded (default) or kept.</param>
-		/// <param name="resultSelector">Projection over the source row, the unpivoted column's name, and its value.</param>
+		/// <param name="resultSelector">Projection over the source row, the unpivoted column's name, and its value. The name is the column's mapped name; a column the mapping does not carry - a member of a projected object, a pivot cell - is named by its member or cell name, or by its member path (<c>Total.Y2000</c>) when another unpivoted column would read the same name.</param>
 		/// <param name="column">First column to unpivot (at least one is required).</param>
 		/// <param name="columns">Additional columns to unpivot.</param>
 		/// <returns>Query producing one row per (source-row, unpivoted column).</returns>

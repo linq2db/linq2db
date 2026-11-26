@@ -282,7 +282,7 @@ namespace Tests.Linq
 
 			noColumnName   .ShouldThrow<System.ArgumentException>().Message.ShouldContain("at least one column");
 			emptyColumnName.ShouldThrow<System.ArgumentException>().Message.ShouldContain("index 1 is empty");
-			computedColumn .ShouldThrow<LinqToDBException>().Message.ShouldContain("simple member access");
+			computedColumn .ShouldThrow<LinqToDBException>().Message.ShouldContain("must be a member access");
 			noColumnGroup  .ShouldThrow<System.ArgumentException>().Message.ShouldContain("at least one column group");
 			emptyGroupName .ShouldThrow<System.ArgumentException>().Message.ShouldContain("group name at index 1 is empty");
 			nullGroupColumn.ShouldThrow<System.ArgumentException>().Message.ShouldContain("'H1' has a null column selector");

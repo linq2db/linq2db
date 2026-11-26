@@ -24,7 +24,7 @@ const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotReadsQueryParameter 
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotSelectAfterCells = "Select projects each pivoted value itself, so it cannot follow Cell or Cells." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotTerminalNotAMember = "'{0}' must be the value of a member or a constructor argument in the projection." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotValueEmptyName = "Pivot value '{0}' produced an empty column name." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotColumnSelector = "Unpivot column selector must be a simple member access (e.g. x => x.Jan)." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotColumnSelector = "Unpivot column selector must be a member access (e.g. x => x.Jan) or a pivot cell read with a name that does not depend on the row, typed by Get<T> or a cast (e.g. x => (decimal?)x.Cells[name])." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotEmptyColumnName = "Column name at index {0} is empty." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotEmptyGroupName = "Column group name at index {0} is empty." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotNeedsColumnGroup = "An unpivot needs at least one column group." -> string!

@@ -1081,14 +1081,10 @@ namespace Tests.Linq
 				.ToArray()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ThenBy(r => r.Name, StringComparer.Ordinal)
-				.Select(r => (r.Key, r.Name))
+				.Select(r => (r.Key, r.Name, r.Value))
 				.ToArray();
 
-			result
-				.Select(r => r.Name)
-				.Distinct()
-				.OrderBy(n => n, StringComparer.Ordinal)
-				.ShouldBe(new[] { "Top.Y2000", "Total.Y2000" });
+			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Top.Y2000", 30m), ("A", "Total.Y2000", 40m), ("B", "Top.Y2000", 5m), ("B", "Total.Y2000", 5m) });
 		}
 
 		/// <summary>The cells go into a member of an anonymous type, which cannot carry a dynamic-columns store.</summary>
@@ -1980,6 +1976,11 @@ namespace Tests.Linq
 			((object)result[0].Cells.Y2010).ShouldBe(20m);
 			((object)result[1].Cells.Y2000).ShouldBe(5m);
 			((object)result[1].Cells.Y2010).ShouldBe(15m);
+
+			((PivotCells)result[0].Cells)
+				.GetDynamicMemberNames()
+				.OrderBy(n => n, StringComparer.Ordinal)
+				.ShouldBe(new[] { "Y2000", "Y2010" });
 
 			Action absentCell = () => _ = result[0].Cells.Y2020;
 
