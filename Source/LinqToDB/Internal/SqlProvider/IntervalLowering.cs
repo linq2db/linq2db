@@ -332,9 +332,10 @@ namespace LinqToDB.Internal.SqlProvider
 				whole = scale == 1 ? amount : factory.Multiply(longType, amount, scale);
 			}
 
-			return factory.Cast(
-				TryGetWrap(element.Unit, element.Within, out var wrap) ? truncateRemainder(whole, wrap) : whole,
-				element.Type);
+			if (TryGetWrap(element.Unit, element.Within, out var wrap))
+				return factory.Cast(truncateRemainder(whole, wrap), element.Type);
+
+			return CastWhole(factory, whole, element.Type);
 		}
 
 		static ISqlExpression? Total(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalUnit unit, DbDataType resultType)
@@ -389,7 +390,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (TryGetWrap(unit, within, out var wrap))
 				return factory.Cast(truncateRemainder(whole, wrap), resultType);
 
-			// a division truncated by a cast to its integer type (SAP HANA, Informix) is cast to the result type once
+			return CastWhole(factory, whole, resultType);
+		}
+
+		// a division truncated by a cast to its integer type (SAP HANA, Informix) is cast to the result type once
+		static ISqlExpression CastWhole(ISqlExpressionFactory factory, ISqlExpression whole, DbDataType resultType)
+		{
 			if (whole is SqlCastExpression { IsMandatory: true } truncated
 				&& truncated.ToType.SystemType.IsIntegerType
 				&& resultType.SystemType.IsIntegerType)
