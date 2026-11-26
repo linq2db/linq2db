@@ -1587,6 +1587,21 @@ namespace Tests.Linq
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}
 
+		// SAP HANA writes CharIndex with a start position as an additive template that * must bracket (rows with a match
+		// only: for a missing match the template answers the start, not 0)
+		[Test]
+		public void CharIndexWithStartUnderMultiplication([IncludeDataSources(true, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => p.FirstName.Contains("o"))
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.FirstName, 1) * 2));
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void Left([DataSources] string context)
 		{
