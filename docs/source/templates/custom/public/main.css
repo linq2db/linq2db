@@ -1,9 +1,13 @@
 .dropdown-menu { white-space:nowrap }
 
 /* A short page has no vertical scrollbar where it takes room (Windows); reserving its gutter keeps every
-   page the same width, so the navbar and centered content do not shift when moving between pages. */
-html {
-	scrollbar-gutter: stable;
+   page the same width, so the navbar and centered content do not shift when moving between pages.
+   Not below 768px: there the article TOC is a Bootstrap offcanvas, whose scroll lock adds the
+   scrollbar's width as padding and would shift the page while it is open. */
+@media (min-width: 768px) {
+	html {
+		scrollbar-gutter: stable;
+	}
 }
 
 /* Links in the landing page's indigo, AA on both backgrounds (6.3:1 on white, 7.7:1 on #212529) */
@@ -269,17 +273,17 @@ body:has(.landing-hero) {
 	outline-offset: -2px;
 }
 
-/* Temp Table runs on SQLite only: its tab shows a note instead of the switcher */
+/* Temp Table (tab 8) runs on SQLite only: its tab shows a note instead of the switcher */
 .demo-dialects-note {
 	display: none;
 	color: rgba(255,255,255,0.7);
 }
 
-.demo-container:has(#demo-tab-7:checked) .demo-dialects > :not(.demo-dialects-note) {
+.demo-container:has(#demo-tab-8:checked) .demo-dialects > :not(.demo-dialects-note) {
 	display: none;
 }
 
-.demo-container:has(#demo-tab-7:checked) .demo-dialects-note {
+.demo-container:has(#demo-tab-8:checked) .demo-dialects-note {
 	display: inline;
 }
 
@@ -296,6 +300,7 @@ body:has(.landing-hero) {
 .demo-container:has(#demo-tab-5:checked) .demo-panel-5,
 .demo-container:has(#demo-tab-6:checked) .demo-panel-6,
 .demo-container:has(#demo-tab-7:checked) .demo-panel-7,
+.demo-container:has(#demo-tab-8:checked) .demo-panel-8,
 .demo-container:has(#demo-dialect-sqlserver:checked)  .demo-sql-variant[data-dialect="sqlserver"],
 .demo-container:has(#demo-dialect-postgresql:checked) .demo-sql-variant[data-dialect="postgresql"],
 .demo-container:has(#demo-dialect-mysql:checked)      .demo-sql-variant[data-dialect="mysql"],
@@ -311,8 +316,9 @@ body:has(.landing-hero) {
 	color: rgba(255,255,255,0.7);
 }
 
-/* "<topic> in the docs →" under each example */
-.demo-more {
+/* "<topic> in the docs →" under each example; an xref: link comes out of docfx with class "xref" instead */
+.demo-more,
+.demo-panel > a.xref {
 	display: block;
 	padding: 0.45rem 1rem;
 	border-top: 1px solid rgba(255,255,255,0.06);
@@ -322,7 +328,8 @@ body:has(.landing-hero) {
 	text-decoration: none;
 }
 
-.demo-more:hover {
+.demo-more:hover,
+.demo-panel > a.xref:hover {
 	color: #fff;
 	text-decoration: underline;
 }

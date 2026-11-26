@@ -31,7 +31,8 @@ _disableContribution: true
 <input type="radio" name="demo-tab" id="demo-tab-4" class="demo-radio" /><label for="demo-tab-4" class="demo-tab">CTE</label>
 <input type="radio" name="demo-tab" id="demo-tab-5" class="demo-radio" /><label for="demo-tab-5" class="demo-tab">Window Functions</label>
 <input type="radio" name="demo-tab" id="demo-tab-6" class="demo-radio" /><label for="demo-tab-6" class="demo-tab">Merge</label>
-<input type="radio" name="demo-tab" id="demo-tab-7" class="demo-radio" /><label for="demo-tab-7" class="demo-tab">Temp Table</label>
+<input type="radio" name="demo-tab" id="demo-tab-7" class="demo-radio" /><label for="demo-tab-7" class="demo-tab">Upsert</label>
+<input type="radio" name="demo-tab" id="demo-tab-8" class="demo-radio" /><label for="demo-tab-8" class="demo-tab">Temp Table</label>
 </div>
 <div class="demo-dialects" role="radiogroup" aria-labelledby="demo-dialects-label">
 <span id="demo-dialects-label" class="demo-dialects-label">SQL for</span>
@@ -550,15 +551,11 @@ _disableContribution: true
         p.Name,
         p.Price,
         Category = p.Category.Name,
-        RowNum = <span class="code-type">Sql</span>.Ext.RowNumber()
-            .Over()
+        RowNum = <span class="code-type">Sql</span>.Window.RowNumber(w =&gt; w
             .PartitionBy(p.CategoryId)
-            .OrderByDesc(p.Price)
-            .ToValue(),
-        Total  = <span class="code-type">Sql</span>.Ext.Sum(p.Price)
-            .Over()
-            .PartitionBy(p.CategoryId)
-            .ToValue()
+            .OrderByDesc(p.Price)),
+        Total  = <span class="code-type">Sql</span>.Window.Sum(p.Price, w =&gt; w
+            .PartitionBy(p.CategoryId))
     };</pre>
 </div>
 <div class="demo-pane">
@@ -755,8 +752,86 @@ _disableContribution: true
 </div>
 <a class="demo-more" href="documentation/sql/merge/merge-api.md">Merge API in the docs <i class="bi bi-arrow-right"></i></a>
 </div>
-<!-- Temp Table -->
+<!-- Upsert -->
 <div class="demo-panel demo-panel-7">
+<div class="demo-split">
+<div class="demo-pane">
+<div class="demo-pane-label">C# LINQ</div>
+<pre class="demo-code"><span class="code-comment">// add to the stock, or start it</span>
+<span class="code-keyword">var</span> item = <span class="code-keyword">new</span> <span class="code-type">Stock</span>
+{
+    ProductId = <span class="code-number">1</span>,
+    Quantity  = <span class="code-number">5</span>
+};
+&#10;db.GetTable&lt;<span class="code-type">Stock</span>&gt;()
+    .Upsert(item, u =&gt; u.Update(v =&gt; v.Set(
+        x =&gt; x.Quantity,
+        (t, s) =&gt; t.Quantity + s.Quantity)));</pre>
+</div>
+<div class="demo-pane">
+<!-- sql-demo:upsert -->
+<div class="demo-sql-variant" data-dialect="sqlserver">
+<div class="demo-pane-label">Generated SQL · SQL Server</div>
+<pre class="demo-code demo-sql" data-sql="upsert/sqlserver"><span class="code-keyword">MERGE INTO</span> [Stock] [t1]
+<span class="code-keyword">USING</span> (<span class="code-keyword">SELECT</span> <span class="code-number">1</span> <span class="code-keyword">AS</span> [ProductId]) [s] <span class="code-keyword">ON</span>
+([t1].[ProductId] = [s].[ProductId])
+<span class="code-keyword">WHEN MATCHED THEN</span>
+    <span class="code-keyword">UPDATE SET</span>
+        [Quantity] = [t1].[Quantity] + <span class="code-number">5</span>
+<span class="code-keyword">WHEN NOT MATCHED THEN</span>
+    <span class="code-keyword">INSERT</span>
+    ([ProductId], [Quantity])
+    <span class="code-keyword">VALUES</span>
+    (<span class="code-number">1</span>, <span class="code-number">5</span>);</pre>
+</div>
+<div class="demo-sql-variant" data-dialect="postgresql">
+<div class="demo-pane-label">Generated SQL · PostgreSQL</div>
+<pre class="demo-code demo-sql" data-sql="upsert/postgresql"><span class="code-keyword">INSERT INTO</span> "Stock" <span class="code-keyword">AS</span> t1
+("ProductId", "Quantity")
+<span class="code-keyword">VALUES</span>
+(<span class="code-number">1</span>, <span class="code-number">5</span>)
+<span class="code-keyword">ON CONFLICT</span> ("ProductId") <span class="code-keyword">DO UPDATE SET</span>
+    "Quantity" = t1."Quantity" + <span class="code-number">5</span></pre>
+</div>
+<div class="demo-sql-variant" data-dialect="mysql">
+<div class="demo-pane-label">Generated SQL · MySQL</div>
+<pre class="demo-code demo-sql" data-sql="upsert/mysql"><span class="code-keyword">INSERT INTO</span> `Stock`
+(`ProductId`, `Quantity`)
+<span class="code-keyword">VALUES</span>
+(<span class="code-number">1</span>, <span class="code-number">5</span>)
+<span class="code-keyword">ON DUPLICATE KEY UPDATE</span>
+    `Quantity` = `Quantity` + <span class="code-number">5</span></pre>
+</div>
+<div class="demo-sql-variant" data-dialect="oracle">
+<div class="demo-pane-label">Generated SQL · Oracle</div>
+<pre class="demo-code demo-sql" data-sql="upsert/oracle"><span class="code-keyword">MERGE INTO</span> "Stock" t1
+<span class="code-keyword">USING</span> (<span class="code-keyword">SELECT</span> <span class="code-number">1</span> <span class="code-keyword">AS</span> "ProductId" <span class="code-keyword">FROM</span> SYS.DUAL) s <span class="code-keyword">ON</span>
+(t1."ProductId" = s."ProductId")
+<span class="code-keyword">WHEN MATCHED THEN</span>
+    <span class="code-keyword">UPDATE SET</span>
+        "Quantity" = t1."Quantity" + <span class="code-number">5</span>
+<span class="code-keyword">WHEN NOT MATCHED THEN</span>
+    <span class="code-keyword">INSERT</span>
+    ("ProductId", "Quantity")
+    <span class="code-keyword">VALUES</span>
+    (<span class="code-number">1</span>, <span class="code-number">5</span>)</pre>
+</div>
+<div class="demo-sql-variant" data-dialect="sqlite">
+<div class="demo-pane-label">Generated SQL · SQLite</div>
+<pre class="demo-code demo-sql" data-sql="upsert/sqlite"><span class="code-keyword">INSERT INTO</span> [Stock] <span class="code-keyword">AS</span> [t1]
+([ProductId], [Quantity])
+<span class="code-keyword">VALUES</span>
+(<span class="code-number">1</span>, <span class="code-number">5</span>)
+<span class="code-keyword">ON CONFLICT</span> ([ProductId]) <span class="code-keyword">DO UPDATE SET</span>
+    [Quantity] = [t1].[Quantity] + <span class="code-number">5</span></pre>
+</div>
+<!-- /sql-demo:upsert -->
+</div>
+</div>
+<a class="demo-more" href="xref:linq2db::LinqToDB.LinqExtensions.Upsert*">Upsert in the API reference <i class="bi bi-arrow-right"></i></a>
+</div>
+<!-- Temp Table -->
+<div class="demo-panel demo-panel-8">
 <div class="demo-split">
 <div class="demo-pane">
 <div class="demo-pane-label">C# Code</div>

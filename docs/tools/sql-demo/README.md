@@ -5,14 +5,14 @@ The landing page at `docs/source/index.md` features a tabbed demo showing C# LIN
 ## Architecture
 
 - **C# side**: Hand-written syntax-highlighted HTML using `<span>` classes (`code-keyword`, `code-type`, `code-string`, `code-number`, `code-comment`).
-- **SQL side**: Written by `SqlDemoGenerator.UpdateLandingPage` between `<!-- sql-demo:<tab> -->` and `<!-- /sql-demo:<tab> -->`: one `demo-sql-variant` block per dialect, holding linq2db's `ToSqlQuery()` output laid out for the pane and highlighted with the same span classes. A dialect that cannot run a tab's query (MERGE on MySQL and SQLite) gets a note instead. Do not edit these regions by hand.
-- **Temp Table**: The exception. It shows the statements `CreateTempTable` really executes on SQLite (CREATE, the bulk copy INSERT, the DROP from `Dispose`), formatted by hand with numbered `--` comments and the 500-row `VALUES` list abbreviated. It has no dialect switcher and no check.
+- **SQL side**: Written by `SqlDemoGenerator.UpdateLandingPage` between `<!-- sql-demo:<tab> -->` and `<!-- /sql-demo:<tab> -->`: one `demo-sql-variant` block per dialect, holding the SQL linq2db generates for the tab — `ToSqlQuery()` for a query, the commands it sends for an executing call such as Upsert — laid out for the pane and highlighted with the same span classes. A dialect the tab names as unsupported (MERGE on MySQL and SQLite) gets a note instead, and the generator checks that the dialect still refuses it. Do not edit these regions by hand.
+- **Temp Table**: The exception. It shows the statements that `CreateTempTable` and the join really execute on SQLite in memory (CREATE, the bulk copy INSERT, the SELECT, the DROP from `Dispose`), formatted by hand with numbered `--` comments and the 500-row `VALUES` list abbreviated. It has no dialect switcher and no check; `main.css` hides the switcher for it with two `#demo-tab-8` rules.
 - **Tabs and dialects**: Pure CSS — two `role="radiogroup"` bars of visually hidden but focusable `<input type="radio">` elements, each right before its `<label>`. `main.css` shows the panel and the dialect block whose radio is checked with `.demo-container:has(#… :checked)` rules (no JavaScript). Keyboard users switch with the arrow keys.
 - **Width**: The generator keeps lines within `SqlHtml.MaxWidth` (56) where it finds a break point; the widest SQL line today is 58 characters, the widest C# line 47. `main.css` is sized for that: the panes split the demo 47:58, and the demo sits beside the text from 1220px and under it below that. A wider line scrolls sideways, so break it or adjust the split and that breakpoint.
 
 ## How to update the SQL panes
 
-`SqlDemoGenerator.cs` holds one method per tab, with the same C# as the tab, and renders it for every dialect offline: `ToSqlQuery` never opens a connection. It is a reference copy and is not compiled where it lives.
+`SqlDemoGenerator.cs` holds one method per tab, with the same C# as the tab, and renders it for every dialect offline: a query through `ToSqlQuery`, which never opens a connection, and an executing call through `CaptureConnection`, which records the commands instead of running them. That SQL was compared with what the same calls send to SQL Server 2022, PostgreSQL 16, MySQL 8, Oracle 23 and SQLite, and was equal. It is a reference copy and is not compiled where it lives.
 
 ### 1. Copy the generator into the playground
 
@@ -26,7 +26,7 @@ cp docs/tools/sql-demo/SqlDemoGenerator.cs Tests/Tests.Playground/SqlDemoGenerat
 
 ### 2. Edit the tab methods if a tab changes
 
-Keep each method's C# identical to its tab's C# pane, except Merge (stops before the executing `.Merge()`).
+Keep each method's C# identical to its tab's C# pane, except Merge, which stops before the executing `.Merge()`, and Temp Table, which ends the join with `ToList()` so it runs.
 
 ### 3. Regenerate the panes
 
@@ -44,7 +44,7 @@ dotnet test --project Tests/Tests.Playground/Tests.Playground.csproj -c Testing 
   --filter "FullyQualifiedName~SqlDemoGenerator" --output detailed --test-progress
 ```
 
-`LandingPageIsCurrent` fails while any region differs from what the current linq2db generates; run it after a linq2db change that may alter the SQL. `TempTable` prints the executed SQLite statements for the hand-formatted Temp Table pane.
+`LandingPageIsCurrent` fails while any region differs from what the current linq2db generates, and on a region no tab owns; run it after a linq2db change that may alter the SQL. `TempTable` prints the executed SQLite statements for the hand-formatted Temp Table pane.
 
 ### 5. Copy the generator back and delete the playground copy
 
@@ -57,8 +57,8 @@ rm Tests/Tests.Playground/SqlDemoGenerator.cs
 
 1. Add `<input type="radio" name="demo-tab" id="demo-tab-N" class="demo-radio" /><label for="demo-tab-N" class="demo-tab">…</label>` to `.demo-tabs`.
 2. Add a `.demo-panel-N` div to `.demo-panels`: the C# pane, an SQL pane holding an empty `<!-- sql-demo:<id> -->` / `<!-- /sql-demo:<id> -->` region, and a `demo-more` link to the matching article.
-3. Add `.demo-container:has(#demo-tab-N:checked) .demo-panel-N` to the visibility rule in `docs/source/templates/custom/public/main.css`.
-4. Add the tab's method and a `Tab` entry with the same `<id>` to `SqlDemoGenerator.cs`, then run `UpdateLandingPage`.
+3. Add `.demo-container:has(#demo-tab-N:checked) .demo-panel-N` to the visibility rule in `docs/source/templates/custom/public/main.css`. If the new tab goes before Temp Table, renumber the tabs after it and move the two Temp Table rules (`#demo-tab-8` today) with it.
+4. Add the tab's method and a `Tab` entry with the same `<id>` to `SqlDemoGenerator.cs` (`Sql` for a query, `Execute` for a call that runs), then run `UpdateLandingPage`.
 
 Adding a dialect is the same: a radio and label in `.demo-dialects`, a `Dialect` entry in the generator, and a `.demo-container:has(#demo-dialect-<id>:checked) .demo-sql-variant[data-dialect="<id>"]` line in `main.css`.
 

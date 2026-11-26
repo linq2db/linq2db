@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,6 +17,8 @@ using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
+using Microsoft.Data.Sqlite;
+
 using NUnit.Framework;
 
 using Shouldly;
@@ -24,10 +28,12 @@ namespace Tests.Playground
 	// Reference copy of the generator behind the landing page demo (docs/source/index.md).
 	// Not compiled here: copy it into Tests/Tests.Playground to run it, see README.md next to it.
 	//
-	// Each tab's query is rendered for every dialect of the demo's SQL switcher. UpdateLandingPage writes
-	// the result into index.md, LandingPageIsCurrent fails while index.md shows anything else.
-	// TempTable records the statements CreateTempTable really executes on SQLite; that pane is formatted
-	// by hand and not checked.
+	// Each tab is rendered for every dialect of the demo's SQL switcher, offline: a query through
+	// ToSqlQuery, an executing call (Upsert) through a connection that records the commands it is sent
+	// instead of running them. UpdateLandingPage writes the result into index.md, LandingPageIsCurrent
+	// fails while index.md shows anything else.
+	// TempTable records the statements CreateTempTable and the join really execute on SQLite in memory;
+	// that pane is formatted by hand and not checked.
 	[TestFixture]
 	public class SqlDemoGenerator
 	{
@@ -62,6 +68,14 @@ namespace Tests.Playground
 			[Column]               public int     ProductId { get; set; }
 			[Column]               public int     Quantity  { get; set; }
 			[Column]               public decimal UnitPrice { get; set; }
+		}
+
+		// Upsert needs the key in the INSERT, so not Product's identity column
+		[Table("Stock")]
+		public class Stock
+		{
+			[PrimaryKey] public int ProductId { get; set; }
+			[Column]     public int Quantity  { get; set; }
 		}
 
 		#endregion
@@ -158,15 +172,11 @@ namespace Tests.Playground
 					p.Name,
 					p.Price,
 					Category = p.Category.Name,
-					RowNum = Sql.Ext.RowNumber()
-						.Over()
+					RowNum = Sql.Window.RowNumber(w => w
 						.PartitionBy(p.CategoryId)
-						.OrderByDesc(p.Price)
-						.ToValue(),
-					Total  = Sql.Ext.Sum(p.Price)
-						.Over()
-						.PartitionBy(p.CategoryId)
-						.ToValue()
+						.OrderByDesc(p.Price)),
+					Total  = Sql.Window.Sum(p.Price, w => w
+						.PartitionBy(p.CategoryId))
 				};
 
 			return query.ToSqlQuery(_sqlOptions).Sql;
@@ -204,7 +214,31 @@ namespace Tests.Playground
 			return merge.ToSqlQuery(_sqlOptions).Sql;
 		}
 
-		sealed record Tab(string Id, Func<DataConnection, string> Sql, string? Unsupported = null);
+		// Executes: the SQL is what the capturing connection was sent (see Render).
+		static void Upsert(DataConnection db)
+		{
+			// add to the stock, or start it
+			var item = new Stock
+			{
+				ProductId = 1,
+				Quantity  = 5
+			};
+
+			db.GetTable<Stock>()
+				.Upsert(item, u => u.Update(v => v.Set(
+					x => x.Quantity,
+					(t, s) => t.Quantity + s.Quantity)));
+		}
+
+		/// <param name="Sql">A query tab: the SQL its ToSqlQuery renders.</param>
+		/// <param name="Execute">An executing tab: the call to run against the capturing connection.</param>
+		/// <param name="UnsupportedOn">Dialects that must refuse the tab; each gets <paramref name="Unsupported"/> as its note.</param>
+		sealed record Tab(
+			string                       Id,
+			Func<DataConnection, string>? Sql           = null,
+			Action<DataConnection>?       Execute       = null,
+			string[]?                     UnsupportedOn = null,
+			string?                       Unsupported   = null);
 
 		static readonly Tab[] _tabs =
 		[
@@ -213,7 +247,8 @@ namespace Tests.Playground
 			new("expression-method", ExpressionMethod),
 			new("cte",               Cte),
 			new("window-functions",  WindowFunctions),
-			new("merge",             Merge, "{0} has no MERGE statement."),
+			new("merge",             Merge, UnsupportedOn: ["mysql", "sqlite"], Unsupported: "{0} has no MERGE statement."),
+			new("upsert",            Execute: Upsert),
 		];
 
 		#endregion
@@ -222,7 +257,9 @@ namespace Tests.Playground
 
 		sealed record Dialect(string Id, string Name, Func<DataOptions, DataOptions> Use);
 
-		// No server is needed: ToSqlQuery never opens the connection.
+		// No server is needed: ToSqlQuery never opens the connection, and an executing tab runs against
+		// CaptureConnection. The SQL equals what these calls send to SQL Server 2022, PostgreSQL 16,
+		// MySQL 8, Oracle 23 and SQLite (compared on live databases, 2026-11-26).
 		static readonly Dialect[] _dialects =
 		[
 			new("sqlserver",  "SQL Server", o => o.UseSqlServer ("Server=offline",       SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient)),
@@ -236,19 +273,94 @@ namespace Tests.Playground
 
 		static readonly SqlGenerationOptions _sqlOptions = new() { InlineParameters = true };
 
-		// null: the dialect cannot run this tab's query
+		// null: the dialect is one the tab names as unsupported. It must still refuse the tab, or its note
+		// would be false; any other dialect's failure propagates.
 		static string? Generate(Tab tab, Dialect dialect)
 		{
-			using var db = new DataConnection(dialect.Use(new DataOptions()));
+			if (tab.UnsupportedOn?.Contains(dialect.Id) != true)
+				return Render(tab, dialect);
 
 			try
 			{
-				return tab.Sql(db);
+				Render(tab, dialect);
 			}
-			catch (LinqToDBException) when (tab.Unsupported != null)
+			catch (LinqToDBException)
 			{
 				return null;
 			}
+
+			throw new InvalidOperationException($"{dialect.Name} now runs the {tab.Id} tab: drop it from UnsupportedOn");
+		}
+
+		static string Render(Tab tab, Dialect dialect)
+		{
+			if (tab.Sql != null)
+			{
+				using var db = new DataConnection(dialect.Use(new DataOptions()));
+				return tab.Sql(db);
+			}
+
+			var capture = new CaptureConnection();
+
+			using (var db = new DataConnection(dialect.Use(new DataOptions()).UseConnectionFactory(_ => capture)))
+			{
+				db.InlineParameters = true;
+				tab.Execute!(db);
+			}
+
+			return string.Join("\n\n", capture.Commands);
+		}
+
+		/// <summary>Records each command's text and reports one affected row; never connects.</summary>
+		sealed class CaptureConnection : DbConnection
+		{
+			ConnectionState _state;
+
+			public readonly List<string> Commands = new();
+
+			[System.Diagnostics.CodeAnalysis.AllowNull]
+			public override string          ConnectionString { get; set; } = "";
+			public override string          Database      => "";
+			public override string          DataSource    => "";
+			public override string          ServerVersion => "";
+			public override ConnectionState State         => _state;
+
+			public override void ChangeDatabase(string databaseName) { }
+			public override void Close() => _state = ConnectionState.Closed;
+			public override void Open()  => _state = ConnectionState.Open;
+
+			protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) => throw new NotSupportedException();
+			protected override DbCommand     CreateDbCommand()                                => new CaptureCommand(this);
+		}
+
+		sealed class CaptureCommand(CaptureConnection connection) : DbCommand
+		{
+			// parameters are inlined; the collection only has to exist
+			readonly DbParameterCollection _parameters = new SqliteCommand().Parameters;
+
+			[System.Diagnostics.CodeAnalysis.AllowNull]
+			public override string          CommandText       { get; set; } = "";
+			public override int             CommandTimeout    { get; set; }
+			public override CommandType     CommandType       { get; set; }
+			public override bool            DesignTimeVisible { get; set; }
+			public override UpdateRowSource UpdatedRowSource  { get; set; }
+
+			protected override DbConnection?         DbConnection          { get; set; } = connection;
+			protected override DbParameterCollection DbParameterCollection => _parameters;
+			protected override DbTransaction?        DbTransaction         { get; set; }
+
+			public override void    Cancel()          { }
+			public override void    Prepare()         { }
+			public override object? ExecuteScalar()   => throw new NotSupportedException(CommandText);
+
+			public override int ExecuteNonQuery()
+			{
+				connection.Commands.Add(CommandText);
+				return 1;
+			}
+
+			protected override DbParameter  CreateDbParameter()                             => new SqliteParameter();
+			protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => throw new NotSupportedException(CommandText);
 		}
 
 		/// <summary>The SQL pane of one tab: a block per dialect, ready to paste into index.md.</summary>
@@ -284,7 +396,15 @@ namespace Tests.Playground
 			var path    = FindLandingPage();
 			var page    = File.ReadAllText(path).Replace("\r\n", "\n");
 			var tabs    = _tabs.ToDictionary(t => t.Id);
-			var updated = _region.Replace(page, m => m.Groups["open"].Value + RenderTab(tabs[m.Groups["id"].Value]) + m.Groups["close"].Value);
+			var updated = _region.Replace(page, m =>
+			{
+				var id = m.Groups["id"].Value;
+
+				if (!tabs.TryGetValue(id, out var tab))
+					throw new InvalidOperationException($"index.md has a <!-- sql-demo:{id} --> region but the generator has no '{id}' tab");
+
+				return m.Groups["open"].Value + RenderTab(tab) + m.Groups["close"].Value;
+			});
 
 			File.WriteAllText(path, updated);
 
@@ -313,6 +433,9 @@ namespace Tests.Playground
 				else if (body != RenderTab(tab))
 					stale.Add($"{tab.Id}: differs");
 			}
+
+			foreach (var id in shown.Keys.Except(_tabs.Select(t => t.Id)))
+				stale.Add($"{id}: region with no generator tab");
 
 			stale.ShouldBeEmpty("docs/source/index.md is out of date, run UpdateLandingPage: " + string.Join("; ", stale));
 		}
@@ -344,12 +467,14 @@ namespace Tests.Playground
 
 			using var db = new DataConnection(options);
 
+			// the join needs Products; its CREATE is not part of the tab
+			db.CreateTable<Product>();
+			executed.Clear();
+
 			// Populate temp table from data
 			var ids = Enumerable
 				.Range(1, 500)
 				.Select(i => new { Id = i });
-
-			string querySql;
 
 			using (var tmp =
 				db.CreateTempTable(
@@ -367,14 +492,12 @@ namespace Tests.Playground
 						p.Price
 					};
 
-				querySql = query.ToSqlQuery(_sqlOptions).Sql;
+				query.ToList();
 			}
 
-			// CREATE, the bulk copy INSERT and the DROP issued by Dispose, in execution order
+			// CREATE, the bulk copy INSERT, the join and the DROP issued by Dispose, in execution order
 			TestContext.Out.WriteLine("=== Temp Table (executed) ===");
 			TestContext.Out.WriteLine(executed.ToString());
-			TestContext.Out.WriteLine("=== Temp Table (query) ===");
-			TestContext.Out.WriteLine(querySql);
 		}
 
 		/// <summary>
@@ -392,9 +515,10 @@ namespace Tests.Playground
 
 			static readonly HashSet<string> _keywords = new(StringComparer.OrdinalIgnoreCase)
 			{
-				"ALL", "AND", "AS", "ASC", "BY", "CASE", "CROSS", "DESC", "DISTINCT", "ELSE", "END", "EXISTS",
-				"FETCH", "FIRST", "FROM", "FULL", "GROUP", "HAVING", "IDENTITY_INSERT", "IN", "INNER", "INSERT",
-				"INTO", "IS", "JOIN", "LEFT", "LIMIT", "MATCHED", "MERGE", "NEXT", "NOT", "NULL", "OFF", "OFFSET",
+				"ALL", "AND", "AS", "ASC", "BY", "CASE", "CONFLICT", "CROSS", "DESC", "DISTINCT", "DO", "DUPLICATE",
+				"ELSE", "END", "EXISTS", "FETCH", "FIRST", "FROM", "FULL", "GROUP", "HAVING", "IDENTITY_INSERT", "IN",
+				"INNER", "INSERT", "INTO", "IS", "JOIN", "KEY", "LEFT", "LIMIT", "MATCHED", "MERGE", "NEXT", "NOT",
+				"NULL", "OFF", "OFFSET",
 				"ON", "ONLY", "OR", "ORDER", "OUTER", "OVER", "OVERRIDING", "PARTITION", "RIGHT", "ROW", "ROWS",
 				"SELECT", "SET", "SYSTEM", "THEN", "TOP", "UNION", "UPDATE", "USING", "VALUE", "VALUES", "WHEN",
 				"WHERE", "WITH",
