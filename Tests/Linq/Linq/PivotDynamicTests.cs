@@ -164,9 +164,7 @@ namespace Tests.Linq
 
 			Action act = () => query.ToList();
 
-			act.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNameFactoryRequired);
+			Assert.That(() => act(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNameFactoryRequired));
 		}
 
 		[Table]
@@ -654,7 +652,8 @@ namespace Tests.Linq
 			sql.ShouldContain("HAVING");
 
 			// Y2010 in the select list and in HAVING; Y2000 is never read.
-			Occurrences(sql, "WHEN").ShouldBe(2);
+			Occurrences(sql, "WHEN")
+				.ShouldBe(2);
 		}
 
 		/// <summary>
@@ -960,11 +959,16 @@ namespace Tests.Linq
 			var expected = Message(ErrorHelper.Pivot.Error_PivotCellNotFound, "Y2099");
 
 			Assert.That(
-				() => pivoted.Where(r => r.Cells.Get<decimal?>("Y2099") > 1).ToList(),
+				() => pivoted
+					.Where(r => r.Cells.Get<decimal?>("Y2099") > 1)
+					.ToList(),
 				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
 
 			Assert.That(
-				() => pivoted.Select(r => r.Cells.Get<decimal?>("Y2099")).Distinct().ToList(),
+				() => pivoted
+					.Select(r => r.Cells.Get<decimal?>("Y2099"))
+					.Distinct()
+					.ToList(),
 				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
 		}
 
@@ -1209,9 +1213,7 @@ namespace Tests.Linq
 
 			Action act = () => query.ToList();
 
-			act.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember, nameof(PivotCells.Store), nameof(PivotCells)));
+			Assert.That(() => act(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember, nameof(PivotCells.Store), nameof(PivotCells))));
 		}
 
 		// Call-site guards: each throws while the query is built, before any SQL.
@@ -1296,35 +1298,17 @@ namespace Tests.Linq
 			Action nullValuesAct      = () => nullValues.ToList();
 			Action selectAfterCellAct = () => selectAfterCell.ToList();
 
-			emptyNameAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotValueEmptyName, ""));
+			Assert.That(() => emptyNameAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotValueEmptyName, "")));
 
-			duplicateNameAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotDuplicateName, "Same"));
+			Assert.That(() => duplicateNameAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotDuplicateName, "Same")));
 
-			noCellAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate);
+			Assert.That(() => noCellAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate));
 
-			noTemplateAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate);
+			Assert.That(() => noTemplateAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate));
 
-			nullValuesAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set"));
+			Assert.That(() => nullValuesAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set")));
 
-			selectAfterCellAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotSelectAfterCells);
+			Assert.That(() => selectAfterCellAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotSelectAfterCells));
 		}
 
 		/// <summary>
@@ -1529,11 +1513,13 @@ namespace Tests.Linq
 			result[1].Cells["Y2000"].ShouldBe(5m);
 			result[1].Cells["Y2010"].ShouldBe(15m);
 
-			result[0].Cells.ContainsKey("Y2020").ShouldBeFalse();
+			result[0].Cells
+				.ContainsKey("Y2020")
+				.ShouldBeFalse();
 
 			Action absentCell = () => _ = result[0].Cells["Y2020"];
 
-			absentCell.ShouldThrow<KeyNotFoundException>();
+			Assert.That(() => absentCell(), Throws.TypeOf<KeyNotFoundException>());
 		}
 
 		static Expression<Func<IEnumerable<Sales>, string?>> MaxNote() => rows => rows.Max(x => x.Note);
@@ -1752,15 +1738,29 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0].Cell("SumY2000").ShouldBe(10);
-			result[0].Cell("AtY2000") .ShouldBe(new DateTime(2000, 1, 1));
-			result[0].Cell("SumY2010").ShouldBeNull();
-			result[0].Cell("AtY2010") .ShouldBeNull();
+			result[0]
+				.Cell("SumY2000")
+				.ShouldBe(10);
+			result[0]
+				.Cell("AtY2000") 
+				.ShouldBe(new DateTime(2000, 1, 1));
+			result[0]
+				.Cell("SumY2010")
+				.ShouldBeNull();
+			result[0]
+				.Cell("AtY2010") 
+				.ShouldBeNull();
 
 			result[1].Key.ShouldBe("B");
-			result[1].Cell("SumY2000").ShouldBeNull();
-			result[1].Cell("AtY2000") .ShouldBeNull();
-			result[1].Cell("SumY2010").ShouldBe(20);
+			result[1]
+				.Cell("SumY2000")
+				.ShouldBeNull();
+			result[1]
+				.Cell("AtY2000") 
+				.ShouldBeNull();
+			result[1]
+				.Cell("SumY2010")
+				.ShouldBe(20);
 		}
 
 		/// <summary>
@@ -1972,10 +1972,14 @@ namespace Tests.Linq
 
 			result.Count.ShouldBe(2);
 
-			((object)result[0].Cells.Y2000).ShouldBe(10m);
-			((object)result[0].Cells.Y2010).ShouldBe(20m);
-			((object)result[1].Cells.Y2000).ShouldBe(5m);
-			((object)result[1].Cells.Y2010).ShouldBe(15m);
+			((object)result[0].Cells.Y2000)
+				.ShouldBe(10m);
+			((object)result[0].Cells.Y2010)
+				.ShouldBe(20m);
+			((object)result[1].Cells.Y2000)
+				.ShouldBe(5m);
+			((object)result[1].Cells.Y2010)
+				.ShouldBe(15m);
 
 			((PivotCells)result[0].Cells)
 				.GetDynamicMemberNames()
@@ -1984,7 +1988,7 @@ namespace Tests.Linq
 
 			Action absentCell = () => _ = result[0].Cells.Y2020;
 
-			absentCell.ShouldThrow<RuntimeBinderException>();
+			Assert.That(() => absentCell(), Throws.TypeOf<RuntimeBinderException>());
 		}
 
 		static T PassThrough<T>(T value) => value;
@@ -2144,40 +2148,19 @@ namespace Tests.Linq
 			Action asArgumentAct        = () => asArgument.ToList();
 			Action inWhereAct           = () => inWhere.ToList();
 
-			capturedAggregateAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotAggregateNotInline);
+			Assert.That(() => capturedAggregateAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotAggregateNotInline));
 
-			capturedColumnAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotLambdaNotInline, "column"));
+			Assert.That(() => capturedColumnAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotLambdaNotInline, "column")));
 
-			correlatedValuesAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "value set"));
+			Assert.That(() => correlatedValuesAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "value set")));
 
-			correlatedFactoryAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "name factory"));
+			Assert.That(() => correlatedFactoryAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "name factory")));
 
-			noTerminalAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNoTerminal);
+			Assert.That(() => noTerminalAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNoTerminal));
 
-			asArgumentAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary)));
+			Assert.That(() => asArgumentAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary))));
 
-			inWhereAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary)));
+			Assert.That(() => inWhereAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary))));
 		}
 
 		/// <summary>The pivot is translated to SQL as part of a query; in memory every member throws, and a template does not.</summary>
@@ -2190,10 +2173,7 @@ namespace Tests.Linq
 
 			Action pivot = () => group.Pivot(x => x.Year, new[] { 2000 });
 
-			pivot
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Error_QueryMarkerInvoked, nameof(LinqExtensions.Pivot)));
+			Assert.That(() => pivot(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Error_QueryMarkerInvoked, nameof(LinqExtensions.Pivot))));
 
 			// No instance can be had in memory, since Pivot throws; one is made here only to reach the members.
 			var builder = (PivotBuilder<Sales, int>)Activator.CreateInstance(typeof(PivotBuilder<Sales, int>), nonPublic: true)!;
@@ -2209,10 +2189,7 @@ namespace Tests.Linq
 
 			foreach (var (name, invoke) in members)
 			{
-				invoke
-					.ShouldThrow<LinqToDBException>()
-					.Message
-					.ShouldBe(Message(ErrorHelper.Error_QueryMarkerInvoked, name));
+				Assert.That(() => invoke(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Error_QueryMarkerInvoked, name)));
 			}
 
 			PivotCell<Sales, int>
@@ -2344,21 +2321,28 @@ namespace Tests.Linq
 				.ShouldBe(10m);
 			CellsOfA()["Y2000"]
 				.ShouldBe(10m);
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same inputs reuse the cached query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "the same inputs reuse the cached query");
 
 			years.Add(2010);
 			CellsOfA()["Y2010"]
 				.ShouldBe(20m);
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a wider value set is a different query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2, "a wider value set is a different query");
 
 			years[1] = 2020;
-			CellsOfA().Store.ContainsKey("Y2010").ShouldBeFalse();
-			(probe.GetCacheMissCount() - start).ShouldBe(3, "a list mutated in place is a different query");
+			CellsOfA()
+				.Store
+				.ContainsKey("Y2010")
+				.ShouldBeFalse();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(3, "a list mutated in place is a different query");
 
 			prefix = "Z";
 			CellsOfA()["Z2000"]
 				.ShouldBe(10m);
-			(probe.GetCacheMissCount() - start).ShouldBe(4, "a name factory reading a changed capture is a different query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(4, "a name factory reading a changed capture is a different query");
 		}
 
 		/// <summary>Names that do not encode the value cannot keep two value sets apart; the values in the tree do.</summary>
@@ -2393,7 +2377,8 @@ namespace Tests.Linq
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
 
-			(probe.GetCacheMissCount() - start).ShouldBe(2);
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2);
 
 			first[0].Value["Current"].ShouldBe(20m);
 			first[0].Value["Prior"]  .ShouldBe(10m);
@@ -2487,12 +2472,10 @@ namespace Tests.Linq
 				.GetCompiledQueryInfo()
 				.ShouldBeSameAs(list1.GetCompiledQueryInfo());
 
-			Action nullSet = () => byArray(db, null!).ToList();
+			Action nullSet = () => byArray(db, null!)
+				.ToList();
 
-			nullSet
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set"));
+			Assert.That(() => nullSet(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set")));
 		}
 
 		/// <summary>
@@ -2819,7 +2802,8 @@ namespace Tests.Linq
 				.ShouldBe(new[] { "A" });
 
 			name.Reads.ShouldBe(0);
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "a capture the factory never reads does not change the query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "a capture the factory never reads does not change the query");
 		}
 
 		[Table]
@@ -2957,7 +2941,8 @@ namespace Tests.Linq
 
 			IQueryable<ListDto> Build(IEnumerable<int> ids) => ProductionShape(mods, acts, masks, atiRubs, iasRubs, ids);
 
-			Build(activityIds).ClearCache();
+			Build(activityIds)
+				.ClearCache();
 
 			var rows = Build(activityIds)
 				.ToList()
@@ -3003,7 +2988,11 @@ namespace Tests.Linq
 			filtered.Count.ShouldBe(1);
 			filtered[0].Cells["IDE_20"].ShouldBe("IDE-B");
 
-			var widened = Build(activityIds.Concat(new[] { 40 }).ToList())
+			var wider = activityIds
+				.Concat(new[] { 40 })
+				.ToList();
+
+			var widened = Build(wider)
 				.ToList()
 				.OrderBy(r => r.Id)
 				.ToList();
@@ -3013,6 +3002,7 @@ namespace Tests.Linq
 			widened[0].Cells["IDE_10"]  .ShouldBe("IDE-A");
 		}
 
+		// Query-cache identity is provider-agnostic.
 		[Test, QueryCacheTest]
 		[ActiveIssue(6028, Configurations = [ProviderName.SQLiteMS], ErrorType = typeof(LinqToDB.Common.LinqToDBConvertException), ErrorMessage = "value failed")]
 		public void PivotsProductionShapeQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -3037,14 +3027,24 @@ namespace Tests.Linq
 
 			var start = probe.GetCacheMissCount();
 
-			_ = Build(activityIds).ToList();
-			(probe.GetCacheMissCount() - start).ShouldBe(1);
+			_ = Build(activityIds)
+				.ToList();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1);
 
-			_ = Build(activityIds).ToList();
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same value set reuses the cached query");
+			_ = Build(activityIds)
+				.ToList();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "the same value set reuses the cached query");
 
-			_ = Build(activityIds.Concat(new[] { 40 }).ToList()).ToList();
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a wider value set is a different query");
+			var wider = activityIds
+				.Concat(new[] { 40 })
+				.ToList();
+
+			_ = Build(wider)
+				.ToList();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2, "a wider value set is a different query");
 		}
 
 		/// <summary>The same production shape with no result type declared at all.</summary>
@@ -3088,18 +3088,24 @@ namespace Tests.Linq
 			rows.Count.ShouldBe(2);
 
 			rows[0].Key.ShouldBe(1);
-			rows[0].Cells.Get<string>("IDE_10").ShouldBe("IDE-A");
+			rows[0].Cells
+				.Get<string>("IDE_10")
+				.ShouldBe("IDE-A");
 			rows[0].Cells["LIB_20"]            .ShouldBe("LIB-B");
 			rows[0].Cells["IDE_30"]            .ShouldBeNull();
 
 			rows[1].Key.ShouldBe(2);
-			rows[1].Cells.Get<string>("IDE_10").ShouldBe("IDE-C");
+			rows[1].Cells
+				.Get<string>("IDE_10")
+				.ShouldBe("IDE-C");
 			rows[1].Cells["LIB_30"]            .ShouldBe("LIB-D");
 			rows[1].Cells["IDE_20"]            .ShouldBeNull();
 
 			// A name that was never generated reads as absent rather than throwing.
 			rows[0].Cells["IDE_99"]            .ShouldBeNull();
-			rows[0].Cells.Get<string>("IDE_99").ShouldBeNull();
+			rows[0].Cells
+				.Get<string>("IDE_99")
+				.ShouldBeNull();
 		}
 
 		/// <summary>
@@ -3146,7 +3152,8 @@ namespace Tests.Linq
 			var sql = db.LastQuery!;
 
 			// One conditional aggregate per cell, plus the one the filter repeats in HAVING.
-			Occurrences(sql, "WHEN").ShouldBe(activityIds.Count * 2 + 1);
+			Occurrences(sql, "WHEN")
+				.ShouldBe(activityIds.Count * 2 + 1);
 			sql.ShouldContain("HAVING");
 		}
 

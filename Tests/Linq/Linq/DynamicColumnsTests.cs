@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -391,8 +391,6 @@ namespace Tests.Linq
 			}
 		}
 
-		#region Projection binding a DynamicColumnInfo
-
 		static Expression<Func<IGrouping<string, Person>, TResult>> GroupProjection<TResult>(Func<ParameterExpression, Expression> body)
 		{
 			var g = Expression.Parameter(typeof(IGrouping<string, Person>), "g");
@@ -421,7 +419,11 @@ namespace Tests.Linq
 			=> ((string)store.ExtendedProperties["Name"], (int)store.ExtendedProperties["Count"]);
 
 		List<(string Name, int Count)> ExpectedNameCounts()
-			=> Person.GroupBy(p => p.FirstName).Select(g => (g.Key, g.Count())).OrderBy(r => r.Key, StringComparer.Ordinal).ToList();
+			=> Person
+				.GroupBy(p => p.FirstName)
+				.Select(g => (g.Key, g.Count()))
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
 
 		[Test]
 		public void ProjectionBindingDynamicColumnsMaterializesIntoTheStore([DataSources] string context)
@@ -452,7 +454,11 @@ namespace Tests.Linq
 				.ToList();
 
 			result.ShouldAllBe(r => r.Key == (string)r.Value.ExtendedProperties["Name"]);
-			result.Select(r => ReadStore(r.Value)).OrderBy(r => r.Name, StringComparer.Ordinal).ToList().ShouldBe(ExpectedNameCounts());
+			result
+				.Select(r => ReadStore(r.Value))
+				.OrderBy(r => r.Name, StringComparer.Ordinal)
+				.ToList()
+				.ShouldBe(ExpectedNameCounts());
 		}
 
 		[Test]
@@ -466,8 +472,7 @@ namespace Tests.Linq
 
 			Action act = () => query.ToList();
 
-			act.ShouldThrow<LinqToDBException>()
-				.Message.ShouldBe(string.Format(CultureInfo.InvariantCulture, ErrorHelper.DynamicColumns.Error_NoDynamicColumnsStore, nameof(PersonWithoutDynamicStore)));
+			Assert.That(() => act(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(string.Format(CultureInfo.InvariantCulture, ErrorHelper.DynamicColumns.Error_NoDynamicColumnsStore, nameof(PersonWithoutDynamicStore))));
 		}
 
 		[Test]
@@ -481,7 +486,9 @@ namespace Tests.Linq
 				.ToList();
 
 			result.Count.ShouldBe(ExpectedNameCounts().Count);
-			new HashSet<PersonWithDynamicStore>(result).Count.ShouldBe(result.Count);
+			new HashSet<PersonWithDynamicStore>(result)
+				.Count
+				.ShouldBe(result.Count);
 		}
 
 		[Test]
@@ -491,14 +498,23 @@ namespace Tests.Linq
 
 			var projection = GroupProjection<PersonWithDynamicStore>(g => StoreInit<PersonWithDynamicStore>(g));
 
-			var result = db.Person.GroupBy(p => p.FirstName).Select(projection)
-				.Concat(db.Person.GroupBy(p => p.FirstName).Select(projection))
+			var second = db.Person
+				.GroupBy(p => p.FirstName)
+				.Select(projection);
+
+			var result = db.Person
+				.GroupBy(p => p.FirstName)
+				.Select(projection)
+				.Concat(second)
 				.ToList()
 				.Select(ReadStore)
 				.OrderBy(r => r.Name, StringComparer.Ordinal)
 				.ToList();
 
-			result.ShouldBe(ExpectedNameCounts().SelectMany(r => new[] { r, r }));
+			var expected = ExpectedNameCounts()
+				.SelectMany(r => new[] { r, r });
+
+			result.ShouldBe(expected);
 		}
 
 		[Test]
@@ -514,10 +530,11 @@ namespace Tests.Linq
 				.Select(ReadStore)
 				.ToList();
 
-			result.ShouldBe(ExpectedNameCounts().Where(r => r.Name == "John"));
-		}
+			var expected = ExpectedNameCounts()
+				.Where(r => r.Name == "John");
 
-		#endregion
+			result.ShouldBe(expected);
+		}
 
 		private MappingSchema ConfigureDynamicClass()
 		{

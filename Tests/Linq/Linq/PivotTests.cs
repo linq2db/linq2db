@@ -47,11 +47,13 @@ namespace Tests.Linq
 				.ToArray();
 
 			// 2 rows x 4 quarters - 2 NULL cells excluded = 6, each quarter name carrying its own column's value
-			result.Select(r => (r.Id, r.Quarter, r.Amount)).ShouldBe(new (int, string, decimal?)[]
-			{
-				(1, "Q1", 10m), (1, "Q2", 20m), (1, "Q3", 30m),
-				(2, "Q1", 5m),  (2, "Q3", 15m), (2, "Q4", 25m),
-			});
+			result
+				.Select(r => (r.Id, r.Quarter, r.Amount))
+				.ShouldBe(new (int, string, decimal?)[]
+				{
+					(1, "Q1", 10m), (1, "Q2", 20m), (1, "Q3", 30m),
+					(2, "Q1", 5m),  (2, "Q3", 15m), (2, "Q4", 25m),
+				});
 		}
 
 		[Test]
@@ -69,7 +71,9 @@ namespace Tests.Linq
 
 			// 2 rows x 4 quarters, NULLs kept = 8
 			result.Length.ShouldBe(8);
-			result.Count(r => r.Amount == null).ShouldBe(2);
+			result
+				.Count(r => r.Amount == null)
+				.ShouldBe(2);
 		}
 
 		/// <summary>
@@ -97,7 +101,11 @@ namespace Tests.Linq
 
 			result.Length.ShouldBe(6);
 			result.ShouldAllBe(r => r.Amount != null);
-			result.Select(r => r.Quarter).Distinct().OrderBy(q => q).ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
+			result
+				.Select(r => r.Quarter)
+				.Distinct()
+				.OrderBy(q => q)
+				.ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
 		}
 
 		// The same table, mapped without its quarter columns - the shape a per-tenant or per-period table has.
@@ -128,7 +136,11 @@ namespace Tests.Linq
 
 			result.Length.ShouldBe(6);
 			result.ShouldAllBe(r => r.Amount != null);
-			result.Select(r => r.Quarter).Distinct().OrderBy(q => q).ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
+			result
+				.Select(r => r.Quarter)
+				.Distinct()
+				.OrderBy(q => q)
+				.ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
 
 			var kept = t
 				.Unpivot(UnpivotNulls.IncludeNulls, (QuarterlySales row, string quarter, decimal? amount) => new { row.Id, Quarter = quarter, Amount = amount }, columns)
@@ -154,15 +166,22 @@ namespace Tests.Linq
 
 			var start = probe.GetCacheMissCount();
 
-			_ = Build(new[] { "Q1" }).ToArray();
-			_ = Build(new[] { "Q1" }).ToArray();
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same column set must reuse the compiled query");
+			_ = Build(new[] { "Q1" })
+				.ToArray();
+			_ = Build(new[] { "Q1" })
+				.ToArray();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "the same column set must reuse the compiled query");
 
-			_ = Build(new[] { "Q2" }).ToArray();
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a different column must not reuse it");
+			_ = Build(new[] { "Q2" })
+				.ToArray();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2, "a different column must not reuse it");
 
-			_ = Build(new[] { "Q1", "Q2" }).ToArray();
-			(probe.GetCacheMissCount() - start).ShouldBe(3, "a wider column set must not reuse it");
+			_ = Build(new[] { "Q1", "Q2" })
+				.ToArray();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(3, "a wider column set must not reuse it");
 		}
 
 		/// <summary>
@@ -190,9 +209,14 @@ namespace Tests.Linq
 
 			result.Length.ShouldBe(6);
 			result.ShouldAllBe(r => r.Amount != null);
-			result.Select(r => r.Quarter).Distinct().OrderBy(q => q).ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
+			result
+				.Select(r => r.Quarter)
+				.Distinct()
+				.OrderBy(q => q)
+				.ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
 		}
 
+		// Asserts SQL text, on the providers with a native UNPIVOT keyword (DuckDB, SQL Server, Oracle) and on SQLite.
 		[Test]
 		public void UnpivotLowersToUnionAll([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
@@ -237,7 +261,9 @@ namespace Tests.Linq
 
 			var source =
 				from p in parents
-				from c in children.Where(c => c.ParentId == p.Id).DefaultIfEmpty()
+				from c in children
+					.Where(c => c.ParentId == p.Id)
+					.DefaultIfEmpty()
 				select new { p.Id, c.Jan, c.Feb };
 
 			var result = source
@@ -245,9 +271,12 @@ namespace Tests.Linq
 				.OrderBy(r => r.Month)
 				.ToArray();
 
-			result.Select(r => (r.Id, r.Month, r.Amount)).ShouldBe(new[] { (1, "Feb", 4), (1, "Jan", 3) });
+			result
+				.Select(r => (r.Id, r.Month, r.Amount))
+				.ShouldBe(new[] { (1, "Feb", 4), (1, "Jan", 3) });
 		}
 
+		// Call-site guards: each throws while the query is built, before any SQL.
 		[Test]
 		public void ArgumentGuardsThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -280,12 +309,12 @@ namespace Tests.Linq
 				.Unpivot((row, half, a, b) => new { row.Id, half, a, b }, ("H1", x => x.Q1, null!))
 				.ToArray();
 
-			noColumnName   .ShouldThrow<System.ArgumentException>().Message.ShouldContain("at least one column");
-			emptyColumnName.ShouldThrow<System.ArgumentException>().Message.ShouldContain("index 1 is empty");
-			computedColumn .ShouldThrow<LinqToDBException>().Message.ShouldContain("must be a member access");
-			noColumnGroup  .ShouldThrow<System.ArgumentException>().Message.ShouldContain("at least one column group");
-			emptyGroupName .ShouldThrow<System.ArgumentException>().Message.ShouldContain("group name at index 1 is empty");
-			nullGroupColumn.ShouldThrow<System.ArgumentException>().Message.ShouldContain("'H1' has a null column selector");
+			Assert.That(() => noColumnName(), Throws.TypeOf<System.ArgumentException>().With.Message.Contains("at least one column").IgnoreCase);
+			Assert.That(() => emptyColumnName(), Throws.TypeOf<System.ArgumentException>().With.Message.Contains("index 1 is empty").IgnoreCase);
+			Assert.That(() => computedColumn(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("must be a member access").IgnoreCase);
+			Assert.That(() => noColumnGroup(), Throws.TypeOf<System.ArgumentException>().With.Message.Contains("at least one column group").IgnoreCase);
+			Assert.That(() => emptyGroupName(), Throws.TypeOf<System.ArgumentException>().With.Message.Contains("group name at index 1 is empty").IgnoreCase);
+			Assert.That(() => nullGroupColumn(), Throws.TypeOf<System.ArgumentException>().With.Message.Contains("'H1' has a null column selector").IgnoreCase);
 		}
 
 		/// <summary>An unpivot over a projected source, built as a sub-query: under <c>Any</c> and on the collection side of a join.</summary>
@@ -310,7 +339,10 @@ namespace Tests.Linq
 					.Where(u => u.Id == p.Id)
 				select new { p.Region, u.Quarter, u.Amount };
 
-			joined.OrderBy(r => r.Region).ThenBy(r => r.Quarter).ToArray()
+			joined
+				.OrderBy(r => r.Region)
+				.ThenBy(r => r.Quarter)
+				.ToArray()
 				.Select(r => (r.Region, r.Quarter, r.Amount))
 				.ShouldBe(new (string, string, decimal?)[] { ("EU", "Q1", 10m), ("EU", "Q2", 20m), ("US", "Q1", 5m) });
 		}
@@ -330,7 +362,9 @@ namespace Tests.Linq
 					.Any(u => u.Id == p.Id && u.Amount > 15)
 				select p.Region;
 
-			regions.ToArray().ShouldBe(new[] { "EU" });
+			regions
+				.ToArray()
+				.ShouldBe(new[] { "EU" });
 		}
 
 		/// <summary>
@@ -350,21 +384,27 @@ namespace Tests.Linq
 				 where t.Where(x => x.Id > 0)
 					.Unpivot((r, q, a) => new { r.Id, Quarter = q, Amount = a }, x => x.Q1, cols)
 					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
-				 select p.Region).ToArray();
+				 select p.Region)
+				.ToArray();
 
-			Regions().ShouldBe(new[] { "EU" });
+			Regions()
+				.ShouldBe(new[] { "EU" });
 
 			cols = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q3 };
-			Regions().ShouldBeEmpty();
+			Regions()
+				.ShouldBeEmpty();
 
 			cols = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q2 };
-			Regions().ShouldBe(new[] { "EU" });
+			Regions()
+				.ShouldBe(new[] { "EU" });
 
 			// The same array, mutated in place: compared by the contents it had when the query was built.
 			cols[0] = x => x.Q3;
-			Regions().ShouldBeEmpty();
+			Regions()
+				.ShouldBeEmpty();
 		}
 
+		// Query identity is provider-agnostic.
 		[Test]
 		public void InlineUnpivotRereadsCapturedColumnNames([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -378,12 +418,15 @@ namespace Tests.Linq
 				 where t.Where(x => x.Id > 0)
 					.Unpivot((QuarterlySales r, string q, decimal? a) => new { r.Id, Quarter = q, Amount = a }, names)
 					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
-				 select p.Region).ToArray();
+				 select p.Region)
+				.ToArray();
 
-			Regions().ShouldBe(new[] { "EU" });
+			Regions()
+				.ShouldBe(new[] { "EU" });
 
 			names = new[] { "Q1", "Q3" };
-			Regions().ShouldBeEmpty();
+			Regions()
+				.ShouldBeEmpty();
 		}
 
 		/// <summary>The marker overload written inline, with its params array passed as a variable.</summary>
@@ -402,15 +445,19 @@ namespace Tests.Linq
 				 where t.Where(x => x.Id > 0)
 					.Unpivot(UnpivotNulls.ExcludeNulls, (r, q, a) => new { r.Id, Quarter = q, Amount = a }, first, extra)
 					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
-				 select p.Region).ToArray();
+				 select p.Region)
+				.ToArray();
 
-			Regions().ShouldBe(new[] { "EU" });
+			Regions()
+				.ShouldBe(new[] { "EU" });
 
 			extra = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q3 };
-			Regions().ShouldBeEmpty();
+			Regions()
+				.ShouldBeEmpty();
 
 			first = x => x.Q2;
-			Regions().ShouldBe(new[] { "EU" });
+			Regions()
+				.ShouldBe(new[] { "EU" });
 		}
 
 		sealed class ColumnSource
@@ -434,12 +481,15 @@ namespace Tests.Linq
 				 where t.Where(x => x.Id > 0)
 					.Unpivot((QuarterlySales r, string q, decimal? a) => new { r.Id, Quarter = q, Amount = a }, source.GetColumns())
 					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
-				 select p.Region).ToArray();
+				 select p.Region)
+				.ToArray();
 
-			Regions().ShouldBe(new[] { "EU" });
+			Regions()
+				.ShouldBe(new[] { "EU" });
 
 			source.Columns = new[] { "Q1", "Q3" };
-			Regions().ShouldBeEmpty();
+			Regions()
+				.ShouldBeEmpty();
 		}
 
 		/// <summary>A value the result selector captures is a parameter, not part of the query's identity.</summary>
@@ -460,11 +510,17 @@ namespace Tests.Linq
 
 			var start = probe.GetCacheMissCount();
 
-			Build(2m).ToArray().ShouldBe(new decimal?[] { 20m });
-			Build(3m).ToArray().ShouldBe(new decimal?[] { 30m });
-			(probe.GetCacheMissCount() - start).ShouldBe(1);
+			Build(2m)
+				.ToArray()
+				.ShouldBe(new decimal?[] { 20m });
+			Build(3m)
+				.ToArray()
+				.ShouldBe(new decimal?[] { 30m });
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1);
 		}
 
+		// Query-cache identity is provider-agnostic.
 		[Test, QueryCacheTest]
 		public void InlineUnpivotSelectorCaptureReusesTheCachedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -484,9 +540,14 @@ namespace Tests.Linq
 
 			var start = probe.GetCacheMissCount();
 
-			Build(2m).ToArray().ShouldBe(new[] { "EU" });
-			Build(1m).ToArray().ShouldBeEmpty();
-			(probe.GetCacheMissCount() - start).ShouldBe(1);
+			Build(2m)
+				.ToArray()
+				.ShouldBe(new[] { "EU" });
+			Build(1m)
+				.ToArray()
+				.ShouldBeEmpty();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1);
 		}
 
 		// Gated for now: SAP HANA rejects a set operator inside LATERAL — linq2db#6034 decorrelates it away.
@@ -506,7 +567,10 @@ namespace Tests.Linq
 					.Unpivot((r, quarter, amount) => new { r.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2)
 				select new { p.Region, u.Quarter, u.Amount };
 
-			joined.OrderBy(r => r.Region).ThenBy(r => r.Quarter).ToArray()
+			joined
+				.OrderBy(r => r.Region)
+				.ThenBy(r => r.Quarter)
+				.ToArray()
 				.Select(r => (r.Region, r.Quarter, r.Amount))
 				.ShouldBe(new (string, string, decimal?)[] { ("EU", "Q1", 10m), ("EU", "Q2", 20m), ("US", "Q1", 5m) });
 		}
@@ -526,14 +590,20 @@ namespace Tests.Linq
 				.Unpivot((row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount }, x => x.Q1)
 				.ToArray();
 
-			LastQuery!.Split(new[] { "unpivot-tag" }, System.StringSplitOptions.None).Length.ShouldBe(2);
+			LastQuery!
+				.Split(new[] { "unpivot-tag" }, System.StringSplitOptions.None)
+				.Length
+				.ShouldBe(2);
 
 			_ = t
 				.TagQuery("unpivot-tag")
 				.Unpivot((row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2)
 				.ToArray();
 
-			LastQuery!.Split(new[] { "unpivot-tag" }, System.StringSplitOptions.None).Length.ShouldBe(3);
+			LastQuery!
+				.Split(new[] { "unpivot-tag" }, System.StringSplitOptions.None)
+				.Length
+				.ShouldBe(3);
 		}
 
 		[Table]
@@ -787,7 +857,8 @@ namespace Tests.Linq
 					.ToSqlQuery();
 			}
 
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same groups must reuse the compiled query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "the same groups must reuse the compiled query");
 
 			// A different group name is a different query - the names must discriminate.
 			_ = t.Unpivot(
@@ -796,7 +867,8 @@ namespace Tests.Linq
 					("Q3", x => x.Apr, x => x.May, x => x.Jun))
 				.ToSqlQuery();
 
-			(probe.GetCacheMissCount() - start).ShouldBe(2);
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2);
 		}
 	}
 }

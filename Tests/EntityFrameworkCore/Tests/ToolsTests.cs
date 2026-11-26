@@ -240,10 +240,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Action withoutLinqToDB = () => pivotQuery.ToArray();
 
-			withoutLinqToDB
-				.ShouldThrow<InvalidOperationException>()
-				.Message
-				.ShouldContain(nameof(LinqExtensions.Pivot));
+			Assert.That(() => withoutLinqToDB(), Throws.TypeOf<InvalidOperationException>().With.Message.Contains(nameof(LinqExtensions.Pivot)).IgnoreCase);
 		}
 
 		[Test]

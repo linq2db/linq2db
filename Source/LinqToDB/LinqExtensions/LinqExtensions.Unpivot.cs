@@ -220,8 +220,8 @@ namespace LinqToDB
 		// constant would miss on every execution. Quoted lambdas compare structurally and the names are
 		// query-dependent, so both halves take part in the cache key.
 		static IQueryable<TResult> BuildMultiValueUnpivot<TSource, TValue, TResult>(
-			IQueryable<TSource>                        source,
-			LambdaExpression                           resultSelector,
+			IQueryable<TSource>                         source,
+			LambdaExpression                            resultSelector,
 			(string name, LambdaExpression[] columns)[] groups)
 		{
 			if (groups.Length == 0)
