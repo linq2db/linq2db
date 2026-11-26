@@ -1102,8 +1102,9 @@ namespace LinqToDB.EntityFrameworkCore
 
 		// An Npgsql binary operator template takes its operator's class, so a nested operator template passed as its
 		// argument is bracketed by the builder (#6390): PostgreSQL's order is AT TIME ZONE above * above + -, and every
-		// other Npgsql operator (@> <@ && << @@ ? ...) is "any other operator", below + -. Except is Subtraction, so its
-		// right operand at the + - level stays bracketed.
+		// other Npgsql operator (@> <@ && << @@ ? ...) is "any other operator", below + -. Union and except are both
+		// Subtraction: the builder brackets an equal-level operand of Subtraction on either side, so a + (b - c) and
+		// a + (b + c) keep their grouping (range union and except are not associative with each other).
 		static int? NpgsqlBinaryPrecedence(Expression expression)
 		{
 #if EF31
@@ -1115,8 +1116,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				"AT TIME ZONE" => Precedence.Primary,
 				"*"            => Precedence.Multiplicative,
-				"+"            => Precedence.Additive,
-				"-"            => Precedence.Subtraction,
+				"+" or "-"     => Precedence.Subtraction,
 				_              => Precedence.Bitwise,
 			};
 #else
@@ -1129,8 +1129,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				"AtTimeZone"                  => Precedence.Primary,
 				"RangeIntersect"              => Precedence.Multiplicative,
-				"RangeUnion"                  => Precedence.Additive,
-				"RangeExcept"                 => Precedence.Subtraction,
+				"RangeUnion" or "RangeExcept" => Precedence.Subtraction,
 				_                             => Precedence.Bitwise,
 			};
 #endif

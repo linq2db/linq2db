@@ -62,8 +62,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Where(e => e.Duration.Except(e.Duration.Union(e.Duration)).Contains(date))
 				.ToLinqToDB();
 
+			var unionOfExcept = db.Events
+				.Where(e => e.Duration.Union(e.Duration.Except(e.Duration)).Contains(date))
+				.ToLinqToDB();
+
+			var unionOfUnion = db.Events
+				.Where(e => e.Duration.Union(e.Duration.Union(e.Duration)).Contains(date))
+				.ToLinqToDB();
+
 			unionThenIntersect.ToArray();
 			exceptOfUnion.ToArray();
+			unionOfExcept.ToArray();
+			unionOfUnion.ToArray();
 
 			var unionThenIntersectSql = unionThenIntersect
 				.ToSqlQuery()
@@ -73,8 +83,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToSqlQuery()
 				.Sql;
 
+			var unionOfExceptSql = unionOfExcept
+				.ToSqlQuery()
+				.Sql;
+
+			var unionOfUnionSql = unionOfUnion
+				.ToSqlQuery()
+				.Sql;
+
 			unionThenIntersectSql.ShouldContain("(e.\"Duration\" + e.\"Duration\") * e.\"Duration\"", Case.Sensitive, unionThenIntersectSql);
 			exceptOfUnionSql.ShouldContain("e.\"Duration\" - (e.\"Duration\" + e.\"Duration\")", Case.Sensitive, exceptOfUnionSql);
+			unionOfExceptSql.ShouldContain("e.\"Duration\" + (e.\"Duration\" - e.\"Duration\")", Case.Sensitive, unionOfExceptSql);
+			unionOfUnionSql.ShouldContain("e.\"Duration\" + (e.\"Duration\" + e.\"Duration\")", Case.Sensitive, unionOfUnionSql);
 		}
 
 		[Test]
