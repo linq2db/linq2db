@@ -941,18 +941,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test2Inlined([DataSources] string context)
-		{
-			Issue4469Test2Core(context, inline: true);
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test2([DataSources] string context)
-		{
-			Issue4469Test2Core(context, inline: false);
-		}
-
-		void Issue4469Test2Core(string context, bool inline)
+		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
 		{
 			if (context.IsAnyOf(TestProvName.AllFirebirdLess4) && !inline)
 				Assert.Ignore("Hard-to-workaround overflow bug");

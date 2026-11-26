@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -1266,7 +1268,9 @@ namespace Tests.Linq
 			var sql = result.ToSqlQuery().Sql;
 
 			// YDB's BitCast is the bit reinterpretation its unsigned-only bitwise operators need, not a conversion of the enum
-			Assert.That(sql, Is.Not.Contains("Convert").And.Not.Contains("Int(").And.Not.Match("(?<!Bit)Cast"));
+			sql.ShouldNotContain("Convert", Case.Sensitive, sql);
+			sql.ShouldNotContain("Int(", Case.Sensitive, sql);
+			sql.ShouldNotMatch("(?<!Bit)Cast", sql);
 		}
 
 		[Test]
