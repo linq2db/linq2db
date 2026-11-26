@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -3115,6 +3117,172 @@ namespace Tests.Linq
 				};
 
 			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6466")]
+		public void RecursiveWithManyRecursiveBranches([RecursiveCteContextSource(false)] string context)
+		{
+			const int branches = 10;
+
+			using var db = GetDataContext(context);
+
+			var cte = db.GetCte<HierarchyLevelCte>(cte =>
+			{
+				var query = db.Parent
+					.Select(p => new HierarchyLevelCte
+					{
+						ParentID = p.ParentID,
+						Level    = 0,
+					});
+
+				for (var i = 0; i < branches; i++)
+				{
+					var k = i;
+
+					query = query.Concat(
+						cte
+							.Where(ct => ct.Level < 3 && ct.ParentID % branches == k)
+							.Select(ct => new HierarchyLevelCte
+							{
+								ParentID = ct.ParentID,
+								Level    = ct.Level + 1,
+							}));
+				}
+
+				return query;
+			});
+
+			// translation of this shape grew factorially with the branch count; the bound only turns a hang into a failure
+			var translation = Task.Run(() => cte.ToSqlQuery().Sql);
+
+			translation
+				.Wait(TimeSpan.FromMinutes(1))
+				.ShouldBeTrue();
+		}
+
+		// one provider: the test asserts NullabilityContext over the translated AST and executes nothing
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6466")]
+		public void RecursiveColumnNullabilityFollowsRecursiveBranchType([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values(1, 3)] int branches)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.GetCte<HierarchyLevelCte>(cte =>
+			{
+				var query = db.Parent
+					.Select(p => new HierarchyLevelCte
+					{
+						ParentID     = p.ParentID,
+						GrandChildID = p.ParentID,
+						Level        = 0,
+					});
+
+				for (var i = 0; i < branches; i++)
+				{
+					var k = i;
+
+					query = query.Concat(
+						cte
+							.Where(ct => ct.Level < 3 && ct.ParentID % branches == k)
+							.Select(ct => new HierarchyLevelCte
+							{
+								ParentID     = ct.ParentID,
+								GrandChildID = ct.GrandChildID + 1,
+								Level        = ct.Level + 1,
+							}));
+				}
+
+				return query;
+			});
+
+			var cteClause = cte
+				.GetSelectQuery()
+				.From
+				.Tables[0]
+				.Source
+				.ShouldBeOfType<SqlCteTable>()
+				.Cte!;
+
+			var nullability = NullabilityContext.GetContext(cteClause.Body);
+
+			// the anchor types GrandChildID as int and the recursive branch as int?: the cycle through the branch keeps the branch's answer
+			var grandChildId = cteClause
+				.Fields
+				.Single(f => f.Name.StartsWith(nameof(HierarchyLevelCte.GrandChildID), StringComparison.Ordinal))
+				.Column!;
+
+			grandChildId
+				.SystemType
+				.ShouldBe(typeof(int));
+
+			nullability
+				.CanBeNull(grandChildId)
+				.ShouldBeTrue();
+
+			var level = cteClause
+				.Fields
+				.Single(f => f.Name.StartsWith(nameof(HierarchyLevelCte.Level), StringComparison.Ordinal))
+				.Column!;
+
+			nullability
+				.CanBeNull(level)
+				.ShouldBeFalse();
+		}
+
+		// one provider: the test asserts NullabilityContext over the translated AST and executes nothing
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6466")]
+		public void RecursivePartFirstColumnNullabilityFollowsOwnType([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values(1, 3)] int branches)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.GetCte<HierarchyLevelCte>(cte =>
+			{
+				IQueryable<HierarchyLevelCte>? query = null;
+
+				for (var i = 0; i < branches; i++)
+				{
+					var k = i;
+
+					var branch = cte
+						.Where(ct => ct.Level < 3 && ct.ParentID % branches == k)
+						.Select(ct => new HierarchyLevelCte
+						{
+							ParentID     = ct.ParentID,
+							GrandChildID = ct.GrandChildID + 1,
+							Level        = ct.Level + 1,
+						});
+
+					query = query == null ? branch : query.Concat(branch);
+				}
+
+				var anchor = db.Parent
+					.Select(p => new HierarchyLevelCte
+					{
+						ParentID     = p.ParentID,
+						GrandChildID = p.ParentID,
+						Level        = 0,
+					});
+
+				return query!.Concat(anchor);
+			});
+
+			var cteClause = cte
+				.GetSelectQuery()
+				.From
+				.Tables[0]
+				.Source
+				.ShouldBeOfType<SqlCteTable>()
+				.Cte!;
+
+			// the head column is the recursive part's int? column and re-enters itself through its own expression, after the branches
+			var grandChildId = cteClause
+				.Fields
+				.Single(f => f.Name.StartsWith(nameof(HierarchyLevelCte.GrandChildID), StringComparison.Ordinal))
+				.Column!;
+
+			NullabilityContext
+				.GetContext(cteClause.Body)
+				.CanBeNull(grandChildId)
+				.ShouldBeTrue();
 		}
 
 		[Table]
