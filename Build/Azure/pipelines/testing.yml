@@ -13,6 +13,56 @@ stages:
 - stage: ''
   displayName: ''
   jobs:
+#######################
+# SUPERSEDED RUNS JOB #
+#######################
+# A new test-all run supersedes every older test run on the PR, so it cancels them. Per-db runs and
+# pushes cancel nothing (autoCancel: false above): a per-db run is not a superset, and a push may not
+# touch anything testable. tests-comment.yml does the same for the GitHub half of the run.
+# A bare `/azp run` would queue every definition at once and let this cancel its own siblings.
+  - ${{ if eq(variables['Build.DefinitionName'], 'test-all') }}:
+    - job: cancel_superseded
+      displayName: Cancel superseded test runs
+      condition: eq(variables['Build.Reason'], 'PullRequest')
+      pool:
+        vmImage: 'ubuntu-24.04'
+      timeoutInMinutes: 5
+      steps:
+      - checkout: none
+      # A failure here must not cost the run its tests. The likely one is a 403: the build service
+      # identity needs "Stop builds" on the test-* definitions.
+      - pwsh: |
+          $base    = $env:COLLECTION_URI + $env:TEAM_PROJECT + '/_apis/build/builds'
+          $headers = @{ Authorization = 'Bearer ' + $env:SYSTEM_ACCESSTOKEN }
+          $branch  = [uri]::EscapeDataString('refs/pull/' + $env:PR_NUMBER + '/merge')
+          $current = [int]$env:BUILD_ID
+
+          $builds = (Invoke-RestMethod -Headers $headers -Uri ($base + '?branchName=' + $branch + '&statusFilter=inProgress,notStarted,postponed&api-version=7.1')).value
+          # Older only: a run that started late must never cancel a newer one.
+          $stale = @($builds | Where-Object { $_.definition.name -like 'test-*' -and $_.id -lt $current })
+          if (-not $stale) { 'No superseded test runs'; exit 0 }
+
+          $failed = 0
+          foreach ($b in $stale) {
+            try {
+              Invoke-RestMethod -Method Patch -Headers $headers -ContentType 'application/json' -Body '{"status":"cancelling"}' `
+                -Uri ($base + '/' + $b.id + '?api-version=7.1') | Out-Null
+              'Cancelled {0} build {1}' -f $b.definition.name, $b.id
+            } catch {
+              $failed++
+              '##vso[task.logissue type=warning]Could not cancel {0} build {1}: {2}' -f $b.definition.name, $b.id, $_.Exception.Message
+            }
+          }
+          if ($failed) { exit 1 }
+        displayName: Cancel older test runs on this PR
+        continueOnError: true
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          COLLECTION_URI: $(System.CollectionUri)
+          TEAM_PROJECT: $(System.TeamProject)
+          PR_NUMBER: $(System.PullRequest.PullRequestNumber)
+          BUILD_ID: $(Build.BuildId)
+
 ##############
 #  BUILD JOB #
 ##############

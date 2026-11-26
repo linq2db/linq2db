@@ -8,6 +8,8 @@
 # issue_comment always runs the default branch's copy of this file, whatever the PR contains - so a PR
 # cannot alter its own trigger, and changes here only take effect once merged.
 name: tests (comment)
+# An issue_comment run carries no PR number of its own; cancel_superseded finds a PR's runs by this title.
+run-name: 'tests #${{ github.event.issue.number }}'
 
 on:
   issue_comment:
@@ -137,6 +139,29 @@ jobs:
             -f context="$context" \
             -f description='Running on GitHub Actions' \
             -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+  # A test-all run supersedes every older run on the PR, whatever its surface, so it cancels them - the
+  # same rule testing.yml's cancel_superseded applies on Azure. A per-db run cancels nothing, and a push
+  # starts nothing here. Older only, by run id: a run that started late must never cancel a newer one.
+  cancel_superseded:
+    needs: authorize
+    if: needs.authorize.outputs.go == 'true' && needs.authorize.outputs.surface == '[all]'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: 'tests #${{ github.event.issue.number }}'
+        run: |
+          for status in requested queued pending waiting in_progress; do
+            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/tests-comment.yml/runs?event=issue_comment&status=$status&per_page=100" \
+              --jq ".workflow_runs[] | select(.display_title == \"$TITLE\" and .id < $GITHUB_RUN_ID) | .id"
+          done | sort -u | while read -r id; do
+            echo "cancelling run $id"
+            gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/cancel" --silent \
+              || echo "::warning::could not cancel run $id"
+          done
 
   tests:
     needs: authorize
