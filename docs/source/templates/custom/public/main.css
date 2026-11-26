@@ -599,15 +599,17 @@ body:has(.landing-hero) {
    Responsive
    ============================================================ */
 
-/* The demo shows C# and SQL side by side; split 47:58 like their widest lines, that takes about
-   760px (see SqlHtml.MaxWidth in docs/tools/sql-demo). From 1220px the text keeps a 340px column
-   and the demo takes the rest; below that the hero is centered with the demo under the text
-   instead of scrolling sideways. The text sits at the top so it stays put while the demo's height
-   changes with the tab. */
+/* The demo shows C# and SQL side by side; split 47:58 like their widest lines, its column takes
+   815px with Consolas (see SqlHtml.MaxWidth in docs/tools/sql-demo). From 1220px the text keeps
+   340px and the demo takes the rest; the text grows towards the 416px that keeps both buttons on
+   one row only while the demo keeps 885px, room for a monospace font about 9% wider (macOS), and
+   past that once the demo reaches 1100px. Below 1220px the hero is centered with the demo under
+   the text instead of scrolling sideways. The text sits at the top so it stays put while the
+   demo's height changes with the tab. */
 @media (min-width: 1220px) {
 	.landing-hero .row {
 		display: grid;
-		grid-template-columns: minmax(340px, 1fr) minmax(760px, 1100px);
+		grid-template-columns: minmax(clamp(340px, 100% - 885px, 416px), 1fr) minmax(815px, 1100px);
 		align-items: start;
 	}
 
