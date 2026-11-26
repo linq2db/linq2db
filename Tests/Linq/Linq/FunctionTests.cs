@@ -1211,12 +1211,9 @@ namespace Tests.Linq
 				where Sql.Between(ClientOnlyDouble(p.ParentID), 3, 8)
 				select p.ParentID;
 
-			var act = () => filtered.ToList();
-
-			act
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldContain("could not be converted to SQL");
+			Assert.That(
+				() => filtered.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains("could not be converted to SQL"));
 		}
 
 		[Test]
