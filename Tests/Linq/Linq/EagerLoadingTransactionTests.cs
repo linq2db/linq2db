@@ -24,10 +24,11 @@ namespace Tests.Linq
 	// LinqOptions.EagerLoadingIsolationLevel replaces the provider's level. Each test runs both values of the option and
 	// expects the same rows from both.
 	//
-	// The tests run on SQLite: the transaction is decided in Query.GetTransactionOwner before any provider code runs,
+	// The tests run on SQLite: the transaction is decided in Query.StartLoadTransaction before any provider code runs,
 	// SQLite supports transactions, and its default level (Serializable) differs from the override used here
 	// (ReadCommitted). Two of them also run on SQL Server, whose default level (RepeatableRead) differs from SQLite's, so
-	// the fallback to the provider's level is told apart from a fixed level. Remote contexts are left out because they
+	// the fallback to the provider's level is told apart from a fixed level; QueryInsideEnumeration runs there because its
+	// connections have no MARS. Remote contexts are left out because they
 	// never open the transaction and trace on the server.
 	[TestFixture]
 	public class EagerLoadingTransactionTests : TestBase
@@ -383,6 +384,46 @@ namespace Tests.Linq
 				.ShouldBe(ExpectedParents());
 
 			AssertTrace(trace, useTransaction, isAsync, IsolationLevel.ReadCommitted);
+		}
+
+		// The main rows are read to the end before the loop body runs, with the transaction or without it, so the loop can
+		// query the same connection. SQL Server: its test connections have no MARS, so a still-open main reader fails there.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4053")]
+		public async Task QueryInsideEnumeration([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context, [Values] bool useTransaction, [Values] bool isAsync)
+		{
+			using var db = GetDataContext(context, o => o.UseEagerLoadingTransaction(useTransaction));
+
+			var query = db.Parent
+				.LoadWith(p => p.Children);
+
+			var parents = new List<Parent>();
+			var counts  = new List<int>();
+
+			if (isAsync)
+			{
+				await foreach (var parent in query.AsAsyncEnumerable())
+				{
+					parents.Add(parent);
+					counts.Add(await db.Child.CountAsync(c => c.ParentID == parent.ParentID));
+				}
+			}
+			else
+			{
+				foreach (var parent in query)
+				{
+					parents.Add(parent);
+					counts.Add(db.Child.Count(c => c.ParentID == parent.ParentID));
+				}
+			}
+
+			Format(parents)
+				.ShouldBe(ExpectedParents());
+
+			var childCounts = parents
+				.Select(p => p.Children.Count)
+				.ToList();
+
+			counts.ShouldBe(childCounts);
 		}
 	}
 }
