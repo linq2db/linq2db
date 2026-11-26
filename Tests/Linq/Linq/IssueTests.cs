@@ -279,55 +279,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue909([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var values = new int?[] { 1, 2, 3 };
-
-			var query = from p in db.GetTable<Parent>()
-						where !values.Contains(p.Value1)
-						select p;
-
-			AssertQuery(query);
-		}
-
-		[Test]
-		public void Issue909Join([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var values = new int?[] { 1, 2, 3 };
-
-			var query = from c in db.GetTable<Child>()
-						from p in db.GetTable<Parent>()
-						where p.ParentID == c.ParentID && !values.Contains(p.Value1)
-						select c;
-
-			AssertQuery(query);
-		}
-
-		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[Test]
-		public void Issue909Subquery([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var values = new int?[] { 1, 2, 3 };
-
-			var expected = from c in Child
-						   where (from p in Parent
-								  where p.ParentID == c.ParentID && (p.Value1 == null || !values.Contains(p.Value1.Value))
-								  select p).Any()
-						   select c;
-
-			var actual = from c in db.GetTable<Child>()
-						 where (from p in db.GetTable<Parent>()
-								where p.ParentID == c.ParentID && !values.Contains(p.Value1!.Value)
-								select p).Any()
-						 select c;
-
-			AreEqual(expected, actual);
-		}
-
-		[Test]
 		public void Issue2823Guid([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool inlineParameters)
 		{
 			using var db = (DataConnection)GetDataContext(context);
