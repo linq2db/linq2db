@@ -554,6 +554,14 @@ namespace Tests.Linq
 
 			AssertQuery(unsignedWide);
 
+			// exact only when ID * 9 + 2 is a multiple of 4: a fractional ulong quotient would make every row match
+			var unsignedWideInWhere = db.Types
+				.Where(p => ((ulong)p.ID * 9 + 2) / 4 * 4 == (ulong)p.ID * 9 + 2)
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID);
+
+			AssertQuery(unsignedWideInWhere);
+
 			var nullable = db.Types
 				.OrderBy(p => p.ID)
 				.Select(p => Sql.AsSql(((int?)p.ID * 7 + 1) / 2));
@@ -601,6 +609,240 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql((decimal)p.ID / 2));
 
 			AssertQueryWithinDelta(fractionalDecimal);
+		}
+
+		// a division over an outer-joined column is nullable through its operand, so the negated comparison keeps the
+		// parent whose child is missing (AreEqual with an explicit expected: the in-memory side would dereference the
+		// missing child)
+		[Test]
+		public void IntegerDivisionOverOuterJoinIsNullable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				where !(c.ChildID / 2 == 10)
+				select p.ParentID;
+
+			var expected =
+				from p in Parent
+				from c in Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				where c == null || c.ChildID / 2 != 10
+				select p.ParentID;
+
+			AreEqual(expected, query, allowEmpty: false);
+		}
+
+		sealed class DecimalStoredIntegerTable
+		{
+			[PrimaryKey]                                                      public int Id { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 10, Scale = 0)] public int X  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 10, Scale = 0)] public int X2 { get; set; }
+		}
+
+		static readonly DecimalStoredIntegerTable[] DecimalStoredIntegerData =
+		[
+			new() { Id = 1, X = -7, X2 = 2 },
+			new() { Id = 2, X =  7, X2 = 2 },
+			new() { Id = 3, X =  9, X2 = 2 },
+			new() { Id = 4, X = -9, X2 = 2 },
+			new() { Id = 5, X =  3, X2 = 2 },
+		];
+
+		// an int member stored in a DECIMAL column divides as an integer: the server must not keep, round or floor the
+		// fraction, whatever the operand's shape (ClickHouse cannot create the table: #6470)
+		[Test]
+		public void DecimalStoredIntegerDivisionTruncates([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(DecimalStoredIntegerData);
+
+			var bare = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(t.X / 2));
+
+			AssertQuery(bare);
+
+			var bareInWhere = tb
+				.Where(t => t.X / 2 == -3)
+				.OrderBy(t => t.Id)
+				.Select(t => t.Id);
+
+			AssertQuery(bareInWhere);
+
+			// a captured divisor is a parameter that takes the column's storage type too
+			var two = 2;
+
+			var byParameter = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(t.X / two));
+
+			AssertQuery(byParameter);
+
+			var sum = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql((t.X + 1) / 2));
+
+			AssertQuery(sum);
+
+			var negated = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(-t.X / 2));
+
+			AssertQuery(negated);
+
+			var abs = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(Math.Abs(t.X) / 2));
+
+			AssertQuery(abs);
+
+			var divisor = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(60 / t.X));
+
+			AssertQuery(divisor);
+
+			var bothStored = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(t.X / t.X2));
+
+			AssertQuery(bothStored);
+
+			// the sum is 3: C# gives 1 where a fractional division gives 1.5
+			var total = tb
+				.GroupBy(t => 1)
+				.Select(g => Sql.AsSql(g.Sum(t => t.X) / 2))
+				.Single();
+
+			total.ShouldBe(1);
+		}
+
+		[Table("DoubleStoredIntegerTable")]
+		sealed class DoubleStoredIntegerTable
+		{
+			[PrimaryKey]                         public int Id { get; set; }
+			[Column(DataType = DataType.Double)] public int D  { get; set; }
+		}
+
+		// seeds the table: several providers refuse to write an int value to a double parameter
+		[Table("DoubleStoredIntegerTable")]
+		sealed class DoubleStoredIntegerSource
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column]     public double D  { get; set; }
+		}
+
+		static readonly DoubleStoredIntegerSource[] DoubleStoredIntegerData =
+		[
+			new() { Id = 1, D = -7 },
+			new() { Id = 2, D =  7 },
+		];
+
+		[Test]
+		public void DoubleStoredIntegerDivisionTruncates([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(DoubleStoredIntegerData);
+
+			var tb = db.GetTable<DoubleStoredIntegerTable>();
+
+			var projected = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(t.D / 2));
+
+			AssertQuery(projected);
+
+			var filtered = tb
+				.Where(t => t.D / 2 == -3)
+				.OrderBy(t => t.Id)
+				.Select(t => t.Id);
+
+			AssertQuery(filtered);
+		}
+
+		// the integer-storage cast reaches only an integer member stored as a non-integer type: an operand that reads such
+		// storage through an integer cast, a condition or an aggregate argument gains no cast (two providers whose
+		// division goes through the base path, where the cast count of the text is stable)
+		[Test]
+		public void IntegerDivisionLeavesOtherOperandsUncast([IncludeDataSources(TestProvName.AllSqlServer2022, TestProvName.PostgreSQL16)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var casted = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((int)p.MoneyValue / 2));
+
+			var castedSql = casted
+				.ToSqlQuery()
+				.Sql;
+
+			AssertQuery(casted);
+
+			var castOnlySql = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((int)p.MoneyValue))
+				.ToSqlQuery()
+				.Sql;
+
+			CountCasts(castedSql)
+				.ShouldBe(CountCasts(castOnlySql), castedSql);
+
+			var condition = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.MoneyValue > 5 ? 1 : 2) / 2));
+
+			var conditionSql = condition
+				.ToSqlQuery()
+				.Sql;
+
+			AssertQuery(condition);
+			CountCasts(conditionSql)
+				.ShouldBe(0, conditionSql);
+
+			var counted = db.Types
+				.GroupBy(p => p.BoolValue)
+				.OrderBy(g => g.Key)
+				.Select(g => Sql.AsSql(g.Count(p => p.MoneyValue > 0) / 2));
+
+			var countedSql = counted
+				.ToSqlQuery()
+				.Sql;
+
+			AssertQuery(counted);
+			CountCasts(countedSql)
+				.ShouldBe(0, countedSql);
+
+			static int CountCasts(string sql)
+				=> sql.Split(["CAST("], StringSplitOptions.None).Length + sql.Split(["::"], StringSplitOptions.None).Length - 2;
+		}
+
+		// a decimal division nested in another: the inner one is already a REAL division on SQLite, so its result is not
+		// cast again
+		[Test]
+		public void NestedDecimalDivisionIsCastOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((decimal)p.ID / 10 / 2));
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			AssertQueryWithinDelta(query);
+
+			sql
+				.Split(["AS Float"], StringSplitOptions.None)
+				.Length
+				.ShouldBe(2, sql);
 		}
 
 		// TimeOfDay divides integer nanoseconds by 100 in a division typed as a float: no integer division, so the

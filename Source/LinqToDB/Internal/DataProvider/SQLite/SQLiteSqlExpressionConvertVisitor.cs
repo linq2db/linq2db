@@ -15,6 +15,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		}
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
+		// a ulong is stored as INTEGER, which divides as an integer
+		protected override bool DividesUnsignedNatively          => true;
 
 		/// <inheritdoc />
 		public override bool CanLowerIntervalDifference => true;
@@ -102,11 +104,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return Factory.Function(Factory.GetDbDataType(typeof(double)), "JulianDay", date);
 		}
 
+		// a REAL division made by the "/" arm below is floating too, although it is typed as the decimal it computes
 		static bool IsFloating(ISqlExpression expression)
 		{
-			var type = expression.SystemType?.ToUnderlying();
-
-			return type == typeof(double) || type == typeof(float);
+			return expression.SystemType?.IsFloatingPointType == true
+				|| expression is SqlBinaryExpression { Operation: "/", Expr1: SqlCastExpression { IsMandatory: true } cast } && cast.SystemType.IsFloatingPointType;
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)

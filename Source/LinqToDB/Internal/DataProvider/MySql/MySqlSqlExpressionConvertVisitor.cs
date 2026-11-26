@@ -21,17 +21,21 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		/// </summary>
 		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			return Factory.Expression(type, Precedence.Multiplicative, "{0} DIV {1}", dividend, divisor);
+			return new SqlExpression(type, "{0} DIV {1}", Precedence.Multiplicative, ParametersNullabilityType.IfAnyParameterNullable, dividend, divisor);
 		}
+
+		/// <summary>
+		/// MySQL computes <c>~</c> on <c>BIGINT UNSIGNED</c>, so a <see cref="ulong"/> <c>~</c> is already right - and the
+		/// signed lowering below builds a <see cref="ulong"/> <c>~</c> of its own that must stay as it is.
+		/// </summary>
+		protected override bool IsNativeUnsigned(Type unsignedType) => unsignedType == typeof(ulong);
 
 		// MySQL computes ~ & | ^ as BIGINT UNSIGNED, so ~4 is 18446744073709551611 where the CLR operator gives -5;
 		// CAST(... AS SIGNED) reads the same 64 bits back as two's complement. The inner node is typed ulong, which
 		// is what MySQL returns, so it is not taken for a signed operator again.
 		static bool IsSignedInteger(Type? type)
 		{
-			return type?.ToUnderlying() is { } underlying
-				&& underlying.IsIntegerType
-				&& underlying.IsSignedNumberType;
+			return type?.IsSignedIntegerType == true;
 		}
 
 		ISqlExpression AsSigned(ISqlExpression unsigned, DbDataType type)
@@ -98,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			var castType = cast.SystemType.ToUnderlying();
 
-			if ((castType == typeof(double) || castType == typeof(float)) && cast.Expression.SystemType == typeof(decimal))
+			if (castType.IsFloatingPointType && cast.Expression.SystemType == typeof(decimal))
 				return cast.Expression;
 
 			return base.ConvertConversion(cast);

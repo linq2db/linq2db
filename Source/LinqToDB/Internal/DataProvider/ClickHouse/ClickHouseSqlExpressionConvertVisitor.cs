@@ -22,6 +22,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
+		protected override bool HasNativeUnsignedIntegers        => true;
 
 		/// <summary>
 		/// <c>intDiv</c>, because ClickHouse's <c>/</c> produces a float even between two integers.

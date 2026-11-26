@@ -44,17 +44,17 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		/// and a cast to an integer truncates toward zero.
 		/// </summary>
 		/// <remarks>
-		/// <see cref="ulong"/> is left as it is: its cast target is a bare <c>DECIMAL</c>, which keeps the fraction.
-		/// The inner division is typed <see cref="double"/>, which is what Informix returns, so it is not taken for
-		/// an integer division again; the cast is mandatory, or the optimizer drops it as a cast to the type the
-		/// node claims.
+		/// <see cref="ulong"/> goes to the base, which truncates with <c>FLOOR</c>: its cast target is a bare <c>DECIMAL</c>,
+		/// which keeps the fraction. The inner division is typed <see cref="double"/>, which is what Informix returns, so it
+		/// is not taken for an integer division again; the cast is mandatory, or the optimizer drops it as a cast to the
+		/// type the node claims.
 		/// </remarks>
 		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
 			var integerType = type.SystemType.ToUnderlying();
 
 			if (integerType == typeof(ulong))
-				return null;
+				return base.IntegerDivide(type, dividend, divisor);
 
 			var division = Factory.Div(Factory.GetDbDataType(typeof(double)), dividend, divisor);
 

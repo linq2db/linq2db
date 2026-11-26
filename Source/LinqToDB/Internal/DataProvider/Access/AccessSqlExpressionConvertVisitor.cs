@@ -29,6 +29,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 		}
 
 		/// <summary>
+		/// Access has no 64-bit integer and strips integer casts, so the unsigned rewrites cannot hold their values here;
+		/// its own <c>-1 - x</c> keeps <c>a BAND ~b</c> correct within 32 bits.
+		/// </summary>
+		protected override bool IsNativeUnsigned(Type unsignedType) => true;
+
+		/// <summary>
 		/// A second is as fine as Access counts - <c>DateDiff</c> has no millisecond part at all.
 		/// </summary>
 		/// <remarks>

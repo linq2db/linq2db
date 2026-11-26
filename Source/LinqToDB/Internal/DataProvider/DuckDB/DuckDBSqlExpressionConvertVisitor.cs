@@ -12,6 +12,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 	{
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
+		protected override bool HasNativeUnsignedIntegers        => true;
 
 		/// <summary>
 		/// <c>//</c>, DuckDB's integer division - its <c>/</c> produces a double even between two integers.

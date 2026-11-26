@@ -565,7 +565,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var incType = f.GetDbDataType(isMs ? typeof(long) : typeof(int));
 				var sysType = f.GetDbDataType(increment).SystemType.UnwrappedNullableType;
 
-				if (sysType == typeof(double) || sysType == typeof(float))
+				if (sysType.IsFloatingPointType)
 					increment = f.Cast(increment, incType, isMandatory: true);
 
 				if (datepart == Sql.DateParts.Week)

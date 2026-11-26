@@ -15,6 +15,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
+		// a ulong is a DECIMAL(20, 0), and dividing two scale-0 decimals keeps scale 0
+		protected override bool DividesUnsignedNatively          => true;
 
 		/// <inheritdoc />
 		public override bool CanLowerIntervalDifference => true;
