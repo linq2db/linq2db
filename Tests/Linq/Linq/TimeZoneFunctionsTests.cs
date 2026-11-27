@@ -389,6 +389,29 @@ namespace Tests.Linq
 			table.Select(r => Sql.AsSql(r.Dto.TimeOfDay)).Single().ShouldBe(stored.TimeOfDay);
 		}
 
+		/// <summary>
+		/// The time half keeps the fraction of a second the column holds. Oracle reads it through
+		/// <c>TO_CHAR(…, 'HH24:MI:SS')</c>, which drops the fraction, and answers 12:00:00 for 12:00:00.5; master raised
+		/// ORA-50031 for the same query instead of answering.
+		/// </summary>
+		[ActiveIssue(5913, Configurations = [TestProvName.AllOracle], ErrorType = typeof(ShouldAssertException))]
+		[Test]
+		public void TimeOfDayKeepsTheFractionOfASecond([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value.AddMilliseconds(500)));
+
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
+
+			var timeOfDay = table
+				.Select(r => Sql.AsSql(r.Dto.TimeOfDay))
+				.Single();
+
+			timeOfDay.ShouldBe(stored.TimeOfDay);
+		}
+
 		#endregion
 
 		#region Arithmetic inside the frame
