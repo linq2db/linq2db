@@ -295,33 +295,32 @@ namespace Tests.OData.Microsoft
 			var materialized = query.ToArray();
 		}
 
-		#region Issue 3757 Data
-		[Test]
-		public void Issue3757Test([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context, [Values("", "?$filter=Children/any(c: contains(c/LS, 'de'))")] string queryString)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3757")]
+		public void FilterOnProjectedChildrenCollection([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context, [Values("", "?$filter=Children/any(c: contains(c/LS, 'de'))")] string queryString)
 		{
 			var modelBuilder = new ODataModelBuilder();
 
-			var level1 = modelBuilder.EntityType<Issue3757Level1>();
+			var level1 = modelBuilder.EntityType<ODataLevel1Entity>();
 			level1.HasKey(p => p.ID);
 			level1.Property(p => p.ValS);
 			level1.Property(p => p.ValB);
 			level1.Property(p => p.ValInt);
 
-			var level2 = modelBuilder.EntityType<Issue3757Level2>();
+			var level2 = modelBuilder.EntityType<ODataLevel2Entity>();
 			level2.HasKey(p => p.ID);
 			level2.HasKey(p => p.ParentId);
 			level2.Property(p => p.ValS);
 			level2.Property(p => p.ValB);
 			level2.Property(p => p.ValInt);
 
-			var projection = modelBuilder.ComplexType<Issue3757ODataModel>();
+			var projection = modelBuilder.ComplexType<ODataProjectionModel>();
 			projection.Property(p => p.Id);
 			projection.Property(p => p.L1B);
 			projection.Property(p => p.L1S);
 			projection.Property(p => p.L1I);
 			projection.CollectionProperty(p => p.Children);
 
-			var cjildProjection = modelBuilder.ComplexType<Issue3757ODataChild>();
+			var cjildProjection = modelBuilder.ComplexType<ODataProjectionChild>();
 			cjildProjection.Property(p => p.Id);
 			cjildProjection.Property(p => p.LB);
 			cjildProjection.Property(p => p.LS);
@@ -331,9 +330,9 @@ namespace Tests.OData.Microsoft
 
 			using var db = GetDataContext(context);
 			var path = new ODataPath();
-			ODataQueryContext queryContext = new ODataQueryContext(model, typeof(Issue3757ODataModel), path);
+			ODataQueryContext queryContext = new ODataQueryContext(model, typeof(ODataProjectionModel), path);
 
-			var uri = new Uri($"http://localhost:15580/odata/Issue3757{queryString}");
+			var uri = new Uri($"http://localhost:15580/odata/ProjectedChildren{queryString}");
 #if NETFRAMEWORK
 			using var request = new HttpRequestMessage()
 			{
@@ -362,11 +361,11 @@ namespace Tests.OData.Microsoft
 			var options = new ODataQueryOptions(queryContext, request);
 
 			IQueryable resultQuery;
-			using var t1 = db.CreateLocalTable<Issue3757Level1>();
-			using var t2 = db.CreateLocalTable<Issue3757Level2>();
+			using var t1 = db.CreateLocalTable<ODataLevel1Entity>();
+			using var t2 = db.CreateLocalTable<ODataLevel2Entity>();
 
 			var query = from l1 in t1
-						select new Issue3757ODataModel
+						select new ODataProjectionModel
 						{
 							Id = l1.ID,
 							L1B = l1.ValB,
@@ -374,7 +373,7 @@ namespace Tests.OData.Microsoft
 							L1I = l1.ValInt,
 							Children = from l2 in t2
 									   where l1.ID == l2.ParentId
-									   select new Issue3757ODataChild
+									   select new ODataProjectionChild
 									   {
 										   Id = l2.ID,
 										   LB = l2.ValB,
@@ -387,7 +386,7 @@ namespace Tests.OData.Microsoft
 		}
 
 		[Table]
-		public class Issue3757Level1
+		public class ODataLevel1Entity
 		{
 			[PrimaryKey] public int ID { get; set; }
 			[Column] public string? ValS { get; set; }
@@ -395,7 +394,7 @@ namespace Tests.OData.Microsoft
 			[Column] public int? ValInt { get; set; }
 		}
 		[Table]
-		public class Issue3757Level2
+		public class ODataLevel2Entity
 		{
 			[PrimaryKey] public int ID { get; set; }
 			[Column] public int ParentId { get; set; }
@@ -404,21 +403,20 @@ namespace Tests.OData.Microsoft
 			[Column] public int? ValInt { get; set; }
 		}
 
-		public class Issue3757ODataModel
+		public class ODataProjectionModel
 		{
 			public int Id { get; set; }
 			public string? L1S { get; set; }
 			public bool? L1B { get; set; }
 			public int? L1I { get; set; }
-			public IEnumerable<Issue3757ODataChild> Children { get; set; } = null!;
+			public IEnumerable<ODataProjectionChild> Children { get; set; } = null!;
 		}
-		public class Issue3757ODataChild
+		public class ODataProjectionChild
 		{
 			public int Id { get; set; }
 			public string? LS { get; set; }
 			public bool? LB { get; set; }
 			public int? LI { get; set; }
 		}
-		#endregion
 	}
 }

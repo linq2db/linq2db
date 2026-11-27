@@ -2470,8 +2470,8 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
-		[Test]
-		public void Issue515Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/515")]
+		public void DateTimeOffsetRoundTrip([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			try
@@ -2488,8 +2488,8 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
-		[Test]
-		public void Issue612Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/612")]
+		public void DateTimeOffsetTimestampDefaultPrecisionRoundTrip([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			try
@@ -2513,8 +2513,8 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
-		[Test]
-		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/612")]
+		public void DateTimeOffsetTimestampTzPrecisionWithinNineTicks([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			try
@@ -2559,8 +2559,8 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.Guid),             Nullable] public byte[]? guidDataType   { get; set; } // RAW(16)
 		}
 
-		[Test]
-		public void Issue539([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/539")]
+		public void RawGuidByteArrayParameterInSubquery([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			ResetAllTypesIdentity(context);
 
@@ -2592,8 +2592,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("ISSUE723TABLE")]
-		public class Issue723Table
+		[Table("IDENTITYSCHEMATABLE")]
+		public class IdentitySchemaTable
 		{
 			[PrimaryKey, Identity]
 			public int Id;
@@ -2604,11 +2604,11 @@ namespace Tests.DataProvider
 		// if this test fails with "ORA-12828: Can't start parallel transaction at a remote site"
 		// for devart provider in oci mode, add this to connection string:
 		// Enlist=false;Transaction Scope Local=true;
-		[Test]
-		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/723")]
+		public void CreateAndInsertWithIdentityInCustomSchema([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			//var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "ISSUE723SCHEMA" : "C##ISSUE723SCHEMA";
-			var schema = "C##ISSUE723SCHEMA";
+			//var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "IDENTITYSCHEMA" : "C##IDENTITYSCHEMA";
+			var schema = "C##IDENTITYSCHEMA";
 			// v12 fix: ORA-65096: invalid common user or role name
 			// http://www.dba-oracle.com/t_ora_65096_create_user_12c_without_c_prefix.htm
 
@@ -2630,28 +2630,28 @@ namespace Tests.DataProvider
 				var tableSpace = db.Execute<string>($"SELECT default_tablespace FROM sys.dba_users WHERE username = '{schema}'");
 				db.Execute($"ALTER USER {schema} quota unlimited on {tableSpace}");
 
-				db.CreateTable<Issue723Table>(schemaName: schema);
-				Assert.That(db.LastQuery!, Does.Contain($"{schema}.ISSUE723TABLE"));
+				db.CreateTable<IdentitySchemaTable>(schemaName: schema);
+				Assert.That(db.LastQuery!, Does.Contain($"{schema}.IDENTITYSCHEMATABLE"));
 
 				try
 				{
 
 					new FluentMappingBuilder(db.MappingSchema)
-						.Entity<Issue723Table>()
+						.Entity<IdentitySchemaTable>()
 						.HasSchemaName(schema)
 						.Build();
 
 					for (var i = 1; i < 3; i++)
 					{
-						var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() { StringValue = i.ToString() }));
+						var id = Convert.ToInt32(db.InsertWithIdentity(new IdentitySchemaTable() { StringValue = i.ToString() }));
 						Assert.That(id, Is.EqualTo(i));
 					}
 
-					Assert.That(db.LastQuery, Does.Contain($"{schema}.ISSUE723TABLE"));
+					Assert.That(db.LastQuery, Does.Contain($"{schema}.IDENTITYSCHEMATABLE"));
 				}
 				finally
 				{
-					db.DropTable<Issue723Table>(schemaName: schema);
+					db.DropTable<IdentitySchemaTable>(schemaName: schema);
 				}
 			}
 			finally
@@ -2660,14 +2660,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void Issue723Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/723")]
+		public void CreateLocalTableWithIdentityColumn([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue723Table>();
+			using var tb = db.CreateLocalTable<IdentitySchemaTable>();
 		}
 
-		public class Issue731Table
+		public class GuidBinaryColsTable
 		{
 			public int     Id;
 			public Guid    Guid;
@@ -2679,13 +2679,13 @@ namespace Tests.DataProvider
 
 		}
 
-		[Test]
-		public void Issue731Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/731")]
+		public void BinaryGuidAndRawColumnsRoundTrip([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<Issue731Table>())
+			using (db.CreateLocalTable<GuidBinaryColsTable>())
 			{
-				var origin = new Issue731Table()
+				var origin = new GuidBinaryColsTable()
 				{
 					Id         = 1,
 					Guid       = TestData.Guid1,
@@ -2696,7 +2696,7 @@ namespace Tests.DataProvider
 
 				db.Insert(origin);
 
-				var result = db.GetTable<Issue731Table>().First(_ => _.Id == 1);
+				var result = db.GetTable<GuidBinaryColsTable>().First(_ => _.Id == 1);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(origin.Id));
@@ -3571,7 +3571,7 @@ namespace Tests.DataProvider
 		// schema's rows. The count this test used to carry was 11 against a schema that now holds 31, so it had gone
 		// stale without the defect ever coming back; anything counting schema objects goes the same way.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/399")]
-		public void Issue399Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		public void SchemaPackageMembersAndLoadedProcedures([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataConnection(context);
 			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
@@ -3775,18 +3775,17 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#region Issue 2342
-		[Test]
-		public void Issue2342Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2342")]
+		public void BulkCopyInsertIntoWithRetryPolicy([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using var db    = GetDataContext(context, o => o
 				.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto })
 				.UseFactory(connection => new DummyRetryPolicy()));
-			using var table = db.CreateLocalTable<Issue2342Entity>();
+			using var table = db.CreateLocalTable<BulkCopyRetryEntity>();
 
 			using (db.BeginTransaction())
 			{
-				table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
+				table.BulkCopy(Enumerable.Range(1, 10).Select(id => new BulkCopyRetryEntity { Id = id, Name = $"Name_{id}" }));
 			}
 
 			table.Truncate();
@@ -3801,12 +3800,11 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class Issue2342Entity
+		sealed class BulkCopyRetryEntity
 		{
 			[Column]                        public long   Id   { get; set; }
 			[Column(Length = 256, CanBeNull = false)] public string Name { get; set; } = null!;
 		}
-#endregion
 
 		[Test]
 		public void TestTablesAndViewsLoad([IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withFilter)
@@ -3852,9 +3850,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-#region Issue 2504
-		[Test]
-		public async Task Issue2504Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2504")]
+		public async Task InsertWithInt64IdentityCompositeKeySequence([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			try
@@ -3868,7 +3865,7 @@ CREATE TABLE ""TABLE_A""(
 	CONSTRAINT ""PK_TABLE_A"" PRIMARY KEY(""COLUMN_A"", ""COLUMN_B"", ""COLUMN_C"")
 )");
 
-				var id = await db.InsertWithInt64IdentityAsync(new Issue2504Table1
+				var id = await db.InsertWithInt64IdentityAsync(new CompositeSeqTableA
 				{
 					COLUMNA = 1,
 					COLUMNB = 2
@@ -3876,7 +3873,7 @@ CREATE TABLE ""TABLE_A""(
 
 				Assert.That(id, Is.EqualTo(1));
 
-				id = await db.InsertWithInt64IdentityAsync(new Issue2504Table2()
+				id = await db.InsertWithInt64IdentityAsync(new CompositeSeqTableB()
 				{
 					COLUMNA = 1,
 					COLUMNB = 2
@@ -3893,7 +3890,7 @@ CREATE TABLE ""TABLE_A""(
 		}
 
 		[Table(Name = "TABLE_A")]
-		public sealed class Issue2504Table1
+		public sealed class CompositeSeqTableA
 		{
 			[PrimaryKey]
 			[Column(Name = "COLUMN_A")]
@@ -3909,7 +3906,7 @@ CREATE TABLE ""TABLE_A""(
 		}
 
 		[Table(Name = "TABLE_A")]
-		public sealed class Issue2504Table2
+		public sealed class CompositeSeqTableB
 		{
 			[PrimaryKey]
 			[Column(Name = "COLUMN_A")]
@@ -3923,7 +3920,6 @@ CREATE TABLE ""TABLE_A""(
 			[Column(Name = "COLUMN_C"), SequenceName("SEQ_A")]
 			public int COLUMNC { get; set; }
 		}
-#endregion
 
 		[Test]
 		public void TestDateTimeNAddTimeSpan([IncludeDataSources(true, TestProvName.AllOracle)] string context)
@@ -4199,8 +4195,8 @@ CREATE TABLE ""TABLE_A""(
 			}
 		}
 
-		[Test]
-		public void Issue3732Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/3732")]
+		public void BulkCopyInsertIntoWithNotEqualParameter([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
@@ -4211,63 +4207,61 @@ CREATE TABLE ""TABLE_A""(
 			table.Where(x => x.Id != id).ToArray();
 		}
 
-		[Test]
-		public void Issue3740Test1([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3740")]
+		public void InlinePlsqlBooleanFunctionInWithClause([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			db.Execute("CREATE OR REPLACE FUNCTION ISSUE3742(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
+			db.Execute("CREATE OR REPLACE FUNCTION PLSQL_BOOL_FUNC(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
 			try
 			{
 				db.Execute(@"WITH
 FUNCTION convert_bool(i IN VARCHAR2) RETURN NUMBER AS
 BEGIN
-	RETURN CASE ISSUE3742(i) WHEN TRUE THEN 1 WHEN FALSE THEN 0 END;
+	RETURN CASE PLSQL_BOOL_FUNC(i) WHEN TRUE THEN 1 WHEN FALSE THEN 0 END;
 END convert_bool;
 SELECT convert_bool(:p) FROM SYS.DUAL", new { p = "test" });
 			}
 			finally
 			{
-				db.Execute("DROP FUNCTION ISSUE3742");
+				db.Execute("DROP FUNCTION PLSQL_BOOL_FUNC");
 			}
 		}
 
-		[Test]
-		public void Issue3740Test2([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3740")]
+		public void InlinePlsqlBooleanFunctionViaQueryHint([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			db.Execute("CREATE OR REPLACE FUNCTION ISSUE3742(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
+			db.Execute("CREATE OR REPLACE FUNCTION PLSQL_BOOL_FUNC(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
 			try
 			{
 				db.NextQueryHints.Add(@"**WITH
 FUNCTION convert_bool(i IN VARCHAR2) RETURN NUMBER AS
 BEGIN
-	RETURN CASE ISSUE3742(i) WHEN TRUE THEN 1 WHEN FALSE THEN 0 END;
+	RETURN CASE PLSQL_BOOL_FUNC(i) WHEN TRUE THEN 1 WHEN FALSE THEN 0 END;
 END convert_bool;");
-				db.Select(() => Issue3742Function("test"));
+				db.Select(() => PlsqlBoolFunction("test"));
 			}
 			finally
 			{
-				db.Execute("DROP FUNCTION ISSUE3742");
+				db.Execute("DROP FUNCTION PLSQL_BOOL_FUNC");
 			}
 		}
 
 		[Sql.Expression("convert_bool({0})", ServerSideOnly = true)]
-		private static bool Issue3742Function(string parameter) => throw new ServerSideOnlyException(nameof(Issue3742Function));
+		private static bool PlsqlBoolFunction(string parameter) => throw new ServerSideOnlyException(nameof(PlsqlBoolFunction));
 
-		#region Issue 4172
-
-		[Table(Name = "ISSUE4172TABLE")]
-		sealed class ISSUE4172TABLE
+		[Table(Name = "ROLEFILTERTABLE")]
+		sealed class RoleEnumTable
 		{
 			[Column("ROLE"), Nullable] public Role ROLE { get; set; }
 
-			public static ISSUE4172TABLE[] TestData =
+			public static RoleEnumTable[] TestData =
 			[
-				new ISSUE4172TABLE() { ROLE = Role.Unknown },
-				new ISSUE4172TABLE() { ROLE = Role.Unknown },
-				new ISSUE4172TABLE() { ROLE = Role.Role1 },
+				new RoleEnumTable() { ROLE = Role.Unknown },
+				new RoleEnumTable() { ROLE = Role.Unknown },
+				new RoleEnumTable() { ROLE = Role.Role1 },
 			];
 		}
 
@@ -4284,10 +4278,10 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_Enum_Literal_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void EmptyStringEnumLiteralEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
+			using var users = db.CreateLocalTable(RoleEnumTable.TestData);
 
 			var data = (
 					from u in users
@@ -4298,10 +4292,10 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_Enum_Literal_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void EmptyStringEnumLiteralNotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
+			using var users = db.CreateLocalTable(RoleEnumTable.TestData);
 
 			var data = (
 				 from u in users
@@ -4312,10 +4306,10 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_Enum_Variable_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		public void EmptyStringEnumVariableEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
+			using var users = db.CreateLocalTable(RoleEnumTable.TestData);
 
 			db.InlineParameters = inline;
 			var value = Role.Unknown;
@@ -4329,10 +4323,10 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_Enum_Variable_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		public void EmptyStringEnumVariableNotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
+			using var users = db.CreateLocalTable(RoleEnumTable.TestData);
 
 			db.InlineParameters = inline;
 			var value = Role.Unknown;
@@ -4345,24 +4339,24 @@ END convert_bool;");
 			Assert.That(data, Has.Count.EqualTo(1));
 		}
 
-		[Table(Name = "ISSUE4172TABLE")]
-		sealed class ISSUE4172TABLEx
+		[Table(Name = "ROLEFILTERTABLE")]
+		sealed class RoleStringTable
 		{
 			[Column("ROLE"), Nullable] public string ROLE { get; set; } = null!;
 
-			public static ISSUE4172TABLEx[] TestData =
+			public static RoleStringTable[] TestData =
 			[
-				new ISSUE4172TABLEx() { ROLE = "" },
-				new ISSUE4172TABLEx() { ROLE = "" },
-				new ISSUE4172TABLEx() { ROLE = "1" },
+				new RoleStringTable() { ROLE = "" },
+				new RoleStringTable() { ROLE = "" },
+				new RoleStringTable() { ROLE = "1" },
 			];
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_String_Literal_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void EmptyStringLiteralEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+			using var users = db.CreateLocalTable(RoleStringTable.TestData);
 
 			var data = (
 				 from u in users
@@ -4373,10 +4367,10 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_String_Literal_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void EmptyStringLiteralNotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+			using var users = db.CreateLocalTable(RoleStringTable.TestData);
 
 			var data = (
 				 from u in users
@@ -4387,10 +4381,10 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_String_Variable_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		public void EmptyStringVariableEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+			using var users = db.CreateLocalTable(RoleStringTable.TestData);
 
 			db.InlineParameters = inline;
 			var value = "";
@@ -4404,10 +4398,10 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test_String_Variable_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		public void EmptyStringVariableNotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+			using var users = db.CreateLocalTable(RoleStringTable.TestData);
 
 			db.InlineParameters = inline;
 			var value = "";
@@ -4420,11 +4414,8 @@ END convert_bool;");
 			Assert.That(data, Has.Count.EqualTo(1));
 		}
 
-		#endregion
-
-		#region Issue 1999
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1999")]
-		public void Issue1999Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void ExecuteProcBlobOutputByDataType([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -4434,22 +4425,22 @@ END convert_bool;");
 			var pIn = new DataParameter("pIn", blob, DataType.Blob);
 			var pOut = new DataParameter("pOut", null, DataType.Blob) { Direction = ParameterDirection.Output };
 
-			db.Execute("CREATE OR REPLACE PROCEDURE ISSUE1999(pIn IN BLOB, pOut OUT BLOB) AS BEGIN pOut := pIn; END;");
+			db.Execute("CREATE OR REPLACE PROCEDURE BLOB_ECHO_PROC(pIn IN BLOB, pOut OUT BLOB) AS BEGIN pOut := pIn; END;");
 
 			try
 			{
-				db.ExecuteProc("ISSUE1999", pIn, pOut);
+				db.ExecuteProc("BLOB_ECHO_PROC", pIn, pOut);
 
 				Assert.That(pOut.Value, Is.EqualTo(blob));
 			}
 			finally
 			{
-				db.Execute("DROP PROCEDURE ISSUE1999");
+				db.Execute("DROP PROCEDURE BLOB_ECHO_PROC");
 			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1999")]
-		public void Issue1999Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void ExecuteProcBlobOutputByDbType([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -4459,25 +4450,24 @@ END convert_bool;");
 			var pIn = new DataParameter("pIn", blob, "BLOB");
 			var pOut = new DataParameter("pOut", null, DataType.Blob) { Direction = ParameterDirection.Output };
 
-			db.Execute("CREATE OR REPLACE PROCEDURE ISSUE1999(pIn IN BLOB, pOut OUT BLOB) AS BEGIN pOut := pIn; END;");
+			db.Execute("CREATE OR REPLACE PROCEDURE BLOB_ECHO_PROC(pIn IN BLOB, pOut OUT BLOB) AS BEGIN pOut := pIn; END;");
 
 			try
 			{
-				db.ExecuteProc("ISSUE1999", pIn, pOut);
+				db.ExecuteProc("BLOB_ECHO_PROC", pIn, pOut);
 
 				Assert.That(pOut.Value, Is.EqualTo(blob));
 			}
 			finally
 			{
-				db.Execute("DROP PROCEDURE ISSUE1999");
+				db.Execute("DROP PROCEDURE BLOB_ECHO_PROC");
 			}
 		}
-		#endregion
 
 		[ActiveIssue(2365, ErrorMessage = "Assert.That(column.Length, Is.Null)",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The CLOB column comes back with a length of 22 where none is due - #2365's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2365")]
-		public void Issue2365Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void SchemaAllTypesColumnLengths([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataConnection(context);
 

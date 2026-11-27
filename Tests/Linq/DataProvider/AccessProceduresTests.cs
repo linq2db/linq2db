@@ -8,6 +8,7 @@ using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 using Tests.Model;
+using Tests.SchemaProvider;
 using Tests.UserTests;
 
 namespace Tests.DataProvider
@@ -259,32 +260,32 @@ namespace Tests.DataProvider
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
-				Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.Zero);
+				Assert.That(db.GetTable<SchemaProviderTests.AllTypesChar20Row>().Where(_ => _.char20DataType == "issue792").Count(), Is.Zero);
 
 				var cnt = ThisProcedureNotVisibleFromODBC(db, context.IsAnyOf(TestProvName.AllAccessOdbc));
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(1));
+					Assert.That(db.GetTable<SchemaProviderTests.AllTypesChar20Row>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(1));
 				}
 			}
 		}
 
-		[Test]
-		public void Test_AddIssue792Record([IncludeDataSources(TestProvName.AllAccess)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/792")]
+		public void Test_AddRecord([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
-				Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.Zero);
+				Assert.That(db.GetTable<SchemaProviderTests.AllTypesChar20Row>().Where(_ => _.char20DataType == "issue792").Count(), Is.Zero);
 
-				var cnt = AddIssue792Record(db, 100500, context.IsAnyOf(TestProvName.AllAccessOdbc));
+				var cnt = AddRecord(db, 100500, context.IsAnyOf(TestProvName.AllAccessOdbc));
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(1));
+					Assert.That(db.GetTable<SchemaProviderTests.AllTypesChar20Row>().Where(_ => _.char20DataType == "issue792").Count(), Is.EqualTo(1));
 				}
 			}
 		}
@@ -456,7 +457,7 @@ namespace Tests.DataProvider
 			return dataConnection.ExecuteProc(commandText);
 		}
 
-		private static int AddIssue792Record(IDataContext dataConnection, int? unused, bool odbc)
+		private static int AddRecord(IDataContext dataConnection, int? unused, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL AddIssue792Record(?) }" : "AddIssue792Record";
 			return dataConnection.ExecuteProc(
