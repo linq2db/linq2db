@@ -2082,7 +2082,8 @@ namespace LinqToDB.Internal.SqlProvider
 					if (takeValue.ElementType != QueryElementType.SqlValue && takeValue.CanBeEvaluated(true))
 						return true;
 				}
-				else if (takeValue.ElementType != QueryElementType.SqlParameter)
+				// ConvertSkipTake renders a parameter or a constant as is; anything else is evaluated per execution
+				else if (takeValue.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					return true;
 
 			}
@@ -2099,7 +2100,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (skipValue.ElementType != QueryElementType.SqlValue && skipValue.CanBeEvaluated(true))
 						return true;
 				}
-				else if (skipValue.ElementType != QueryElementType.SqlParameter)
+				else if (skipValue.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					return true;
 			}
 

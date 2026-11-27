@@ -23,6 +23,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(6202, Configuration = TestProvName.AllYdb, BaselinesMismatch = true)]
 		public void TestBinary([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
