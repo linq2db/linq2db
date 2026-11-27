@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,7 +48,10 @@ namespace Tests.Scaffold.Harness
 
 			foreach (var table in tables)
 			{
-				var entities = Enumerable.Range(0, RowCount).Select(i => CreateRow(db, table.EntityType, i)).ToArray();
+				var entities = Enumerable
+					.Range(0, RowCount)
+					.Select(i => CreateRow(db, table.EntityType, i))
+					.ToArray();
 
 				foreach (var entity in entities)
 					Call(nameof(Insert), table.EntityType, db, entity);
@@ -59,15 +63,21 @@ namespace Tests.Scaffold.Harness
 
 			foreach (var table in tables)
 			{
-				var actual   = ((IEnumerable)Call(nameof(ToList), table.EntityType, table.GetTable())!).Cast<object>().ToList();
+				var actual   = ((IEnumerable)Call(nameof(ToList), table.EntityType, table.GetTable())!)
+					.Cast<object>()
+					.ToList();
 				var expected = rows[table.EntityType];
 
 				var columns = Comparable(db, table.EntityType);
 
-				Assert.That(
-					actual.Select(r => RowKey(columns, r)).OrderBy(static k => k, StringComparer.Ordinal),
-					Is.EqualTo(expected.Select(r => RowKey(columns, r)).OrderBy(static k => k, StringComparer.Ordinal)),
-					$"{model}: {table.Property.Name} rows");
+				var actualKeys   = actual
+					.Select(r => RowKey(columns, r))
+					.OrderBy(static k => k, StringComparer.Ordinal);
+				var expectedKeys = expected
+					.Select(r => RowKey(columns, r))
+					.OrderBy(static k => k, StringComparer.Ordinal);
+
+				Assert.That(actualKeys, Is.EqualTo(expectedKeys), $"{model}: {table.Property.Name} rows");
 
 				rowCount += actual.Count;
 			}
@@ -84,10 +94,15 @@ namespace Tests.Scaffold.Harness
 				var source = rows[entityType][RowCount - 1];
 				var found  = InvokeFind(method, db, table.GetTable(), source);
 
-				Assert.That(found, Is.Not.Null, $"{model}: {method.DeclaringType!.Name}.{method.Name}({string.Join(", ", method.GetParameters().Select(static p => p.ParameterType.Name))}) didn't find row");
+				var parameterTypes = method
+					.GetParameters()
+					.Select(static p => p.ParameterType.Name);
+				var parameters     = string.Join(", ", parameterTypes);
+
+				Assert.That(found, Is.Not.Null, $"{model}: {method.DeclaringType!.Name}.{method.Name}({parameters}) didn't find row");
 				Assert.That(RowKey(Comparable(db, entityType), found!), Is.EqualTo(RowKey(Comparable(db, entityType), source)));
 
-				finds.Add($"{entityType.Name}.{method.Name}({string.Join(", ", method.GetParameters().Select(static p => p.ParameterType.Name))})");
+				finds.Add($"{entityType.Name}.{method.Name}({parameters})");
 			}
 
 			var associations = 0;
@@ -95,13 +110,17 @@ namespace Tests.Scaffold.Harness
 			{
 				foreach (var association in db.MappingSchema.GetEntityDescriptor(table.EntityType).Associations)
 				{
-					var loaded = ((IEnumerable)Call(nameof(LoadWith), table.EntityType, table.GetTable(), association.MemberInfo)!).Cast<object>().ToList();
+					var loaded = ((IEnumerable)Call(nameof(LoadWith), table.EntityType, table.GetTable(), association.MemberInfo)!)
+						.Cast<object>()
+						.ToList();
 
 					var populated = loaded.Count(row => GetValue(association.MemberInfo, row) switch
 					{
 						null                 => false,
 						string               => true,
-						IEnumerable children => children.Cast<object>().Any(),
+						IEnumerable children => children
+							.Cast<object>()
+							.Any(),
 						_                    => true,
 					});
 
@@ -147,7 +166,9 @@ namespace Tests.Scaffold.Harness
 					args[i] = source;
 				else
 				{
-					var member = source.GetType().GetProperty(parameter.Name!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)
+					var member = source
+						.GetType()
+						.GetProperty(parameter.Name!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)
 						?? throw new InvalidOperationException($"{method.Name}: no entity member for parameter '{parameter.Name}'");
 
 					args[i] = member.GetValue(source);
@@ -158,8 +179,13 @@ namespace Tests.Scaffold.Harness
 
 			if (result is Task task)
 			{
-				task.GetAwaiter().GetResult();
-				result = task.GetType().GetProperty(nameof(Task<>.Result))!.GetValue(task);
+				task
+					.GetAwaiter()
+					.GetResult();
+				result = task
+					.GetType()
+					.GetProperty(nameof(Task<>.Result))!
+					.GetValue(task);
 			}
 
 			if (result is IQueryable query)
@@ -247,7 +273,7 @@ namespace Tests.Scaffold.Harness
 				TypeCode.Single   => row + 0.5f,
 				TypeCode.Boolean  => row % 2 == 0,
 				TypeCode.String   => "v" + row.ToString(CultureInfo.InvariantCulture),
-				TypeCode.DateTime => new DateTime(2020, 1, 1).AddDays(row),
+				TypeCode.DateTime => new DateTime(2020, 1, 1) + TimeSpan.FromDays(row),
 				TypeCode.Char     => (char)('a' + row),
 				_ when type == typeof(Guid)   => new Guid(row + 1, 0, 0, new byte[8]),
 				_ when type == typeof(byte[]) => new byte[] { 1, 2, (byte)row },
@@ -274,8 +300,10 @@ namespace Tests.Scaffold.Harness
 
 		static string Normalize(object? value)
 		{
-			if (value != null && value.GetType().IsGenericType && value.GetType().GetGenericTypeDefinition() == typeof(FSharpOption<>))
-				value = value.GetType().GetProperty(nameof(FSharpOption<>.Value))!.GetValue(value);
+			if (value?.GetType() is { IsGenericType: true } type && type.GetGenericTypeDefinition() == typeof(FSharpOption<>))
+				value = type
+					.GetProperty(nameof(FSharpOption<>.Value))!
+					.GetValue(value);
 
 			return value switch
 			{
@@ -298,7 +326,9 @@ namespace Tests.Scaffold.Harness
 			}
 			catch (TargetInvocationException ex) when (ex.InnerException != null)
 			{
-				System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+				ExceptionDispatchInfo
+					.Capture(ex.InnerException)
+					.Throw();
 				throw;
 			}
 		}
@@ -324,7 +354,9 @@ namespace Tests.Scaffold.Harness
 			var parameter = Expression.Parameter(typeof(T), "e");
 			var selector  = Expression.Lambda<Func<T, object?>>(Expression.Convert(Expression.MakeMemberAccess(parameter, association), typeof(object)), parameter);
 
-			return table.LoadWith(selector).ToList();
+			return table
+				.LoadWith(selector)
+				.ToList();
 		}
 	}
 }

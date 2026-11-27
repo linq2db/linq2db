@@ -30,7 +30,9 @@ namespace Tests.Scaffold.Harness
 
 		public Type? FindType(string name)
 		{
-			var types = Types.Where(t => string.Equals(t.Name, name, StringComparison.Ordinal)).ToList();
+			var types = Types
+				.Where(t => string.Equals(t.Name, name, StringComparison.Ordinal))
+				.ToList();
 
 			return types.Count switch
 			{
@@ -101,7 +103,11 @@ namespace Tests.Scaffold.Harness
 
 			static void Collect(object owner, List<TableAccessor> result, int depth)
 			{
-				foreach (var property in owner.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+				var properties = owner
+					.GetType()
+					.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+				foreach (var property in properties)
 				{
 					if (property.GetIndexParameters().Length > 0)
 						continue;

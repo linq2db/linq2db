@@ -22,7 +22,10 @@ namespace Tests.Scaffold.Harness
 		public static CompileResult TryCompile(GeneratedSource source, IReadOnlyCollection<string>? allowedWarnings = null)
 		{
 			var assemblyName = $"Gen_{Generator.ToIdentifier(source.Name)}_{source.Language}_{Guid.NewGuid():N}";
-			var files        = source.Files.Select(static f => new SourceFile(f.FileName, f.Code)).ToArray();
+			var files        = source
+				.Files
+				.Select(static f => new SourceFile(f.FileName, f.Code))
+				.ToArray();
 			var nullable     = source.Options.CodeGeneration.EnableNullableReferenceTypes;
 
 			return source.Language == ScaffoldLanguage.CSharp

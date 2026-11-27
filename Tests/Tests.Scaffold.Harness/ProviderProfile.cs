@@ -45,7 +45,8 @@ namespace Tests.Scaffold.Harness
 		/// <summary>
 		/// Options for SQL generation without database access.
 		/// </summary>
-		public DataOptions CreateOfflineOptions() => new DataOptions().UseConnectionString(DataProvider, DummyConnectionString);
+		public DataOptions CreateOfflineOptions() => new DataOptions()
+			.UseConnectionString(DataProvider, DummyConnectionString);
 
 		public override string ToString() => Name;
 

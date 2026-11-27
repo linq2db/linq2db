@@ -28,7 +28,8 @@ namespace Tests.Scaffold.Harness
 		/// <summary>
 		/// Options for context over this database. Connection is not disposed by context.
 		/// </summary>
-		public DataOptions Options => new DataOptions().UseConnection(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), _connection, false);
+		public DataOptions Options => new DataOptions()
+			.UseConnection(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), _connection, false);
 
 		public void Execute(string sql)
 		{

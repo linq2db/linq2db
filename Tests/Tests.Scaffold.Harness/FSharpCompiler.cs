@@ -105,7 +105,10 @@ namespace Tests.Scaffold.Harness
 			Microsoft.FSharp.Core.FSharpOption<Exception>? exception;
 
 			lock (_sync)
-				(fsDiagnostics, exception) = FSharpAsync.StartAsTask(_checker.Value.Compile(argv.ToArray(), null), null, null).GetAwaiter().GetResult();
+				(fsDiagnostics, exception) = FSharpAsync
+					.StartAsTask(_checker.Value.Compile(argv.ToArray(), null), null, null)
+					.GetAwaiter()
+					.GetResult();
 
 			var diagnostics = fsDiagnostics
 				.Where(static d => d.Severity == FSharpDiagnosticSeverity.Error || d.Severity == FSharpDiagnosticSeverity.Warning)

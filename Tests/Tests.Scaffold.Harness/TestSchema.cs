@@ -60,13 +60,18 @@ namespace Tests.Scaffold.Harness
 
 		public ForeignKey AddForeignKey(string name, SqlObjectName source, SqlObjectName target, params (string Source, string Target)[] columns)
 		{
-			var fk = new ForeignKey(name, source, target, columns.Select(static c => new ForeignKeyColumnMapping(c.Source, c.Target)).ToArray());
+			var mappings = columns
+				.Select(static c => new ForeignKeyColumnMapping(c.Source, c.Target))
+				.ToArray();
+			var fk       = new ForeignKey(name, source, target, mappings);
 			ForeignKeys.Add(fk);
 			return fk;
 		}
 
 		static Column[] WithOrdinals(IReadOnlyList<Column> columns)
-			=> columns.Select(static (c, i) => c.Ordinal == null ? c with { Ordinal = i } : c).ToArray();
+			=> columns
+				.Select(static (c, i) => c.Ordinal == null ? c with { Ordinal = i } : c)
+				.ToArray();
 
 		IEnumerable<Table>             ISchemaProvider.GetTables()                                         => Tables;
 		IEnumerable<View>              ISchemaProvider.GetViews()                                          => Views;

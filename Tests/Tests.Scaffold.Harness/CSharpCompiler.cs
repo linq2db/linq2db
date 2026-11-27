@@ -11,7 +11,10 @@ namespace Tests.Scaffold.Harness
 {
 	public static class CSharpCompiler
 	{
-		static readonly Lazy<MetadataReference[]> _references = new(static () => HostReferences.Paths.Select(static p => (MetadataReference)MetadataReference.CreateFromFile(p)).ToArray());
+		static readonly Lazy<MetadataReference[]> _references = new(static () => HostReferences
+			.Paths
+			.Select(static p => (MetadataReference)MetadataReference.CreateFromFile(p))
+			.ToArray());
 
 		/// <summary>
 		/// Language versions for generated code: the floor (default versions of net462 and netstandard2.0 projects, C# 8 for
@@ -82,7 +85,9 @@ namespace Tests.Scaffold.Harness
 		static CSharpCompilation CreateCompilation(string assemblyName, IReadOnlyList<SourceFile> sources, LanguageVersion languageVersion)
 		{
 			var parseOptions = new CSharpParseOptions(languageVersion);
-			var trees        = sources.Select(s => CSharpSyntaxTree.ParseText(s.Code, parseOptions, s.FileName)).ToArray();
+			var trees        = sources
+				.Select(s => CSharpSyntaxTree.ParseText(s.Code, parseOptions, s.FileName))
+				.ToArray();
 
 			// nullable context comes from #nullable directives, emitted by generator when NRT enabled
 			return CSharpCompilation.Create(

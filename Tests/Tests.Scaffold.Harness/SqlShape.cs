@@ -27,15 +27,24 @@ namespace Tests.Scaffold.Harness
 		/// <c>source.Select(e => function(e.member, ...))</c>: scalar function call in projection.
 		/// </summary>
 		public static IQueryable SelectCall(IQueryable source, MethodInfo function, params string[] members)
-			=> SelectCall(source, function, members.Select(static m => (Func<ParameterExpression, Expression>)(e => Expression.PropertyOrField(e, m))).ToArray());
+		{
+			var arguments = members
+				.Select(static m => (Func<ParameterExpression, Expression>)(e => Expression.PropertyOrField(e, m)))
+				.ToArray();
+
+			return SelectCall(source, function, arguments);
+		}
 
 		/// <summary>
 		/// <c>source.Select(e => function(argument(e), ...))</c>: scalar function call in projection with argument expressions.
 		/// </summary>
 		public static IQueryable SelectCall(IQueryable source, MethodInfo function, Func<ParameterExpression, Expression>[] arguments)
 		{
-			var e    = Expression.Parameter(source.ElementType, "e");
-			var call = Expression.Call(function, function.GetParameters().Select((p, i) => Convert(arguments[i](e), p.ParameterType)));
+			var e         = Expression.Parameter(source.ElementType, "e");
+			var converted = function
+				.GetParameters()
+				.Select((p, i) => Convert(arguments[i](e), p.ParameterType));
+			var call      = Expression.Call(function, converted);
 
 			return Select(source, Expression.Lambda(call, e));
 		}

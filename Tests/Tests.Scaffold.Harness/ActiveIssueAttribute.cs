@@ -46,9 +46,15 @@ namespace Tests.Scaffold.Harness
 			if (string.IsNullOrWhiteSpace(Arguments))
 				return true;
 
-			var arguments = test.Arguments.Select(static a => a?.ToString()).ToArray();
+			var arguments = test
+				.Arguments
+				.Select(static a => a?.ToString())
+				.ToArray();
 
-			return Arguments.Split(',').Select(static a => a.Trim()).All(v => arguments.Contains(v, StringComparer.Ordinal));
+			return Arguments
+				.Split(',')
+				.Select(static a => a.Trim())
+				.All(v => arguments.Contains(v, StringComparer.Ordinal));
 		}
 
 		bool Matches(string? message)

@@ -58,7 +58,9 @@ namespace Tests.Scaffold.Harness
 
 			var languageProvider = GetLanguage(language);
 			var scaffolder       = new Scaffolder(languageProvider, HumanizerNameConverter.Instance, options, interceptors);
-			var dataModel        = scaffolder.LoadDataModel(schema, (typeMappings ?? profile.CreateTypeMappings()).WithParser(languageProvider.TypeParser));
+			var mappings         = (typeMappings ?? profile.CreateTypeMappings())
+				.WithParser(languageProvider.TypeParser);
+			var dataModel        = scaffolder.LoadDataModel(schema, mappings);
 			var sqlBuilder       = profile.DataProvider.CreateSqlBuilder(profile.DataProvider.MappingSchema, new DataOptions());
 
 			var files = scaffolder.GenerateCodeModel(

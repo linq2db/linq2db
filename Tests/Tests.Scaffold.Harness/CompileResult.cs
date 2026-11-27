@@ -61,15 +61,23 @@ namespace Tests.Scaffold.Harness
 			sb.AppendLine(FailedWith(Failures.Select(static d => d.Id)));
 
 			foreach (var diagnostic in Failures)
-				sb.Append('\t').AppendLine(diagnostic.ToString());
+				sb
+					.Append('\t')
+					.AppendLine(diagnostic.ToString());
 
 			foreach (var source in Sources)
 			{
-				sb.AppendLine().Append("// ").AppendLine(source.FileName);
+				sb
+					.AppendLine()
+					.Append("// ")
+					.AppendLine(source.FileName);
 
 				var lines = source.Code.Split('\n');
 				for (var i = 0; i < lines.Length; i++)
-					sb.Append((i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture).PadLeft(5)).Append(": ").AppendLine(lines[i].TrimEnd('\r'));
+					sb
+						.Append((i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture).PadLeft(5))
+						.Append(": ")
+						.AppendLine(lines[i].TrimEnd('\r'));
 			}
 
 			return sb.ToString();
