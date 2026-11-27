@@ -31,17 +31,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return connectionString;
 		}
 
-		#region Issue 261
-		public class Issue261Table
+		public class TypeRegisteredEntity
 		{
 			public int Id { get; set; }
 			public string? Name { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/261")]
-		public void Issue261Test([EFDataSources] string provider)
+		public void GetTableOfEntityRegisteredByType([EFDataSources] string provider)
 		{
-			Test<Issue261Table>();
+			Test<TypeRegisteredEntity>();
 
 			void Test<T>()
 				where T : class
@@ -69,7 +68,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					_ => throw new InvalidOperationException($"ProviderSetup is not implemented for provider {provider}")
 				};
 
-				using var ctx = new Issue261Context<T>(optionsBuilder.Options);
+				using var ctx = new TypeRegisteredEntityContext<T>(optionsBuilder.Options);
 
 				using (new DisableBaseline("create db"))
 				{
@@ -82,7 +81,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		public sealed class Issue261Context<T>(DbContextOptions options) : DbContext(options)
+		public sealed class TypeRegisteredEntityContext<T>(DbContextOptions options) : DbContext(options)
 		{
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
@@ -91,31 +90,28 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				});
 			}
 		}
-#endregion
-
-		#region Issue 4669
 
 		// Regression test for #4669 with its own DbContext. The equivalent test on the shared Northwind model
 		// (ToolsTests.TestGlobalQueryFilters) cannot serve as one: it fails only when run alone, and passes
 		// whenever ToolsTests.NavigationProperties has run first - which it always has in a full run, since it
 		// sorts earlier. The masking is process-global state tied to the shared NorthwindContextBase model, so a
 		// separate context type is what makes the outcome independent of execution order.
-		public class Issue4669Item
+		public class QueryFilterItem
 		{
 			public int     Id   { get; set; }
 			public string? Name { get; set; }
 		}
 
-		public sealed class Issue4669Context(DbContextOptions options) : DbContext(options)
+		public sealed class QueryFilterContext(DbContextOptions options) : DbContext(options)
 		{
-			public DbSet<Issue4669Item> Items { get; set; } = null!;
+			public DbSet<QueryFilterItem> Items { get; set; } = null!;
 
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
 				// Mirrors IssueContextBase's ShadowTable: IsDeleted is a SHADOW property, and the query filter
 				// reaches it through EF.Property. Both tests that reproduce #4669 have a filter of this shape;
 				// an earlier attempt here used EF.Property against a real CLR property and did not reproduce.
-				modelBuilder.Entity<Issue4669Item>(e =>
+				modelBuilder.Entity<QueryFilterItem>(e =>
 				{
 					e.Property(x => x.Id).ValueGeneratedNever();
 					e.Property<bool>("IsDeleted").IsRequired();
@@ -124,11 +120,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		// Named distinctly from IssueTests.Issue4669Test, which covers a different aspect of the same issue and
+		// Named distinctly from IssueTests.EfQueryAfterLinqToDbQuery, which covers a different aspect of the same issue and
 		// is not gated - a FullyQualifiedName~ filter would otherwise select both.
 		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
-		public void Issue4669QueryFilterTest([EFDataSources] string provider)
+		public void ShadowQueryFilterEfQueryAfterLinqToDbCall([EFDataSources] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 
@@ -151,7 +147,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				_ => throw new InvalidOperationException($"ProviderSetup is not implemented for provider {provider}")
 			};
 
-			using var ctx = new Issue4669Context(optionsBuilder.Options);
+			using var ctx = new QueryFilterContext(optionsBuilder.Options);
 
 			using (new DisableBaseline("create db"))
 			{
@@ -159,40 +155,37 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				ctx.Database.EnsureCreated();
 			}
 
-			ctx.Add(new Issue4669Item { Id = 1, Name = "TestOne" });
-			ctx.Add(new Issue4669Item { Id = 2, Name = "Other"   });
+			ctx.Add(new QueryFilterItem { Id = 1, Name = "TestOne" });
+			ctx.Add(new QueryFilterItem { Id = 2, Name = "Other"   });
 			ctx.SaveChanges();
 
-			// Same shape as IssueTests.Issue4669Test: a linq2db call, then the EF call that throws.
+			// Same shape as IssueTests.EfQueryAfterLinqToDbQuery: a linq2db call, then the EF call that throws.
 			var linq2dbResult = ctx.Items.Where(x => x.Name!.Contains("Test")).OrderBy(x => x.Name).ToLinqToDB().ToList();
 			var efResult      = ctx.Items.Where(x => x.Name!.StartsWith("Test")).ToList();
 
 			linq2dbResult.Count.ShouldBe(efResult.Count);
 		}
 
-		#endregion
-
-		#region Issue 4657
 #if !NETFRAMEWORK // requires UseCollation API
 
-		public class Issue4657TempTable
+		public class CollationMergeTempTable
 		{
 			public int Id { get; set; }
 			public int Code { get; set; }
 		}
 
-		public class Issue4657Table
+		public class CollationMergeTable
 		{
 			public int Id { get; set; }
 			public int Code { get; set; }
 		}
 
-		public sealed class Issue4657Context(DbContextOptions options) : DbContext(options)
+		public sealed class CollationMergeContext(DbContextOptions options) : DbContext(options)
 		{
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
 				modelBuilder.UseCollation("Latin1_General_CS_AS");
-				modelBuilder.Entity<Issue4657Table>(e =>
+				modelBuilder.Entity<CollationMergeTable>(e =>
 				{
 					e.Property(e => e.Id).HasColumnName("ID");
 					e.Property(e => e.Code).HasColumnName("CODE");
@@ -201,14 +194,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4657")]
-		public void Issue4657Test([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
+		public void MergeCteWithOutputIntoTempTableUnderCaseSensitiveCollation([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder().UseSqlServer(connectionString);
 			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
-			using var ctx = new Issue4657Context(optionsBuilder.Options);
+			using var ctx = new CollationMergeContext(optionsBuilder.Options);
 
 			using (new DisableBaseline("create db"))
 			{
@@ -218,25 +211,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			using var db = ctx.CreateLinqToDBConnection();
 
-			using var tempTable1 = db.CreateTempTable([new Issue4657TempTable() { Id = 1, Code = 2 }], tableName: "#Issue4657TempTable1");
-			using var tempTable2 = db.CreateTempTable([new Issue4657TempTable() { Id = 1, Code = 2 }], tableName: "#Issue4657TempTable2");
+			using var tempTable1 = db.CreateTempTable([new CollationMergeTempTable() { Id = 1, Code = 2 }], tableName: "#CollationMergeTempTable1");
+			using var tempTable2 = db.CreateTempTable([new CollationMergeTempTable() { Id = 1, Code = 2 }], tableName: "#CollationMergeTempTable2");
 
-			var q = ctx.Set<Issue4657Table>()
+			var q = ctx.Set<CollationMergeTable>()
 				.AsCte()
 				.Merge()
 				.Using(tempTable1)
 				.On((s, t) => s.Id == t.Id)
-				.InsertWhenNotMatched(s => new Issue4657Table() { Code = s.Code })
+				.InsertWhenNotMatched(s => new CollationMergeTable() { Code = s.Code })
 				.MergeWithOutputInto(
 					tempTable2,
-					(s, t, o) => new Issue4657TempTable() { Id = o.Id, Code = o.Code });
+					(s, t, o) => new CollationMergeTempTable() { Id = o.Id, Code = o.Code });
 		}
 #endif
-#endregion
 
-		#region issue 306
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/306")]
-		public void Issue306Test([EFIncludeDataSources(TestProvName.AllSQLite)] string provider)
+		public void UnwrapDataObjectInterceptorIsCalled([EFIncludeDataSources(TestProvName.AllSQLite)] string provider)
 		{
 			var interceptor = new DummyInterceptor();
 
@@ -250,7 +241,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				builder.AddInterceptor(interceptor);
 			});
 
-			using var ctx = new Issue306Context(optionsBuilder.Options);
+			using var ctx = new UnwrapInterceptorContext(optionsBuilder.Options);
 			using (new DisableBaseline("create db"))
 			{
 				ctx.Database.EnsureDeleted();
@@ -258,26 +249,26 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 
 			var id = 1;
-			var query = ctx.Set<Issue306Entity>().Where(e => e.Id == id).ToLinqToDB().ToArray();
+			var query = ctx.Set<UnwrapInterceptorEntity>().Where(e => e.Id == id).ToLinqToDB().ToArray();
 
 			Assert.That(interceptor.Count, Is.GreaterThan(0));
 		}
 
-		public class Issue306Entity
+		public class UnwrapInterceptorEntity
 		{
 			public int Id { get; set; }
 			public int Value { get; set; }
 		}
 
-		public class Issue306Context(DbContextOptions options) : DbContext(options)
+		public class UnwrapInterceptorContext(DbContextOptions options) : DbContext(options)
 		{
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
 				base.OnModelCreating(modelBuilder);
 
-				modelBuilder.Entity<Issue306Entity>(e =>
+				modelBuilder.Entity<UnwrapInterceptorEntity>(e =>
 				{
-					e.HasData(new Issue306Entity() { Id = 1, Value = 11 });
+					e.HasData(new UnwrapInterceptorEntity() { Id = 1, Value = 11 });
 				});
 			}
 		}
@@ -310,12 +301,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				return dataReader;
 			}
 		}
-		#endregion
-
-		#region Issue 5296
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5296")]
-		public async ValueTask Issue5296Test([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
+		public async ValueTask EfConnectionIsReleasedAfterProviderDetection([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 
@@ -329,7 +317,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				_                                                   => throw new InvalidOperationException($"ProviderSetup is not implemented for provider {provider}")
 			};
 
-			using var ctx = new Issue5296Context(optionsBuilder.Options);
+			using var ctx = new ConnectionReleaseContext(optionsBuilder.Options);
 
 			using (new DisableBaseline("create db"))
 			{
@@ -340,7 +328,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				// which opens EF's shared DbConnection and (before the fix) leaves it open
 				using (var db = ctx.CreateLinqToDBConnection())
 				{
-					await db.GetTable<Issue5296Entity>().ToListAsyncLinqToDB();
+					await db.GetTable<ConnectionReleaseEntity>().ToListAsyncLinqToDB();
 				}
 
 				// must not throw: a leaked-open connection bound to the dropped database
@@ -350,25 +338,21 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		public sealed class Issue5296Context(DbContextOptions options) : DbContext(options)
+		public sealed class ConnectionReleaseContext(DbContextOptions options) : DbContext(options)
 		{
-			public DbSet<Issue5296Entity> Entities { get; set; } = null!;
+			public DbSet<ConnectionReleaseEntity> Entities { get; set; } = null!;
 
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
-				modelBuilder.Entity<Issue5296Entity>();
+				modelBuilder.Entity<ConnectionReleaseEntity>();
 			}
 		}
 
-		public record Issue5296Entity(int Id, string Name);
-
-		#endregion
-
-		#region Issue 4783
+		public record ConnectionReleaseEntity(int Id, string Name);
 
 #if NET9_0_OR_GREATER
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
-		public async ValueTask Issue4783Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public async ValueTask PostgreSqlNativeEnumBulkCopyRoundTrip([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 
@@ -377,9 +361,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.UseNodaTime().MapEnum<Issue4783DBStatus>());
+				o => o.UseNodaTime().MapEnum<NativeEnumStatus>());
 
-			using var ctx = new Issue4783Context(optionsBuilder.Options);
+			using var ctx = new NativeEnumContext(optionsBuilder.Options);
 
 			using (new DisableBaseline("create db"))
 			{
@@ -387,20 +371,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				ctx.Database.EnsureCreated();
 			}
 
-			var entities = new List<Issue4783RecordDb>()
+			var entities = new List<NativeEnumRecord>()
 			{
-				new(0, "EF", Issue4783DBStatus.Open, Issue4783DBStatus.Open),
-				new(0, "EF", Issue4783DBStatus.Closed, Issue4783DBStatus.Closed),
-				new(0, "EF", Issue4783DBStatus.Closed, null)
+				new(0, "EF", NativeEnumStatus.Open, NativeEnumStatus.Open),
+				new(0, "EF", NativeEnumStatus.Closed, NativeEnumStatus.Closed),
+				new(0, "EF", NativeEnumStatus.Closed, null)
 			};
 
-			ctx.Issue4783DBRecords.AddRange(entities);
+			ctx.NativeEnumRecords.AddRange(entities);
 			await ctx.SaveChangesAsync();
 
 			await ctx.BulkCopyAsync(entities.Select(x => x with { Source = "linq2db" }));
 
 			using var db = ctx.CreateLinqToDBConnection();
-			var results = await db.GetTable<Issue4783RecordDbRaw>().OrderBy(r => r.Id).ToArrayAsync();
+			var results = await db.GetTable<NativeEnumRecordRaw>().OrderBy(r => r.Id).ToArrayAsync();
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -412,30 +396,30 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		public sealed class Issue4783Context(DbContextOptions options) : DbContext(options)
+		public sealed class NativeEnumContext(DbContextOptions options) : DbContext(options)
 		{
-			public DbSet<Issue4783RecordDb> Issue4783DBRecords { get; set; } = null!;
+			public DbSet<NativeEnumRecord> NativeEnumRecords { get; set; } = null!;
 
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
-				modelBuilder.Entity<Issue4783RecordDb>();
+				modelBuilder.Entity<NativeEnumRecord>();
 			}
 		}
 
-		public record Issue4783RecordDb(
+		public record NativeEnumRecord(
 			int Id,
 			string Source,
-			Issue4783DBStatus Status,
-			Issue4783DBStatus? NullableStatus);
+			NativeEnumStatus Status,
+			NativeEnumStatus? NullableStatus);
 
-		[LinqToDB.Mapping.Table("Issue4783DBRecords", IsColumnAttributeRequired = false)]
-		public record Issue4783RecordDbRaw(
+		[LinqToDB.Mapping.Table("NativeEnumRecords", IsColumnAttributeRequired = false)]
+		public record NativeEnumRecordRaw(
 			int Id,
 			string Source,
 			object Status,
 			object? NullableStatus);
 
-		public enum Issue4783DBStatus
+		public enum NativeEnumStatus
 		{
 			Open,
 			Closed
@@ -444,13 +428,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 #if NET8_0_OR_GREATER
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4917")]
-		public async ValueTask Issue4917Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public async ValueTask ContextCreatedFromNpgsqlDataSource([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 			var dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
 			var optionsBuilder = new DbContextOptionsBuilder().UseLoggerFactory(LoggerFactory).UseNpgsql(dataSource);
 
-			using var ctx = new Issue4917Context(optionsBuilder.Options);
+			using var ctx = new DataSourceContext(optionsBuilder.Options);
 			using (new DisableBaseline("create db"))
 			{
 				ctx.Database.EnsureDeleted();
@@ -463,28 +447,25 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			// from this server and not from whichever PostgreSQL instance the process resolved first
 			db.DataProvider.Name.ShouldBe(DataConnection.GetDataProvider(provider).Name);
 
-			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB();
+			await db.GetTable<DataSourceRecord>().ToListAsyncLinqToDB();
 		}
 
-		public sealed class Issue4917Context(DbContextOptions options) : DbContext(options)
+		public sealed class DataSourceContext(DbContextOptions options) : DbContext(options)
 		{
-			public DbSet<Issue4917RecordDb> Issue4917DBRecords { get; set; } = null!;
+			public DbSet<DataSourceRecord> DataSourceRecords { get; set; } = null!;
 
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
-				modelBuilder.Entity<Issue4917RecordDb>();
+				modelBuilder.Entity<DataSourceRecord>();
 			}
 		}
 
-		public record Issue4917RecordDb(int Id, string Name);
+		public record DataSourceRecord(int Id, string Name);
 #endif
-#endregion
-		
-		#region Issue 4940
 		
 #if NET9_0_OR_GREATER
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4940")]
-		public async ValueTask Issue4940Test_NotMapped([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
+		public async ValueTask EnumDmlOnTempTableOfNotMappedEntity([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 
@@ -493,9 +474,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.MapEnum<Issue4940DBStatus>().MapEnum<Issue4940DBNullableStatus>());
+				o => o.MapEnum<EnumDmlStatus>().MapEnum<EnumDmlNullableStatus>());
 
-			using var ctx = new Issue4940Context(optionsBuilder.Options);
+			using var ctx = new EnumDmlContext(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
 
 			using (new DisableBaseline("create db"))
@@ -504,27 +485,27 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				ctx.Database.EnsureCreated();
 			}
 
-			var notMappedEntitiesForTempTable = new List<Issue4940RecordNotMapped>
+			var notMappedEntitiesForTempTable = new List<EnumDmlRecordNotMapped>
 			{
-				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Open),
-				new(2, "TempTable", Issue4940DBStatus.Closed, null)
+				new(1, "TempTable", EnumDmlStatus.Open, EnumDmlNullableStatus.Open),
+				new(2, "TempTable", EnumDmlStatus.Closed, null)
 			};
 			using var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);//check valid sql for temp table and insert without parameters
 
-			var notMappedEntityForInsert = new Issue4940RecordNotMapped(3, "Insert", Issue4940DBStatus.Open, null);
+			var notMappedEntityForInsert = new EnumDmlRecordNotMapped(3, "Insert", EnumDmlStatus.Open, null);
 			db.Insert(notMappedEntityForInsert, tableName: tempTable.TableName, tableOptions: tempTable.TableOptions); //check enum as parameter
 			
-			var notMappedEntitiesForBulkCopy = new List<Issue4940RecordNotMapped>
+			var notMappedEntitiesForBulkCopy = new List<EnumDmlRecordNotMapped>
 			{
-				new(4, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBNullableStatus.Closed),
-				new(5, "BulkCopy", Issue4940DBStatus.Open, null)
+				new(4, "BulkCopy", EnumDmlStatus.Closed, EnumDmlNullableStatus.Closed),
+				new(5, "BulkCopy", EnumDmlStatus.Open, null)
 			};
 			tempTable.BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, notMappedEntitiesForBulkCopy); //check bulk copy
 
-			var notMappedEntitiesForMerge = new List<Issue4940RecordNotMapped>
+			var notMappedEntitiesForMerge = new List<EnumDmlRecordNotMapped>
 			{
-				new(6, "Merge", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Closed),
-				new(7, "Merge", Issue4940DBStatus.Open, null)
+				new(6, "Merge", EnumDmlStatus.Open, EnumDmlNullableStatus.Closed),
+				new(7, "Merge", EnumDmlStatus.Open, null)
 			};
 			tempTable
 				.Merge()
@@ -553,7 +534,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 		
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4940")]
-		public async ValueTask Issue4940Test([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
+		public async ValueTask EnumDmlOnMappedEntityAndTempTable([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 
@@ -562,9 +543,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.MapEnum<Issue4940DBStatus>().MapEnum<Issue4940DBNullableStatus>());
+				o => o.MapEnum<EnumDmlStatus>().MapEnum<EnumDmlNullableStatus>());
 
-			using var ctx = new Issue4940Context(optionsBuilder.Options);
+			using var ctx = new EnumDmlContext(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
 
 			using (new DisableBaseline("create db"))
@@ -573,33 +554,33 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				ctx.Database.EnsureCreated();
 			}
 
-			var entitiesForTempTable = new List<Issue4940RecordDb>
+			var entitiesForTempTable = new List<EnumDmlRecord>
 			{
-				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Closed),
-				new(2, "TempTable", Issue4940DBStatus.Closed, null)
+				new(1, "TempTable", EnumDmlStatus.Open, EnumDmlNullableStatus.Closed),
+				new(2, "TempTable", EnumDmlStatus.Closed, null)
 			};
-			using var tempTable = db.CreateTempTable(entitiesForTempTable, tableName: "issue_4940_temp_table");
+			using var tempTable = db.CreateTempTable(entitiesForTempTable, tableName: "enum_dml_temp_table");
 			
-			var entitiesForInsert = new List<Issue4940RecordDb>
+			var entitiesForInsert = new List<EnumDmlRecord>
 			{
-				new(1, "Insert", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Closed),
-				new(2, "Insert", Issue4940DBStatus.Closed, null)
+				new(1, "Insert", EnumDmlStatus.Open, EnumDmlNullableStatus.Closed),
+				new(2, "Insert", EnumDmlStatus.Closed, null)
 			};
 			entitiesForInsert.ForEach(x => db.Insert(x));
 			
-			var entitiesForBulkCopy = new List<Issue4940RecordDb>
+			var entitiesForBulkCopy = new List<EnumDmlRecord>
 			{
-				new(3, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBNullableStatus.Closed),
-				new(4, "BulkCopy", Issue4940DBStatus.Closed, null)
+				new(3, "BulkCopy", EnumDmlStatus.Closed, EnumDmlNullableStatus.Closed),
+				new(4, "BulkCopy", EnumDmlStatus.Closed, null)
 			};
-			db.GetTable<Issue4940RecordDb>().BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, entitiesForBulkCopy);
+			db.GetTable<EnumDmlRecord>().BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, entitiesForBulkCopy);
 
-			var entitiesForMerge = new List<Issue4940RecordDb>
+			var entitiesForMerge = new List<EnumDmlRecord>
 			{
-				new(5, "Merge", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Open),
-				new(6, "Merge", Issue4940DBStatus.Open, null)
+				new(5, "Merge", EnumDmlStatus.Open, EnumDmlNullableStatus.Open),
+				new(6, "Merge", EnumDmlStatus.Open, null)
 			};
-			db.GetTable<Issue4940RecordDb>()
+			db.GetTable<EnumDmlRecord>()
 				.Merge()
 				.Using(entitiesForMerge)
 				.On(s => s.Source, t => t.Source)
@@ -608,7 +589,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Merge();
 
 			var inMemoryRecords = entitiesForInsert.Concat(entitiesForBulkCopy).Concat(entitiesForMerge).ToArray();
-			var rawDbRecords  = await db.GetTable<Issue4940RecordDbRaw>().OrderBy(x => x.Id).ToArrayAsync();
+			var rawDbRecords  = await db.GetTable<EnumDmlRecordRaw>().OrderBy(x => x.Id).ToArrayAsync();
 			var tempTableRecords = await tempTable.OrderBy(x => x.Id).ToArrayAsync();
 
 			using (Assert.EnterMultipleScope())
@@ -627,47 +608,46 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 		
-		public sealed class Issue4940Context(DbContextOptions options) : DbContext(options)
+		public sealed class EnumDmlContext(DbContextOptions options) : DbContext(options)
 		{
-			public DbSet<Issue4940RecordDb> Issue4940DBRecords { get; set; } = null!;
+			public DbSet<EnumDmlRecord> EnumDmlRecords { get; set; } = null!;
 
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
-				modelBuilder.Entity<Issue4940RecordDb>().HasNoKey();
+				modelBuilder.Entity<EnumDmlRecord>().HasNoKey();
 			}
 		}
 
-		public record Issue4940RecordDb(
-			int                        Id,
-			string                     Source,
-			Issue4940DBStatus          Status,
-			Issue4940DBNullableStatus? NullableStatus);
+		public record EnumDmlRecord(
+			int                    Id,
+			string                 Source,
+			EnumDmlStatus          Status,
+			EnumDmlNullableStatus? NullableStatus);
 
-		[LinqToDB.Mapping.Table("Issue4940DBRecords", IsColumnAttributeRequired = false)]
-		public record Issue4940RecordDbRaw(
+		[LinqToDB.Mapping.Table("EnumDmlRecords", IsColumnAttributeRequired = false)]
+		public record EnumDmlRecordRaw(
 			int     Id,
 			string  Source,
 			object  Status,
 			object? NullableStatus);
 
-		public record Issue4940RecordNotMapped(
-			int                        Id,
-			string                     Source,
-			Issue4940DBStatus          Status,
-			Issue4940DBNullableStatus? NullableStatus);
+		public record EnumDmlRecordNotMapped(
+			int                    Id,
+			string                 Source,
+			EnumDmlStatus          Status,
+			EnumDmlNullableStatus? NullableStatus);
 
-		public enum Issue4940DBStatus
+		public enum EnumDmlStatus
 		{
 			Open,
 			Closed
 		}
 		
-		public enum Issue4940DBNullableStatus
+		public enum EnumDmlNullableStatus
 		{
 			Open,
 			Closed
 		}
 #endif
-#endregion
 	}
 }
