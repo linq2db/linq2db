@@ -212,7 +212,7 @@ namespace Tests.Scaffold
 					options.DataModel.GenerateProcedureAsync = async;
 				});
 
-			Methods(model, "OutRefTest")     
+			Methods(model, "OutRefTest")
 				.Count
 				.ShouldBe(sync  ? 1 : 0);
 			Methods(model, "OutRefTestAsync")

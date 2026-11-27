@@ -66,27 +66,27 @@ namespace Tests.Scaffold
 				return (Nullable.GetUnderlyingType(type) ?? type).FullName!;
 			}
 
-			TypeName("IntValue")    
+			TypeName("IntValue")
 				.ShouldBe(typeof(SqlInt32).FullName);
-			TypeName("StringValue") 
+			TypeName("StringValue")
 				.ShouldBe(typeof(SqlString).FullName);
-			TypeName("GuidValue")   
+			TypeName("GuidValue")
 				.ShouldBe(typeof(SqlGuid).FullName);
 			TypeName("DecimalValue")
 				.ShouldBe(typeof(SqlDecimal).FullName);
-			TypeName("DateValue")   
+			TypeName("DateValue")
 				.ShouldBe(typeof(SqlDateTime).FullName);
-			TypeName("BinaryValue") 
+			TypeName("BinaryValue")
 				.ShouldBe(typeof(SqlBinary).FullName);
-			TypeName("BoolValue")   
+			TypeName("BoolValue")
 				.ShouldBe(typeof(SqlBoolean).FullName);
-			TypeName("XmlValue")    
+			TypeName("XmlValue")
 				.ShouldBe(typeof(SqlXml).FullName);
-			TypeName("Hierarchy")   
+			TypeName("Hierarchy")
 				.ShouldBe("Microsoft.SqlServer.Types.SqlHierarchyId");
-			TypeName("Geography")   
+			TypeName("Geography")
 				.ShouldBe("Microsoft.SqlServer.Types.SqlGeography");
-			TypeName("Geometry")    
+			TypeName("Geometry")
 				.ShouldBe("Microsoft.SqlServer.Types.SqlGeometry");
 
 			using var db = model.CreateContext(ProviderProfile.SqlServer.CreateOfflineOptions());
@@ -133,11 +133,11 @@ namespace Tests.Scaffold
 
 			TypeName("Interval")
 				.ShouldBe("NpgsqlTypes.NpgsqlInterval");
-			TypeName("Inet")    
+			TypeName("Inet")
 				.ShouldBe("NpgsqlTypes.NpgsqlInet");
-			TypeName("Point")   
+			TypeName("Point")
 				.ShouldBe("NpgsqlTypes.NpgsqlPoint");
-			TypeName("Polygon") 
+			TypeName("Polygon")
 				.ShouldBe("NpgsqlTypes.NpgsqlPolygon");
 
 			using var db = model.CreateContext(ProviderProfile.PostgreSQL.CreateOfflineOptions());

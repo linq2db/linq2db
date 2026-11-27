@@ -112,10 +112,10 @@ namespace Tests.Scaffold
 			control
 				.FindType("Added")
 				.ShouldBeNull();
-			model  
+			model
 				.FindType("Child")
 				.ShouldBeNull();
-			model  
+			model
 				.FindType("Added")
 				.ShouldNotBeNull();
 
@@ -134,7 +134,7 @@ namespace Tests.Scaffold
 			control
 				.FindType("ParentView")
 				.ShouldNotBeNull();
-			model  
+			model
 				.FindType("ParentView")
 				.ShouldBeNull();
 
@@ -156,7 +156,7 @@ namespace Tests.Scaffold
 			Execute(control)
 				.Associations
 				.ShouldBe(0);
-			Execute(model)  
+			Execute(model)
 				.Associations
 				.ShouldBe(2);
 		}
@@ -176,7 +176,7 @@ namespace Tests.Scaffold
 				.GetProperty("Name")!
 				.PropertyType
 				.ShouldBe(typeof(string));
-			model  
+			model
 				.GetType("Parent")
 				.GetProperty("Name")!
 				.PropertyType
@@ -253,7 +253,7 @@ namespace Tests.Scaffold
 			var model = ScaffoldHarness.Build($"{nameof(InterceptorTests)}_{nameof(PreprocessAssociation)}", language, ProviderProfile.SQLite, TablesSchema(), interceptors: interceptors);
 
 			model
-				.GetType("Child") 
+				.GetType("Child")
 				.GetProperty("Owner")
 				.ShouldNotBeNull();
 			model
@@ -409,14 +409,14 @@ namespace Tests.Scaffold
 		{
 			var (model, control) = Build(name, language, ProviderProfile.SqlServer, CallablesSchema, (TestInterceptors)interceptors, Callables);
 
-			HasMethod(control, absent) 
+			HasMethod(control, absent)
 				.ShouldBeTrue();
 			HasMethod(control, present)
 				.ShouldBe(present != "Renamed");
 
 			HasMethod(model, present)
 				.ShouldBeTrue();
-			HasMethod(model, absent) 
+			HasMethod(model, absent)
 				.ShouldBeFalse();
 		}
 	}
