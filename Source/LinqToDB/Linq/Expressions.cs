@@ -506,12 +506,12 @@ namespace LinqToDB.Linq
 			{ M(() => "".Substring  (0)       ), N(() => L<string?,int,string?>            ((obj,p0)       => Sql.Substring(obj, p0 + 1, obj!.Length - p0))) },
 			{ M(() => "".Substring  (0,0)     ), N(() => L<string?,int,int,string?>        ((obj,p0,p1)    => Sql.Substring(obj, p0 + 1, p1))) },
 #pragma warning disable RS0030 // Do not used banned APIs
-			{ M(() => "".IndexOf    ("")      ), N(() => L<string,string,int>              ((obj,p0)       => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)!                      .Value) - 1)) },
-			{ M(() => "".IndexOf    ("",0)    ), N(() => L<string,string,int,int>          ((obj,p0,p1)    => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1)!.Value) - 1)) },
-			{ M(() => "".IndexOf    ("",0,0)  ), N(() => L<string,string,int,int,int>      ((obj,p0,p1,p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)!    .Value) - 1)) },
-			{ M(() => "".IndexOf    (' ')     ), N(() => L<string,char,int>                ((obj,p0)       =>                                          (Sql.CharIndex(p0, obj)!                      .Value) - 1)) },
-			{ M(() => "".IndexOf    (' ',0)   ), N(() => L<string,char,int,int>            ((obj,p0,p1)    =>                                          (Sql.CharIndex(p0, obj,               p1 + 1)!.Value) - 1)) },
-			{ M(() => "".IndexOf    (' ',0,0) ), N(() => L<string,char,int,int,int>        ((obj,p0,p1,p2) =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)     ?? 0) - 1)) },
+			{ M(() => "".IndexOf    ("")      ), N(() => L<string,string,int>              ((obj,p0)       => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)!                           .Value) - 1)) },
+			{ M(() => "".IndexOf    ("",0)    ), N(() => L<string,string,int,int>          ((obj,p0,p1)    => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,                    p1 + 1)!.Value) - 1)) },
+			{ M(() => "".IndexOf    ("",0,0)  ), N(() => L<string,string,int,int,int>      ((obj,p0,p1,p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1)!.Value) - 1)) },
+			{ M(() => "".IndexOf    (' ')     ), N(() => L<string,char,int>                ((obj,p0)       =>                                          (Sql.CharIndex(p0, obj)!                           .Value) - 1)) },
+			{ M(() => "".IndexOf    (' ',0)   ), N(() => L<string,char,int,int>            ((obj,p0,p1)    =>                                          (Sql.CharIndex(p0, obj,                    p1 + 1)!.Value) - 1)) },
+			{ M(() => "".IndexOf    (' ',0,0) ), N(() => L<string,char,int,int,int>        ((obj,p0,p1,p2) =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1) ?? 0) - 1)) },
 			{ M(() => "".LastIndexOf("")      ), N(() => L<string,string,int>              ((obj,p0)       => p0.Length == 0 ? obj.Length - 1 : (Sql.CharIndex(p0, obj)!                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj))!                              .Value) - p0.Length + 1)) },
 #pragma warning disable CA1514 // CA1514: Avoid redundant length argument
 			{ M(() => "".LastIndexOf("",0)    ), N(() => L<string,string,int,int>          ((obj,p0,p1)    => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, obj,                    p1 + 1)!.Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, obj.Length - p1)))!.Value) - p0.Length + 1)) },

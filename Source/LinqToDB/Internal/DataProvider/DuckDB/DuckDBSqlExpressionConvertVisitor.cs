@@ -124,24 +124,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					Name      : "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type      : var type,
-				} => Add<int>(
+				} => PositionFromStart(
+					type,
 					new SqlExpression(
 						type,
 						"Position({0} in {1})",
 						Precedence.Primary,
 						p0,
-						(ISqlExpression)Visit(
-							new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
-								p1,
-								p2,
-								Sub<int>(
-									(ISqlExpression)Visit(
-										Factory.Length(p1)),
-									p2))
-						)
-					),
-					Sub(p2, 1)
-				),
+						(ISqlExpression)Visit(new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring", p1, p2))),
+					p2),
 
 				_ => base.ConvertSqlFunction(func),
 			};

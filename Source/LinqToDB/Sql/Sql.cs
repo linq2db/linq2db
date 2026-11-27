@@ -498,7 +498,7 @@ namespace LinqToDB
 		[Function(PN.Firebird,   "Position",                    IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "positionUTF8", 1, 0,          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "INSTR",         1, 0,         IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Ydb,      "Unicode::Find({1}, {0}) + 1", IsNullable = IsNullableType.SameAsFirstOrSecondParameter, Precedence = Precedence.Additive)]
+		[Expression(PN.Ydb,      "IF({1} IS NULL OR {0} IS NULL, NULL, Coalesce(CAST(Unicode::Find({1}, Coalesce({0}, ''u)) AS Int32) + 1, 0))", IsNullable = IsNullableType.SameAsFirstOrSecondParameter)]
 		public static int? CharIndex(string? substring, string? str)
 		{
 			if (str == null || substring == null) return null;
@@ -520,8 +520,10 @@ namespace LinqToDB
 		[Function  (PN.MySql,      "Locate",                                   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function  (PN.Firebird,   "Position",                                 IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.ClickHouse, "positionUTF8({1}, {0}, toUInt32({2}))",    IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SapHana,    "Locate(Substring({1},{2} + 1),{0}) + {2}", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Additive)]
-		[Expression(PN.Ydb,        "Unicode::Find({1}, {0}, {2}) + 1",         IsNullable = IsNullableType.SameAsFirstOrSecondParameter, Precedence = Precedence.Additive)]
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function  (PN.SapHana,    "Locate",       1, 0, 2,                    IsNullable = IsNullableType.IfAnyParameterNullable)]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Expression(PN.Ydb,        "IF({1} IS NULL OR {0} IS NULL OR {2} IS NULL, NULL, Coalesce(CAST(Unicode::Find({1}, Coalesce({0}, ''u), {2} - 1) AS Int32) + 1, 0))", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(string? substring, string? str, int? start)
 		{
 			if (str == null || substring == null || start == null) return null;
@@ -539,7 +541,7 @@ namespace LinqToDB
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		[Function(PN.Firebird,   "Position",                    IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "INSTR",        1, 0,          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Ydb,      "Unicode::Find({1}, {0}) + 1", IsNullable = IsNullableType.SameAsFirstOrSecondParameter, Precedence = Precedence.Additive)]
+		[Expression(PN.Ydb,      "IF({1} IS NULL OR {0} IS NULL, NULL, Coalesce(CAST(Unicode::Find({1}, Coalesce({0}, ''u)) AS Int32) + 1, 0))", IsNullable = IsNullableType.SameAsFirstOrSecondParameter)]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -553,7 +555,7 @@ namespace LinqToDB
 #pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
 		[Function(PN.SapHana,      "Locate",       1, 0, 2,                 IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Expression(PN.Ydb,        "Unicode::Find({1}, {0}, {2}) + 1",      IsNullable = IsNullableType.SameAsFirstOrSecondParameter, Precedence = Precedence.Additive)]
+		[Expression(PN.Ydb,        "IF({1} IS NULL OR {0} IS NULL OR {2} IS NULL, NULL, Coalesce(CAST(Unicode::Find({1}, Coalesce({0}, ''u), {2} - 1) AS Int32) + 1, 0))", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.ClickHouse, "positionUTF8({1}, {0}, toUInt32({2}))", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.Firebird,     "Position",                              IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(char? value, string? str, int? start)

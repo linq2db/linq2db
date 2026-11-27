@@ -486,7 +486,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				} => new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1)),
+				} => NullWhenArgumentIsNull(type, new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1)), p2),
 
 				_ => base.ConvertSqlFunction(func),
 			};

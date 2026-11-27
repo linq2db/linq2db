@@ -1495,37 +1495,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf2([DataSources(TestProvName.AllSQLite)] string context)
+		public void IndexOf2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var q = from p in db.Person where p.LastName.IndexOf("e", 2) == 4 && p.ID == 2 select p;
 			Assert.That(q.ToList().First().ID, Is.EqualTo(2));
 		}
 
-		// Seven families answer an empty result set; SQLite has no CharIndex function at all and refuses outright.
-		// Oracle keeps no declaration - it has no CI leg, so nothing was harvested for it.
-		[ActiveIssue(ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no elements",
-			Configurations =
-			[
-				TestProvName.AllClickHouse,
-				TestProvName.AllInformix,
-				TestProvName.AllMySql,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase,
-				TestProvName.AllDuckDB,
-			],
-			Details = "no-issue: Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
-		[ActiveIssue(Configuration = TestProvName.AllSQLite, ErrorMessage = "no such function: CharIndex",
-			Details = "no-issue: as above; SQLite has no such function, so it refuses instead of answering nothing. Message-only because the two SQLite drivers put the detail on different lines.")]
-		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllAccessLibRed], ErrorTypeName = "System.InvalidOperationException",
-			ErrorMessage = "Sequence contains no elements",
-			Details = "no-issue: as above - Oracle and LibRed answer nothing rather than refusing, so the assertion runs out of rows. One wording over both transports, the failure being ours and not the driver's.")]
 		[Test]
-		public void IndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllFirebird,
-			ProviderName.SqlCe, TestProvName.AllNativeAccess)]
-			string context)
+		public void IndexOf3([DataSources] string context)
 		{
 			var s  = "e";
 			var n1 = 2;
@@ -1580,26 +1558,328 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex2([DataSources(TestProvName.AllSQLite)] string context)
+		public void CharIndex2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var q = from p in db.Person where Sql.CharIndex("p", p.LastName, 2) == 3 && p.ID == 1 select p;
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}
 
-		// SAP HANA writes CharIndex with a start position as an additive template that * must bracket (rows with a match
-		// only: for a missing match the template answers the start, not 0)
+		// a start position keeps its grouping under *, and a missing match after it is 0
 		[Test]
-		public void CharIndexWithStartUnderMultiplication([IncludeDataSources(true, TestProvName.AllSapHana)] string context)
+		public void CharIndexWithStartUnderMultiplication([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var query = db.Person
-				.Where(p => p.FirstName.Contains("o"))
 				.OrderBy(p => p.ID)
 				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.FirstName, 1) * 2));
 
 			AssertQuery(query);
+		}
+
+		// a missing match is 0, not NULL (YDB's Unicode::Find answers NULL)
+		[Test]
+		public void CharIndexMissingMatch([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.FirstName) * 2));
+
+			AssertQuery(query);
+		}
+
+		// a match at the start position itself
+		[Test]
+		public void CharIndexMatchAtStart([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var atStart = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("J", p.FirstName, 1)));
+
+			AssertQuery(atStart);
+		}
+
+		// a start above 1 with no match after it is 0
+		[Test]
+		public void CharIndexMissingMatchAfterStart([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.FirstName, 2)));
+
+			AssertQuery(query);
+
+			var charQuery = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex('o', p.FirstName, 2)));
+
+			AssertQuery(charQuery);
+		}
+
+		// a match on the last character after a start above 1
+		[ActiveIssue(6495, Configurations = [ProviderName.DB2], ErrorMessage = "! 6 <> 7", Details = "LOCATE counts bytes")]
+		[Test]
+		public void CharIndexMatchAtLastCharacter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("n", p.FirstName, 2)));
+
+			AssertQuery(query);
+		}
+
+		// NULL in, NULL out
+		[Test]
+		public void CharIndexOverNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.MiddleName)));
+
+			AssertQuery(query);
+
+			var nullSubstring = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex(p.MiddleName, p.FirstName)));
+
+			AssertQuery(nullSubstring);
+
+			var nullChar = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex(p.MiddleName == null ? null : (char?)'o', p.FirstName)));
+
+			AssertQuery(nullChar);
+
+			// a NULL string is not a missing match
+			var missingFiltered = db.Person
+				.Where(p => Sql.CharIndex("o", p.MiddleName) == 0)
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID);
+
+			AssertQuery(missingFiltered);
+		}
+
+		[Test]
+		public void CharIndexWithStartOverNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.MiddleName, 2)));
+
+			AssertQuery(query);
+
+			var nullSubstring = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex(p.MiddleName, p.FirstName, 2)));
+
+			AssertQuery(nullSubstring);
+
+			var nullChar = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex(p.MiddleName == null ? null : (char?)'o', p.FirstName, 2)));
+
+			AssertQuery(nullChar);
+
+			var nullStart = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.FirstName, p.MiddleName == null ? null : 1)));
+
+			AssertQuery(nullStart);
+
+			// the result is declared nullable: a NULL start is a NULL result a filter can see
+			var nullStartFiltered = db.Person
+				.Where(p => Sql.CharIndex("o", p.FirstName, p.MiddleName == null ? null : 1) == null)
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID);
+
+			AssertQuery(nullStartFiltered);
+
+			int? start = 1;
+
+			var parameterStart = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.FirstName, start)));
+
+			AssertQuery(parameterStart);
+
+			int? nullValuedStart = null;
+
+			var nullParameterStart = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("o", p.FirstName, nullValuedStart)));
+
+			AssertQuery(nullParameterStart);
+		}
+
+		// IndexOf with no match is -1
+		[Test]
+		public void IndexOfMissingMatch([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.IndexOf("x")));
+
+			AssertQuery(query);
+
+			var charQuery = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.IndexOf('x')));
+
+			AssertQuery(charQuery);
+
+			var c = 'o';
+
+			var charParameter = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.IndexOf(c)));
+
+			AssertQuery(charParameter);
+
+			var charParameterWithStart = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.IndexOf(c, 1)));
+
+			AssertQuery(charParameterWithStart);
+		}
+
+		// a start past the end with no match is 0 (Substring past the end may be NULL or empty)
+		[Test]
+		public void CharIndexWithStartPastEnd([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("x", p.FirstName, 10)));
+
+			AssertQuery(query);
+		}
+
+		// IndexOf with a start and no match after it is -1, not start - 1
+		[Test]
+		public void IndexOfMissingAfterStart([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.IndexOf("x", 1)));
+
+			AssertQuery(query);
+
+			var charQuery = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.IndexOf('x', 1)));
+
+			AssertQuery(charQuery);
+
+			// a start at the length (CharIndex start = Length + 1) searches an empty tail
+			var atLength = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.IndexOf("x", p.FirstName.Length)));
+
+			AssertQuery(atLength);
+		}
+
+		// IndexOf(value, start, count) searches [start, start + count) of "Testerson" (row 2). The expected values are .NET's:
+		// AssertQuery would evaluate its side through the same IndexOf mapping and agree with a wrong one
+		[Test]
+		public void IndexOfWithinCount([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var testerson = db.Person.Where(p => p.ID == 2);
+
+			testerson
+				.Select(p => Sql.AsSql(p.LastName.IndexOf("r", 2, 5)))
+				.ToArray()
+				.ShouldBe([5]);
+
+			testerson
+				.Select(p => Sql.AsSql(p.LastName.IndexOf("n", 2, 3)))
+				.ToArray()
+				.ShouldBe([-1]);
+
+			// the 'o' is at 7 = start + count: outside [2, 7), inside [2, 8)
+			testerson
+				.Select(p => Sql.AsSql(p.LastName.IndexOf("o", 2, 5)))
+				.ToArray()
+				.ShouldBe([-1]);
+
+			testerson
+				.Select(p => Sql.AsSql(p.LastName.IndexOf("o", 2, 6)))
+				.ToArray()
+				.ShouldBe([7]);
+
+			testerson
+				.Select(p => Sql.AsSql(p.LastName.IndexOf('r', 2, 5)))
+				.ToArray()
+				.ShouldBe([5]);
+
+			testerson
+				.Select(p => Sql.AsSql(p.LastName.IndexOf('o', 2, 5)))
+				.ToArray()
+				.ShouldBe([-1]);
+
+			testerson
+				.Select(p => Sql.AsSql(p.LastName.IndexOf('o', 2, 6)))
+				.ToArray()
+				.ShouldBe([7]);
+		}
+
+		// LastIndexOf with a start and no match is -1 (excluded where the LastIndexOf siblings are)
+		[Test]
+		public void LastIndexOfMissingAfterStart([DataSources(
+			ProviderName.DB2, ProviderName.SqlCe, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.FirstName.LastIndexOf("x", 1)));
+
+			AssertQuery(query);
+		}
+
+		// a start below 1 searches from the first character
+		[ActiveIssue(6480, Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllDuckDB, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllYdb, TestProvName.AllSQLite, TestProvName.AllSybase],
+			ErrorMessage = "! 1 <> 0", Details = "the start is passed to the server unclamped")]
+		[ActiveIssue(6480, Configurations = [TestProvName.AllNativeAccess], ErrorMessage = "Invalid procedure call",                    Details = "InStr refuses a start below 1")]
+		[ActiveIssue(6480, Configurations = [TestProvName.AllAccessLibRed], ErrorMessage = "Invalid procedure call",                    Details = "InStr refuses a start below 1")]
+		[ActiveIssue(6480, Configurations = [TestProvName.AllFirebird],    ErrorMessage = "Argument #3 for POSITION must be positive", Details = "POSITION refuses a start below 1")]
+		[ActiveIssue(6480, Configurations = [ProviderName.DB2],            ErrorMessage = "42815",                                     Details = "LOCATE refuses a start below 1")]
+		[Test]
+		public void CharIndexWithStartBelowOne([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var zeroStart = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("J", p.FirstName, 0)));
+
+			AssertQuery(zeroStart);
+
+			var negativeStart = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.CharIndex("J", p.FirstName, -1)));
+
+			AssertQuery(negativeStart);
 		}
 
 		[Test]
