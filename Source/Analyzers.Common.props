@@ -11,6 +11,8 @@
 		<!-- Roslyn components must be netstandard2.0; clear the inherited multi-TFM list. -->
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<TargetFrameworks></TargetFrameworks>
+		<!-- the root props pivots output on $(TargetFramework); a global one (docs build) must not move it -->
+		<ArtifactsPivots>$(Configuration)</ArtifactsPivots>
 
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>

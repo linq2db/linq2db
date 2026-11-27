@@ -1,0 +1,2125 @@
+dotnet linq2db - Linq To DB command-line utilities. Version: 6.0.0.0
+
+Usage:
+        dotnet linq2db scaffold <options>
+
+Options:
+
+=== General : basic options
+
+   -i, --import                              : path to JSON file with scaffold options
+         type: string (optional)
+         json: not allowed
+
+      When both command line and JSON file contains same option, value from command line will override value from file for single-value options and will combine values for multi-value opti
+      ons.
+      JSON property type depends on option type: bool for boolean properties, integer number for numeric properties and string for other properties.
+      If property could have multiple values, it should use array as property type.
+      JSON file example:
+      	{
+      	  "general": {
+      	    "output": "c:\my\project\datamodel",
+      	    "overwrite": true,
+      	    "provider": "SQLServer",
+      	  },
+      	  "code": {
+      	    "nrt": false
+      	  }
+      	}
+
+   -o, --output                              : relative or full path to folder to put generated files
+         type: string (optional)
+         json: general.output
+
+      If folder doesn't exists, it will be created. When not specified, current folder used.
+
+   -f, --overwrite                           : overwrite existing files
+         type: bool (optional)
+         json: general.overwrite
+         default: false
+         default (T4 mode): false
+
+   -p, --provider                            : database provider (database)
+         type: string (required)
+         json: general.provider
+         supported values:
+               Access          : MS Access (requires OLE DB or/and ODBC provider installed)
+               DB2             : IBM DB2 LUW or z/OS
+               Firebird        : Firebird
+               Informix        : IBM Informix
+               SQLServer       : MS SQL Server (including Azure SQL Server)
+               MySQL           : MySQL/MariaDB
+               Oracle          : Oracle Database
+               PostgreSQL      : PostgreSQL
+               SqlCe           : MS SQL Server Compact
+               SQLite          : SQLite
+               Sybase          : SAP/Sybase ASE
+               SapHana         : SAP HANA
+               ClickHouseMySql : ClickHouse (MySql interface)
+               ClickHouseHttp  : ClickHouse (HTTP(S) interface)
+               ClickHouseTcp   : ClickHouse (TCP/binary interface)
+
+   -l, --provider-location                   : database provider location
+         type: string (optional)
+         json: general.provider-location
+
+      Allows user to specify path to database provider for some databases.
+      Supported databases:
+      - SQL Server Compact Edition : value is a full path to System.Data.SqlServerCe.dll assembly from Private folder of SQL CE installation
+      - SAP HANA                   : value is a full path to Sap.Data.Hana.Core.v2.1.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Net.v8.0.dll assembly from HDB client installation fol
+      der
+      - IBM DB2 and Informix       : value is a full path to IBM.Data.DB2.Core.dll assembly in DB2 provider folder
+
+   -c, --connection                          : database connection string
+         type: string (required)
+         json: general.connection
+
+   --additional-connection                   : secondary database connection string
+         type: string (optional)
+         json: general.additional-connection
+
+      Allows user to specify additional database connection using different provider. This option supported only for Access and require that main and additional connection strings use OLE 
+      DB and ODBC (in any order).
+      This is caused by fact that both OLE DB and ODBC Access providers return incomplete or invalid information in different places. Using database schema data from both providers allows 
+      us to build complete and proper database schema.
+      List of known issues, solved this way:
+      - OLE DB doesn't provide information about autoincrement (counter) columns
+      - OLE DB returns nullable type for procedure column returned for table counter column
+      - ODBC doesn't provide information about primary keys and foreign keys
+      - ODBC marks all columns in tables and procedure results as nullable except counter and bit
+      - ODBC doesn't provide length information for text-based procedure parameter type
+      - ODBC doesn't show some procedures in schema (no logic traced)
+
+   -a, --architecture                        : process architecture for utility
+         type: string (optional)
+         json: general.architecture
+         supported values:
+               x86 : x86 architecture
+               x64 : x64 architecture
+
+      By default utility runs AnyCPU build, which could result in error in multi-arch environment when platform-specific database provider used and provider's architecture doesn't match pr
+      ocess architecture. For such provider you could specify process architecture explicitly.
+      Example of platform-specific providers:
+       - OLE DB providers
+       - ODBC providers
+       - thin wrappers over native provider (e.g. IBM.Data.DB2 providers)
+
+   -t, --template                            : select base set of default options
+         type: string (optional)
+         json: general.template
+         default: default
+         default (T4 mode): default
+         supported values:
+               default : set of parameters, used by default (as specified in option help)
+               t4      : set of parameters, similar to T4 defaults (compat. option)
+
+      Specify this option only if you want to to use scaffolding options, similar to used by old T4 templates by default
+
+   --customize                               : specify path to T4 template or assembly with scaffolding customization logic
+         type: string (optional)
+         json: general.customize
+
+      Option accepts path to file with customization logic which could be:
+      - assembly (recognized by .dll extension);
+      - T4 template.
+      If you choose T4, you can create initial empty template using 'dotnet linq2db template' command. It will generate initial template file with pre-generated extension points which you 
+      can modify to implement required customizations.
+      Customization using compiled assembly has several requirements:
+      - it should be compatible with current runtime, used by 'dotnet linq2db' tool;
+      - assembly should contain exactly one interceptor class with customization logic. It should be inherited from ScaffoldInterceptors and has default public constructor;
+      - linq2db.Scaffold version should match tool's version to avoid possible compatibility issues/errors.
+
+=== Database Schema : database schema load
+
+   --objects                                 : schema objects to load
+         type: string list (optional)
+         json: schema.objects
+         default: table, view, foreign-key
+         default (T4 mode): table, view, foreign-key, stored-procedure, scalar-function, table-function, aggregate-function
+         supported values:
+               table              : load tables
+               view               : load views
+               foreign-key        : load foreign key constrains
+               stored-procedure   : load stored procedures
+               scalar-function    : load scalar functions
+               table-function     : load table functions
+               aggregate-function : load aggregate/window functions
+         examples:
+               --objects table,stored-procedure,table-function
+         JSON examples:
+               { "schema": { "objects": ["table", "view", "table-function"] } }
+
+   --prefer-provider-types                   : prefer provider-specific data types to regular .net types for columns and parameters
+         type: bool (optional)
+         json: schema.prefer-provider-types
+         default: false
+         default (T4 mode): false
+
+      Database provider could have db-specific .net types to better mapping handling to database types. E.g. MySqlGeometry, NpgsqlInet or OracleTimeStampLTZ types, provided by correspondin
+      g providers.
+
+   --ignore-duplicate-fk                     : load only first (or order, returned by database) foreign key with same columns
+         type: bool (optional)
+         json: schema.ignore-duplicate-fk
+         default: true
+         default (T4 mode): false
+
+   --safe-schema-only                        : load stored procedure/table function schema using only safe methods
+         type: bool (optional)
+         json: schema.safe-schema-only
+         default: true
+         default (T4 mode): false
+
+      Don't use CommandBehavior.SchemaOnly execution mode to load stored procedure or table function schema as it is not safe if them contain non-transactional code.
+
+   --database-in-name                        : include database name in name of db object in database schema
+         type: bool (optional)
+         json: schema.database-in-name
+         default: false
+         default (T4 mode): false
+
+   --load-sproc-schema                       : enable loading stored procedure schema
+         type: bool (optional)
+         json: schema.load-sproc-schema
+         default: false
+         default (T4 mode): true
+
+      When not set, procedures and their parameters will be loaded, but not result-set schema.
+
+   --mssql-enable-return-value-parameter     : (only for SQL Server) enable generation of RETURN_VALUE parameter for stored procedures
+         type: bool (optional)
+         json: schema.mssql-enable-return-value-parameter
+         default: false
+         default (T4 mode): false
+
+   --include-schemas                         : load only specified database schemas
+         type: string list (optional)
+         cannot use with: --exclude-schemas
+         json: schema.include-schemas
+
+   --exclude-schemas                         : do not load specified database schemas
+         type: string list (optional)
+         cannot use with: --include-schemas
+         json: schema.exclude-schemas
+
+   --include-catalogs                        : load only specified database schemas
+         type: string list (optional)
+         cannot use with: --exclude-catalogs
+         json: schema.include-catalogs
+
+   --exclude-catalogs                        : do not load specified database schemas
+         type: string list (optional)
+         cannot use with: --include-catalogs
+         json: schema.exclude-catalogs
+
+   --default-schemas                         : specify which schemas should be recognized as default schemas
+         type: string list (optional)
+         json: schema.default-schemas
+
+      Objects from schemas, marked as default, will be:
+        - put to main data context instead of separate schema-specific class (see also schema-as-type option)
+        - will skip generation of schema name in metadata (see also include-default-schema-name option)
+      When this option is not set, CLI tool use database-specific logic to detect default schema. Usually it is current user/schema name associated with connection string, used for databas
+      e scaffolding and supports only one schema. Using this option you can specify multiple schemas.
+
+   --include-tables                          : only load tables with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --exclude-tables
+         json: schema.include-tables
+         examples:
+               --include-tables Users,Roles,Permissions
+         JSON examples:
+               { "schema": { "include-tables": [ "Users", { "name": "Roles", "schema": "dbo" } ] } } // Users and dbo.Roles tables
+               { "schema": { "include-tables": [ { "regex": "^audit_.+$", "schema": "dbo" } ] } } // all tables starting from audit_ prefix
+
+      Provided table names should have same casing as actual table name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it
+       instead:
+        - there is no way to specify schema name for table;
+        - table name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - table schema (schema property);
+        - regular expression (regex property) instead of exact table name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // table name
+          "schema": string? // table schema (optional)
+      }
+      |
+      {
+          "regex" : string  // table name matching regular expression
+          "schema": string? // table schema (optional)
+      }
+      |
+      string // also you can put table name as string directly to list
+
+   --exclude-tables                          : skip load of tables with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --include-tables
+         json: schema.exclude-tables
+         examples:
+               --exclude-tables Users,Roles,Permissions
+         JSON examples:
+               { "schema": { "exclude-tables": [ "Users", { "name": "Roles", "schema": "dbo" } ] } } // Users and dbo.Roles tables ignored
+               { "schema": { "exclude-tables": [ { "regex": "^audit_.+$", "schema": "dbo" } ] } } // all tables starting from audit_ prefix ignored
+
+      Provided table names should have same casing as actual table name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it
+       instead:
+        - there is no way to specify schema name for table;
+        - table name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - table schema (schema property);
+        - regular expression (regex property) instead of exact table name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // table name
+          "schema": string? // table schema (optional)
+      }
+      |
+      {
+          "regex" : string  // table  name matching regular expression
+          "schema": string? // table schema (optional)
+      }
+      |
+      string // also you can put table name as string directly to list
+
+   --include-views                           : only load views with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --exclude-views
+         json: schema.include-views
+         examples:
+               --include-views Users,Roles,Permissions
+         JSON examples:
+               { "schema": { "include-views": [ "Users", { "name": "Roles", "schema": "dbo" } ] } } // Users and dbo.Roles views
+               { "schema": { "include-views": [ { "regex": "^audit_.+$", "schema": "dbo" } ] } } // all views starting from audit_ prefix
+
+      Provided view names should have same casing as actual view name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it i
+      nstead:
+        - there is no way to specify schema name for view;
+        - view name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - view schema (schema property);
+        - regular expression (regex property) instead of exact view name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // view name
+          "schema": string? // view schema (optional)
+      }
+      |
+      {
+          "regex" : string  // view name matching regular expression
+          "schema": string? // view schema (optional)
+      }
+      |
+      string // also you can put view name as string directly to list
+
+   --exclude-views                           : skip load of views with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --include-views
+         json: schema.exclude-views
+         examples:
+               --exclude-views Users,Roles,Permissions
+         JSON examples:
+               { "schema": { "exclude-views": [ "Users", { "name": "Roles", "schema": "dbo" } ] } } // Users and dbo.Roles views ignored
+               { "schema": { "exclude-views": [ { "regex": "^audit_.+$", "schema": "dbo" } ] } } // all views starting from audit_ prefix ignored
+
+      Provided view names should have same casing as actual view name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it i
+      nstead:
+        - there is no way to specify schema name for view;
+        - view name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - view schema (schema property);
+        - regular expression (regex property) instead of exact view name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // view name
+          "schema": string? // view schema (optional)
+      }
+      |
+      {
+          "regex" : string  // view name matching regular expression
+          "schema": string? // view schema (optional)
+      }
+      |
+      string // also you can put view name as string directly to list
+
+   --procedures-with-schema                  : only load schema for stored procedures with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --procedures-without-schema
+         json: schema.procedures-with-schema
+         examples:
+               --procedures-with-schema GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "procedures-with-schema": [ "GetUsers", { "name": "LoadPermissions", "schema": "dbo" } ] } } // GetUsers and dbo.LoadPermissions procedures
+               { "schema": { "procedures-with-schema": [ { "regex": "^Load.+$", "schema": "dbo" } ] } } // all procedures starting from Load prefix
+
+      Provided stored procedure names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to 
+      use JSON for it instead:
+        - there is no way to specify schema name for procedure;
+        - procedure name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - procedure schema (schema property);
+        - regular expression (regex property) instead of exact procedure name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // stored procedure name
+          "schema": string? // stored procedure schema (optional)
+      }
+      |
+      {
+          "regex" : string  // stored procedure name matching regular expression
+          "schema": string? // stored procedure schema (optional)
+      }
+      |
+      string // also you can put procedure name as string directly to list
+
+   --procedures-without-schema               : skip load of schema for stored procedures with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --procedures-with-schema
+         json: schema.procedures-without-schema
+         examples:
+               --procedures-without-schema FormatAllDrives,DropAllTables
+         JSON examples:
+               { "schema": { "procedures-without-schema": [ "DropAllTables", { "name": "FormatAllDrives", "schema": "dbo" } ] } } // DropAllTables and dbo.FormatAllDrives procedures schema not loaded
+               { "schema": { "procedures-without-schema": [ { "regex": "^Delete.+$", "schema": "dbo" } ] } } // all procedures starting from Delete prefix
+
+      Provided stored procedure names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to 
+      use JSON for it instead:
+        - there is no way to specify schema name for procedure;
+        - procedure name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - procedure schema (schema property);
+        - regular expression (regex property) instead of exact procedure name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // stored procedure name
+          "schema": string? // stored procedure schema (optional)
+      }
+      |
+      {
+          "regex" : string  // stored procedure name matching regular expression
+          "schema": string? // stored procedure schema  (optional)
+      }
+      |
+      string // also you can put procedure name as string directly to list
+
+   --include-stored-procedures               : only load stored procedures with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --exclude-stored-procedures
+         json: schema.include-stored-procedures
+         examples:
+               --include-stored-procedures GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "include-stored-procedures": [ "ActiveUsers", { "name": "InactiveUsers", "schema": "dbo" } ] } } // ActiveUsers and dbo.InactiveUsers procedures
+               { "schema": { "include-stored-procedures": [ { "regex": "^Query.+$", "schema": "dbo" } ] } } // all stored procedures starting from Query prefix
+
+      Provided stored procedures names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to
+       use JSON for it instead:
+        - there is no way to specify schema name for stored procedure;
+        - stored procedure name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - stored procedure schema (schema property);
+        - regular expression (regex property) instead of exact stored procedure name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // stored procedure name
+          "schema": string? // stored procedure schema (optional)
+      }
+      |
+      {
+          "regex" : string  // stored procedure name matching regular expression
+          "schema": string? // stored procedure schema (optional)
+      }
+      |
+      string // also you can put stored procedure name as string directly to list
+
+   --exclude-stored-procedures               : skip load of stored procedures with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --include-stored-procedures
+         json: schema.exclude-stored-procedures
+         examples:
+               --exclude-stored-procedure GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "exclude-stored-procedure": [ "TestProcedure", { "name": "CheckDb", "schema": "dbo" } ] } } // TestProcedure and dbo.CheckDb procedures ignored
+               { "schema": { "exclude-stored-procedure": [ { "regex": "^Audit.+$", "schema": "dbo" } ] } } // all stored procedures starting from Audit prefix ignored
+
+      Provided stored procedures names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to
+       use JSON for it instead:
+        - there is no way to specify schema name for stored procedure;
+        - stored procedure name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - stored procedure schema (schema property);
+        - regular expression (regex property) instead of exact stored procedure name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // stored procedure name
+          "schema": string? // stored procedure schema (optional)
+      }
+      |
+      {
+          "regex" : string  // stored procedure name matching regular expression
+          "schema": string? // stored procedure schema  (optional)
+      }
+      |
+      string // also you can put stored procedure name as string directly to list
+
+   --include-table-functions                 : only load table functions with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --exclude-table-functions
+         json: schema.include-table-functions
+         examples:
+               --include-table-functions GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "include-table-functions": [ "ActiveUsers", { "name": "InactiveUsers", "schema": "dbo" } ] } } // ActiveUsers and dbo.InactiveUsers functions
+               { "schema": { "include-table-functions": [ { "regex": "^Query.+$", "schema": "dbo" } ] } } // all table functions starting from Query prefix
+
+      Provided table functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to us
+      e JSON for it instead:
+        - there is no way to specify schema name for table function;
+        - table function name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - table function schema (schema property);
+        - regular expression (regex property) instead of exact table function name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // table function name
+          "schema": string? // table function schema (optional)
+      }
+      |
+      {
+          "regex" : string  // table function name matching regular expression
+          "schema": string? // table function schema (optional)
+      }
+      |
+      string // also you can put table function name as string directly to list
+
+   --exclude-table-functions                 : skip load of table functions with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --include-table-functions
+         json: schema.exclude-table-functions
+         examples:
+               --exclude-table-functions GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "exclude-table-functions": [ "TestFunction", { "name": "CheckDb", "schema": "dbo" } ] } } // TestFunction and dbo.CheckDb functions ignored
+               { "schema": { "exclude-table-functions": [ { "regex": "^Audit.+$", "schema": "dbo" } ] } } // all table functions starting from Audit prefix ignored
+
+      Provided table functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to us
+      e JSON for it instead:
+        - there is no way to specify schema name for table function;
+        - table function name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - table function schema (schema property);
+        - regular expression (regex property) instead of exact table function name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // table function name
+          "schema": string? // table function schema (optional)
+      }
+      |
+      {
+          "regex" : string  // table function name matching regular expression
+          "schema": string? // table function schema  (optional)
+      }
+      |
+      string // also you can put table function name as string directly to list
+
+   --include-scalar-functions                : only load scalar functions with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --exclude-scalar-functions
+         json: schema.include-scalar-functions
+         examples:
+               --include-scalar-functions GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "include-scalar-functions": [ "ActiveUsers", { "name": "InactiveUsers", "schema": "dbo" } ] } } // ActiveUsers and dbo.InactiveUsers functions
+               { "schema": { "include-scalar-functions": [ { "regex": "^Query.+$", "schema": "dbo" } ] } } // all scalar functions starting from Query prefix
+
+      Provided scalar functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to u
+      se JSON for it instead:
+        - there is no way to specify schema name for scalar function;
+        - scalar function name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - scalar function schema (schema property);
+        - regular expression (regex property) instead of exact scalar function name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // scalar function name
+          "schema": string? // scalar function schema (optional)
+      }
+      |
+      {
+          "regex" : string  // scalar function name matching regular expression
+          "schema": string? // scalar function schema (optional)
+      }
+      |
+      string // also you can put scalar function name as string directly to list
+
+   --exclude-scalar-functions                : skip load of scalar functions with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --include-scalar-functions
+         json: schema.exclude-scalar-functions
+         examples:
+               --exclude-scalar-functions GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "exclude-scalar-functions": [ "TestFunction", { "name": "CheckDb", "schema": "dbo" } ] } } // TestFunction and dbo.CheckDb functions ignored
+               { "schema": { "exclude-scalar-functions": [ { "regex": "^Audit.+$", "schema": "dbo" } ] } } // all scalar functions starting from Audit prefix ignored
+
+      Provided scalar functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to u
+      se JSON for it instead:
+        - there is no way to specify schema name for scalar function;
+        - scalar function name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - scalar function schema (schema property);
+        - regular expression (regex property) instead of exact scalar function name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // scalar function name
+          "schema": string? // scalar function schema (optional)
+      }
+      |
+      {
+          "regex" : string  // scalar function name matching regular expression
+          "schema": string? // scalar function schema  (optional)
+      }
+      |
+      string // also you can put scalar function name as string directly to list
+
+   --include-aggregate-functions             : only load aggregate functions with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --exclude-aggregate-functions
+         json: schema.include-aggregate-functions
+         examples:
+               --include-aggregate-functions GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "include-aggregate-functions": [ "ActiveUsers", { "name": "InactiveUsers", "schema": "dbo" } ] } } // ActiveUsers and dbo.InactiveUsers functions
+               { "schema": { "include-aggregate-functions": [ { "regex": "^Query.+$", "schema": "dbo" } ] } } // all aggregate functions starting from Query prefix
+
+      Provided aggregate functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended t
+      o use JSON for it instead:
+        - there is no way to specify schema name for aggregate function;
+        - aggregate function name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - aggregate function schema (schema property);
+        - regular expression (regex property) instead of exact aggregate function name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // aggregate function name
+          "schema": string? // aggregate function schema (optional)
+      }
+      |
+      {
+          "regex" : string  // aggregate function name matching regular expression
+          "schema": string? // aggregate function schema (optional)
+      }
+      |
+      string // also you can put aggregateaggregate function name as string directly to list
+
+   --exclude-aggregate-functions             : skip load of aggregate functions with specified name(s)
+         type: (string | object) list (optional)
+         cannot use with: --include-aggregate-functions
+         json: schema.exclude-aggregate-functions
+         examples:
+               --exclude-aggregate-functions GetUsers,GetRoles,LoadPermissions
+         JSON examples:
+               { "schema": { "exclude-aggregate-functions": [ "TestFunction", { "name": "CheckDb", "schema": "dbo" } ] } } // TestFunction and dbo.CheckDb functions ignored
+               { "schema": { "exclude-aggregate-functions": [ { "regex": "^Audit.+$", "schema": "dbo" } ] } } // all aggregate functions starting from Audit prefix ignored
+
+      Provided aggregate functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended t
+      o use JSON for it instead:
+        - there is no way to specify schema name for aggregate function;
+        - aggregate function name cannot have comma (,) as it is used as list separator;
+        - only exact match possible;
+      JSON allows you to specify more options:
+        - aggregate function schema (schema property);
+        - regular expression (regex property) instead of exact aggregate function name (name property).
+      JSON list element schema:
+      {
+          "name"  : string  // aggregate function name
+          "schema": string? // aggregate function schema (optional)
+      }
+      |
+      {
+          "regex" : string  // aggregate function name matching regular expression
+          "schema": string? // aggregate function schema  (optional)
+      }
+      |
+      string // also you can put aggregate function name as string directly to list
+
+=== Data Model : data model configuration
+
+   --include-db-name                         : include database name into generated mappings
+         type: bool (optional)
+         json: dataModel.include-db-name
+         default: false
+         default (T4 mode): false
+
+   --include-default-schema-name             : include default schema(s) name into generated mappings
+         type: bool (optional)
+         json: dataModel.include-default-schema-name
+         default: false
+         default (T4 mode): true
+
+   --metadata                                : specify type of generated metadata
+         type: string (optional)
+         json: dataModel.metadata
+         default: attributes
+         default (T4 mode): attributes
+         supported values:
+               none       : don't emit metadata for model
+               attributes : annotate model with mapping attributes
+               fluent     : annotate model using fluent mapping
+
+   --base-entity                             : base class for generated entities
+         type: string (optional)
+         json: dataModel.base-entity
+         examples:
+               --base-entity My.Namespace.MyBaseEntity
+               --base-entity My.Namespace.ParentClass+MyBaseNestedEntity
+         JSON examples:
+               { "dataModel": { "base-entity": "My.Namespace.MyBaseEntity" } }
+               { "dataModel": { "base-entity": "My.Namespace.ParentClass+MyBaseNestedEntity" } }
+
+   --include-datatype                        : include DataType enum value to column mappings
+         type: bool (optional)
+         json: dataModel.include-datatype
+         default: false
+         default (T4 mode): false
+
+   --include-db-type                         : include database type to column mappings
+         type: bool (optional)
+         json: dataModel.include-db-type
+         default: false
+         default (T4 mode): false
+
+   --include-length                          : include database type length/size to column mappings
+         type: bool (optional)
+         json: dataModel.include-length
+         default: false
+         default (T4 mode): false
+
+   --include-precision                       : include database type precision to column mappings
+         type: bool (optional)
+         json: dataModel.include-precision
+         default: false
+         default (T4 mode): false
+
+   --include-scale                           : include database type scale to column mappings
+         type: bool (optional)
+         json: dataModel.include-scale
+         default: false
+         default (T4 mode): false
+
+   --include-db-info                         : generate comment on data context with database information
+         type: bool (optional)
+         json: dataModel.include-db-info
+         default: false
+         default (T4 mode): false
+
+      Information includes database name, data source and server version (when database provider expose this information).
+
+   --add-default-ctor                        : generate default constructor on data context
+         type: bool (optional)
+         json: dataModel.add-default-ctor
+         default: true
+         default (T4 mode): true
+
+   --add-configuration-ctor                  : generate data context contructor with configuration name parameter
+         type: bool (optional)
+         json: dataModel.add-configuration-ctor
+         default: true
+         default (T4 mode): true
+
+      Constructor example: public MyDataContext(string context) { ... }
+
+   --add-options-ctor                        : generate data context contructor with options parameter
+         type: bool (optional)
+         json: dataModel.add-options-ctor
+         default: false
+         default (T4 mode): true
+
+      Constructor example: public MyDataContext(DataOptions options) { ... }
+
+   --add-typed-options-ctor                  : generate data context contructor with generic options parameter
+         type: bool (optional)
+         json: dataModel.add-typed-options-ctor
+         default: true
+         default (T4 mode): true
+
+      Constructor example: public MyDataContext(DataOptions<MyDataContext> options) { ... }
+
+   --context-name                            : class name for generated data context
+         type: string (optional)
+         json: dataModel.context-name
+         default: MyDataContext
+         default (T4 mode): MyDataContext
+
+      When not specified, database name used. When database name not available, "MyDataContext" used
+
+   --base-context                            : base class for generated data context
+         type: string (optional)
+         json: dataModel.base-context
+         default: LinqToDB.Data.DataConnection
+         default (T4 mode): LinqToDB.Data.DataConnection
+         examples:
+               --base-context LinqToDB.DataContext
+         JSON examples:
+               { "dataModel": { "base-context": "LinqToDB.DataContext" } }
+
+   --context-modifier                        : access modifier for generated data context
+         type: string (optional)
+         json: dataModel.context-modifier
+         default: public
+         default (T4 mode): public
+         supported values:
+               private  : applies 'public' to data context class
+               internal : applies 'internal' to data context class
+               public   : applies 'private' to data context class
+         examples:
+               --context-modifier internal
+         JSON examples:
+               { "dataModel": { "context-modifier": "internal" } }
+
+   --add-init-context                        : generate InitDataContext partial method on data context for custom context setup
+         type: bool (optional)
+         json: dataModel.add-init-context
+         default: true
+         default (T4 mode): true
+
+   --add-static-init-context                 : generate StaticInitDataContext partial method on data context for custom context setup
+         type: bool (optional)
+         json: dataModel.add-static-init-context
+         default: false
+         default (T4 mode): false
+
+      Method will be called from generated context's static constructor after all other code. Enabling this option will force static constructor generation.
+
+   --add-associations                        : generate association properties on entities
+         type: bool (optional)
+         json: dataModel.add-associations
+         default: true
+         default (T4 mode): true
+
+   --add-association-extensions              : generate association extension methods for entities
+         type: bool (optional)
+         json: dataModel.add-association-extensions
+         default: false
+         default (T4 mode): false
+
+   --association-collection                  : collection type to use for many-sided associations
+         type: string (optional)
+         json: dataModel.association-collection
+         default: System.Collections.Generic.IEnumerable<>
+         default (T4 mode): System.Collections.Generic.IEnumerable<>
+         examples:
+               --association-collection []
+               --association-collection System.Collections.Generic.List<>
+         JSON examples:
+               { "dataModel": { "association-collection": "[]" } }
+               { "dataModel": { "association-collection": "System.Collections.Generic.List<>" } }
+
+      Should be open-generic type with one parameter or [] for array
+
+   --reuse-entities-in-procedures            : allows use of entity mapping for return type of stored procedure/table function
+         type: bool (optional)
+         json: dataModel.reuse-entities-in-procedures
+         default: true
+         default (T4 mode): true
+
+      When procedure/function schema has same columns (by name, type and nullability) as known table/view entity, this option allows to use entity mapping for procedure/function return typ
+      e. Otherwise separate mapping class will be generated for specific procedure/function.
+
+   --table-function-returns-table            : table functions use ITable<T> as return type, otherwise IQueryable<T> type used
+         type: bool (optional)
+         json: dataModel.table-function-returns-table
+         default: false
+         default (T4 mode): true
+
+   --emit-schema-errors                      : generate #error pragma for stored procedures and table functions with schema load errors
+         type: bool (optional)
+         json: dataModel.emit-schema-errors
+         default: false
+         default (T4 mode): false
+
+   --procedure-types                         : enables generation of sync and async versions of stored procedure mapping
+         type: string list (optional)
+         json: dataModel.procedure-types
+         default: sync, async
+         default (T4 mode): sync
+         supported values:
+               sync  : generate sync stored procedure call mappings
+               async : generate async stored procedure call mappings
+
+   --skip-procedures-with-schema-errors      : skips mapping generation for stored procedure with schema load errors, otherwise generate mapping without result table
+         type: bool (optional)
+         json: dataModel.skip-procedures-with-schema-errors
+         default: false
+         default (T4 mode): true
+
+   --procedure-returns-list                  : use List<T> for stored procedure return dataset, otherwise IEnumerable<T> used
+         type: bool (optional)
+         json: dataModel.procedure-returns-list
+         default: false
+         default (T4 mode): false
+
+   --add-db-type-to-procedures               : include database type to stored procedure parameters
+         type: bool (optional)
+         json: dataModel.add-db-type-to-procedures
+         default: false
+         default (T4 mode): false
+
+   --schema-as-type                          : generate non-default schemas' code nested into separate class
+         type: bool (optional)
+         json: dataModel.schema-as-type
+         default: true
+         default (T4 mode): false
+
+   --equatable-entities                      : entity classes will implement IEquatable<T> interface using primary key column(s) for identity calculation. Requires reference to linq2db.Tools nuget from generated code.
+         type: bool (optional)
+         json: dataModel.equatable-entities
+         default: false
+         default (T4 mode): false
+
+   --find-methods                            : enable generation of extension methods to access entity by primary key
+         type: string list (optional)
+         json: dataModel.find-methods
+         default: sync-pk-table, async-pk-table
+         default (T4 mode): sync-pk-table
+         supported values:
+               none                 : disable generation of Find extensions. Cannot be used with other values
+               sync-pk-table        : generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)
+               async-pk-table       : generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)
+               query-pk-table       : generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)
+               sync-pk-context      : generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)
+               async-pk-context     : generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)
+               query-pk-context     : generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)
+               sync-entity-table    : generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)
+               async-entity-table   : generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)
+               query-entity-table   : generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)
+               sync-entity-context  : generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)
+               async-entity-context : generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)
+               query-entity-context : generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)
+
+   --order-find-parameters-by-ordinal        : use primary key column ordinal to order Find() extension method parameters (composite primary key only)
+         type: bool (optional)
+         json: dataModel.order-find-parameters-by-ordinal
+         default: true
+         default (T4 mode): false
+
+   --partial-entities                        : when set to true, generates partial class modifier on entity mapping classes
+         type: bool (optional)
+         json: dataModel.partial-entities
+         default: false
+         default (T4 mode): true
+
+   --schema-class-names                      : provides schema context class/property names for non-default schemas (appliable only if schema-as-type option enabled)
+         type: [string]: string (optional)
+         json: dataModel.schema-class-names
+         examples:
+               --schema-class-names schema1=SchemaOne,schema2=SpecialSchema
+         JSON examples:
+               { "dataModel": { "schema1": "SchemaOne", "schema2": "SpecialSchema" } }
+
+      Without this option schema name will be used as base name to generate schema context/property names. Specifying this option in command line has limitations and it is recommended to u
+      se JSON for it instead because names in CLI cannot contain comma (,) or equality (=) characters, as they used as separators.
+
+   --fluent-entity-type-helpers              : Enables generation of entity builder extension method calls for each fluent entity builder.
+         type: string list (optional)
+         json: dataModel.fluent-entity-type-helpers
+         default: 
+         default (T4 mode): 
+
+      Enabling this requires one or more extension methods, with same name, taking "this EntityMappingBuilder<T> builder" as first parameter and nullable entity value (passed as null) as s
+      econd parameter. Entity parameter type could be specific or generic type.
+      E.g. following example defines two fluent mapping helpers:
+       - ConfigureEntity is a set of methods, with entity parameter constrained to specific type or interface and optional fallback method to handle other types.
+       - ConfigureAllEntities is a single method that accept any entity
+      static class CustomFluentExtensions
+      {
+          // called for builder of specific entity type or it's childs only
+      	internal static EntityMappingBuilder<T> ConfigureEntity<T>(this EntityMappingBuilder<T> builder, Person? _) where T : Person => ...;
+          // called for builder of entities with specific interface
+      	internal static EntityMappingBuilder<T> ConfigureEntity<T>(this EntityMappingBuilder<T> builder, Child? _) where T : IEntities => ...;
+      	// called for all other entities. As example it annotated with Obsolete attribute to catch new entities not convered by methods above in build-time
+      	[Obsolete("Define ConfigureEntity method for this entity type")]
+      	internal static EntityMappingBuilder<T> ConfigureEntity<T>(this EntityMappingBuilder<T> builder, T? _) where T : class => ...;
+      	// single method to call for all entity builder to perform generic configuration or dispatch entity configuration by type dynamically by method itself
+      	internal static EntityMappingBuilder<T> ConfigureAllEntities<T>(this EntityMappingBuilder<T> builder, T? _) where T : class => ...;
+      	}
+
+     data-context-class-name                 : (allowed only in JSON) data context class naming options (for auto-generated names only)
+         type: object (optional)
+         json: dataModel.data-context-class-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "data-context-class-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     entity-class-name                       : (allowed only in JSON) entity class naming options
+         type: object (optional)
+         json: dataModel.entity-class-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "singular",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": true,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "t4",
+                      "pluralization"                   : "singular",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": true,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "entity-class-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     entity-column-property-name             : (allowed only in JSON) entity column properties naming options
+         type: object (optional)
+         json: dataModel.entity-column-property-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "t4",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                      "max_uppercase_word_length"       : 2,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "entity-column-property-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     entity-context-property-name            : (allowed only in JSON) entity table access data context property naming options
+         type: object (optional)
+         json: dataModel.entity-context-property-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "plural_multiple_characters",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": true,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "t4_pluralized",
+                      "pluralization"                   : "plural_multiple_characters",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": true,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "entity-context-property-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     association-name                        : (allowed only in JSON) association property or extension method naming options
+         type: object (optional)
+         json: dataModel.association-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "association",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "association",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "association-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     association-single-backreference-name   : (allowed only in JSON) association backreference property or extension method naming options for single-record cardinality
+         type: object (optional)
+         json: dataModel.association-single-backreference-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "association",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "association",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "association-single-backreference-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     association-multi-backreference-name    : (allowed only in JSON) association backreference property or extension method naming options for multi-record cardinality
+         type: object (optional)
+         json: dataModel.association-multi-backreference-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "plural_multiple_characters",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "association",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "plural_multiple_characters",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "association",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "association-multi-backreference-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     proc-or-func-method-name                : (allowed only in JSON) procedure or function method naming options
+         type: object (optional)
+         json: dataModel.proc-or-func-method-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "proc-or-func-method-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     proc-or-func-param-name                 : (allowed only in JSON) procedure or function method parameters naming options
+         type: object (optional)
+         json: dataModel.proc-or-func-param-name
+         default: {
+                      "case"                            : "camel_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "camel_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "proc-or-func-param-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     proc-or-func-result-class-name          : (allowed only in JSON) procedure or table function custom result record mapping class naming options
+         type: object (optional)
+         json: dataModel.proc-or-func-result-class-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Result",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Result",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "proc-or-func-result-class-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     async-proc-multi-result-class-name      : (allowed only in JSON) results wrapper/holder class naming options for async signature of stored procedure with multiple results. E.g.
+- procedure with one or more return, out or in-out parameters and rowcount value;
+- procedure with one or more return, out or in-out parameters and result table.
+         type: object (optional)
+         json: dataModel.async-proc-multi-result-class-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Results",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Results",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "async-proc-multi-result-class-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     async-proc-multi-result-property-name   : (allowed only in JSON) results wrapper/holder class properties naming options for async signature of stored procedure with multiple results. E.g.
+- procedure with one or more return, out or in-out parameters and rowcount value;
+- procedure with one or more return, out or in-out parameters and result table.
+         type: object (optional)
+         json: dataModel.async-proc-multi-result-property-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "async-proc-multi-result-property-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     proc-or-func-result-property-name       : (allowed only in JSON) procedure or table function custom result record column property naming options. You probably don't want to specify this option, as it used for field with private visibility.
+         type: object (optional)
+         json: dataModel.proc-or-func-result-property-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "none",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                      "max_uppercase_word_length"       : 2,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "proc-or-func-result-property-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     function-tuple-class-name               : (allowed only in JSON) tuple class naming options for scalar function with tuple return type
+         type: object (optional)
+         json: dataModel.function-tuple-class-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Result",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Result",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "function-tuple-class-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     function-tuple-class-field-name         : (allowed only in JSON) tuple class field naming options for scalar function with tuple return type
+         type: object (optional)
+         json: dataModel.function-tuple-class-field-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "function-tuple-class-field-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     schema-class-name                       : (allowed only in JSON) non-default schema wrapper class naming options
+         type: object (optional)
+         json: dataModel.schema-class-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Schema",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : "Schema",
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "schema-class-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     schema-context-property-name            : (allowed only in JSON) non-default schema context property in main context naming options
+         type: object (optional)
+         json: dataModel.schema-context-property-name
+         default: {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "pascal_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "schema-context-property-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+     find-parameter-name                     : (allowed only in JSON) Find extension method parameters naming options
+         type: object (optional)
+         json: dataModel.find-parameter-name
+         default: {
+                      "case"                            : "camel_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         default (T4 mode): {
+                      "case"                            : "camel_case",
+                      "pluralization"                   : "none",
+                      "prefix"                          : null,
+                      "suffix"                          : null,
+                      "transformation"                  : "split_by_underscore",
+                      "pluralize_if_ends_with_word_only": false,
+                      "ignore_all_caps"                 : false,
+                  }
+         JSON examples:
+               
+{
+  "dataModel":
+  {
+    "find-parameter-name":
+    {
+      "case"         : "pascal_case",
+      "pluralization": "singular",
+      "suffix"       : "Record"
+    }
+  }
+}
+
+      Naming options could be specified only in JSON file and defined as object with following properties:
+      - case                             : string  : specify name casing (see values below)
+          + "none"          : no casing applied to identifier
+          + "pascal_case"   : identifier cased using PascalCase
+          + "camel_case"    : identifier cased using camelCase
+          + "snake_case"    : identifier cased using snake_case
+          + "lower_case"    : identifier cased using lowercase
+          + "upper_case"    : identifier cased using UPPERCASE
+          + "t4_pluralized" : emulation of casing logic for pluralized names used by T4 templates (compat. option)
+          + "t4"            : emulation of casing logic for non-pluralized names used by T4 templates (compat. option)
+      - pluralization                    : string  : specify name pluralization (see values below)
+          + "none"                       : don't pluralize identifier
+          + "singular"                   : singularize identifier
+          + "plural"                     : pluralize identifier
+          + "plural_multiple_characters" : pluralize identifier only when last word is longer than one character
+      - prefix                           : string? : optional name prefix
+      - suffix                           : string? : optional name suffix
+      - transformation                   : string  : base name transformation logic (see values below)
+          + "none"                : no transformations applied, treat whole identifier as one word
+          + "split_by_underscore" : split base name, got from database object name, into separate words by underscore (_)
+          + "association"         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+      - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
+      - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
+      If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
+
+=== Code Generation : code-generation options
+
+   --nrt                                     : enable generation of nullable reference type annotations
+         type: bool (optional)
+         json: code.nrt
+         default: true
+         default (T4 mode): true
+
+   --indent                                  : code indent string
+         type: string (optional)
+         json: code.indent
+         default: \t
+         default (T4 mode): \t
+
+   --new-line                                : new line sequence, used by generated code
+         type: string (optional)
+         json: code.new-line
+         default: value of Environment.NewLine
+         default (T4 mode): value of Environment.NewLine
+         examples:
+               --new-line "/*I'm newline*/"
+         JSON examples:
+               { "code": { "new-line": "\r\n" } }
+
+      it is recommended to use json for this option, as passing new line characters in command line could be tricky
+
+   --no-xmldoc-warn                          : suppress missing xml-doc warnings in generated code
+         type: bool (optional)
+         json: code.no-xmldoc-warn
+         default: true
+         default (T4 mode): true
+
+   --autogenerated                           : marks code with <auto-generated /> comment
+         type: bool (optional)
+         json: code.autogenerated
+         default: true
+         default (T4 mode): true
+
+   --single-file                             : generates all code in single file
+         type: bool (optional)
+         json: code.single-file
+         default: false
+         default (T4 mode): true
+
+   --generated-suffix                        : adds ".generated.<extension>" suffix to generated files
+         type: bool (optional)
+         json: code.generated-suffix
+         default: false
+         default (T4 mode): false
+
+   --conflicts                               : specify namespaces and/or types that conflict with generated code
+         type: string list (optional)
+         json: code.conflicts
+         examples:
+               --conflicts My.Namespace.SomeType+ConflictingNestedType,Some.ConflictingNamespace.Or.Type
+         JSON examples:
+               { "code": { "conflicts": ["My.Namespace.SomeType+ConflictingNestedType", "Some.ConflictingNamespace.Or.Type"] } }
+
+      If generated code has name conflict with other namespaces or types you define or reference in your code, you can pass those names to this method. Code generator will use this informa
+      tion to generate non-conflicting names.
+
+   --header                                  : specify custom text for <auto-generated /> file header comment (when enabled)
+         type: string (optional)
+         json: code.header
+
+      When not specified, uses default linq2db header text.
+
+   -n, --namespace                           : namespace name for generated code
+         type: string (optional)
+         json: code.namespace
+         default: DataModel
+         default (T4 mode): DataModel
+
+Examples:
+
+        dotnet linq2db scaffold -o c:\my_project\model -p SqlServer -c "Server=MySqlServer;Database=MyDatabase;User Id=scaffold_user;Password=secret;"
+                generates database model classes in specified folder for SQL Server database, pointed by specified connection string
+
+        dotnet linq2db scaffold -i path\to\my_scaffold_options.json -c "Server=MySqlServer;Database=MyDatabase;User Id=scaffold_user;Password=secret;"
+                generates database model classes using options, specified in json file, except database connection string, passed explicitly

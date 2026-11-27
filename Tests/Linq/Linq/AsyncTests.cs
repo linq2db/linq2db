@@ -254,7 +254,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CancellableAsyncEnumerableTest([DataSources] string context)
+		public async Task CancellableAsyncEnumerableTest([DataSources] string context)
 		{
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
@@ -264,7 +264,7 @@ namespace Tests.Linq
 
 			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
 
-			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Assert.ThatAsync(async () =>
 			{
 				try
 				{
@@ -283,7 +283,7 @@ namespace Tests.Linq
 					// ~Aliens~ Oracle
 					throw new OperationCanceledException();
 				}
-			});
+			}, Throws.TypeOf<OperationCanceledException>());
 
 			// the cancelled token leaves a pending server-side cancel on a Firebird attachment (#6012)
 			TestUtils.DiscardFirebirdConnection(db);

@@ -11,9 +11,7 @@ namespace Tests.UserTests.Issue1736
 	[TestFixture]
 	public class UserTest : TestBase
 	{
-		public interface IModifiedTimeStamp
-		{
-		}
+		public interface IModifiedTimeStamp;
 
 		public class BasicDTO : BasicDTOwithoutID, IDTOWithId
 		{
@@ -24,25 +22,15 @@ namespace Tests.UserTests.Issue1736
 
 		public class BasicDTOwithoutID : IMccEntityState;
 
-		public interface ICreatedTimeStamp
-		{
-		}
+		public interface ICreatedTimeStamp;
 
-		public interface IDTOWithId
-		{
-		}
+		public interface IDTOWithId;
 
-		public interface IHasArchiveTable
-		{
-		}
+		public interface IHasArchiveTable;
 
-		public interface IMccEntityState
-		{
-		}
+		public interface IMccEntityState;
 
-		public interface IExtensionData
-		{
-		}
+		public interface IExtensionData;
 
 		public class AisleDTO : BasicDTOwithExtensionData
 		{
@@ -210,7 +198,7 @@ namespace Tests.UserTests.Issue1736
 				var baseQry = baseQry1.Union(baseQry2);
 				baseQry = baseQry.Where(cr => cr.IR.Quantity > cr.RefQty);
 
-				Assert.DoesNotThrow(() => baseQry.ToList());
+				baseQry.ToList();
 			}
 		}
 	}

@@ -11,6 +11,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
+		<PackBrowserWasmAsset>true</PackBrowserWasmAsset>
 		<Title>LINQ to DB remote data context over gRPC</Title>
 		<Description>LINQ to DB Remote gRPC package provides client and server classes to query database remotely using gRPC.</Description>
 		<Product>$(Title)</Product>

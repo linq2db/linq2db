@@ -9,7 +9,6 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-//	[Order(10101)]
 	public partial class MergeTests : TestBase
 	{
 		

@@ -130,8 +130,10 @@ namespace Tests
 		/// <summary>
 		/// Gets or sets the exception type the test is expected to fail with. Mutually exclusive with
 		/// <see cref="ErrorTypeName"/>. A Shouldly wrong-results assertion fails with a message starting
-		/// <c>Shouldly.ShouldAssertException</c>, so it is pinned by type; an NUnit <c>Assert</c> failure's message
-		/// carries no type name, so pin it with <see cref="ErrorMessage"/> instead.
+		/// <c>Shouldly.ShouldAssertException</c>, so it is pinned by type; when the test makes more than one Shouldly
+		/// assertion, also pin the failing one's expected value with <see cref="ErrorMessage"/>
+		/// (<c>"should be{0}&lt;expected&gt;{1}but was"</c>), or a failure of any other assertion matches too. An NUnit
+		/// <c>Assert</c> failure's message carries no type name, so pin it with <see cref="ErrorMessage"/> instead.
 		/// </summary>
 		public Type? ErrorType { get; set; }
 

@@ -40,7 +40,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	public override bool IsPlatformSupported => !(Platform.IsWindows && RuntimeInformation.ProcessArchitecture == Architecture.Arm64);
 
 #if !NETFRAMEWORK
-	private const string NativeClientPackage = "Sap.Data.Hana.Net.v8.0";
+	private const string NativeClientPackage = "Sap.Data.Hana.Net.v10.0";
 
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
 	{
@@ -48,7 +48,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 			return [("System.Data.Odbc", NuGetPackageVersions.System_Data_Odbc)];
 
 		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
-			return [(NativeClientPackage, NuGetPackageVersions.Sap_Data_Hana_Net_v8_0)];
+			return [(NativeClientPackage, NuGetPackageVersions.Sap_Data_Hana_Net_v10_0)];
 
 		return [];
 	}

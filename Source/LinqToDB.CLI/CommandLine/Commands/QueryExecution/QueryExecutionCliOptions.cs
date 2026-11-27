@@ -25,6 +25,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static readonly CliOption Password            = new StringCliOption("password",              null, false, false, "database password for connection string formatting");
 		public static readonly CliOption PasswordEnv         = new StringCliOption("password-env",          null, false, false, "environment variable with database password");
 		public static readonly CliOption Credentials         = new StringCliOption("credentials",           null, false, false, "system or external credential store target containing database user and password; supports %NAME% and ${NAME} environment variable expansion");
+		public static readonly CliOption CredentialsCli      = new StringCliOption("credentials-cli",       null, false, false, "credential store for the targets named by --credentials: @local (built-in encrypted store), @credential-manager (Windows), @keyring, @gpg or @vault (generated scripts), or a credentials CLI command line \"<program> [arguments]\" (the program is run as you; no shell, no expansion); overrides the profile's credentialsCli");
 		public static readonly CliOption CommandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds; 0 disables the option");
 		public static readonly CliOption LockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "lock wait timeout in seconds for SQL Server, PostgreSQL, MySQL/MariaDB, and SQLite; unsupported providers report a diagnostic; 0 disables the option");
 		public static readonly CliOption MaxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read; 0 disables the limit");
@@ -33,7 +34,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static readonly CliOption SqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute; supports %NAME% and ${NAME} environment variable expansion");
 
 		public static readonly CliOption Overwrite           = new BooleanCliOption("overwrite",   null, false, "replace existing output file", null, null, null, false, false);
-		public static readonly CliOption Impersonate         = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; file and configuration access uses the original process account", null, null, null, false, false);
+		public static readonly CliOption Impersonate         = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials (provider version detection, connection, execution and result reading); configuration, credentials, SQL validation and output files use the original process account, while code the database client loads on first use is loaded as that user, so the tool's, the .NET and the provider's folders must be readable by it", null, null, null, false, false);
 
 		public static readonly CliOption Output = new StringEnumCliOption(
 			"output",
