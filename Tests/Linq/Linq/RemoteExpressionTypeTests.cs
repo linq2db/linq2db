@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
@@ -71,9 +72,8 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Data);
 
-			table
-				.Select(r => SameTypeCast(r.A, r.B))
-				.Single()
+			// rounded: AseClient on .NET 11 reads 3.75 as 3.7500000000000000780625564125 (AseClient#240)
+			Math.Round(table.Select(r => SameTypeCast(r.A, r.B)).Single(), 10)
 				.ShouldBe(3.75m);
 
 			var sql = GetCurrentBaselines();
@@ -90,9 +90,8 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Data);
 
-			table
-				.Select(r => DefaultTypeCast(r.A, r.B))
-				.Single()
+			// rounded: AseClient#240, as above
+			Math.Round(table.Select(r => DefaultTypeCast(r.A, r.B)).Single(), 10)
 				.ShouldBe(3.75m);
 
 			GetCurrentBaselines()
