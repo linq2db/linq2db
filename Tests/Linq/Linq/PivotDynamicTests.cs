@@ -164,9 +164,7 @@ namespace Tests.Linq
 
 			Action act = () => query.ToList();
 
-			act.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNameFactoryRequired);
+			Assert.That(() => act(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNameFactoryRequired));
 		}
 
 		[Table]
@@ -185,6 +183,15 @@ namespace Tests.Linq
 				new() { Id = 2, Category = "A", Year = 2010, Amount = 20m },
 				new() { Id = 3, Category = "B", Year = 2000, Amount = 5m  },
 				new() { Id = 4, Category = "B", Year = 2010, Amount = 15m },
+			};
+
+			// A fractional cell, so a cell read as int differs from the cell.
+			public static readonly CategorySales[] FractionalData =
+			{
+				new() { Id = 1, Category = "A", Year = 2000, Amount = 10m   },
+				new() { Id = 2, Category = "A", Year = 2010, Amount = 20.6m },
+				new() { Id = 3, Category = "B", Year = 2000, Amount = 5m    },
+				new() { Id = 4, Category = "B", Year = 2010, Amount = 15m   },
 			};
 
 			// Two rows per cell, so AVG / MIN / MAX are distinguishable from SUM.
@@ -654,7 +661,8 @@ namespace Tests.Linq
 			sql.ShouldContain("HAVING");
 
 			// Y2010 in the select list and in HAVING; Y2000 is never read.
-			Occurrences(sql, "WHEN").ShouldBe(2);
+			Occurrences(sql, "WHEN")
+				.ShouldBe(2);
 		}
 
 		/// <summary>
@@ -802,6 +810,516 @@ namespace Tests.Linq
 				.ShouldBe(new decimal?[] { 20m, 15m });
 		}
 
+		/// <summary>
+		/// A projected cell name read from the row has no value until the query runs, so the cached query compares it as part
+		/// of the tree: the second execution reads as the first.
+		/// </summary>
+		[Test]
+		public void ARowDependentCellNameReadsOnEveryExecution([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Key);
+
+			for (var execution = 0; execution < 2; execution++)
+			{
+				pivoted
+					.Select(r => r.Cells.Get<decimal?>(r.Key == "A" ? "Y2000" : "Y2010"))
+					.ToList()
+					.ShouldBe(new decimal?[] { 10m, 15m });
+
+				pivoted
+					.Select(r => (decimal?)r.Cells[r.Key == "A" ? "Y2000" : "Y2010"])
+					.ToList()
+					.ShouldBe(new decimal?[] { 10m, 15m });
+			}
+		}
+
+		/// <summary>A changed name read through the indexer is a different query, as through <see cref="PivotCells.Get{T}"/>.</summary>
+		[Test]
+		public void ACapturedCellNameKeysAnIndexerRead([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var name = "Y2000";
+
+			List<string> Keys() => t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Where(r => (decimal?)r.Cells[name] > 12)
+				.Select(r => r.Key)
+				.ToList();
+
+			var keys = Keys();
+
+			keys.ShouldBeEmpty();
+
+			name = "Y2010";
+
+			Keys()
+				.OrderBy(k => k, StringComparer.Ordinal)
+				.ShouldBe(new[] { "A", "B" });
+		}
+
+		/// <summary>A compiled query's cell name, passed as an argument, keys the build it reuses.</summary>
+		// Compiled-query build identity is provider-agnostic.
+		[Test]
+		public void ACompiledCellNameKeysTheBuild([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var keys = CompiledQuery.Compile((IDataContext dc, string name) => dc
+				.GetTable<CategorySales>()
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Where(r => r.Cells.Get<decimal?>(name) > 12)
+				.Select(r => r.Key));
+
+			keys(db, "Y2000")
+				.ToList()
+				.ShouldBeEmpty();
+
+			keys(db, "Y2010")
+				.OrderBy(k => k)
+				.ToList()
+				.ShouldBe(new[] { "A", "B" });
+		}
+
+		/// <summary>
+		/// Where SQL is required, <see cref="PivotCells.Get{T}"/> reads the cell's column converted to <c>T</c>, not the
+		/// in-memory default a projection reads for a cell of another type.
+		/// </summary>
+		[Test]
+		public void AGetInASqlPositionReadsTheCellAsItsType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			// The provider's own cast of the same amounts - Distinct puts it in SQL - which truncates or rounds as the cell's does.
+			var cast = t
+				.Where(x => x.Year == 2010)
+				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
+				.ToList();
+
+			var castOfA = t
+				.Where(x => x.Year == 2010 && x.Category == "A")
+				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
+				.Single();
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			pivoted
+				.Where(r => r.Cells.Get<int>("Y2010") == castOfA)
+				.Select(r => r.Key)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			pivoted
+				.Select(r => r.Cells.Get<int>("Y2010"))
+				.Distinct()
+				.ToList()
+				.OrderBy(v => v)
+				.ShouldBe(cast.OrderBy(v => v));
+
+			// A projection keeps the in-memory read: a decimal cell is not an int.
+			pivoted
+				.OrderBy(r => r.Key)
+				.Select(r => r.Cells.Get<int>("Y2010"))
+				.ToList()
+				.ShouldBe(new[] { 0, 0 });
+		}
+
+		/// <summary>Where SQL is required, a name no cell carries is a named error rather than a getter that throws later.</summary>
+		[Test]
+		public void AnAbsentCellNameInASqlPositionIsNamed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			var expected = Message(ErrorHelper.Pivot.Error_PivotCellNotFound, "Y2099");
+
+			Assert.That(
+				() => pivoted
+					.Where(r => r.Cells.Get<decimal?>("Y2099") > 1)
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+
+			Assert.That(
+				() => pivoted
+					.Select(r => r.Cells.Get<decimal?>("Y2099"))
+					.Distinct()
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+		}
+
+		/// <summary>
+		/// Where SQL is required, a read SQL cannot translate is a named error: a type the cell has no conversion to, and an
+		/// absent name in a grouping key or an unpivot column.
+		/// </summary>
+		[Test]
+		public void ACellReadSqlCannotTranslateIsNamed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			Assert.That(
+				() => pivoted
+					.Where(r => r.Cells.Get<Uri>("Y2010") != null)
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
+
+			Assert.That(
+				() => pivoted
+					.Unpivot(
+						(row, name, value) => new { row.Key, Value = value },
+						x => x.Cells.Get<Uri>("Y2010"))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
+
+			// Kept NULLs leave no filter, so the column alone reports it.
+			Assert.That(
+				() => pivoted
+					.Unpivot(
+						UnpivotNulls.IncludeNulls,
+						(row, name, value) => new { row.Key, Value = value },
+						x => x.Cells.Get<Uri>("Y2010"))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
+
+			var absent = Message(ErrorHelper.Pivot.Error_PivotCellNotFound, "Y2099");
+
+			Assert.That(
+				() => pivoted
+					.Unpivot(
+						UnpivotNulls.IncludeNulls,
+						(row, name, value) => new { row.Key, Value = value },
+						x => x.Cells.Get<int>("Y2099"))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(absent));
+
+			Assert.That(
+				() => pivoted
+					.GroupBy(r => r.Cells.Get<decimal?>("Y2099"))
+					.Select(g => g.Count())
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(absent));
+		}
+
+		/// <summary>The conversions an unpivot column writes over a cell read are kept.</summary>
+		[Test]
+		public void UnpivotKeepsTheConversionsOverACellRead([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => (int?)(decimal?)x.Cells["Y2000"])
+				.Where(u => u.Value == 10)
+				.Select(u => u.Key)
+				.ToList();
+
+			result.ShouldBe(new[] { "A" });
+		}
+
+		/// <summary>An unpivot column reads a cell as the type the read names, not as the cell's own type.</summary>
+		[Test]
+		public void UnpivotConvertsACellReadToItsType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			pivoted
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2000"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new[] { ("A", 10), ("B", 5) });
+
+			pivoted
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => (int?)x.Cells["Y2000"])
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new (string, int?)[] { ("A", 10), ("B", 5) });
+		}
+
+		/// <summary>
+		/// An unpivot column reads a cell as a filter does: cast in SQL, as the provider casts, over every column, and NULL for an
+		/// empty cell kept by <see cref="UnpivotNulls.IncludeNulls"/>.
+		/// </summary>
+		[Test]
+		public void UnpivotCastsACellReadAsTheProviderDoes([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			// The provider's own cast of the fractional amount - Distinct puts it in SQL.
+			var castOfA = t
+				.Where(x => x.Year == 2010 && x.Category == "A")
+				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
+				.Single();
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010, 2020 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			pivoted
+				.Unpivot(
+					(row, name, value) => new { row.Key, Name = name, Value = value },
+					x => x.Cells.Get<int>("Y2000"),
+					x => x.Cells.Get<int>("Y2010"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.ThenBy(u => u.Name, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Name, u.Value))
+				.ShouldBe(new[] { ("A", "Y2000", 10), ("A", "Y2010", castOfA), ("B", "Y2000", 5), ("B", "Y2010", 15) });
+
+			pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => (int?)x.Cells["Y2020"])
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new (string, int?)[] { ("A", null), ("B", null) });
+
+			pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2020"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new[] { ("A", 0), ("B", 0) });
+		}
+
+		/// <summary>
+		/// A cell an unpivot column reads as another type stays that read through the operators composed after it: a filter
+		/// and a projection of the value read the provider's conversion, an empty cell reads as the type's default, and a type
+		/// the cell has no conversion to is named.
+		/// </summary>
+		[Test]
+		public void UnpivotsAConvertedCellThroughLaterOperators([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			// The provider's own cast of the fractional amount - Distinct puts it in SQL.
+			var castOfA = t
+				.Where(x => x.Year == 2010 && x.Category == "A")
+				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
+				.Single();
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010, 2020 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			var unpivoted = pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Name = name, Value = value },
+					x => x.Cells.Get<int>("Y2010"),
+					x => x.Cells.Get<int>("Y2020"));
+
+			unpivoted
+				.Where(u => u.Value == castOfA)
+				.Select(u => u.Key)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			unpivoted
+				.Where(u => u.Name == "Y2010")
+				.OrderBy(u => u.Key)
+				.Select(u => u.Value)
+				.ToList()
+				.ShouldBe(new[] { castOfA, 15 });
+
+			unpivoted
+				.Where(u => u.Name == "Y2020")
+				.Select(u => u.Value)
+				.ToList()
+				.ShouldBe(new[] { 0, 0 });
+
+			var expected = Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri));
+
+			var asUri = pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<Uri>("Y2010"));
+
+			Assert.That(
+				() => asUri
+					.Where(u => u.Value != null)
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+
+			Assert.That(
+				() => asUri
+					.Select(u => u.Value)
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+		}
+
+		/// <summary>The value an unpivot column reads is converted in SQL, not after the rows are read.</summary>
+		// The SQL text differs per provider; SQLite's is a plain CAST.
+		[Test]
+		public void UnpivotConvertsACellReadInSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			var sql = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2010"))
+				.Select(u => u.Value)
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain("CAST(", Case.Insensitive);
+		}
+
+		/// <summary>An unpivot column's value can feed a subquery in the result selector.</summary>
+		[Test]
+		public void UnpivotValueFeedsASubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Rows = t.Count(o => o.Amount == value) },
+					x => x.Cells.Get<decimal?>("Y2000"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Rows))
+				.ShouldBe(new[] { ("A", 1), ("B", 1) });
+		}
+
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
 		[Test]
 		public void UnpivotsTheCellsUnderTheirOwnNames([DataSources] string context)
@@ -888,14 +1406,51 @@ namespace Tests.Linq
 				.ToArray()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ThenBy(r => r.Name, StringComparer.Ordinal)
-				.Select(r => (r.Key, r.Name))
+				.Select(r => (r.Key, r.Name, r.Value))
 				.ToArray();
 
-			result
-				.Select(r => r.Name)
-				.Distinct()
-				.OrderBy(n => n, StringComparer.Ordinal)
-				.ShouldBe(new[] { "Top.Y2000", "Total.Y2000" });
+			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Top.Y2000", 30m), ("A", "Total.Y2000", 40m), ("B", "Top.Y2000", 5m), ("B", "Total.Y2000", 5m) });
+		}
+
+		sealed class InterfaceCellsPair
+		{
+			public string                               Category { get; set; } = null!;
+			public IReadOnlyDictionary<string, object?> Total    { get; set; } = null!;
+			public IReadOnlyDictionary<string, object?> Top      { get; set; } = null!;
+		}
+
+		/// <summary>Same-named cells read through a cast of interface-typed members unpivot under the members' paths.</summary>
+		[Test]
+		public void UnpivotsCastInterfaceMembersUnderTheirPaths([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsPair
+				{
+					Category = g.Key,
+					Total    = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+					Top      = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Max(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Category, Name = name, Value = value },
+					x => ((PivotCells)x.Total).Get<decimal?>("Y2000"),
+					x => ((PivotCells)x.Top).Get<decimal?>("Y2000"))
+				.ToArray()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.ThenBy(r => r.Name, StringComparer.Ordinal)
+				.Select(r => (r.Category, r.Name, r.Value))
+				.ToArray();
+
+			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Top.Y2000", 30m), ("A", "Total.Y2000", 40m), ("B", "Top.Y2000", 5m), ("B", "Total.Y2000", 5m) });
 		}
 
 		/// <summary>The cells go into a member of an anonymous type, which cannot carry a dynamic-columns store.</summary>
@@ -1020,9 +1575,7 @@ namespace Tests.Linq
 
 			Action act = () => query.ToList();
 
-			act.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember, nameof(PivotCells.Store), nameof(PivotCells)));
+			Assert.That(() => act(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember, nameof(PivotCells.Store), nameof(PivotCells))));
 		}
 
 		// Call-site guards: each throws while the query is built, before any SQL.
@@ -1107,35 +1660,17 @@ namespace Tests.Linq
 			Action nullValuesAct      = () => nullValues.ToList();
 			Action selectAfterCellAct = () => selectAfterCell.ToList();
 
-			emptyNameAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotValueEmptyName, ""));
+			Assert.That(() => emptyNameAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotValueEmptyName, "")));
 
-			duplicateNameAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotDuplicateName, "Same"));
+			Assert.That(() => duplicateNameAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotDuplicateName, "Same")));
 
-			noCellAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate);
+			Assert.That(() => noCellAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate));
 
-			noTemplateAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate);
+			Assert.That(() => noTemplateAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate));
 
-			nullValuesAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set"));
+			Assert.That(() => nullValuesAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set")));
 
-			selectAfterCellAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotSelectAfterCells);
+			Assert.That(() => selectAfterCellAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotSelectAfterCells));
 		}
 
 		/// <summary>
@@ -1273,6 +1808,183 @@ namespace Tests.Linq
 			public IReadOnlyDictionary<string, object?> Cells    { get; set; } = null!;
 		}
 
+		/// <summary>
+		/// A cell of a member declared through the dictionary interface is filtered on through <c>Sql.Property</c>, or
+		/// through <see cref="PivotCells.Get{T}"/> once the member is cast back.
+		/// </summary>
+		[Test]
+		public void FiltersAnInterfaceTypedMember([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var query = t
+				.Select(x => new { x.Category, x.Year, x.Amount })
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsRow
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			query
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			query
+				.Where(r => ((PivotCells)r.Cells).Get<decimal?>("Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+		}
+
+		/// <summary>
+		/// <c>Sql.Property&lt;object&gt;</c> under a cast reads the cell's column cast in SQL, through a member typed
+		/// <see cref="PivotCells"/> and through one typed as the dictionary interface.
+		/// </summary>
+		[Test]
+		public void ReadsACellThroughAnObjectProperty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var source = t.Select(x => new { x.Category, x.Year, x.Amount });
+
+			source
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Category)
+				.Select(r => (decimal?)Sql.Property<object>(r.Cells, "Y2010"))
+				.ToList()
+				.ShouldBe(new decimal?[] { 20m, 15m });
+
+			var throughInterface = source
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsRow
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Category);
+
+			throughInterface
+				.Select(r => (decimal?)Sql.Property<object>(r.Cells, "Y2010"))
+				.ToList()
+				.ShouldBe(new decimal?[] { 20m, 15m });
+
+			// Read as another type than the cell's.
+			throughInterface
+				.Select(r => (int)Sql.Property<object>(r.Cells, "Y2010"))
+				.ToList()
+				.ShouldBe(new[] { 20, 15 });
+		}
+
+		/// <summary>An unpivot with a converted cell read is the collection of a SelectMany.</summary>
+		[Test]
+		public void UnpivotsAConvertedCellAsASelectManyCollection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var unpivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2000"));
+
+			var categories = t
+				.Select(x => x.Category)
+				.Distinct();
+
+			categories
+				.SelectMany(c => unpivoted.Where(u => u.Key == c), (c, u) => new { Category = c, u.Value })
+				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.Select(r => (r.Category, r.Value))
+				.ShouldBe(new[] { ("A", 10), ("B", 5) });
+
+			categories
+				.SelectMany(c => unpivoted.Where(u => u.Key == c).Select(u => u.Value))
+				.ToList()
+				.OrderBy(v => v)
+				.ShouldBe(new[] { 5, 10 });
+
+			categories
+				.SelectMany(c => unpivoted.Where(u => u.Key == c && u.Value > 100).Select(u => u.Value).DefaultIfEmpty())
+				.ToList()
+				.ShouldBe(new[] { 0, 0 });
+
+			var asUri = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<Uri>("Y2000"));
+
+			Assert.That(
+				() => categories
+					.SelectMany(c => asUri.Where(u => u.Key == c).Select(u => u.Value))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2000", typeof(Uri))));
+		}
+
+		/// <summary>A set operation over rows with an interface-typed member still filters on its cells.</summary>
+		[Test]
+		public void FiltersAnInterfaceTypedMemberUnderConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var query = t
+				.Select(x => new { x.Category, x.Year, x.Amount })
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsRow
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			query
+				.Concat(query)
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A", "A" });
+		}
+
 		/// <summary>A result type declares the member through the dictionary interface.</summary>
 		[Test]
 		public void PivotsIntoAnInterfaceTypedMember([DataSources] string context)
@@ -1305,11 +2017,13 @@ namespace Tests.Linq
 			result[1].Cells["Y2000"].ShouldBe(5m);
 			result[1].Cells["Y2010"].ShouldBe(15m);
 
-			result[0].Cells.ContainsKey("Y2020").ShouldBeFalse();
+			result[0].Cells
+				.ContainsKey("Y2020")
+				.ShouldBeFalse();
 
 			Action absentCell = () => _ = result[0].Cells["Y2020"];
 
-			absentCell.ShouldThrow<KeyNotFoundException>();
+			Assert.That(() => absentCell(), Throws.TypeOf<KeyNotFoundException>());
 		}
 
 		static Expression<Func<IEnumerable<Sales>, string?>> MaxNote() => rows => rows.Max(x => x.Note);
@@ -1528,15 +2242,29 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0].Cell("SumY2000").ShouldBe(10);
-			result[0].Cell("AtY2000") .ShouldBe(new DateTime(2000, 1, 1));
-			result[0].Cell("SumY2010").ShouldBeNull();
-			result[0].Cell("AtY2010") .ShouldBeNull();
+			result[0]
+				.Cell("SumY2000")
+				.ShouldBe(10);
+			result[0]
+				.Cell("AtY2000") 
+				.ShouldBe(new DateTime(2000, 1, 1));
+			result[0]
+				.Cell("SumY2010")
+				.ShouldBeNull();
+			result[0]
+				.Cell("AtY2010") 
+				.ShouldBeNull();
 
 			result[1].Key.ShouldBe("B");
-			result[1].Cell("SumY2000").ShouldBeNull();
-			result[1].Cell("AtY2000") .ShouldBeNull();
-			result[1].Cell("SumY2010").ShouldBe(20);
+			result[1]
+				.Cell("SumY2000")
+				.ShouldBeNull();
+			result[1]
+				.Cell("AtY2000") 
+				.ShouldBeNull();
+			result[1]
+				.Cell("SumY2010")
+				.ShouldBe(20);
 		}
 
 		/// <summary>
@@ -1748,14 +2476,23 @@ namespace Tests.Linq
 
 			result.Count.ShouldBe(2);
 
-			((object)result[0].Cells.Y2000).ShouldBe(10m);
-			((object)result[0].Cells.Y2010).ShouldBe(20m);
-			((object)result[1].Cells.Y2000).ShouldBe(5m);
-			((object)result[1].Cells.Y2010).ShouldBe(15m);
+			((object)result[0].Cells.Y2000)
+				.ShouldBe(10m);
+			((object)result[0].Cells.Y2010)
+				.ShouldBe(20m);
+			((object)result[1].Cells.Y2000)
+				.ShouldBe(5m);
+			((object)result[1].Cells.Y2010)
+				.ShouldBe(15m);
+
+			((PivotCells)result[0].Cells)
+				.GetDynamicMemberNames()
+				.OrderBy(n => n, StringComparer.Ordinal)
+				.ShouldBe(new[] { "Y2000", "Y2010" });
 
 			Action absentCell = () => _ = result[0].Cells.Y2020;
 
-			absentCell.ShouldThrow<RuntimeBinderException>();
+			Assert.That(() => absentCell(), Throws.TypeOf<RuntimeBinderException>());
 		}
 
 		static T PassThrough<T>(T value) => value;
@@ -1915,40 +2652,19 @@ namespace Tests.Linq
 			Action asArgumentAct        = () => asArgument.ToList();
 			Action inWhereAct           = () => inWhere.ToList();
 
-			capturedAggregateAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotAggregateNotInline);
+			Assert.That(() => capturedAggregateAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotAggregateNotInline));
 
-			capturedColumnAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotLambdaNotInline, "column"));
+			Assert.That(() => capturedColumnAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotLambdaNotInline, "column")));
 
-			correlatedValuesAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "value set"));
+			Assert.That(() => correlatedValuesAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "value set")));
 
-			correlatedFactoryAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "name factory"));
+			Assert.That(() => correlatedFactoryAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotReadsQueryParameter, "name factory")));
 
-			noTerminalAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(ErrorHelper.Pivot.Error_PivotNoTerminal);
+			Assert.That(() => noTerminalAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(ErrorHelper.Pivot.Error_PivotNoTerminal));
 
-			asArgumentAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary)));
+			Assert.That(() => asArgumentAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary))));
 
-			inWhereAct
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary)));
+			Assert.That(() => inWhereAct(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotTerminalNotAMember, nameof(PivotBuilder<,>.AsDictionary))));
 		}
 
 		/// <summary>The pivot is translated to SQL as part of a query; in memory every member throws, and a template does not.</summary>
@@ -1961,10 +2677,7 @@ namespace Tests.Linq
 
 			Action pivot = () => group.Pivot(x => x.Year, new[] { 2000 });
 
-			pivot
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Error_QueryMarkerInvoked, nameof(LinqExtensions.Pivot)));
+			Assert.That(() => pivot(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Error_QueryMarkerInvoked, nameof(LinqExtensions.Pivot))));
 
 			// No instance can be had in memory, since Pivot throws; one is made here only to reach the members.
 			var builder = (PivotBuilder<Sales, int>)Activator.CreateInstance(typeof(PivotBuilder<Sales, int>), nonPublic: true)!;
@@ -1980,10 +2693,7 @@ namespace Tests.Linq
 
 			foreach (var (name, invoke) in members)
 			{
-				invoke
-					.ShouldThrow<LinqToDBException>()
-					.Message
-					.ShouldBe(Message(ErrorHelper.Error_QueryMarkerInvoked, name));
+				Assert.That(() => invoke(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Error_QueryMarkerInvoked, name)));
 			}
 
 			PivotCell<Sales, int>
@@ -2115,21 +2825,28 @@ namespace Tests.Linq
 				.ShouldBe(10m);
 			CellsOfA()["Y2000"]
 				.ShouldBe(10m);
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same inputs reuse the cached query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "the same inputs reuse the cached query");
 
 			years.Add(2010);
 			CellsOfA()["Y2010"]
 				.ShouldBe(20m);
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a wider value set is a different query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2, "a wider value set is a different query");
 
 			years[1] = 2020;
-			CellsOfA().Store.ContainsKey("Y2010").ShouldBeFalse();
-			(probe.GetCacheMissCount() - start).ShouldBe(3, "a list mutated in place is a different query");
+			CellsOfA()
+				.Store
+				.ContainsKey("Y2010")
+				.ShouldBeFalse();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(3, "a list mutated in place is a different query");
 
 			prefix = "Z";
 			CellsOfA()["Z2000"]
 				.ShouldBe(10m);
-			(probe.GetCacheMissCount() - start).ShouldBe(4, "a name factory reading a changed capture is a different query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(4, "a name factory reading a changed capture is a different query");
 		}
 
 		/// <summary>Names that do not encode the value cannot keep two value sets apart; the values in the tree do.</summary>
@@ -2164,7 +2881,8 @@ namespace Tests.Linq
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
 
-			(probe.GetCacheMissCount() - start).ShouldBe(2);
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2);
 
 			first[0].Value["Current"].ShouldBe(20m);
 			first[0].Value["Prior"]  .ShouldBe(10m);
@@ -2258,12 +2976,10 @@ namespace Tests.Linq
 				.GetCompiledQueryInfo()
 				.ShouldBeSameAs(list1.GetCompiledQueryInfo());
 
-			Action nullSet = () => byArray(db, null!).ToList();
+			Action nullSet = () => byArray(db, null!)
+				.ToList();
 
-			nullSet
-				.ShouldThrow<LinqToDBException>()
-				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set"));
+			Assert.That(() => nullSet(), Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(Message(ErrorHelper.Pivot.Error_PivotArgumentNull, "value set")));
 		}
 
 		/// <summary>
@@ -2590,7 +3306,8 @@ namespace Tests.Linq
 				.ShouldBe(new[] { "A" });
 
 			name.Reads.ShouldBe(0);
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "a capture the factory never reads does not change the query");
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "a capture the factory never reads does not change the query");
 		}
 
 		[Table]
@@ -2728,7 +3445,8 @@ namespace Tests.Linq
 
 			IQueryable<ListDto> Build(IEnumerable<int> ids) => ProductionShape(mods, acts, masks, atiRubs, iasRubs, ids);
 
-			Build(activityIds).ClearCache();
+			Build(activityIds)
+				.ClearCache();
 
 			var rows = Build(activityIds)
 				.ToList()
@@ -2774,7 +3492,11 @@ namespace Tests.Linq
 			filtered.Count.ShouldBe(1);
 			filtered[0].Cells["IDE_20"].ShouldBe("IDE-B");
 
-			var widened = Build(activityIds.Concat(new[] { 40 }).ToList())
+			var wider = activityIds
+				.Concat(new[] { 40 })
+				.ToList();
+
+			var widened = Build(wider)
 				.ToList()
 				.OrderBy(r => r.Id)
 				.ToList();
@@ -2784,6 +3506,7 @@ namespace Tests.Linq
 			widened[0].Cells["IDE_10"]  .ShouldBe("IDE-A");
 		}
 
+		// Query-cache identity is provider-agnostic.
 		[Test, QueryCacheTest]
 		[ActiveIssue(6028, Configurations = [ProviderName.SQLiteMS], ErrorType = typeof(LinqToDB.Common.LinqToDBConvertException), ErrorMessage = "value failed")]
 		public void PivotsProductionShapeQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -2808,14 +3531,24 @@ namespace Tests.Linq
 
 			var start = probe.GetCacheMissCount();
 
-			_ = Build(activityIds).ToList();
-			(probe.GetCacheMissCount() - start).ShouldBe(1);
+			_ = Build(activityIds)
+				.ToList();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1);
 
-			_ = Build(activityIds).ToList();
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same value set reuses the cached query");
+			_ = Build(activityIds)
+				.ToList();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(1, "the same value set reuses the cached query");
 
-			_ = Build(activityIds.Concat(new[] { 40 }).ToList()).ToList();
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a wider value set is a different query");
+			var wider = activityIds
+				.Concat(new[] { 40 })
+				.ToList();
+
+			_ = Build(wider)
+				.ToList();
+			(probe.GetCacheMissCount() - start)
+				.ShouldBe(2, "a wider value set is a different query");
 		}
 
 		/// <summary>The same production shape with no result type declared at all.</summary>
@@ -2859,18 +3592,24 @@ namespace Tests.Linq
 			rows.Count.ShouldBe(2);
 
 			rows[0].Key.ShouldBe(1);
-			rows[0].Cells.Get<string>("IDE_10").ShouldBe("IDE-A");
+			rows[0].Cells
+				.Get<string>("IDE_10")
+				.ShouldBe("IDE-A");
 			rows[0].Cells["LIB_20"]            .ShouldBe("LIB-B");
 			rows[0].Cells["IDE_30"]            .ShouldBeNull();
 
 			rows[1].Key.ShouldBe(2);
-			rows[1].Cells.Get<string>("IDE_10").ShouldBe("IDE-C");
+			rows[1].Cells
+				.Get<string>("IDE_10")
+				.ShouldBe("IDE-C");
 			rows[1].Cells["LIB_30"]            .ShouldBe("LIB-D");
 			rows[1].Cells["IDE_20"]            .ShouldBeNull();
 
 			// A name that was never generated reads as absent rather than throwing.
 			rows[0].Cells["IDE_99"]            .ShouldBeNull();
-			rows[0].Cells.Get<string>("IDE_99").ShouldBeNull();
+			rows[0].Cells
+				.Get<string>("IDE_99")
+				.ShouldBeNull();
 		}
 
 		/// <summary>
@@ -2917,7 +3656,8 @@ namespace Tests.Linq
 			var sql = db.LastQuery!;
 
 			// One conditional aggregate per cell, plus the one the filter repeats in HAVING.
-			Occurrences(sql, "WHEN").ShouldBe(activityIds.Count * 2 + 1);
+			Occurrences(sql, "WHEN")
+				.ShouldBe(activityIds.Count * 2 + 1);
 			sql.ShouldContain("HAVING");
 		}
 

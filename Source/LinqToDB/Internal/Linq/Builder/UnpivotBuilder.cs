@@ -149,32 +149,41 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		// A pivot cell read through PivotCells' own members becomes the dynamic-column access Sql.Property builds.
+		// A pivot cell read through PivotCells' own members becomes the dynamic-column access Sql.Property builds. Only the
+		// node that reads the cell is replaced, so every conversion the selector writes over it is kept.
 		static LambdaExpression ReadCellAsColumn(LambdaExpression column)
 		{
-			var body     = column.Body;
-			var cellType = body.Type;
+			var body        = column.Body;
+			var isConverted = false;
 
 			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary)
-				body = unary.Operand;
+			{
+				isConverted = true;
+				body        = unary.Operand;
+			}
 
 			if (body is not MethodCallExpression { Object: { Type: var receiverType } cells } call
 				|| receiverType != typeof(PivotCells)
 				|| call.Arguments[0].Find(column.Parameters[0]) != null)
 				return column;
 
-			if (call.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true })
-				cellType = call.Method.GetGenericArguments()[0];
-			else if (call.Method is not { Name: "get_Item" } || ReferenceEquals(body, column.Body))
+			var isGet = call.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true };
+
+			// The indexer is typed object, so only a conversion over it gives the column a type.
+			if (!isGet && !(call.Method is { Name: "get_Item" } && isConverted))
 				return column;
 
 			var name = call.Arguments[0].EvaluateExpression<string>();
 			if (name == null)
 				return column;
 
-			var access = (Expression)Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), cellType, name));
+			// The cell is read as the pivot bound it and converted to the type the read names, as in a filter.
+			Expression access = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), typeof(object), name));
 
-			return Expression.Lambda(access.Type == column.Body.Type ? access : Expression.Convert(access, column.Body.Type), column.Parameters);
+			if (isGet)
+				access = Expression.Convert(access, call.Type);
+
+			return Expression.Lambda(column.Body.Replace(call, access), column.Parameters);
 		}
 
 		// The name column reports the physical column name, so a query reads the same names whether or not the
@@ -207,11 +216,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			// A complex column is keyed by its full member path, as the entity descriptor keys it.
 			var memberName = member.Member.Name;
 			var path       = memberName;
+			var receiver   = member.Expression;
 
-			while (member.Expression is MemberExpression parent)
+			// A cast receiver - ((PivotCells)x.Cells).Get<T>(name) over an interface-typed member - keeps its path.
+			while (true)
 			{
-				member = parent;
-				path   = member.Member.Name + "." + path;
+				while (receiver is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } cast)
+					receiver = cast.Operand;
+
+				if (receiver is not MemberExpression parent)
+					break;
+
+				path     = parent.Member.Name + "." + path;
+				receiver = parent.Expression;
 			}
 
 			return (path, memberName);

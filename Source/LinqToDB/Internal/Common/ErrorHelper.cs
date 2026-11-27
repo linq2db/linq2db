@@ -190,7 +190,7 @@
 		{
 			public const string Error_UnpivotNeedsColumn            = "An unpivot needs at least one column.";
 			public const string Error_UnpivotEmptyColumnName        = "Column name at index {0} is empty.";
-			public const string Error_UnpivotColumnSelector         = "Unpivot column selector must be a simple member access (e.g. x => x.Jan).";
+			public const string Error_UnpivotColumnSelector         = "Unpivot column selector must be a member access (e.g. x => x.Jan) or a pivot cell read with a name that does not depend on the row, typed by Get<T> or a cast (e.g. x => (decimal?)x.Cells[name]).";
 			public const string Error_UnpivotNeedsColumnGroup       = "An unpivot needs at least one column group.";
 			public const string Error_UnpivotEmptyGroupName         = "Column group name at index {0} is empty.";
 			public const string Error_UnpivotNullGroupColumn        = "Column group '{0}' has a null column selector.";
@@ -207,6 +207,7 @@
 			public const string Error_PivotValueEmptyName           = "Pivot value '{0}' produced an empty column name.";
 			public const string Error_PivotDuplicateName            = "Duplicate pivot column name '{0}'.";
 			public const string Error_PivotCellNotFound             = "No pivot cell is named '{0}'.";
+			public const string Error_PivotCellType                 = "Pivot cell '{0}' cannot be read as '{1}' where SQL is required.";
 		}
 	}
 }

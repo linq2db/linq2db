@@ -1377,6 +1377,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (body is SqlGenericConstructorExpression genericConstructor)
 						{
+							// A dynamic column read through a type the constructed type implements is its column, as in the
+							// MemberInit branch.
+							if (member is DynamicColumnInfo { DeclaringType: { } readThrough } dynamicColumn && readThrough != genericConstructor.Type && readThrough.IsSameOrParentOf(genericConstructor.Type))
+								member = new DynamicColumnInfo(genericConstructor.Type, dynamicColumn.PropertyType, dynamicColumn.Name);
+
 							Expression? bodyExpresion = null;
 							for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 							{
@@ -1611,7 +1616,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					var memberInType = body.Type.GetMemberEx(member);
 					if (memberInType == null)
 					{
-						if (member.DeclaringType?.IsSameOrParentOf(body.Type) == true)
+						// A dynamic column read through a type the store's owner implements - a member typed as an
+						// interface - is the owner's column.
+						if (member is DynamicColumnInfo { DeclaringType: { } readThrough } dynamicColumn && readThrough != body.Type && readThrough.IsSameOrParentOf(body.Type))
+							memberInType = new DynamicColumnInfo(body.Type, dynamicColumn.PropertyType, dynamicColumn.Name);
+						else if (member.DeclaringType?.IsSameOrParentOf(body.Type) == true)
 							memberInType = member;
 					}
 
