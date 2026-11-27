@@ -594,6 +594,81 @@ namespace Tests.Linq
 				});
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void CustomAggregateWithGroupFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person
+				group p by p.FirstName into g
+				where Sql.NotBetween(g.Sum(i => i.ID), 2, 3)
+				select new
+				{
+					g.Key,
+					Sum       = g.Sum(i => i.ID),
+					Length    = (int?)g.Sum(i => i.LastName.Length),
+					KeyLength = (int?)g.Sum(i => i.ID + g.Key.Length),
+				},
+				from p in db.Person
+				group p by p.FirstName into g
+				where Sql.NotBetween(g.Sum(i => i.ID), 2, 3)
+				select new
+				{
+					g.Key,
+					Sum       = g.MySum(i => i.ID),
+					Length    = g.MySum(i => Sql.Length(i.LastName)),
+					KeyLength = g.MySum(i => i.ID + Sql.Length(g.Key)),
+				});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void CustomAggregateOfRowAndComputedKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from c in Child
+				group c by c.ChildID % 3 into g
+				select new
+				{
+					g.Key,
+					Sum         = g.Sum(x => x.ChildID + g.Key),
+					SumOfMapped = g.Sum(x => x.ChildID + Math.Abs(g.Key)),
+				},
+				from c in db.Child
+				group c by c.ChildID % 3 into g
+				select new
+				{
+					g.Key,
+					Sum         = g.MySum(x => x.ChildID + g.Key),
+					SumOfMapped = g.MySum(x => x.ChildID + Abs(g.Key)),
+				});
+
+			AreEqual(
+				from c in Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.Sum(x => x.ChildID + g.Key.ParentID) },
+				from c in db.Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.MySum(x => x.ChildID + g.Key.ParentID) });
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void CustomAggregateOfRowAndComputedKeyWithGroupFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from c in Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				where g.Count() != 2
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.Sum(x => x.ChildID + g.Key.ParentID) },
+				from c in db.Child
+				group c by new { c.ParentID, Odd = c.ChildID % 2 } into g
+				where Sql.NotBetween(g.Count(), 2, 2)
+				select new { g.Key.ParentID, g.Key.Odd, Sum = g.MySum(x => x.ChildID + g.Key.ParentID) });
+		}
+
 		[Test]
 		public void GetValueOrDefault([DataSources] string context)
 		{
@@ -737,6 +812,9 @@ namespace Tests.Linq
 
 		[Sql.Function("COALESCE", ServerSideOnly = true)]
 		static int Coalesce(int? value, int defaultValue) => throw new ServerSideOnlyException(nameof(Coalesce));
+
+		[Sql.Function("Abs", ServerSideOnly = true)]
+		static int Abs(int value) => throw new ServerSideOnlyException(nameof(Abs));
 	}
 
 	public static class SqlLite

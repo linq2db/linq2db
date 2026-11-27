@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -4085,6 +4086,130 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByPredicateExtensionFilterWithServerSideProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p.ID by new { p.FirstName } into g
+				where Sql.NotBetween(g.Sum(), 2, 3)
+				select Sql.Length(g.Key.FirstName);
+
+			AssertQuery(query, EqualityComparer<int?>.Default);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByFilterWithFunctionsOfGroupValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p by new { p.FirstName } into g
+				where Sql.NotBetween(g.Sum(x => x.ID), 2, 3)
+				select new
+				{
+					KeyLength = Sql.Length(g.Key.FirstName),
+					MaxLength = Sql.Length(g.Max(x => x.LastName)),
+					KeyRange  = Sql.Between(g.Key.FirstName, "A", "K"),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByScalarKeyFilterWithServerSideProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p.ID by p.FirstName into g
+				where Sql.NotBetween(g.Sum(), 2, 3)
+				select Sql.Length(g.Key);
+
+			AssertQuery(query, EqualityComparer<int?>.Default);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByScalarKeyFilterWithExtensionsOfKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				group c by c.ParentID into g
+				where Sql.NotBetween(g.Count(), 2, 3)
+				select new
+				{
+					g.Key,
+					Doubled = Sql.Expr<int>($"{g.Key} * 2"),
+					InRange = Sql.Between(g.Key, 2, 4),
+				};
+
+			var expected =
+				from c in Child
+				group c by c.ParentID into g
+				where g.Count() < 2 || g.Count() > 3
+				select new
+				{
+					g.Key,
+					Doubled = g.Key * 2,
+					InRange = g.Key >= 2 && g.Key <= 4,
+				};
+
+			AreEqual(expected, query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByHavingWithFunctionsOfGroupValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p by p.FirstName into g
+				where Sql.Lower(g.Key) == "john" || Sql.Length(g.Max(x => x.LastName)) > 6
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
+		[Table]
+		sealed class BinaryGroupItem
+		{
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column]     public string? Name  { get; set; }
+			[Column]     public byte[]? Value { get; set; }
+
+			public static readonly BinaryGroupItem[] Data =
+			[
+				new() { Id = 1, Name = "a", Value = [1, 2]    },
+				new() { Id = 4, Name = "a", Value = [1, 2, 3] },
+				new() { Id = 2, Name = "b", Value = [7]       },
+			];
+		}
+
+		// The placement is engine behaviour, the same on every provider; MAX over a binary column is not portable.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByFilterWithFunctionOfBinaryAggregate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BinaryGroupItem.Data);
+
+			var query =
+				from r in tb
+				group r by r.Name into g
+				where Sql.NotBetween(g.Sum(x => x.Id), 2, 3)
+				select Sql.Length(g.Max(x => x.Value));
+
+			var lengths = query.ToArray();
+
+			lengths.ShouldBe([3]);
 		}
 	}
 }

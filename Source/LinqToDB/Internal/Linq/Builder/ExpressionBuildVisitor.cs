@@ -1290,6 +1290,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
+			// Over a grouping, a function of its rows is an aggregate, while a function of the values it reads - a key, an
+			// aggregate's result - is calculated where those values are read. Not marked as one, a call is taken for a function of
+			// the rows when it is a function of a set (above), takes the rows (a sequence or a per-row lambda) or takes nothing at
+			// all: a raw SQL aggregate such as COUNT(*).
+			var readsGroupRows = isSetFunction || IsSetFunctionCall(expr) || !HasArguments(expr);
+
 			var root = GetAggregationRootContext(expr);
 			if (root != null)
 			{
@@ -1315,7 +1321,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 						else if (current is GroupByBuilder.GroupByContext)
 						{
-							findAggregationRoot = true;
+							findAggregationRoot = readsGroupRows;
 							break;
 						}
 						else
@@ -1338,9 +1344,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (rootContext is GroupByBuilder.GroupByContext groupBy)
+			// A function of the grouping's rows is calculated by the GROUP BY query, and its arguments are nested up to that query:
+			// nested up to the grouping's own query, which reads the GROUP BY query as a subquery, an argument would be a column of
+			// the GROUP BY query read from inside it. A per-row lambda reads a row of the grouping, not the grouping, so its
+			// parameter is the grouping's element, while its body is built in the GROUP BY query: built in the element's query, a
+			// key it reads would be a column of the GROUP BY query read from inside the element's subquery. An argument reads the
+			// grouping itself, not the select wrapper above it: read through the wrapper, a key is a column of the GROUP BY query.
+			SelectQuery?                   argumentsQuery = null;
+			GroupByBuilder.GroupByContext? grouping       = null;
+
+			if (readsGroupRows && rootContext is GroupByBuilder.GroupByContext groupBy)
 			{
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
+				argumentsQuery  = rootSelectQuery;
+				grouping        = groupBy;
 			}
 
 			Expression           transformed;
@@ -1355,14 +1372,28 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
-				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, translatedToSql, argumentsAreOperands),
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, argumentsQuery, grouping, translatedToSql, argumentsAreOperands),
 					Builder.DataContext,
 					Builder,
 					rootSelectQuery,
 					expr,
 					static (context, e, descriptor, inline) =>
 					{
-						var result = context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline);
+						var argumentContext = context.context;
+						var argument        = e;
+
+						if (context.grouping != null)
+						{
+							argument = ReadGroupingDirectly(argument, context.grouping);
+
+							if (argument.UnwrapConvertToObject().Unwrap() is LambdaExpression lambda)
+							{
+								argument        = lambda.GetBody(new ContextRefExpression(lambda.Parameters[0].Type, context.grouping.Element));
+								argumentContext = context.grouping.SubQuery;
+							}
+						}
+
+						var result = context.buildVisitor.ConvertToExtensionSql(argumentContext, argument, descriptor, inline, context.argumentsQuery);
 
 						if (result is SqlPlaceholderExpression placeholder)
 						{
@@ -1411,8 +1442,34 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expr;
 		}
 
-		public Expression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters)
+		/// <summary>
+		/// Replaces a reference to <paramref name="grouping"/> through the select wrappers above it with a reference to the grouping.
+		/// </summary>
+		static Expression ReadGroupingDirectly(Expression expression, GroupByBuilder.GroupByContext grouping)
 		{
+			return expression.Transform(grouping, static (grouping, e) =>
+			{
+				if (e is ContextRefExpression contextRef)
+				{
+					var current = contextRef.BuildContext;
+
+					while (current is SubQueryContext { IsSelectWrapper: true } wrapper)
+					{
+						current = wrapper.SubQuery;
+
+						if (current == grouping)
+							return contextRef.WithContext(grouping);
+					}
+				}
+
+				return e;
+			});
+		}
+
+		/// <param name="nestUpTo">The query the converted argument is nested up to; <paramref name="context"/>'s query when <see langword="null"/>.</param>
+		public Expression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters, SelectQuery? nestUpTo = null)
+		{
+			var nestingQuery        = nestUpTo ?? context.SelectQuery;
 			var translationModifier = context.TranslationModifier;
 			if (inlineParameters == true)
 				translationModifier = translationModifier.WithInlineParameters(true);
@@ -1432,7 +1489,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var body = lambda.GetBody(contextRefExpression);
 
-					return BuildSqlExpression(context, body);
+					return Builder.UpdateNesting(nestingQuery, BuildExpression(context, body, BuildPurpose.Sql));
 				}
 
 				if (unwrapped is ContextRefExpression contextRef)
@@ -1448,7 +1505,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							result = placeholder.WithType(expression.Type);
 						}
 
-						result = Builder.UpdateNesting(context, result);
+						result = Builder.UpdateNesting(nestingQuery, result);
 
 						return result;
 					}
@@ -1458,7 +1515,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
-					var converted = BuildSqlExpression(context, expression);
+					var converted = Builder.UpdateNesting(nestingQuery, BuildExpression(context, expression, BuildPurpose.Sql));
 
 					if (converted is SqlPlaceholderExpression or SqlErrorExpression)
 					{
@@ -6202,8 +6259,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// A call that takes a sequence or a per-element lambda is a function of a set (an aggregate, a window function).
-		/// An inline array passed to a <see langword="params"/> parameter, or to a <see cref="string"/> method, is a list of
-		/// values, not a set.
+		/// A <see cref="string"/> or a <see langword="byte"/> array is one value, not a sequence. An inline array passed to a
+		/// <see langword="params"/> parameter, or to a <see cref="string"/> method, is a list of values, not a set.
 		/// </summary>
 		static bool IsSetFunctionCall(Expression expression)
 		{
@@ -6237,8 +6294,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				return typeof(Delegate).IsAssignableFrom(type)
 					|| typeof(LambdaExpression).IsAssignableFrom(type)
-					|| type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
+					|| type != typeof(string) && type != typeof(byte[]) && typeof(IEnumerable).IsAssignableFrom(type);
 			}
+		}
+
+		/// <summary>
+		/// Whether a call reads any value: an argument, or the instance it is called on.
+		/// </summary>
+		static bool HasArguments(Expression expression)
+		{
+			return expression switch
+			{
+				MethodCallExpression call   => call.Object != null || call.Arguments.Count > 0,
+				MemberExpression     member => member.Expression != null,
+				_                           => true,
+			};
 		}
 
 		// BuildArrayAggregationFunction reads an inline array through these wrappers as the same list of values. Its chain
