@@ -3,6 +3,7 @@ using System.IO;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine.Commands.Mcp
 {
@@ -18,6 +19,17 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 		public int BufferWidth => _inner.BufferWidth;
 		public ICredentialStore CredentialStore => _inner.CredentialStore;
+
+		public ICredentialStore CreateLocalCredentialStore(string directory)
+		{
+			return _inner.CreateLocalCredentialStore(directory);
+		}
+
+		public ICredentialStore CreateCredentialsCliStore(CredentialsCliSettings settings)
+		{
+			// Nobody can answer a prompt raised by a credentials CLI started from an MCP tool call.
+			return new CredentialsCliStore(new CredentialsCliProcessRunner(settings, interactive: false));
+		}
 
 		public bool FileExists(string path)
 		{
@@ -72,6 +84,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		public string? ReadLine()
 		{
 			throw new NotSupportedException("MCP query execution does not support interactive input.");
+		}
+
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
+		{
+			return _inner.StartImpersonation(user, password, mode);
 		}
 	}
 }

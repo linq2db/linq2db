@@ -2,6 +2,7 @@ using System;
 using System.IO;
 
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine
 {
@@ -94,11 +95,29 @@ namespace LinqToDB.CommandLine
 			return true;
 		}
 
-		public ICredentialStore CredentialStore { get; } = WindowsCredentialStore.Instance;
+		public ICredentialStore CredentialStore => WindowsCredentialStore.Instance;
+
+		public ICredentialStore CreateLocalCredentialStore(string directory)
+		{
+			return new LocalCredentialStore(directory, Environment.GetEnvironmentVariable("USERPROFILE"));
+		}
+
+		public ICredentialStore CreateCredentialsCliStore(CredentialsCliSettings settings)
+		{
+			// A credentials CLI may prompt (keyring unlock, pinentry) only when a user sits at the console.
+			var interactive = !Console.IsInputRedirected;
+
+			return new CredentialsCliStore(new CredentialsCliProcessRunner(settings, interactive));
+		}
 
 		public string? ReadLine()
 		{
 			return Console.ReadLine();
+		}
+
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
+		{
+			return WindowsImpersonation.Logon(user, password, mode);
 		}
 	}
 }

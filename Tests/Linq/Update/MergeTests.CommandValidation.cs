@@ -28,10 +28,10 @@ namespace Tests.xUpdate
 
 			GetProviderName(context, out var isLinq);
 			if (!isLinq)
-				Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+				Assert.That(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge(), Throws.TypeOf<LinqToDBException>());
 #if NETFRAMEWORK
 			else
-				Assert.Throws<FaultException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+				Assert.That(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge(), Throws.TypeOf<FaultException>());
 #endif
 		}
 	}

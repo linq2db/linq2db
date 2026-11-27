@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq.Expressions;
 
@@ -213,6 +213,13 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
+			// Access evaluates ^ before negation, * / and MOD, so an operand built from any of them needs its own parentheses
+			protected virtual ISqlExpression Power(ISqlExpressionFactory factory, DbDataType type, ISqlExpression x, ISqlExpression y)
+			{
+				// a right-nested power is grouped by AccessSqlBuilderBase.BuildBinaryExpression, a negated one by BuildUnaryExpression
+				return factory.Binary(type, x, "^", y, LinqToDB.SqlQuery.Precedence.Unary + 1);
+			}
+
 			// Access's own Round already rounds a midpoint to even.
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -248,7 +255,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				ISqlExpression? power = precision is null or SqlValue { Value: 0 }
 					? null
-					: factory.Binary(valueType, factory.Value(valueType, 10), "^", precision);
+					: Power(factory, valueType, factory.Value(valueType, 10), precision);
 
 				var magnitude = factory.Function(valueType, "Abs", value);
 				var scaled    = power == null ? magnitude : factory.Multiply(valueType, magnitude, power);
@@ -285,7 +292,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					yValue = factory.Cast(yValue, xType);
 				}
 
-				var result = factory.Binary(yType, xValue, "^", yValue);
+				var result = Power(factory, yType, xValue, yValue);
 
 				if (!resultType.EqualsDbOnly(xType))
 				{

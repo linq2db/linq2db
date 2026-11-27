@@ -15,7 +15,7 @@ namespace Tests.Exceptions
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() =>
 					db.Doctor.InsertOrUpdate(
 						() => new Doctor
@@ -27,7 +27,7 @@ namespace Tests.Exceptions
 						{
 							Taxonomy = "...",
 						}),
-				"InsertOrUpdate method requires the 'Doctor' table to have a primary key.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("InsertOrUpdate method requires the 'Doctor' table to have a primary key."));
 		}
 
 		[Test]
@@ -36,7 +36,7 @@ namespace Tests.Exceptions
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() =>
 					db.Patient.InsertOrUpdate(
 						() => new Patient
@@ -47,7 +47,7 @@ namespace Tests.Exceptions
 						{
 							Diagnosis = "...",
 						}),
-				"InsertOrUpdate method requires the 'Patient.PersonID' field to be included in the insert setter.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("InsertOrUpdate method requires the 'Patient.PersonID' field to be included in the insert setter."));
 		}
 	}
 }

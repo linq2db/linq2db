@@ -14,9 +14,7 @@ namespace Tests.UserTests
 {
 	namespace MCC.Common.ServiceInterfaces.DTO
 	{
-		public interface IModifiedTimeStamp
-		{
-		}
+		public interface IModifiedTimeStamp;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
@@ -41,45 +39,33 @@ namespace Tests.UserTests
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
 	{
-		public interface ICreatedTimeStamp
-		{
-		}
+		public interface ICreatedTimeStamp;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
 	{
-		public interface IDTOWithId
-		{
-		}
+		public interface IDTOWithId;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
 	{
-		public interface IHasArchiveTable
-		{
-		}
+		public interface IHasArchiveTable;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
 	{
-		public interface IInterlinqDTO
-		{
-		}
+		public interface IInterlinqDTO;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
 	{
-		public interface IMccEntityState
-		{
-		}
+		public interface IMccEntityState;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.Interfaces
 	{
 		[DefaultMember("Item")]
-		public interface IExtensionData
-		{
-		}
+		public interface IExtensionData;
 	}
 
 	namespace MCC.WMS.ServiceInterfaces.DTO
