@@ -36,6 +36,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return dateAdd;
 			}
+
+			// 2005 has no TIME: the cast would be dropped and the whole datetime read back as a TimeSpan, so the member
+			// is left to .NET. DateTimeOffset.TimeOfDay delegates here.
+			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				return null;
+			}
 		}
 	}
 }

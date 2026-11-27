@@ -50,6 +50,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return cast;
 			}
 
+			// The base cast to TIME, which the 2005 translator this one derives from declines.
+			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var cast    = factory.Cast(dateExpression, factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time), true);
+
+				return cast;
+			}
+
 			protected override ISqlExpression TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;

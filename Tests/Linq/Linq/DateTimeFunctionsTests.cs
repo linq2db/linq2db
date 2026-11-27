@@ -824,6 +824,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2005)]
 		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -839,6 +840,24 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
 					from t in db.Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+		}
+
+		/// <summary>
+		/// The time of day is the reading's time alone, with no days. SQL Server 2005 has no <c>time</c> type and
+		/// answers it in .NET, which a projection allows.
+		/// </summary>
+		[Test]
+		[ActiveIssue(6493, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}10:00:00{1}but was")]
+		public void TimeOfDayOfAColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var timeOfDay = t
+				.Select(r => r.Value.TimeOfDay)
+				.Single();
+
+			timeOfDay.ShouldBe(CoarseValue.TimeOfDay);
 		}
 
 		#endregion

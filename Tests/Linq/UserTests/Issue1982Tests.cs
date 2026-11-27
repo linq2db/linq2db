@@ -20,6 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2005)]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
