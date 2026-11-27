@@ -1002,8 +1002,8 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// Where SQL is required, a read SQL cannot translate is a named error: a type with no scalar mapping, and an absent
-		/// name in a grouping key.
+		/// Where SQL is required, a read SQL cannot translate is a named error: a type the cell has no conversion to, and an
+		/// absent name in a grouping key or an unpivot column.
 		/// </summary>
 		[Test]
 		public void ACellReadSqlCannotTranslateIsNamed([DataSources] string context)
@@ -1036,7 +1036,26 @@ namespace Tests.Linq
 					.ToList(),
 				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
 
+			// Kept NULLs leave no filter, so the column alone reports it.
+			Assert.That(
+				() => pivoted
+					.Unpivot(
+						UnpivotNulls.IncludeNulls,
+						(row, name, value) => new { row.Key, Value = value },
+						x => x.Cells.Get<Uri>("Y2010"))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
+
 			var absent = Message(ErrorHelper.Pivot.Error_PivotCellNotFound, "Y2099");
+
+			Assert.That(
+				() => pivoted
+					.Unpivot(
+						UnpivotNulls.IncludeNulls,
+						(row, name, value) => new { row.Key, Value = value },
+						x => x.Cells.Get<int>("Y2099"))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(absent));
 
 			Assert.That(
 				() => pivoted
@@ -1168,6 +1187,32 @@ namespace Tests.Linq
 				.OrderBy(u => u.Key, StringComparer.Ordinal)
 				.Select(u => (u.Key, u.Value))
 				.ShouldBe(new[] { ("A", 0), ("B", 0) });
+		}
+
+		/// <summary>An unpivot column's value can feed a subquery in the result selector.</summary>
+		[Test]
+		public void UnpivotValueFeedsASubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Rows = t.Count(o => o.Amount == value) },
+					x => x.Cells.Get<decimal?>("Y2000"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Rows))
+				.ShouldBe(new[] { ("A", 1), ("B", 1) });
 		}
 
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
@@ -1691,6 +1736,49 @@ namespace Tests.Linq
 				.Select(r => r.Category)
 				.ToList()
 				.ShouldBe(new[] { "A" });
+		}
+
+		/// <summary>
+		/// <c>Sql.Property&lt;object&gt;</c> under a cast reads the cell's column cast in SQL, through a member typed
+		/// <see cref="PivotCells"/> and through one typed as the dictionary interface.
+		/// </summary>
+		[Test]
+		public void ReadsACellThroughAnObjectProperty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var source = t.Select(x => new { x.Category, x.Year, x.Amount });
+
+			source
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Category)
+				.Select(r => (decimal?)Sql.Property<object>(r.Cells, "Y2010"))
+				.ToList()
+				.ShouldBe(new decimal?[] { 20m, 15m });
+
+			source
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsRow
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Category)
+				.Select(r => (decimal?)Sql.Property<object>(r.Cells, "Y2010"))
+				.ToList()
+				.ShouldBe(new decimal?[] { 20m, 15m });
 		}
 
 		/// <summary>A set operation over rows with an interface-typed member still filters on its cells.</summary>

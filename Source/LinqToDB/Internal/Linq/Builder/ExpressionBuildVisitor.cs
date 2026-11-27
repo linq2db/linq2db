@@ -2784,13 +2784,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// An Unpivot column reads a pivot cell as object converted to its type; it is read as a filter reads it, where the BCL's
 			// rewrite of the conversion would reject the operand changing from object to the cell's own type.
-			if (node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null, Operand: MemberExpression { Member: DynamicColumnInfo { DeclaringType: var declaringType } } cellAccess }
-				&& declaringType == typeof(PivotCells)
+			if (node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null, Operand: MemberExpression { Member: DynamicColumnInfo { DeclaringType: { } declaringType } } cellAccess }
+				&& declaringType != typeof(object)
+				&& declaringType.IsAssignableFrom(typeof(PivotCells))
 				&& cellAccess.Type == typeof(object)
 				&& cellAccess.Expression != null
 				&& !Builder.CanBeEvaluatedOnClient(cellAccess.Expression))
 			{
-				return ReadPivotCellAs(cellAccess, node.NodeType, node.Type, node);
+				if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
+					return ReadPivotCellAs(cellAccess, node.NodeType, node.Type, node);
+
+				// Other passes keep the read's shape; an operand of the cell's own type is converted as the object it stood for.
+				var operand = Visit(cellAccess);
+
+				if (operand.Type == typeof(object))
+					return node.Update(operand);
+
+				return Expression.MakeUnary(node.NodeType, HasConversion(operand.Type, node.Type) ? operand : Expression.Convert(operand, typeof(object)), node.Type);
 			}
 
 			if (PreferClientCalculation(node))
