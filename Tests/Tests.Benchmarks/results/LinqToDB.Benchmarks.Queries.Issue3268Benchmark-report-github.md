@@ -13,27 +13,27 @@ Jit=RyuJit  Platform=X64
 ```
 | Method                        | Runtime              | Mean      | Allocated |
 |------------------------------ |--------------------- |----------:|----------:|
-| Update_Nullable               | .NET 8.0             |  85.60 μs |  32.77 KB |
-| Update_Nullable_Full          | .NET 8.0             |  63.23 μs |   35.7 KB |
-| Compiled_Update_Nullable      | .NET 8.0             |  31.84 μs |  16.81 KB |
-| Compiled_Update_Nullable_Full | .NET 8.0             |  35.34 μs |  19.81 KB |
-| Update                        | .NET 8.0             | 125.72 μs |  32.93 KB |
-| Update_Full                   | .NET 8.0             | 141.99 μs |  35.85 KB |
-| Compiled_Update               | .NET 8.0             |  34.12 μs |  16.81 KB |
-| Compiled_Update_Full          | .NET 8.0             |  39.57 μs |  19.81 KB |
-| Update_Nullable               | .NET 9.0             | 117.52 μs |  32.79 KB |
-| Update_Nullable_Full          | .NET 9.0             | 132.21 μs |   36.1 KB |
-| Compiled_Update_Nullable      | .NET 9.0             |  32.57 μs |  16.72 KB |
-| Compiled_Update_Nullable_Full | .NET 9.0             |  31.60 μs |  19.72 KB |
-| Update                        | .NET 9.0             | 114.01 μs |  32.71 KB |
-| Update_Full                   | .NET 9.0             | 132.72 μs |  35.38 KB |
-| Compiled_Update               | .NET 9.0             |  15.94 μs |  16.72 KB |
-| Compiled_Update_Full          | .NET 9.0             |  33.51 μs |  19.72 KB |
-| Update_Nullable               | .NET Framework 4.6.2 | 265.72 μs |  49.13 KB |
-| Update_Nullable_Full          | .NET Framework 4.6.2 | 200.04 μs |  54.74 KB |
-| Compiled_Update_Nullable      | .NET Framework 4.6.2 |  75.44 μs |  17.39 KB |
-| Compiled_Update_Nullable_Full | .NET Framework 4.6.2 | 114.24 μs |     23 KB |
-| Update                        | .NET Framework 4.6.2 | 173.15 μs |  49.47 KB |
-| Update_Full                   | .NET Framework 4.6.2 | 418.79 μs |  55.08 KB |
-| Compiled_Update               | .NET Framework 4.6.2 |  90.54 μs |  17.38 KB |
-| Compiled_Update_Full          | .NET Framework 4.6.2 | 112.90 μs |  22.99 KB |
+| Update_Nullable               | .NET 8.0             | 122.93 μs |  63.66 KB |
+| Update_Nullable_Full          | .NET 8.0             | 153.17 μs |  66.41 KB |
+| Compiled_Update_Nullable      | .NET 8.0             |  34.55 μs |  51.02 KB |
+| Compiled_Update_Nullable_Full | .NET 8.0             |  82.57 μs |  53.78 KB |
+| Update                        | .NET 8.0             |  66.25 μs |   63.8 KB |
+| Update_Full                   | .NET 8.0             | 159.41 μs |   66.1 KB |
+| Compiled_Update               | .NET 8.0             |  76.55 μs |  51.02 KB |
+| Compiled_Update_Full          | .NET 8.0             |  67.94 μs |  53.78 KB |
+| Update_Nullable               | .NET 9.0             | 151.81 μs |   62.7 KB |
+| Update_Nullable_Full          | .NET 9.0             |  74.34 μs |  65.23 KB |
+| Compiled_Update_Nullable      | .NET 9.0             |  70.82 μs |  50.05 KB |
+| Compiled_Update_Nullable_Full | .NET 9.0             |  76.32 μs |  52.88 KB |
+| Update                        | .NET 9.0             |  69.19 μs |   62.6 KB |
+| Update_Full                   | .NET 9.0             | 121.48 μs |  65.52 KB |
+| Compiled_Update               | .NET 9.0             |  70.14 μs |  50.05 KB |
+| Compiled_Update_Full          | .NET 9.0             |  57.30 μs |  52.88 KB |
+| Update_Nullable               | .NET Framework 4.6.2 | 173.05 μs |  85.24 KB |
+| Update_Nullable_Full          | .NET Framework 4.6.2 | 412.23 μs |  88.14 KB |
+| Compiled_Update_Nullable      | .NET Framework 4.6.2 | 111.75 μs |  60.57 KB |
+| Compiled_Update_Nullable_Full | .NET Framework 4.6.2 | 148.85 μs |  63.47 KB |
+| Update                        | .NET Framework 4.6.2 | 388.41 μs |  85.57 KB |
+| Update_Full                   | .NET Framework 4.6.2 | 410.65 μs |  88.47 KB |
+| Compiled_Update               | .NET Framework 4.6.2 | 149.23 μs |  60.55 KB |
+| Compiled_Update_Full          | .NET Framework 4.6.2 | 169.96 μs |  63.45 KB |
