@@ -5,6 +5,7 @@
 		<AssemblyName>linq2db.Tests</AssemblyName>
 
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,6 +29,8 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+		<ProjectReference Include="..\Tests.Scaffold.Harness\Tests.Scaffold.Harness.csproj" />
 	</ItemGroup>
 
 	<!-- From net11 that framework supplies it, so the Tests-wide pin is pruned and fails a net11-only restore (NU1510). -->

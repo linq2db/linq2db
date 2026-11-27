@@ -1,0 +1,131 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Loader;
+using System.Threading;
+
+using FSharp.Compiler.CodeAnalysis;
+using FSharp.Compiler.Diagnostics;
+
+using Microsoft.FSharp.Control;
+
+using NUnit.Framework;
+
+namespace Tests.Scaffold.Harness
+{
+	public static class FSharpCompiler
+	{
+		// FSharpChecker.Create has only optional (FSharpOption) parameters, which are not optional for C# callers
+		static readonly Lazy<FSharpChecker> _checker = new(static () =>
+		{
+			var create = typeof(FSharpChecker).GetMethod(nameof(FSharpChecker.Create))!;
+			return (FSharpChecker)create.Invoke(null, new object?[create.GetParameters().Length])!;
+		});
+
+		// concurrent Compile calls are not documented as supported
+		static readonly Lock _sync = new();
+
+		/// <summary>
+		/// Every source is compiled with each of these <c>--langversion</c> values: the floor generated code targets
+		/// (F# 9 nullness), then the newest the referenced compiler supports. The first one produces the assembly.
+		/// </summary>
+		public static IReadOnlyList<string> LanguageVersions { get; } = ["9.0", "latest"];
+
+		/// <summary>
+		/// Compiles sources (in specified order) with each of <see cref="LanguageVersions"/> to assembly and loads it.
+		/// </summary>
+		/// <param name="nullable">Enables nullness checking (<c>--checknulls+</c>), as F# projects with <c>Nullable=enable</c>.</param>
+		public static CompileResult Compile(string assemblyName, IReadOnlyList<SourceFile> sources, bool nullable, IReadOnlyCollection<string>? allowedWarnings = null)
+		{
+			// compiler works with files: sources and assemblies are removed after load
+			var directory = Path.Combine(TestContext.CurrentContext.WorkDirectory, "scaffold-harness", assemblyName);
+			Directory.CreateDirectory(directory);
+
+			try
+			{
+				var files = sources
+					.Select(s =>
+					{
+						var path = Path.Combine(directory, s.FileName);
+						File.WriteAllText(path, s.Code);
+						return path;
+					})
+					.ToList();
+
+				var output      = Path.Combine(directory, assemblyName + ".dll");
+				var diagnostics = new List<CompileDiagnostic>();
+				var emitted     = true;
+
+				for (var i = 0; i < LanguageVersions.Count; i++)
+				{
+					var langVersion = LanguageVersions[i];
+					var target      = i == 0 ? output : Path.Combine(directory, langVersion, assemblyName + ".dll");
+
+					Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+
+					var versionDiagnostics = Compile(files, target, langVersion, nullable);
+
+					diagnostics.AddRange(versionDiagnostics);
+					emitted &= versionDiagnostics.TrueForAll(static d => d.Severity != CompileDiagnosticSeverity.Error) && File.Exists(target);
+				}
+
+				var assembly = emitted
+					? AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(File.ReadAllBytes(output)))
+					: null;
+
+				return new CompileResult(sources, diagnostics, allowedWarnings ?? [], emitted, assembly);
+			}
+			finally
+			{
+				Directory.Delete(directory, recursive: true);
+			}
+		}
+
+		static List<CompileDiagnostic> Compile(List<string> files, string output, string langVersion, bool nullable)
+		{
+			var argv = new List<string>
+			{
+				"fsc.exe",
+				"-o:" + output,
+				"--target:library",
+				"--noframework",
+				"--targetprofile:netcore",
+				"--langversion:" + langVersion,
+				"--optimize-",
+				"--debug-",
+				"--nologo",
+				nullable ? "--checknulls+" : "--checknulls-",
+			};
+
+			argv.AddRange(HostReferences.Paths.Select(static p => "-r:" + p));
+			argv.AddRange(files);
+
+			FSharpDiagnostic[]           fsDiagnostics;
+			Microsoft.FSharp.Core.FSharpOption<Exception>? exception;
+
+			lock (_sync)
+				(fsDiagnostics, exception) = FSharpAsync
+					.StartAsTask(_checker.Value.Compile(argv.ToArray(), null), null, null)
+					.GetAwaiter()
+					.GetResult();
+
+			var diagnostics = fsDiagnostics
+				.Where(static d => d.Severity == FSharpDiagnosticSeverity.Error || d.Severity == FSharpDiagnosticSeverity.Warning)
+				.Select(d => new CompileDiagnostic(
+					d.Severity == FSharpDiagnosticSeverity.Error ? CompileDiagnosticSeverity.Error : CompileDiagnosticSeverity.Warning,
+					d.ErrorNumberText,
+					$"[langversion:{langVersion}] {d.Message}",
+					Path.GetFileName(d.FileName),
+					d.StartLine,
+					d.StartColumn + 1))
+				.ToList();
+
+			// compiler aborts with exception after reporting errors
+			if (exception != null && diagnostics.TrueForAll(static d => d.Severity != CompileDiagnosticSeverity.Error))
+				throw new InvalidOperationException($"F# compiler failed (langversion:{langVersion})", exception.Value);
+
+			return diagnostics;
+		}
+	}
+}

@@ -233,6 +233,9 @@
 		<!--net11 cannot sit below linq2db.FSharp's net11 floor, $(FSharpCoreForNuget)-->
 		<PackageVersion Include="FSharp.Core"                                           Version="10.1.404"                     Condition="'$(TargetFramework)'!='net11.0'" />
 		<PackageVersion Include="FSharp.Core"                                           Version="11.0.101"                     Condition="'$(TargetFramework)'=='net11.0'" />
+		<!--pins FSharp.Core exactly, so each row follows the FSharp.Core row above-->
+		<PackageVersion Include="FSharp.Compiler.Service"                               Version="43.13.404"                    Condition="'$(TargetFramework)'!='net11.0'" />
+		<PackageVersion Include="FSharp.Compiler.Service"                               Version="43.13.101"                    Condition="'$(TargetFramework)'=='net11.0'" />
 		<PackageVersion Include="LinqKit"                                               Version="1.4.2"                        />
 
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                 Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
