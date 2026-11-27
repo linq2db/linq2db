@@ -1870,7 +1870,7 @@ namespace Tests.Linq
 				.ToList()
 				.ShouldBe(new decimal?[] { 20m, 15m });
 
-			source
+			var throughInterface = source
 				.GroupBy(x => x.Category)
 				.Select(g => new InterfaceCellsRow
 				{
@@ -1880,10 +1880,82 @@ namespace Tests.Linq
 						.Cell(rows => rows.Sum(x => x.Amount), Year)
 						.AsDictionary(),
 				})
-				.OrderBy(r => r.Category)
+				.OrderBy(r => r.Category);
+
+			throughInterface
 				.Select(r => (decimal?)Sql.Property<object>(r.Cells, "Y2010"))
 				.ToList()
 				.ShouldBe(new decimal?[] { 20m, 15m });
+
+			// Read as another type than the cell's.
+			throughInterface
+				.Select(r => (int)Sql.Property<object>(r.Cells, "Y2010"))
+				.ToList()
+				.ShouldBe(new[] { 20, 15 });
+		}
+
+		/// <summary>An unpivot with a converted cell read is the collection of a SelectMany.</summary>
+		[Test]
+		public void UnpivotsAConvertedCellAsASelectManyCollection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var unpivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2000"));
+
+			var categories = t
+				.Select(x => x.Category)
+				.Distinct();
+
+			categories
+				.SelectMany(c => unpivoted.Where(u => u.Key == c), (c, u) => new { Category = c, u.Value })
+				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.Select(r => (r.Category, r.Value))
+				.ShouldBe(new[] { ("A", 10), ("B", 5) });
+
+			categories
+				.SelectMany(c => unpivoted.Where(u => u.Key == c).Select(u => u.Value))
+				.ToList()
+				.OrderBy(v => v)
+				.ShouldBe(new[] { 5, 10 });
+
+			categories
+				.SelectMany(c => unpivoted.Where(u => u.Key == c && u.Value > 100).Select(u => u.Value).DefaultIfEmpty())
+				.ToList()
+				.ShouldBe(new[] { 0, 0 });
+
+			var asUri = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<Uri>("Y2000"));
+
+			Assert.That(
+				() => categories
+					.SelectMany(c => asUri.Where(u => u.Key == c).Select(u => u.Value))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2000", typeof(Uri))));
 		}
 
 		/// <summary>A set operation over rows with an interface-typed member still filters on its cells.</summary>

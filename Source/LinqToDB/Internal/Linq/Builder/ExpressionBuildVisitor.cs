@@ -2785,8 +2785,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// An Unpivot column reads a pivot cell as object converted to its type; it is read as a filter reads it, where the BCL's
 			// rewrite of the conversion would reject the operand changing from object to the cell's own type.
 			if (node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null, Operand: MemberExpression { Member: DynamicColumnInfo { DeclaringType: { } declaringType } } cellAccess }
-				&& declaringType != typeof(object)
-				&& declaringType.IsAssignableFrom(typeof(PivotCells))
+				&& (declaringType == typeof(PivotCells) || declaringType.IsInterface && declaringType.IsAssignableFrom(typeof(PivotCells)))
 				&& cellAccess.Type == typeof(object)
 				&& cellAccess.Expression != null
 				&& !Builder.CanBeEvaluatedOnClient(cellAccess.Expression))
