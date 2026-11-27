@@ -52,8 +52,8 @@ namespace Tests.Scaffold
 		}
 
 		[TestCaseSource(nameof(NameCases))]
-		[ActiveIssue(6486, Details = "all-lowercase class name raises CS8981", Arguments = "CSharp,FSharpKeywords", ErrorMessage = "CS8981")]
-		[ActiveIssue(6486, Details = "all-lowercase class name raises CS8981", Arguments = "CSharp,NameWithSpace" , ErrorMessage = "CS8981")]
+		[ActiveIssue(6486, Details = "all-lowercase class name raises CS8981", Arguments = "CSharp,FSharpKeywords", ErrorMessage = "Compilation failed (CS8981):")]
+		[ActiveIssue(6486, Details = "all-lowercase class name raises CS8981", Arguments = "CSharp,NameWithSpace" , ErrorMessage = "Compilation failed (CS8981):")]
 		public void RoundTrip(ScaffoldLanguage language, NameCase nameCase)
 		{
 			var schema = ProviderProfile.SQLite.CreateSchema();
@@ -114,7 +114,7 @@ namespace Tests.Scaffold
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4831")]
-		[ActiveIssue(4831, Arguments = "CSharp", ErrorMessage = "CS0246")]
+		[ActiveIssue(4831, Arguments = "CSharp", ErrorMessage = "Compilation failed (CS0246):")]
 		public void ViewNamedTable([Values] ScaffoldLanguage language)
 		{
 			var schema = ProviderProfile.SQLite.CreateSchema();

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -38,13 +39,26 @@ namespace Tests.Scaffold.Harness
 		public bool Success => emitted && Failures.Count == 0;
 
 		/// <summary>
+		/// First line of <see cref="Report"/> for compilation, failed with exactly <paramref name="ids"/>. A pin on a
+		/// compile failure matches this line, not a bare id, so it doesn't hold when other failures appear.
+		/// </summary>
+		public static string FailedWith(params IEnumerable<string> ids)
+		{
+			var sorted = ids
+				.Distinct(StringComparer.Ordinal)
+				.Order(StringComparer.Ordinal);
+
+			return $"Compilation failed ({string.Join(", ", sorted)}):";
+		}
+
+		/// <summary>
 		/// Diagnostics with source listing for test failure message.
 		/// </summary>
 		public string Report()
 		{
 			var sb = new StringBuilder();
 
-			sb.AppendLine("Compilation failed:");
+			sb.AppendLine(FailedWith(Failures.Select(static d => d.Id)));
 
 			foreach (var diagnostic in Failures)
 				sb.Append('\t').AppendLine(diagnostic.ToString());

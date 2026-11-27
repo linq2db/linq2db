@@ -145,14 +145,43 @@ namespace Tests.Scaffold
 		}
 
 		// outcomes that fail the run can't be asserted by a pinned test itself: the attribute command runs over a stub body
-		static TestResult ExecutePinned(string? failure)
+		static TestResult ExecutePinned(string? failure, string errorMessage = "expected failure")
 		{
 			var test    = new TestMethod(new MethodWrapper(typeof(PinnedFixture), nameof(PinnedFixture.Method)));
 			var context = new TestExecutionContext { CurrentTest = test, CurrentResult = test.MakeTestResult() };
 
-			return new ActiveIssueAttribute(1) { ErrorMessage = "expected failure" }
+			return new ActiveIssueAttribute(1) { ErrorMessage = errorMessage }
 				.Wrap(new PinnedBody(test, failure))
 				.Execute(context);
+		}
+
+		static string CompileReport(string code)
+		{
+			var result = CSharpCompiler.Compile($"SelfTest_Pin_{Guid.NewGuid():N}", [new SourceFile("Pin.cs", code)]);
+
+			result.Success.ShouldBeFalse();
+
+			return result.Report();
+		}
+
+		[Test]
+		public void CompilePinHoldsOnPinnedIdOnly()
+		{
+			var report = CompileReport("namespace P { public class C { public Missing M() => null; } }");
+
+			var result = ExecutePinned(report, CompileResult.FailedWith("CS0246"));
+
+			result.ResultState.ShouldBe(ResultState.Inconclusive);
+		}
+
+		[Test]
+		public void CompilePinFailsOnPinnedIdPlusAnother()
+		{
+			var report = CompileReport("namespace P { public class C { public Missing M() => null; public int N() => undefinedName; } }");
+
+			var result = ExecutePinned(report, CompileResult.FailedWith("CS0246"));
+
+			result.ResultState.ShouldBe(ResultState.Failure);
 		}
 
 		[Test]
