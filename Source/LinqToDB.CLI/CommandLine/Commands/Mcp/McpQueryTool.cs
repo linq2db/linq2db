@@ -126,7 +126,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 
-			var result = await new SchemaInspectionExecutor(settings).Execute(resultWriter, cancellationToken);
+			var result = await new SchemaInspectionExecutor(environment, settings).Execute(resultWriter, cancellationToken);
 
 			if (result.Error != null)
 				return CreateErrorResult(result.Error);
@@ -188,7 +188,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 
-			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken);
+			var result = await new QueryExecutionExecutor(environment, settings).Execute(resultWriter, cancellationToken);
 
 			if (result.Error != null)
 				return CreateErrorResult(result.Error);
@@ -222,7 +222,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				QueryExecutionMode.Query,
 				sql,
 				null,
-				"json-table");
+				"json-table")
+			{
+				CredentialsCli = _startupOptions.CredentialsCli,
+			};
 		}
 
 		ConnectionOptionValues CreateConnectionOptionValues(string? profile)
@@ -242,7 +245,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				_startupOptions.Impersonate,
 				_startupOptions.ImpersonateMode,
 				_startupOptions.CommandTimeout,
-				_startupOptions.LockTimeout);
+				_startupOptions.LockTimeout)
+			{
+				CredentialsCli = _startupOptions.CredentialsCli,
+			};
 		}
 
 		static bool IsMcpOutputFormat(string output)

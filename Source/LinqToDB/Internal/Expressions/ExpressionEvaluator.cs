@@ -122,5 +122,49 @@ namespace LinqToDB.Internal.Expressions
 			var value = Expression.Lambda(expr).CompileExpression().DynamicInvokeExt();
 			return value;
 		}
+
+		/// <summary>
+		/// Reads the value of a captured variable - a chain of field reads over a constant, or a static field -
+		/// without running any getter or method. Reading a static field runs its type's static constructor if it has
+		/// not run yet.
+		/// </summary>
+		/// <param name="expr">Expression to read.</param>
+		/// <param name="value">The value read, when the method returns <see langword="true"/>.</param>
+		/// <returns>
+		/// <see langword="false"/> when <paramref name="expr"/> is anything other than such a chain, or a link of the
+		/// chain is <see langword="null"/>.
+		/// </returns>
+		public static bool TryEvaluateCapturedValue(this Expression expr, out object? value)
+		{
+			switch (expr)
+			{
+				case MemberExpression { Member: FieldInfo field, Expression: null } when field.IsStatic:
+					value = field.GetValue(null);
+					return true;
+
+				case MemberExpression { Member: FieldInfo field, Expression: { } instanceExpr }:
+					if (TryReadLink(instanceExpr, out var instance) && instance != null)
+					{
+						value = field.GetValue(instance);
+						return true;
+					}
+
+					break;
+			}
+
+			value = null;
+			return false;
+
+			static bool TryReadLink(Expression link, out object? linkValue)
+			{
+				if (link is ConstantExpression constant)
+				{
+					linkValue = constant.Value;
+					return true;
+				}
+
+				return link.TryEvaluateCapturedValue(out linkValue);
+			}
+		}
 	}
 }

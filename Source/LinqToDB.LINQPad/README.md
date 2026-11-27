@@ -1,6 +1,6 @@
 # LINQ to DB LINQPad Driver
 
-This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer, on Windows and macOS (LINQPad 9 recommended). LINQPad 5 is supported by the `.lpx` plugin published with each [release](https://github.com/linq2db/linq2db/releases). Support for older LINQPad versions is available in older driver versions.
+This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer, on Windows and macOS (LINQPad 9 recommended), with queries running on .NET 10 or newer. LINQPad 5 is supported by the `.lpx` plugin published with each [release](https://github.com/linq2db/linq2db/releases). Support for older LINQPad versions is available in older driver versions.
 
 Following databases supported:
 
@@ -10,7 +10,7 @@ Following databases supported:
 * **DuckDB**
 * **Firebird**
 * **Informix**: 64-bit LINQPad only — the LINQPad 5 `.lpx` also supports 32-bit
-* **Microsoft Access**: both OLE DB and ODBC drivers *(Windows only)*
+* **Microsoft Access**: OLE DB and ODBC drivers *(Windows only)*; managed LibRed engine on every OS, on the prerelease `LibRed.Ado` package *(not in the LINQPad 5 `.lpx`)*
 * **Microsoft SQL Server** 2005+ *(including **Microsoft SQL Azure**)*
 * **Microsoft SQL Server Compact (SQL CE)** *(Windows only)*
 * **MariaDB**

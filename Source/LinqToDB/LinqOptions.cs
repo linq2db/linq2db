@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
@@ -210,9 +211,9 @@ namespace LinqToDB
 	/// <para>
 	/// Off by default in 6.x because enabling it is observable, not merely faster: the emitted SQL changes shape
 	/// (statements joined by <c>;</c>, sharing one parameter scope with deduplicated names), and with
-	/// <see cref="UseDbBatch"/> the command travels a different ADO.NET path, which changes traced output. The implicit
-	/// read-consistency transaction (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>)
-	/// is unchanged: a sequential eager load already opens one whenever the query has harvesters. Planned to default to
+	/// <see cref="UseDbBatch"/> the command travels a different ADO.NET path, which changes traced output. The
+	/// read-consistency transaction around an eager load (<see cref="UseEagerLoadingTransaction"/>,
+	/// <see cref="EagerLoadingIsolationLevel"/>) is not affected by this option. Planned to default to
 	/// <see langword="true"/> in version 7.
 	/// </para>
 	/// <para>
@@ -232,6 +233,22 @@ namespace LinqToDB
 	/// included.
 	/// </para>
 	/// Default value: <see langword="false"/>.
+	/// </param>
+	/// <param name="UseEagerLoadingTransaction">
+	/// Controls the transaction linq2db opens around an eager load — a query that loads child collections
+	/// (<c>LoadWith</c>/<c>ThenLoad</c> or a collection projected in <c>Select</c>) — so that the main query and its
+	/// child queries read the database in one transaction, protected from concurrent changes as far as its isolation
+	/// level allows:
+	/// - if <see langword="true"/> - the transaction is opened at <see cref="EagerLoadingIsolationLevel"/> unless one is
+	/// already active (an explicit transaction or a <c>TransactionScope</c>);
+	/// - if <see langword="false"/> - no transaction is opened.
+	/// Default value: <see langword="true"/>.
+	/// </param>
+	/// <param name="EagerLoadingIsolationLevel">
+	/// Isolation level of the transaction opened around an eager load (see <see cref="UseEagerLoadingTransaction"/>).
+	/// When <see langword="null"/>, the data provider's default
+	/// (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>) is used.
+	/// Default value: <see langword="null"/>.
 	/// </param>
 	public sealed record LinqOptions
 	(
@@ -263,7 +280,9 @@ namespace LinqToDB
 		bool                      OptimizeForSequentialAccess = false,
 		bool                      UseDbBatch                  = true,
 		// TODO: Default to true in v7 (#6214)
-		bool                      UseCombinedCommands         = false
+		bool                      UseCombinedCommands         = false,
+		bool                      UseEagerLoadingTransaction  = true,
+		IsolationLevel?           EagerLoadingIsolationLevel  = null
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID,
 		// and to keep a shipped signature as a binary-compat constructor / Deconstruct pair (see below).
@@ -299,6 +318,8 @@ namespace LinqToDB
 			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
 			UseDbBatch                  = original.UseDbBatch;
 			UseCombinedCommands         = original.UseCombinedCommands;
+			UseEagerLoadingTransaction  = original.UseEagerLoadingTransaction;
+			EagerLoadingIsolationLevel  = original.EagerLoadingIsolationLevel;
 		}
 
 		/// <summary>
@@ -361,7 +382,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _, out _, out _, out _, out _, out _);
+				out _, out _, out _, out _, out _, out _, out _, out _, out _);
 		}
 
 		/// <summary>
@@ -436,6 +457,88 @@ namespace LinqToDB
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar, out preferClientCalculation, out upsertEmulationPolicy,
 				out defaultEagerLoadingStrategy, out implicitCollectionLoading, out optimizeForSequentialAccess,
+				out _, out _, out _, out _);
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor — mirrors the
+		/// public ctor signature as it was before <see cref="UseEagerLoadingTransaction"/> and <see cref="EagerLoadingIsolationLevel"/>
+		/// were added, so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching Deconstruct overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool                      preloadGroups,
+			bool                      ignoreEmptyUpdate,
+			bool                      generateExpressionTest,
+			bool                      traceMapperExpression,
+			bool                      concatenateOrderBy,
+			bool                      optimizeJoins,
+			CompareNulls              compareNulls,
+			bool                      guardGrouping,
+			bool                      disableQueryCache,
+			TimeSpan?                 cacheSlidingExpiration,
+			bool                      preferApply,
+			bool                      keepDistinctOrdered,
+			bool                      parameterizeTakeSkip,
+			bool                      enableContextSchemaEdit,
+			bool                      preferExistsForScalar,
+			bool                      preferClientCalculation,
+			UpsertEmulationPolicy     upsertEmulationPolicy,
+			EagerLoadingStrategy      defaultEagerLoadingStrategy,
+			ImplicitCollectionLoading implicitCollectionLoading,
+			bool                      optimizeForSequentialAccess,
+			bool                      useDbBatch,
+			bool                      useCombinedCommands)
+			: this(
+				preloadGroups, ignoreEmptyUpdate, generateExpressionTest, traceMapperExpression,
+				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
+				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
+				enableContextSchemaEdit, preferExistsForScalar, preferClientCalculation, upsertEmulationPolicy,
+				defaultEagerLoadingStrategy, implicitCollectionLoading, optimizeForSequentialAccess,
+				useDbBatch, useCombinedCommands,
+				UseEagerLoadingTransaction: true, EagerLoadingIsolationLevel: null)
+		{
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
+		/// method signature as it was before <see cref="UseEagerLoadingTransaction"/> and <see cref="EagerLoadingIsolationLevel"/>
+		/// were added.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching constructor overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool                      preloadGroups,
+			out bool                      ignoreEmptyUpdate,
+			out bool                      generateExpressionTest,
+			out bool                      traceMapperExpression,
+			out bool                      concatenateOrderBy,
+			out bool                      optimizeJoins,
+			out CompareNulls              compareNulls,
+			out bool                      guardGrouping,
+			out bool                      disableQueryCache,
+			out TimeSpan?                 cacheSlidingExpiration,
+			out bool                      preferApply,
+			out bool                      keepDistinctOrdered,
+			out bool                      parameterizeTakeSkip,
+			out bool                      enableContextSchemaEdit,
+			out bool                      preferExistsForScalar,
+			out bool                      preferClientCalculation,
+			out UpsertEmulationPolicy     upsertEmulationPolicy,
+			out EagerLoadingStrategy      defaultEagerLoadingStrategy,
+			out ImplicitCollectionLoading implicitCollectionLoading,
+			out bool                      optimizeForSequentialAccess,
+			out bool                      useDbBatch,
+			out bool                      useCombinedCommands)
+		{
+			Deconstruct(
+				out preloadGroups, out ignoreEmptyUpdate, out generateExpressionTest, out traceMapperExpression,
+				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
+				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
+				out enableContextSchemaEdit, out preferExistsForScalar, out preferClientCalculation, out upsertEmulationPolicy,
+				out defaultEagerLoadingStrategy, out implicitCollectionLoading, out optimizeForSequentialAccess,
+				out useDbBatch, out useCombinedCommands,
 				out _, out _);
 		}
 
@@ -467,6 +570,8 @@ namespace LinqToDB
 						.Add(OptimizeForSequentialAccess)
 						.Add(UseDbBatch)
 						.Add(UseCombinedCommands)
+						.Add(UseEagerLoadingTransaction)
+						.Add((int?)EagerLoadingIsolationLevel)
 						.CreateID();
 				}
 

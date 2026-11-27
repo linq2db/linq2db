@@ -317,10 +317,10 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(testData);
 
 			// Query returns empty sequence, MaxBy on value type should throw
-			Assert.Throws<InvalidOperationException>(() =>
+			Assert.That(() =>
 			{
 				_ = table.Where(x => x.Id < 0).Select(x => x.Id).MaxBy(x => x);
-			});
+			}, Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]
@@ -332,10 +332,10 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(testData);
 
 			// Query returns empty sequence, MinBy on value type should throw
-			Assert.Throws<InvalidOperationException>(() =>
+			Assert.That(() =>
 			{
 				_ = table.Where(x => x.Id < 0).Select(x => x.Id).MinBy(x => x);
-			});
+			}, Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]

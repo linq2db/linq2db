@@ -5,6 +5,11 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<!--Same as LinqToDB.csproj: $(BaselineVersion) still ships these. Drop once a released baseline no longer carries them.-->
+		<PackageValidationBaselineFrameworkToIgnore Include="net8.0;net9.0" />
+	</ItemGroup>
+
 	<PropertyGroup Label="Nuget">
 		<Title>LINQ to DB Scaffold Framework</Title>
 		<Description>LINQ to DB Scaffold framework is used for database model generation for Linq To DB projects.</Description>

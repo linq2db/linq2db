@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// <summary>
 	/// Adds support for types and functions, defined in Microsoft.SqlServer.Types spatial types
 	/// (or any other types and methods, that use SqlMethodAttribute or SqlUserDefinedTypeAttribute mapping attributes).
-	/// Check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types
+	/// Check https://linq2db.github.io/articles/faq.html#how-can-i-use-sql-server-spatial-types
 	/// for additional required configuration steps to support SQL Server spatial types.
 	/// </summary>
 	public class SystemDataSqlServerAttributeReader : IMetadataReader

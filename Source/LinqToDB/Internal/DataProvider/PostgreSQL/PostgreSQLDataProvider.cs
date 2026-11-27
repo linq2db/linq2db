@@ -90,13 +90,17 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (Adapter.SupportsBigInteger)
 				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
 
-#if SUPPORTS_DATEONLY
-			SetProviderField<DbDataReader, TimeSpan, TimeOnly>((rd, idx) => rd.GetFieldValue<TimeSpan>(idx));
+			// npgsql 10 returns TimeOnly / DateOnly for time / date. Resolved at runtime: modern runtimes also load the
+			// netstandard2.0 build, which can't name those types (#6077).
+			if (Type.GetType("System.TimeOnly") is { } timeOnly)
+				SetProviderField<DbDataReader, TimeSpan>(timeOnly, (rd, idx) => rd.GetFieldValue<TimeSpan>(idx));
 
-			var rangeDateTime = Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
-			var rangeDateOnly = Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateOnly));
-			SetGetFieldValueReader(rangeDateTime, rangeDateOnly, Adapter.DataReaderType);
-#endif
+			if (Type.GetType("System.DateOnly") is { } dateOnly)
+			{
+				var rangeDateTime = Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
+				var rangeDateOnly = Adapter.NpgsqlRangeTType.MakeGenericType(dateOnly);
+				SetGetFieldValueReader(rangeDateTime, rangeDateOnly, Adapter.DataReaderType);
+			}
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
@@ -618,6 +622,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				PostgreSQLVersion.v19 => new PostgreSQLMappingSchema.PostgreSQL19MappingSchema(),
 				PostgreSQLVersion.v18 => new PostgreSQLMappingSchema.PostgreSQL18MappingSchema(),
 				PostgreSQLVersion.v15 => new PostgreSQLMappingSchema.PostgreSQL15MappingSchema(),
+				PostgreSQLVersion.v13 => new PostgreSQLMappingSchema.PostgreSQL13MappingSchema(),
+				PostgreSQLVersion.v12 => new PostgreSQLMappingSchema.PostgreSQL12MappingSchema(),
+				PostgreSQLVersion.v11 => new PostgreSQLMappingSchema.PostgreSQL11MappingSchema(),
 				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),
 				PostgreSQLVersion.v93 => new PostgreSQLMappingSchema.PostgreSQL93MappingSchema(),
 				_                     => new PostgreSQLMappingSchema.PostgreSQL95MappingSchema(),

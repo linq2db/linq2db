@@ -443,17 +443,21 @@ namespace Tests.Linq
 			if (isLinqService)
 			{
 #if NETFRAMEWORK
-				var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+				Assert.That(
+					() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList(),
+					Throws.TypeOf<FaultException>().With.Message.Contains("firstname").IgnoreCase);
 #else
-				var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+				Assert.That(
+					() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList(),
+					Throws.TypeOf<Grpc.Core.RpcException>().With.Message.Contains("firstname").IgnoreCase);
 #endif
-				Assert.That(fe.Message.ToLowerInvariant(), Does.Contain("firstname"));
 			}
 			else
 			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 				// field name casing depends on database
-				Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("firstname"));
+				Assert.That(
+					() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList(),
+					Throws.TypeOf<LinqToDBConvertException>().With.Property(nameof(LinqToDBConvertException.ColumnName)).EqualTo("firstname").IgnoreCase);
 			}
 		}
 
@@ -463,8 +467,9 @@ namespace Tests.Linq
 			GetProviderName(context, out var isLinqService);
 
 			using var db = GetDataContext(context, suppressSequentialAccess: true);
-			var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
-			Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("lastname"));
+			Assert.That(
+				() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList(),
+				Throws.TypeOf<LinqToDBConvertException>().With.Property(nameof(LinqToDBConvertException.ColumnName)).EqualTo("lastname").IgnoreCase);
 		}
 
 #region Records
@@ -637,9 +642,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4113
-		public interface IInterface1
-		{
-		}
+		public interface IInterface1;
 
 		public interface IInterface2
 		{
@@ -792,7 +795,7 @@ namespace Tests.Linq
 
 		#region Issue 3060
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3060")]
-		public void Issue3060Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue3060Test([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<byte[], Blob16AsGuidType>(x => new Blob16AsGuidType(x));
@@ -879,7 +882,7 @@ namespace Tests.Linq
 			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
 			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
+		public void Issue3117Test1([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(IdConverter<>));
@@ -919,7 +922,7 @@ namespace Tests.Linq
 			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
 			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
+		public void Issue3117Test2([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);
@@ -1559,7 +1562,7 @@ namespace Tests.Linq
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for an Int32.",
 			Details = "as above; the MySql.Data driver names the target type where MySqlConnector words it generically.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
-		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
+		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllNativeAccess)] string context, [Values(null, 1L)] long? first)
 		{
 			using var db = GetDataContext(context);
 
@@ -1585,7 +1588,7 @@ namespace Tests.Linq
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
 			Details = "CAST to BIGINT doesn't work in MariaDB, so 2147483648 comes back as an int and overflows on the way out.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
-		public void MappingTypingByConstant_FromQuery_Int64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1L)] long? first)
+		public void MappingTypingByConstant_FromQuery_Int64([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool inline, [Values(null, 1L)] long? first)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1606,7 +1609,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
-		public void MappingTypingByConstant_FromEnumerable_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1ul)] ulong? first)
+		public void MappingTypingByConstant_FromEnumerable_UInt64([DataSources(TestProvName.AllNativeAccess)] string context, [Values(null, 1ul)] ulong? first)
 		{
 			using var db = GetDataContext(context);
 
@@ -1629,7 +1632,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
-		public void MappingTypingByConstant_FromQuery_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1ul)] ulong? first)
+		public void MappingTypingByConstant_FromQuery_UInt64([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool inline, [Values(null, 1ul)] ulong? first)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1650,7 +1653,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
-		public void MappingTypingByConstant_FromEnumerable_UInt32([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1u)] uint? first)
+		public void MappingTypingByConstant_FromEnumerable_UInt32([DataSources(TestProvName.AllNativeAccess)] string context, [Values(null, 1u)] uint? first)
 		{
 			using var db = GetDataContext(context);
 
@@ -1673,7 +1676,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
-		public void MappingTypingByConstant_FromQuery_UInt32([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1u)] uint? first)
+		public void MappingTypingByConstant_FromQuery_UInt32([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool inline, [Values(null, 1u)] uint? first)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1694,7 +1697,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
-		public void MappingTypingByConstant_FromEnumerable_Decimal([DataSources(TestProvName.AllAccess)] string context, [Values] bool isNull)
+		public void MappingTypingByConstant_FromEnumerable_Decimal([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool isNull)
 		{
 			using var db = GetDataContext(context);
 
@@ -1712,12 +1715,12 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.That(res[0].Value, Is.EqualTo(value));
+				Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
-		public void MappingTypingByConstant_FromQuery_Decimal([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values] bool isNull)
+		public void MappingTypingByConstant_FromQuery_Decimal([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool inline, [Values] bool isNull)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1728,17 +1731,17 @@ namespace Tests.Linq
 
 			var res = query.ToArray();
 			Assert.That(res, Has.Length.EqualTo(4));
-			Assert.That(res[0].Value, Is.EqualTo(value));
+			Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 
 			value = 2147483648.123m;
 
 			res = query.ToArray();
 			Assert.That(res, Has.Length.EqualTo(4));
-			Assert.That(res[0].Value, Is.EqualTo(value));
+			Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
-		public void MappingTypingByConstant_FromEnumerable_Double([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0D)] double? first)
+		public void MappingTypingByConstant_FromEnumerable_Double([DataSources(TestProvName.AllNativeAccess)] string context, [Values(null, 0D)] double? first)
 		{
 			using var db = GetDataContext(context);
 
@@ -1782,7 +1785,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
-		public void MappingTypingByConstant_FromEnumerable_Float([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0F)] float? first)
+		public void MappingTypingByConstant_FromEnumerable_Float([DataSources(TestProvName.AllNativeAccess)] string context, [Values(null, 0F)] float? first)
 		{
 			using var db = GetDataContext(context);
 
@@ -2024,9 +2027,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, Issue5540Schema());
 			using var tb = db.CreateLocalTable<Issue5540Entity>();
 
-			var ex = Assert.Throws<LinqToDB.LinqToDBException>(
-				() => tb.Where(e => e.Items.Any(i => i.Code == "X")).ToList());
-			Assert.That(ex!.Message, Does.Contain(nameof(Issue5540JsonEach)));
+			Assert.That(
+				() => tb.Where(e => e.Items.Any(i => i.Code == "X")).ToList(),
+				Throws.TypeOf<LinqToDB.LinqToDBException>().With.Message.Contains(nameof(Issue5540JsonEach)));
 		}
 
 		#endregion

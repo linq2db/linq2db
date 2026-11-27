@@ -13,10 +13,7 @@ for vp in $versions; do
     ver="${vp%%:*}"
     port="${vp##*:}"
     name="pgsql${ver//./}"
-    # PostgreSQL 19 ships only as a prerelease image tag; other versions match the version tag.
-    image="postgres:${ver}"
-    [ "$ver" = "19" ] && image="postgres:19beta1"
-    docker run -d --name "$name" -e POSTGRES_PASSWORD=Password12! -p "${port}:5432" "$image"
+    docker run -d --name "$name" -e POSTGRES_PASSWORD=Password12! -p "${port}:5432" "postgres:${ver}"
 done
 
 # wait for each server to accept connections and create the testdata database

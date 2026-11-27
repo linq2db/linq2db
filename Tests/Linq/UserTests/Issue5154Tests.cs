@@ -116,8 +116,8 @@ namespace Tests.UserTests
 				var query = buildQuery();
 				string? sql    = null;
 				object? result = null;
-				Assert.DoesNotThrow(() => sql    = query.ToSqlQuery().Sql);
-				Assert.DoesNotThrow(() => result = query.ToArray());
+				sql    = query.ToSqlQuery().Sql;
+				result = query.ToArray();
 				Assert.That(sql,    Is.Not.Null.And.Not.Empty);
 				Assert.That(result, Is.Not.Null);
 			}
@@ -129,8 +129,8 @@ namespace Tests.UserTests
 				var query = buildQuery();
 				object? result = null;
 				string? sql    = null;
-				Assert.DoesNotThrow(() => result = query.ToArray());
-				Assert.DoesNotThrow(() => sql    = query.ToSqlQuery().Sql);
+				result = query.ToArray();
+				sql    = query.ToSqlQuery().Sql;
 				Assert.That(result, Is.Not.Null);
 				Assert.That(sql,    Is.Not.Null.And.Not.Empty);
 			}

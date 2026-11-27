@@ -190,7 +190,7 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE Int NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNulls(context, withNullCompares: true);
 		}
@@ -202,7 +202,7 @@ namespace Tests.Linq
 		// The two sibling LikeSql gates below carry the same declaration for the same reason.
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNulls(context, withNullCompares: false);
 		}
@@ -225,14 +225,14 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE Enum NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsEnumLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsEnum(context, withNullCompares: true);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsEnum(context, withNullCompares: false);
 		}
@@ -255,14 +255,14 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE CEnum NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsCEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsCEnumLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsCEnum(context, withNullCompares: true);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsCEnum(context, withNullCompares: false);
 		}
@@ -361,6 +361,9 @@ namespace Tests.Linq
 			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "cannot be read as a number",
+			Details = "no-issue: an alpha.2 -> alpha.3 regression, measured against both packages - comparing a text column against a numeric literal (=, IN, NOT IN) now coerces the text to a number and throws on any non-numeric value, where alpha.2 evaluated it and ACE accepts it. LibRed.Ado 11.0.0-alpha.3 to beta.1; re-check when a newer LibRed ships.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2608")]
 		public void Issue2608Test([DataSources(TestProvName.AllSapHana)] string context)
 		{
@@ -462,9 +465,43 @@ namespace Tests.Linq
 			Assert.That(res, Is.EqualTo(expected));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsValueType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 1, 2, 3 };
+
+			var items = db.Person
+				.Where(p => ids.Contains(p.ID))
+				.Select(p => p.ID)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe([1, 2, 3]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsReferenceType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var names = new[] { "John", "Jane" };
+
+			var items = db.Person
+				.Where(p => names.Contains(p.FirstName))
+				.Select(p => p.FirstName)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe(["Jane", "John"]);
+		}
+
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void ContainsSubqueryTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ContainsSubqueryTest([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
