@@ -11,10 +11,14 @@ namespace Tests.LinqToDB.CLI
 	[TestFixture]
 	public sealed class ScaffoldTemplateErrorTests : CliProcessTestBase
 	{
-		const string Template = """
+		const string Header = """
 			<#@ template language="C#" inherits="LinqToDB.LinqToDBHost" linePragmas="false" #>
 			<#@ import namespace="LinqToDB.Scaffold" #>
-			<# int broken = "text"; #>
+
+			""";
+
+		const string Body = """
+
 			public class Interceptors : ScaffoldInterceptors
 			{
 			}
@@ -22,6 +26,47 @@ namespace Tests.LinqToDB.CLI
 
 		[Test]
 		public async Task TemplateCompileErrorReported()
+		{
+			var result = await RunTemplate(Header + """<# int broken = "text"; #>""" + Body);
+
+			using (Assert.EnterMultipleScope())
+			{
+				// EXPECTED_ERROR with compiler diagnostics instead of INTERNAL_ERROR (-2) from NullReferenceException
+				result.ExitCode.ShouldBe(-3, result.Error);
+				result.Error.ShouldContain("T4 compilation of template '");
+				result.Error.ShouldContain("scaffold.tt' failed:");
+				result.Error.ShouldContain("CS0029");
+			}
+		}
+
+		[Test]
+		public async Task TemplateMissingAssemblyReported()
+		{
+			var result = await RunTemplate("""<#@ assembly name="/nonexistent/Missing.dll" #>""" + "\n" + Header + Body);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-4, result.Error);
+				result.Error.ShouldContain("Missing.dll");
+				result.Error.ShouldNotContain("Unhandled exception");
+			}
+		}
+
+		[Test]
+		public async Task TemplateRuntimeExceptionReported()
+		{
+			var result = await RunTemplate(Header + """<# throw new System.InvalidOperationException("boom from template"); #>""" + Body);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3, result.Error);
+				result.Error.ShouldContain("execution failed");
+				result.Error.ShouldContain("boom from template");
+				result.Error.ShouldNotContain("Unhandled exception");
+			}
+		}
+
+		static async Task<CliProcessResult> RunTemplate(string templateText)
 		{
 			var database = CreateCliSqliteDatabase("template-error", false);
 			var folder   = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"template-error-{Guid.NewGuid():N}");
@@ -31,23 +76,16 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				await File.WriteAllTextAsync(template, Template);
+				await File.WriteAllTextAsync(template, templateText);
 
-				var result = await RunCliProcess(
+				return await RunCliProcess(
 					TimeSpan.FromMinutes(2),
 					"scaffold",
 					"-p", "SQLite",
 					"-c", $"Data Source={database};Pooling=False",
 					"-o", Path.Combine(folder, "output"),
+					"--include-tables", "Customers",
 					"--customize", template);
-
-				using (Assert.EnterMultipleScope())
-				{
-					// EXPECTED_ERROR with compiler diagnostics instead of INTERNAL_ERROR (-2) from NullReferenceException
-					result.ExitCode.ShouldBe(-3, result.Error);
-					result.Error.ShouldContain("T4 compilation failed");
-					result.Error.ShouldContain("CS0029");
-				}
 			}
 			finally
 			{

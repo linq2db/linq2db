@@ -58,14 +58,20 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		protected static Task<CliProcessResult> RunCliProcess(params string[] arguments)
-			=> RunCliProcessCore(null, DefaultTimeout, arguments);
+		{
+			return RunCliProcessCore(null, DefaultTimeout, arguments);
+		}
 
 		protected static Task<CliProcessResult> RunCliProcess(TimeSpan timeout, params string[] arguments)
-			=> RunCliProcessCore(null, timeout, arguments);
+		{
+			return RunCliProcessCore(null, timeout, arguments);
+		}
 
 		/// <summary>Runs the CLI in a new process with extra environment variables (<see langword="null"/> removes one).</summary>
 		protected static Task<CliProcessResult> RunCliProcess(IReadOnlyDictionary<string, string?>? environment, params string[] arguments)
-			=> RunCliProcessCore(environment, DefaultTimeout, arguments);
+		{
+			return RunCliProcessCore(environment, DefaultTimeout, arguments);
+		}
 
 		static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(20);
 
