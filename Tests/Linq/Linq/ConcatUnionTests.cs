@@ -3700,23 +3700,26 @@ namespace Tests.Linq
 			public TimeSpan? Time { get; set; }
 		}
 
-		// test depends on data order from db
-		// fails at least for SAP HANA for this reason
+		// Take(10) without ORDER BY: the server picks which rows come back,
+		// so the check accepts any 10 distinct rows of the full expected set
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/356")]
-		public void CorrelatedUnionDistinctSubqueryUnsortedTake([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllDuckDB)] string context)
+		public void CorrelatedUnionDistinctSubqueryUnsortedTake([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var resultUnion = db.Child.Union(db.Child).Distinct();
 			var result = db.Parent
 					.SelectMany(x => resultUnion.Where(c => c.ParentID == x.ParentID).Select(z => new { x.ParentID, z.ChildID }))
-					.Take(10);
+					.Take(10)
+					.ToList();
 
 			var expectedUnion = Child.Union(Child).Distinct();
 			var expected = Parent
 					.SelectMany(x => expectedUnion.Where(c => c.ParentID == x.ParentID).Select(z => new { x.ParentID, z.ChildID }))
-					.Take(10);
+					.ToList();
 
-			AreEqual(expected, result, src => src.OrderBy(_ => _.ParentID).ThenBy(_ => _.ChildID));
+			result.Count.ShouldBe(Math.Min(10, expected.Count));
+			result.ShouldBeUnique();
+			result.ShouldBeSubsetOf(expected);
 		}
 
 		// Test without sorting order dependency

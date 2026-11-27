@@ -122,7 +122,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		// Named distinctly from IssueTests.EfQueryAfterLinqToDbQuery, which covers a different aspect of the same issue and
 		// is not gated - a FullyQualifiedName~ filter would otherwise select both.
-		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
 		public void ShadowQueryFilterEfQueryAfterLinqToDbCall([EFDataSources] string provider)
 		{

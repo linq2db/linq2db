@@ -72,7 +72,7 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly IDiagnosticsLogger<DbLoggerCategory.Query>?                  _logger;
 #endif
 #if !EF31
-		private readonly DatabaseDependencies?                                        _databaseDependencies;
+		private readonly IMethodCallTranslatorProvider?                               _methodCallTranslatorProvider;
 #endif
 
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
@@ -99,10 +99,20 @@ namespace LinqToDB.EntityFrameworkCore
 					accessor.GetService<LoggingDefinitions>(),
 					new NullDbContextLogger());
 
-				// Only Pomelo's translator provider reads it (see GetDbFunctionFromMethodCall), and it reaches
-				// this context's IDbContextOptions through QueryCompilationContextDependencies.
-				if (string.Equals(_dependencies?.MethodCallTranslatorProvider.GetType().Name, "MySqlMethodCallTranslatorProvider", StringComparison.Ordinal))
-					_databaseDependencies = accessor.GetService<DatabaseDependencies>();
+				_methodCallTranslatorProvider = _dependencies?.MethodCallTranslatorProvider;
+
+				// Pomelo's translators read a QueryCompilationContext from their provider (Pomelo #1801), which Pomelo
+				// sets and clears around its own translations on the context's scoped instance. Translate with a
+				// private instance instead, its context created here, while this DbContext is alive.
+				if (_methodCallTranslatorProvider is { } provider && string.Equals(provider.GetType().Name, "MySqlMethodCallTranslatorProvider", StringComparison.Ordinal))
+				{
+					var contextProperty = provider.GetType().GetProperty("QueryCompilationContext")
+						?? throw new InvalidOperationException("MySqlMethodCallTranslatorProvider.QueryCompilationContext property not found");
+
+					_methodCallTranslatorProvider = (IMethodCallTranslatorProvider)Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(accessor.Instance, provider.GetType());
+
+					contextProperty.SetValue(_methodCallTranslatorProvider, accessor.GetService<DatabaseDependencies>().QueryCompilationContextFactory.Create(false));
+				}
 #endif
 			}
 
@@ -877,22 +887,7 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 
 #if !EF31
-						// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
-						// The field is non-null exactly when the constructor identified Pomelo's provider.
-						if (ctx.this_._databaseDependencies != null)
-						{
-							var contextProperty = ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().GetProperty("QueryCompilationContext")
-							?? throw new InvalidOperationException("MySqlMethodCallTranslatorProvider.QueryCompilationContext property not found");
-
-							if (contextProperty.GetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider) == null)
-							{
-								contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies.QueryCompilationContextFactory.Create(false));
-							}
-						}
-#endif
-
-#if !EF31
-						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray, ctx.this_._logger!);
+						var newExpression = ctx.this_._methodCallTranslatorProvider!.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray, ctx.this_._logger!);
 #else
 						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray);
 #endif
