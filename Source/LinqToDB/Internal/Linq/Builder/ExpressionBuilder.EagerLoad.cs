@@ -601,7 +601,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Dictionary<Expression, Expression>? cteUnionCache = null;
 
 				if (strategy == EagerLoadingStrategy.CteUnion)
-					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, localHarvesters, previousKeys, attempt);
+					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, localHarvesters, previousKeys, attempt);
 
 				// Phase 2: Process each remaining eager load with the current strategy
 				var failed             = false;
@@ -660,9 +660,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (attempt.QueryFinalizedRequested)
 						_query.IsFinalized = true;
 
-					// Single-query CteUnion (parent branch inlined into carrier) reconstructs from
-					// path-based carrier slots — ToColumns must be skipped. All other modes (harvester-only
-					// CteUnion, KeyedQuery, Default) use column-index-based projection via ToColumns.
+					// CteUnion (parent branch inlined into carrier) reconstructs from path-based carrier
+					// slots — ToColumns must be skipped. KeyedQuery and Default use column-index-based
+					// projection via ToColumns.
 					finalizer = attempt.HasCteUnionQuery
 						? static e => e
 						: e => ToColumns(buildContext.GetResultQuery(), e);
