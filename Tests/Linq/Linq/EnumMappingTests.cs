@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1785,7 +1786,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		public class Issue1622Table
+		public class EnumConverterTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1793,30 +1794,30 @@ namespace Tests.Linq
 			public string? SomeText { get; set; }
 		}
 
-		public enum Issue1622Enum
+		public enum EnumConverterValue
 		{
 			Value1, Value2
 		}
 
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
-		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new ServerSideOnlyException(nameof(SomeComparison));
+		private static bool SomeComparison(string? column, EnumConverterValue value) => throw new ServerSideOnlyException(nameof(SomeComparison));
 
-		[Test]
-		public void Issue1622Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1622")]
+		public void ValueToSqlConverterForEnumInSqlExpression([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
+				ms.SetValueToSqlConverter(typeof(EnumConverterValue),
 					(sb, dt, v) =>
 					{
-						sb.Append('\'').Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
+						sb.Append('\'').Append(((EnumConverterValue)v).ToString()).Append("_suffix'");
 					});
 
 			using var db = GetDataContext(context, ms);
-			using var table = db.CreateLocalTable<Issue1622Table>();
-			var item = new Issue1622Table() { Id = 1, SomeText = "Value1_suffix" };
+			using var table = db.CreateLocalTable<EnumConverterTable>();
+			var item = new EnumConverterTable() { Id = 1, SomeText = "Value1_suffix" };
 			db.Insert(item);
 
-			var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).Single();
+			var res = table.Where(e => SomeComparison(e.SomeText, EnumConverterValue.Value1)).Single();
 			var res2 = table.Where(e => e.Id == 1).Single();
 			using (Assert.EnterMultipleScope())
 			{
@@ -2259,9 +2260,7 @@ namespace Tests.Linq
 			}
 		}
 
-		#region Issue 5012
-
-		sealed class Issue5012
+		sealed class EnumMethodArgumentModel
 		{
 			public enum TestStatus
 			{
@@ -2290,38 +2289,36 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5012")]
-		public void Issue5012Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void EnumConditionalArgumentToMethod([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db  = GetDataContext(context);
-			using var tb  = db.CreateLocalTable(Issue5012.Test.Data);
+			using var tb  = db.CreateLocalTable(EnumMethodArgumentModel.Test.Data);
 
 			_ = tb
 				.Select(i => new
 				{
-					Status = Issue5012.Ext.GetStrValue(i.Status == Issue5012.TestStatus.Completed
-					? Issue5012.TestStatus.Completed
-					: Issue5012.TestStatus.Outstanding)
+					Status = EnumMethodArgumentModel.Ext.GetStrValue(i.Status == EnumMethodArgumentModel.TestStatus.Completed
+					? EnumMethodArgumentModel.TestStatus.Completed
+					: EnumMethodArgumentModel.TestStatus.Outstanding)
 				})
 				.ToList();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5012")]
-		public void Issue5012Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void EnumConditionalCastArgumentToMethod([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db  = GetDataContext(context);
-			using var tb  = db.CreateLocalTable(Issue5012.Test.Data);
+			using var tb  = db.CreateLocalTable(EnumMethodArgumentModel.Test.Data);
 
 			_ = tb
 				.Select(i => new
 				{
-					Status = Issue5012.Ext.GetStrValue((Issue5012.TestStatus)(i.Status == Issue5012.TestStatus.Completed
-					? Issue5012.TestStatus.Completed
-					: Issue5012.TestStatus.Outstanding))
+					Status = EnumMethodArgumentModel.Ext.GetStrValue((EnumMethodArgumentModel.TestStatus)(i.Status == EnumMethodArgumentModel.TestStatus.Completed
+					? EnumMethodArgumentModel.TestStatus.Completed
+					: EnumMethodArgumentModel.TestStatus.Outstanding))
 				})
 				.ToList();
 		}
-
-		#endregion
 
 		enum ItemTypeEnum
 		{
@@ -2367,6 +2364,941 @@ namespace Tests.Linq
 						x.Owner.Name,
 					} : null,
 				}).ToArray();
+		}
+
+		[Table("MappedEnumKeyRecord")]
+		public class MappedEnumKeyRecord
+		{
+			[PrimaryKey]
+			public int       Id              { get; set; }
+			[Column]
+			public MapValueKeyType  ClaimedKeyType  { get; set; }
+			[Column]
+			public MapValueKeyType? ClaimedKeyTypeN { get; set; }
+
+			public static MappedEnumKeyRecord TestInstance = new MappedEnumKeyRecord()
+			{
+				Id              = 0,
+				ClaimedKeyType  = MapValueKeyType.RSA,
+				ClaimedKeyTypeN = MapValueKeyType.RSA
+			};
+		}
+
+		public class FluentMappedEnumKeyRecord
+		{
+			public int       Id              { get; set; }
+			public MapValueKeyType  ClaimedKeyType  { get; set; }
+			public MapValueKeyType? ClaimedKeyTypeN { get; set; }
+
+			public static FluentMappedEnumKeyRecord TestInstance = new FluentMappedEnumKeyRecord()
+			{
+				Id              = 0,
+				ClaimedKeyType  = MapValueKeyType.RSA,
+				ClaimedKeyTypeN = MapValueKeyType.RSA
+			};
+		}
+
+		public enum MapValueKeyType : byte
+		{
+			[MapValue("RSA")]
+			RSA = 1,
+			[MapValue("EC")]
+			EC  = 2
+		}
+
+		public enum MapValueAlternateKeyType
+		{
+			[MapValue("NOT_RSA")]
+			RSA = 1,
+			[MapValue("NOT_EC")]
+			EC  = 2
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void UpdateSetMapValueEnumFromVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			db.Insert(MappedEnumKeyRecord.TestInstance);
+
+			var claimedKeyType = MapValueKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void UpdateSetMapValueEnumFromBoxedVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			db.Insert(MappedEnumKeyRecord.TestInstance);
+
+			object claimedKeyType = MapValueKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void UpdateSetMapValueEnumFromCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			db.Insert(MappedEnumKeyRecord.TestInstance);
+
+			var claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void UpdateSetMapValueEnumFromBoxedCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			db.Insert(MappedEnumKeyRecord.TestInstance);
+
+			object claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void UpdateSetMapValueEnumFromInlineCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			db.Insert(MappedEnumKeyRecord.TestInstance);
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Set(p => p.ClaimedKeyTypeN, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void InsertValueMapValueEnumFromVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			var claimedKeyType = MapValueKeyType.EC;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void InsertValueMapValueEnumFromBoxedVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			object claimedKeyType = MapValueKeyType.EC;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void InsertValueMapValueEnumFromCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			var claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void InsertValueMapValueEnumFromBoxedCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			object claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void InsertValueMapValueEnumFromInlineCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<MappedEnumKeyRecord>();
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Value(p => p.ClaimedKeyTypeN, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentUpdateSetMapValueEnumFromVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			db.Insert(FluentMappedEnumKeyRecord.TestInstance);
+
+			var claimedKeyType = MapValueKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentUpdateSetMapValueEnumFromBoxedVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			db.Insert(FluentMappedEnumKeyRecord.TestInstance);
+
+			object claimedKeyType = MapValueKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentUpdateSetMapValueEnumFromCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			db.Insert(FluentMappedEnumKeyRecord.TestInstance);
+
+			var claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentUpdateSetMapValueEnumFromBoxedCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			db.Insert(FluentMappedEnumKeyRecord.TestInstance);
+
+			object claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, claimedKeyType)
+				.Set(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentUpdateSetMapValueEnumFromInlineCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			db.Insert(FluentMappedEnumKeyRecord.TestInstance);
+
+			table.Where(p => p.Id == 0).AsUpdatable()
+				.Set(p => p.ClaimedKeyType, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Set(p => p.ClaimedKeyTypeN, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Update();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentInsertValueMapValueEnumFromVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			var claimedKeyType = MapValueKeyType.EC;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentInsertValueMapValueEnumFromBoxedVariableAndNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			object  claimedKeyType     = MapValueKeyType.EC;
+			object? claimedKeyTypeNull = null;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyTypeNull)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.Null);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentInsertValueMapValueEnumFromCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			var claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentInsertValueMapValueEnumFromBoxedCastVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			object claimedKeyType = (MapValueKeyType)MapValueAlternateKeyType.EC;
+
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, claimedKeyType)
+				.Value(p => p.ClaimedKeyTypeN, claimedKeyType)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1554")]
+		public void FluentInsertValueMapValueEnumFromInlineCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureFluentKeyRecordMapping());
+			using var table = db.CreateLocalTable<FluentMappedEnumKeyRecord>();
+			table.Value(p => p.Id, 0)
+				.Value(p => p.ClaimedKeyType, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Value(p => p.ClaimedKeyTypeN, (MapValueKeyType)MapValueAlternateKeyType.EC)
+				.Insert();
+
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.ClaimedKeyType, Is.EqualTo(MapValueKeyType.EC));
+				Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(MapValueKeyType.EC));
+			}
+		}
+
+		private static MappingSchema ConfigureFluentKeyRecordMapping()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMappedEnumKeyRecord>()
+					.HasTableName("FluentMappedEnumKeyRecord")
+					.Property(p => p.Id)
+						.IsPrimaryKey()
+					.Property(p => p.ClaimedKeyType)
+					.Property(p => p.ClaimedKeyTypeN)
+				.Build();
+
+			return ms;
+		}
+
+		public enum UserReleaseVersion
+		{
+			FirstRelease = 0,
+			SecondRelease = 1
+		}
+
+		[Table("Users")]
+		public class NullableEnumVersionUser
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(CanBeNull = true)]
+			public UserReleaseVersion? Version { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1946")]
+		public void NullableEnumLessThanEnumVariable([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new NullableEnumVersionUser { Id = 1, Version = UserReleaseVersion.FirstRelease } });
+			var maxVersion = UserReleaseVersion.SecondRelease;
+
+			var query = from u in table
+						where u.Version!.Value < maxVersion
+						select u.Id;
+
+			var ids1 = query.ToArray();
+			Assert.That(ids1, Has.Length.EqualTo(1));
+		}
+
+		public enum StringMappedStatus
+		{
+			Undefined = 0,
+			Used = 40,
+			Finished = 88
+		}
+
+		public class StringMappedStatusRecord
+		{
+			public Guid Id { get; set; }
+
+			public StringMappedStatus Status { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2372")]
+		public void InsertEnumWithStringConvertersAndFluentDataType([DataSources] string context)
+		{
+			Model.ITestDataContext? db1 = null;
+			try
+			{
+				var ms1 = new MappingSchema();
+				var fmb1 = new FluentMappingBuilder(ms1);
+				fmb1.Entity<StringMappedStatusRecord>()
+				  .HasTableName("InventoryResource")
+				  .Property(e => e.Id).IsPrimaryKey()
+				  .Property(e => e.Status).HasDataType(DataType.NVarChar)
+				  .Build();
+
+				var ms2 = new MappingSchema();
+				ms2.SetConverter<StringMappedStatus, string>((obj) =>
+				{
+					return obj.ToString();
+				});
+				ms2.SetConverter<StringMappedStatus, DataParameter>((obj) =>
+				{
+					return new DataParameter { Value = obj.ToString() };
+				});
+				ms2.SetConverter<string, StringMappedStatus>((txt) =>
+				{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
+					return (StringMappedStatus)Enum.Parse(typeof(StringMappedStatus), txt, true);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
+				});
+
+				var fmb2 = new FluentMappingBuilder(ms2);
+				fmb2.Entity<StringMappedStatusRecord>()
+				  .HasTableName("InventoryResource")
+				  .Property(e => e.Id).IsPrimaryKey()
+				  .Property(e => e.Status)
+				  .Build();
+
+				db1 = GetDataContext(context, ms1);
+				db1.DropTable<StringMappedStatusRecord>(throwExceptionIfNotExists: false);
+				using var t = db1.CreateLocalTable<StringMappedStatusRecord>();
+
+				using var db2 = GetDataContext(context, ms2);
+				var dto1 = new StringMappedStatusRecord
+				{
+					Status = StringMappedStatus.Used,
+					Id     = TestData.Guid1
+				};
+				db2.Insert(dto1);
+			}
+			finally
+			{
+				if (db1 != null)
+					db1.Dispose();
+			}
+		}
+
+		public enum InEnumValue
+		{
+			Val1 = 1,
+			Val2 = 2,
+			Val3 = 3,
+		}
+
+		[Table]
+		public class InEnumTable
+		{
+			[Column, PrimaryKey] public int  Id    { get; set; }
+			[Column]             public int? Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5398")]
+		public void CastNullableIntToEnumWithIn([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new InEnumTable { Id = 1, Value = 1 },
+				new InEnumTable { Id = 2, Value = 2 },
+				new InEnumTable { Id = 3, Value = 3 },
+				new InEnumTable { Id = 4, Value = null },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var actual = table
+				.Where(i => ((InEnumValue)i.Value!).In(InEnumValue.Val1))
+				.Select(i => i.Id)
+				.ToList();
+
+			var expected = testData
+				.Where(i => i.Value != null && ((InEnumValue)i.Value!).In(InEnumValue.Val1))
+				.Select(i => i.Id)
+				.ToList();
+
+			AreEqual(actual, expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5398")]
+		public void CastNullableIntToEnumWithInMultipleValues([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new InEnumTable { Id = 1, Value = 1 },
+				new InEnumTable { Id = 2, Value = 2 },
+				new InEnumTable { Id = 3, Value = 3 },
+				new InEnumTable { Id = 4, Value = null },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var actual = table
+				.Where(i => ((InEnumValue)i.Value!).In(InEnumValue.Val1, InEnumValue.Val2))
+				.Select(i => i.Id)
+				.OrderBy(id => id)
+				.ToList();
+
+			var expected = testData
+				.Where(i => i.Value != null && ((InEnumValue)i.Value!).In(InEnumValue.Val1, InEnumValue.Val2))
+				.Select(i => i.Id)
+				.OrderBy(id => id)
+				.ToList();
+
+			AreEqual(actual, expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5398")]
+		public void CastIntToEnumWithIn([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new InEnumTable { Id = 1, Value = 1 },
+				new InEnumTable { Id = 2, Value = 2 },
+				new InEnumTable { Id = 3, Value = 3 },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var query = table
+				.Where(i => ((InEnumValue)i.Value!).In(InEnumValue.Val1, InEnumValue.Val3))
+				.Select(i => i.Id)
+				.OrderBy(id => id);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5398")]
+		public void CastNullableIntToNullableEnumWithIn([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new InEnumTable { Id = 1, Value = 1 },
+				new InEnumTable { Id = 2, Value = 2 },
+				new InEnumTable { Id = 3, Value = 3 },
+				new InEnumTable { Id = 4, Value = null },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var actual = table
+				.Where(i => ((InEnumValue?)i.Value).In(InEnumValue.Val1))
+				.Select(i => i.Id)
+				.ToList();
+
+			var expected = testData
+				.Where(i => i.Value != null && ((InEnumValue?)i.Value).In(InEnumValue.Val1))
+				.Select(i => i.Id)
+				.ToList();
+
+			AreEqual(actual, expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5398")]
+		public void CastNullableIntToNullableEnumWithInMultipleValues([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new InEnumTable { Id = 1, Value = 1 },
+				new InEnumTable { Id = 2, Value = 2 },
+				new InEnumTable { Id = 3, Value = 3 },
+				new InEnumTable { Id = 4, Value = null },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var actual = table
+				.Where(i => ((InEnumValue?)i.Value).In(InEnumValue.Val1, InEnumValue.Val2))
+				.Select(i => i.Id)
+				.OrderBy(id => id)
+				.ToList();
+
+			var expected = testData
+				.Where(i => i.Value != null && ((InEnumValue?)i.Value).In(InEnumValue.Val1, InEnumValue.Val2))
+				.Select(i => i.Id)
+				.OrderBy(id => id)
+				.ToList();
+
+			AreEqual(actual, expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5398")]
+		public void CastNullableIntToNullableEnumWithInNull([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new InEnumTable { Id = 1, Value = 1 },
+				new InEnumTable { Id = 2, Value = 2 },
+				new InEnumTable { Id = 3, Value = null },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var actual = table
+				.Where(i => ((InEnumValue?)i.Value).In(InEnumValue.Val1, null))
+				.Select(i => i.Id)
+				.OrderBy(id => id)
+				.ToList();
+
+			var expected = testData
+				.Where(i => i.Value == null || ((InEnumValue?)i.Value).In(InEnumValue.Val1, null))
+				.Select(i => i.Id)
+				.OrderBy(id => id)
+				.ToList();
+
+			AreEqual(actual, expected);
+		}
+
+#nullable disable
+
+		enum ReceiptStatus
+		{
+			Ok,
+			Fail,
+		}
+
+		class EnumStatusReceipt
+		{
+			[Column("RECEIPT_NO")]  public string ReceiptNo  { get; set; }
+			[Column("SERV_CATG")]   public ReceiptStatus  Status     { get; set; }
+			[Column("PROPERTY_ID")] public int?   PropertyId { get; set; }
+
+			[Association(ThisKey = nameof(PropertyId), OtherKey = nameof(ReceiptProperty.Id))]
+			public ReceiptProperty ReceiptProperty { get; }
+		}
+
+		class ReceiptProperty
+		{
+			public int Id { get; set; }
+		}
+
+		class OptionalStatusTable
+		{
+			[Column] public int    Id     { get; set; }
+			[Column] public ReceiptStatus? Status { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5666")]
+		public void NonNullableEnumColumnDoesNotLeakIntoAssociationJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db        = GetDataContext(context);
+			using var receipts  = db.CreateLocalTable(new[]
+			{
+				new EnumStatusReceipt { ReceiptNo = "R1", Status = ReceiptStatus.Ok,   PropertyId = 100 },
+				new EnumStatusReceipt { ReceiptNo = "R2", Status = ReceiptStatus.Fail, PropertyId = 100 },
+				new EnumStatusReceipt { ReceiptNo = "R3", Status = ReceiptStatus.Ok,   PropertyId = 999 },
+			});
+			using var lookup    = db.CreateLocalTable(new[]
+			{
+				new ReceiptProperty { Id = 100 },
+			});
+
+			var query =
+				from i in db.GetTable<EnumStatusReceipt>()
+				where i.ReceiptProperty.Id == 100
+				select new { i.ReceiptNo };
+
+			// R1 (Status = Ok = 0) and R2 (Status = Fail) both reference Property 100, so both must
+			// be returned. The bug injects "SERV_CATG <> 0" into the join, silently dropping R1.
+			var result = query.ToList();
+			Assert.That(result.Select(x => x.ReceiptNo), Is.EquivalentTo(new[] { "R1", "R2" }));
+
+			// The non-nullable enum column is never referenced by the query; it must not leak into the SQL.
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql, Does.Not.Contain("SERV_CATG"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5666")]
+		public void NullableEnumNullComparison([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool notEqual)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[]
+			{
+				new OptionalStatusTable { Id = 1, Status = ReceiptStatus.Ok }, // nullable-enum vs null goes through the generic null path (IS [NOT] NULL); the "<> 0" regression itself is guarded by NonNullableEnumColumnDoesNotLeakIntoAssociationJoin
+				new OptionalStatusTable { Id = 2, Status = null },
+			});
+
+			var query = notEqual
+				? db.GetTable<OptionalStatusTable>().Where(x => x.Status != null)
+				: db.GetTable<OptionalStatusTable>().Where(x => x.Status == null);
+
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql, Does.Contain(notEqual ? "IS NOT NULL" : "IS NULL"));
+
+			var result = query.Select(x => x.Id).ToList();
+			Assert.That(result, Is.EquivalentTo(notEqual ? new[] { 1 } : new[] { 2 }));
+		}
+
+#nullable restore
+
+		[Table(Name = "Person")]
+		public class PersonWithNullableEnumMiddleName
+		{
+			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+			[Column("PersonID", IsIdentity = true)]
+			[PrimaryKey]
+			        public int     ID         { get; set; }
+
+			[Column]public Gender  Gender     { get; set; }
+			[Column]public string  FirstName  { get; set; } = null!;
+			[DataType(DataType.NVarChar, Configuration = ProviderName.Sybase)]
+			[Column]public MiddleNameKind?   MiddleName { get; set; }
+			[Column]public string  LastName   { get; set; } = null!;
+		}
+
+		public enum MiddleNameKind
+		{
+			A
+		}
+
+		[ActiveIssue(5594, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Writing value of 'null' is not supported without explicit mapping to the YdbDbType",
+			Details = "YDB: null parameter requires an explicit type (potential type-propagation bug, not investigated)")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/693")]
+		public void NullableEnumConvertedToStringAndDataParameter([DataSources(false)] string context)
+		{
+			ResetPersonIdentity(context);
+
+			var ms = new MappingSchema();
+
+			ms.SetConverter<MiddleNameKind?, string?>((obj) =>
+			{
+				if (obj != null)
+					return obj.ToString();
+				return null;
+			});
+
+			ms.SetConverter<MiddleNameKind?,DataParameter>((obj) =>
+			{
+				if (obj != null)
+					return new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar };
+				return new DataParameter { Value = DBNull.Value };
+			});
+
+			ms.SetConverter<string, MiddleNameKind?>((txt) =>
+			{
+				if (string.IsNullOrEmpty(txt))
+					return null;
+#pragma warning disable CA2263 // Prefer generic overload when type is known
+				return (MiddleNameKind?)Enum.Parse(typeof(MiddleNameKind), txt, true);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
+			});
+
+			using (var db = GetDataContext(context, ms))
+			using (new RestoreBaseTables(db))
+			{
+				var obj = new PersonWithNullableEnumMiddleName
+				{
+					FirstName  = "a",
+					MiddleName = MiddleNameKind.A,
+					LastName   = "b",
+					Gender     = Gender.Male
+				};
+
+				int id1;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj.ID = id1 = 100;
+					db.Insert(obj);
+				}
+				else
+					id1 = db.InsertWithInt32Identity(obj);
+
+				var obj2 = new PersonWithNullableEnumMiddleName
+				{
+					FirstName  = "c",
+					MiddleName = null,
+					LastName   = "d",
+					Gender     = Gender.Male
+				};
+
+				int id2;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj2.ID = id2 = 101;
+					db.Insert(obj2);
+				}
+				else
+					id2 = db.InsertWithInt32Identity(obj2);
+
+				var obj3 = db.GetTable<PersonWithNullableEnumMiddleName>().First(_ => _.ID == id1);
+				var obj4 = db.GetTable<PersonWithNullableEnumMiddleName>().First(_ => _.ID == id2);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(obj4.MiddleName, Is.Null);
+					Assert.That(obj3.MiddleName, Is.Not.Null);
+				}
+			}
 		}
 	}
 }

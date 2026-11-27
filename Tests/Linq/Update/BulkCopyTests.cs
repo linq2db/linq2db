@@ -1461,5 +1461,135 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1107")]
+		public void BulkCopyDateTimeDiscriminatorColumn([DataSources(false)] string configuration)
+		{
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<DateTimeDiscriminatorRecord>())
+			{
+				((DataConnection)db).BulkCopy(GetDefaultBulkCopyOptions(configuration), new[] { new DateTimeDiscriminatorRecord() { TestDate = new DateTime(2018, 1, 1) } });
+			}
+		}
+
+		[Table(Name = "DateTimeDiscriminator")]
+		sealed class DateTimeDiscriminatorRecord
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public DateTime TestDate { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2433")]
+		public void ProviderSpecificBulkCopyOfEnumColumn(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var itb = db.CreateLocalTable<BulkCopyResourceRecord>();
+			var dto1 = new BulkCopyResourceRecord
+			{
+				ResourceID        = TestData.Guid1,
+				Status            = BulkCopyResourceStatus.Used,
+				ModifiedTimeStamp = TestData.DateTime - TimeSpan.FromHours(2),
+				Id                = TestData.Guid2
+			};
+
+			var options = GetDefaultBulkCopyOptions(context) with
+			{
+				CheckConstraints       = true,
+				BulkCopyType           = BulkCopyType.ProviderSpecific,
+				MaxBatchSize           = 5000,
+				UseInternalTransaction = false,
+				NotifyAfter            = 2000,
+				BulkCopyTimeout        = 0,
+				RowsCopiedCallback     = i => { }
+			};
+
+			((DataConnection)db).BulkCopy(options, new[] { dto1 });
+		}
+
+		public enum BulkCopyResourceStatus
+		{
+			Undefined = 0,
+			Used = 40,
+			Finished = 88
+		}
+
+		[Table]
+		public class BulkCopyResourceRecord
+		{
+			[Column]
+			public Guid Id { get; set; }
+
+			[Column]
+			public BulkCopyResourceStatus Status { get; set; }
+
+			[Column]
+			public Guid ResourceID { get; set; }
+
+			[Column]
+			public DateTime? ModifiedTimeStamp { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3056")]
+		public void BulkCopyDynamicColumnsStoreRowsToSchemaQualifiedTable([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var mappingSchema = new MappingSchema();
+			var fm            = new FluentMappingBuilder(mappingSchema);
+
+			fm.Entity<DynamicTableRow>()
+				//.HasIdentity(x => Sql.Property<int>(x, "Id"))
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Property(x => Sql.Property<string>(x, "Description"))
+				.Build();
+
+			var rows = new List<DynamicTableRow>();
+			var drow = new DynamicTableRow();
+			drow.Properties.Add("Id", 1);
+			drow.Properties.Add("Name", "n1");
+			drow.Properties.Add("Description", "d0");
+			rows.Add(drow);
+			drow = new DynamicTableRow();
+			drow.Properties.Add("Id", 2);
+			drow.Properties.Add("Name", "n2");
+			drow.Properties.Add("Description", "d00");
+			rows.Add(drow);
+			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
+			using (db.CreateLocalTable<DynamicBulkCopyTarget>())
+			{
+				var options = GetDefaultBulkCopyOptions(context) with
+				{
+					TableName    = DynamicBulkCopyTableName,
+					SchemaName   = "dbo",
+					MaxBatchSize = 100
+				};
+
+				db.BulkCopy(options, rows);
+			}
+		}
+
+		private const string DynamicBulkCopyTableName = "Table_3056";
+		[Table(DynamicBulkCopyTableName, Schema = "dbo")]
+		sealed class DynamicBulkCopyTarget
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+
+			[Column(DataType = DataType.VarChar, Length = 100)]
+			public string? Name;
+
+			[Column(DataType = DataType.VarChar, Length = 200)]
+			public string? Description;
+
+		}
+
+		[Table]
+		public class DynamicTableRow
+		{
+			[DynamicColumnsStore]
+			public Dictionary<string, object> Properties = new Dictionary<string, object>();
+		}
 	}
 }

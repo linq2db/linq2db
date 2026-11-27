@@ -9,7 +9,7 @@ namespace Tests.UserTests
 {
 	public class SkipValuesTestCache : TestBase
 	{
-		[Table("PR_1598_Insert_Table_Cache")]
+		[Table("SkipOnInsertCache")]
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]

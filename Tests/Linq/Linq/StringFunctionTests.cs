@@ -6,6 +6,8 @@ using System.Data.Linq.SqlClient;
 using System.Data;
 #endif
 
+using System.Data.Odbc;
+using System.Data.OleDb;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 
@@ -2345,7 +2347,6 @@ namespace Tests.Linq
 				.Count(r => r.Diagnosis.EndsWith("Persecution", StringComparison.OrdinalIgnoreCase)).ShouldBe(1);
 		}
 
-		#region Issue 3002
 		public abstract class MySpecialBaseClass : IConvertible, IEquatable<MySpecialBaseClass>
 		{
 			[NotNull]
@@ -2446,8 +2447,8 @@ namespace Tests.Linq
 			[Column]                                            public string?  Value2 { get; set; }
 		}
 
-		[Test]
-		public void Issue3002Test([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3002")]
+		public void IConvertibleStringTypeInComparisonParameter([DataSources(
 			// providers doesn't support IConvertible parameter coercion
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
@@ -2493,6 +2494,225 @@ namespace Tests.Linq
 				Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
 			}
 		}
-		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1925")]
+		public void BracketWildcardsInContainsAndLike([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, ProviderName.Sybase, TestProvName.AllClickHouse)]  string context)
+		{
+			var data = new[]
+			{
+				new LikeWildcardRow() { Id = 1, Value = "6" }, 
+				new LikeWildcardRow() { Id = 2, Value = "x[0-9]x" },
+				new LikeWildcardRow() { Id = 3, Value = "x[0x" },
+				new LikeWildcardRow() { Id = 4, Value = "x[]x" },
+				new LikeWildcardRow() { Id = 5, Value = "x]" },
+				new LikeWildcardRow() { Id = 6, Value = "]x" },
+			};
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var asParam = "[0-9]";
+			var asParamUnterm = "[0";
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(table.Where(r => r.Value!.EndsWith("]")).Select(r => r.Id).Single(), Is.EqualTo(5));
+				Assert.That(table.Where(r => r.Value!.StartsWith("]")).Select(r => r.Id).Single(), Is.EqualTo(6));
+
+				Assert.That(table.Where(r => r.Value!.Contains("-")).Select(r => r.Id).Single(), Is.EqualTo(2));
+
+				Assert.That(table.Where(r => r.Value!.Contains("[]")).ToList(), Has.Count.EqualTo(1));
+
+				Assert.That(table.Where(r => r.Value!.Contains("[0")).ToList(), Has.Count.EqualTo(2));
+
+				Assert.That(table.Where(r => r.Value!.Contains(asParamUnterm)).ToList(), Has.Count.EqualTo(2));
+
+				Assert.That(table.Where(r => r.Value!.Contains("[0-9]")).ToList(), Has.Count.EqualTo(1));
+
+				Assert.That(table.Where(r => r.Value!.Contains("6")).ToList(), Has.Count.EqualTo(1));
+			}
+
+			if (context.IsAnyOf(TestProvName.AllAccessOleDb))
+			{
+#pragma warning disable CA1416 // windows-specific API
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList(), Throws.TypeOf<OleDbException>());
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList(), Throws.TypeOf<OleDbException>());
+#pragma warning restore CA1416
+			}
+			else if (context.IsAnyOf(TestProvName.AllAccessOdbc))
+			{
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList(), Throws.TypeOf<OdbcException>());
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList(), Throws.TypeOf<OdbcException>());
+			}
+			// LibRed rejects the unterminated bracket as the Microsoft drivers do, with its own exception
+			else if (context.IsAnyOf(TestProvName.AllAccessLibRed))
+			{
+				Assert.That(
+					() => table
+						.Where(r => Sql.Like(r.Value, "[0"))
+						.ToList(),
+					Throws.TypeOf<ArgumentException>());
+				Assert.That(
+					() => table
+						.Where(r => Sql.Like(r.Value, asParamUnterm))
+						.ToList(),
+					Throws.TypeOf<ArgumentException>());
+			}
+			else
+			{
+				table.Where(r => Sql.Like(r.Value, "[0")).ToList();
+				table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList();
+			}
+
+			var expected = context.IsAnyOf(TestProvName.AllClickHouse) ? 0 : 1;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList(), Has.Count.EqualTo(expected));
+				Assert.That(table.Where(r => Sql.Like(r.Value, asParam)).ToList(), Has.Count.EqualTo(expected));
+			}
+		}
+
+		[Table]
+		sealed class LikeWildcardRow
+		{
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+		}
+
+		/*
+		 * IsNullOrWhiteSpace takes into account non-surrogate codepoints from unicode with White_Space property
+		 * Per latest Unicode 13 version those are (https://www.unicode.org/Public/13.0.0/ucd/PropList.txt):
+		 */
+		// use int for readable test name
+		private static readonly int[] WhiteSpaceChars = new int[]
+		{
+			0x09,
+			0x0A,
+			0x0B,
+			0x0C,
+			0x0D,
+			0x20,
+			0x85,
+			0xA0,
+			0x1680,
+			0x2000,
+			0x2001,
+			0x2002,
+			0x2003,
+			0x2004,
+			0x2005,
+			0x2006,
+			0x2007,
+			0x2008,
+			0x2009,
+			0x200A,
+			0x2028,
+			0x2029,
+			0x202F,
+			0x205F,
+			0x3000,
+		};
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2816")]
+		public void BasicValues([DataSources] string context)
+		{
+			var cnt = 0;
+
+			var testData = new[]
+			{
+				new WhiteSpaceTextRow() { Id = cnt++, Text = "" },
+				new WhiteSpaceTextRow() { Id = cnt++, Text = "a" },
+				new WhiteSpaceTextRow() { Id = cnt++, Text = " m " },
+				new WhiteSpaceTextRow() { Id = cnt++, Text = " " },
+				new WhiteSpaceTextRow() { Id = cnt++, Text = "  " },
+				new WhiteSpaceTextRow() { Id = cnt++, Text = null }
+			};
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from p in table
+						where string.IsNullOrWhiteSpace(p.Text)
+						select p;
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2816")]
+		public void UnicodeWhiteSpaceCharacters([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
+		{
+			if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
+				Assert.Inconclusive($"Character {(char)character} not supported by runtime");
+
+			var testData = GetTestCase((char)character, GetProviderName(context, out var isRemoteContext), out var supported);
+			if (!supported)
+				Assert.Inconclusive($"Character {(char)character} not supported by database");
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = (from p in table
+						 where !string.IsNullOrWhiteSpace(p.Text)
+						 select p).ToArray();
+
+			if (supported)
+			{
+				Assert.That(query, Has.Length.EqualTo(1));
+				Assert.That(query[0].Id, Is.EqualTo(3));
+			}
+			else
+			{
+				Assert.That(query, Has.Length.EqualTo(3));
+			}
+		}
+
+		private static WhiteSpaceTextRow[] GetTestCase(char character, string providerName, out bool supported)
+		{
+			supported = IsSupported(character, providerName);
+
+			return new[]
+			{
+				new WhiteSpaceTextRow()
+				{
+					Id = 1,
+					Text = $"{character}"
+				},
+				new WhiteSpaceTextRow()
+				{
+					Id = 2,
+					Text = $" {character} "
+				},
+				new WhiteSpaceTextRow()
+				{
+					Id = 3,
+					Text = $" {character}x "
+				}
+			};
+		}
+
+		private static bool IsSupported(char character, string providerName)
+		{
+			return providerName switch
+			{
+				string when providerName.IsAnyOf(TestProvName.AllAccess) =>
+					// only 4 characters including space supported
+					character is (char)0x20 or (char)0x1680 or (char)0x205F or (char)0x3000,
+
+#if AZURE
+				ProviderName.InformixDB2 =>
+					// TODO: fix azure instance locale
+					// currently fails on test data insert with
+					// ERROR [IX000] [IBM][IDS/UNIX64] Code-set conversion function failed due to illegal sequence or invalid value.
+					character <= 0xA0,
+#endif
+
+				_ => true,
+			};
+		}
+
+		[Table("WhiteSpaceTextRow")]
+		sealed class WhiteSpaceTextRow
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public string? Text { get; set; }
+		}
 	}
 }

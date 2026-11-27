@@ -28,9 +28,8 @@ namespace Tests.xUpdate
 			public DateTime? datetime2DataType { get; set; }
 		}
 
-		#region https://github.com/linq2db/linq2db/issues/200
-		[Test]
-		public void Issue200InSource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/200")]
+		public void MergeDateTimePrecisionInSource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -74,8 +73,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
-		public void Issue200InPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/200")]
+		public void MergeDateTimePrecisionInOnEqualityPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -117,8 +116,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
-		public void Issue200InPredicate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/200")]
+		public void MergeDateTimePrecisionInOnInequalityPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -165,8 +164,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
-		public void Issue200InInsert([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/200")]
+		public void MergeDateTimePrecisionInInsertSetter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -222,8 +221,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
-		public void Issue200InUpdate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/200")]
+		public void MergeDateTimePrecisionInUpdateSetter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -282,31 +281,9 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-		#endregion
 
-		#region https://github.com/linq2db/linq2db/issues/1007
-
-		[Table("Person")]
-		sealed class Person1007
-		{
-			[Column("PersonID"), Identity]
-			public int ID { get; set; }
-
-			[PrimaryKey]
-			public string FirstName { get; set; } = null!;
-
-			[Column]
-			public string LastName { get; set; } = null!;
-
-			[Column]
-			public string? MiddleName { get; set; }
-
-			[Column]
-			public Gender Gender { get; set; }
-		}
-
-		[Test]
-		public void Issue1007OnNewAPI([IdentityInsertMergeDataContextSource] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1007")]
+		public void MergeInsertAndUpdateOnIdentityTable([IdentityInsertMergeDataContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			var table = db.GetTable<TestMappingWithIdentity>();
@@ -345,7 +322,6 @@ namespace Tests.xUpdate
 				Assert.That(result[0].Field, Is.EqualTo(10));
 			}
 		}
-		#endregion
 
 		[Test]
 		public void TestDB2NullsInSource([IncludeDataSources(true, ProviderName.DB2)] string context)
@@ -829,8 +805,8 @@ namespace Tests.xUpdate
 		}
 		#endregion
 
-		[Test(Description = "Test query filter not used for target, but preserved for source")]
-		public void Issue3729Test([MergeDataContextSource] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3729")]
+		public void MergeKeepsQueryFilterOnSourceNotTarget([MergeDataContextSource] string context)
 		{
 			// prepare data before fiters applied
 			using (var db1 = GetDataContext(context))
@@ -865,7 +841,7 @@ namespace Tests.xUpdate
 
 		// HANA: Syntax error or access violation;257 sql syntax error: incorrect syntax near "WHEN MATCHED "
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3589")]
-		public void Issue3589Test([MergeDataContextSource(TestProvName.AllSapHana)] string context)
+		public void MergeWithAlwaysTrueOnCondition([MergeDataContextSource(TestProvName.AllSapHana)] string context)
 		{
 			// prepare data before fiters applied
 			using (var db1 = GetDataContext(context))
@@ -885,7 +861,7 @@ namespace Tests.xUpdate
 
 		// merge into CTE supported only by SQL Server
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4338")]
-		public void Issue4338Test([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeIntoCteWithAssociationFilter([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			// prepare data before fiters applied
 			using (var db1 = GetDataContext(context))
@@ -912,9 +888,8 @@ namespace Tests.xUpdate
 				.Merge();
 		}
 
-		#region issue 2918
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2918")]
-		public void Issue2918Test([MergeDataContextSource(TestProvName.AllSqlServer2016Minus, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void MergeUsingSourceWithStringAggregate([MergeDataContextSource(TestProvName.AllSqlServer2016Minus, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			// prepare data before fiters applied
 			using var db = GetDataContext(context);
@@ -958,7 +933,7 @@ namespace Tests.xUpdate
 		}
 
 		// use shorter name
-		[Table("Issue2918Table2")]
+		[Table("PatentAssessmentReviewer")]
 		sealed class PatentAssessmentTechnicalReviewer
 		{
 			[Column] public int PatentId { get; set; }
@@ -977,7 +952,6 @@ namespace Tests.xUpdate
 			[PrimaryKey] public int Id { get; set; }
 			[Column(CanBeNull = false, Length = 1000)] public string DisplayName { get; set; } = null!;
 		}
-		#endregion
 
 		// Blanket, plus the two providers that never get as far as the assertion: Firebird 2.5 and Informix reject
 		// the statement outright.
@@ -988,7 +962,7 @@ namespace Tests.xUpdate
 		[ActiveIssue(4584, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "A syntax error has occurred.", Details = "as Firebird 2.5 - refused before the assertion is reached.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
-		public void Issue4584Test([MergeDataContextSource(false)] string context)
+		public void MergeInsertFromClientRecordsParameterCount([MergeDataContextSource(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -1047,7 +1021,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		#region Issue 4584
 		class MyBaseClass
 		{
 			[Column, PrimaryKey]
@@ -1062,7 +1035,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
-		public void Issue_EnumerableSourceDuplicateColumnAlias([MergeDataContextSource(true)] string context)
+		public void MergeEnumerableSourceDuplicateColumnAlias([MergeDataContextSource(true)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<MyChildClass>();
@@ -1082,7 +1055,6 @@ namespace Tests.xUpdate
 				.InsertWhenNotMatched()
 				.Merge();
 		}
-		#endregion
 
 		public class UnusedSourceTable
 		{
@@ -1162,6 +1134,129 @@ namespace Tests.xUpdate
 			var record = tb.Where(r => r.Id != 1).SingleOrDefault();
 
 			Assert.That(record, Is.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1238")]
+		public void MergeOnTargetKeyWithNullKeyColumn([MergeDataContextSource(false)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<NullableKeyRecord>().Delete();
+
+				var record = new NullableKeyRecord()
+				{
+					Key1 = 143,
+					Key2 = null,
+					Data = 1
+				};
+
+				db.GetTable<NullableKeyRecord>()
+					.Merge()
+					.Using(new[] { record })
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+
+				db.GetTable<NullableKeyRecord>()
+					.Merge()
+					.Using(new[] { record })
+					.OnTargetKey()
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1238")]
+		public void MergeOnExplicitKeyWithNullKeyColumn([MergeDataContextSource(false)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<NullableKeyRecord>().Delete();
+
+				var record = new NullableKeyRecord()
+				{
+					Key1 = 143,
+					Key2 = null,
+					Data = 1
+				};
+
+				db.GetTable<NullableKeyRecord>()
+					.Merge()
+					.Using(new[] { record })
+					.On((t, s) => t.Key1 == s.Key1 && t.Key2 == s.Key2)
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+
+				db.GetTable<NullableKeyRecord>()
+					.Merge()
+					.Using(new[] { record })
+					.On((t, s) => t.Key1 == s.Key1 && t.Key2 == s.Key2)
+					.UpdateWhenMatched()
+					.InsertWhenNotMatched()
+					.Merge();
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+			}
+		}
+
+		[Table("InheritanceParent")]
+		public class NullableKeyRecord
+		{
+			[Column("InheritanceParentId"), PrimaryKey]           public int     Key1;
+			[Column("Name"),                PrimaryKey, Nullable] public string? Key2;
+			[Column("TypeDiscriminator")]                         public int?    Data;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3304")]
+		public void MergeInsertWithClassValueConvertedToIntParameter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<VersionedMergeTarget.RowVersion, int>(c => c?.Version ?? 0);
+			ms.SetConverter<VersionedMergeTarget.RowVersion, DataParameter>(version => new DataParameter()
+			{
+				DataType = DataType.Int32,
+				Value    = version?.Version ?? 0
+			});
+			ms.SetConverter<int, VersionedMergeTarget.RowVersion>(v => new VersionedMergeTarget.RowVersion() { Version = v });
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<VersionedMergeTarget>();
+			var data = new VersionedMergeTarget()
+			{
+				UserId = TestData.Guid1
+			};
+
+			var query = tb.Merge()
+					.Using(new[] {data })
+					.OnTargetKey()
+					.InsertWhenNotMatched();
+
+			query.Merge();
+		}
+
+		[Table]
+		public class VersionedMergeTarget
+		{
+			[Column    ] public RowVersion Version   { get; set; } = null!;
+			[Column    ] public DateTime?    UpdatedOn { get; set; }
+			[PrimaryKey] public Guid         UserId    { get; set; }
+			[Column    ] public Guid?        Value     { get; set; }
+
+			public class RowVersion
+			{
+				public int Version { get; set; }
+			}
 		}
 	}
 }

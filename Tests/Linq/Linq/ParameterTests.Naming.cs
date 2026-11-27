@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -174,6 +176,267 @@ namespace Tests.Linq
 			sql.Parameters
 				.Select(p => p.Name)
 				.ShouldBe(["segment"]);
+		}
+
+		// verifies that the proper SQL parameter name is used when constructing the query
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4254")]
+		public void VerifyParameterNameIsCorrect([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			// prep tables
+			{
+				using var db = GetDataContext(context);
+				// drop tables if they already exist
+				db.GetTable<ParamNameItemCategory>().Drop(false);
+				db.GetTable<ParamNameItemShare>().Drop(false);
+				db.GetTable<ParamNameItem>().Drop(false);
+				// create tables
+				db.CreateTable<ParamNameItem>();
+				db.CreateTable<ParamNameItemShare>();
+				db.CreateTable<ParamNameItemCategory>();
+			}
+			// run tests
+			try
+			{
+				// test 1
+				{
+					using var db = GetDataContext(context);
+
+					var now = TestData.DateTime;
+					var userId = TestData.Guid1;
+
+					var result = GetQuery(db, userId, now)
+						.Select(MediaItemSearchSharedResultProjection(now))
+						.ToList();
+				}
+
+				// test 2 (same query; should also work properly)
+				{
+					using var db = GetDataContext(context);
+
+					var now = TestData.DateTime3;
+					var userId = TestData.Guid2;
+
+					var result = GetQuery(db, userId, now)
+						.Select(MediaItemSearchSharedResultProjection(now))
+						.ToList();
+				}
+			}
+			finally
+			{
+				// drop tables
+				using var db = GetDataContext(context);
+				db.GetTable<ParamNameItemCategory>().Drop(false);
+				db.GetTable<ParamNameItemShare>().Drop(false);
+				db.GetTable<ParamNameItem>().Drop(false);
+			}
+
+			static Expression<Func<ParamNameItem, ParamNameSearchResult>> MediaItemSearchSharedResultProjection(DateTime now)
+			{
+				return x => new ParamNameSearchResult
+				{
+					CategoryIds = x.Categories.Select(y => y.CategoryId).ToList(),
+					IsUnvisited = x.UserShare.Any(y => y.ExpiresAt > now)
+				};
+			}
+
+			static IQueryable<ParamNameItem> GetQuery(IDataContext context, Guid userId, DateTime now)
+			{
+				return context.GetTable<ParamNameItem>()
+					.Where(x =>
+						x.UserShare.Any(y => y.UserId == userId && y.ExpiresAt > now) ||
+						x.UserShare.Any(y => y.CreatedById == userId && y.ExpiresAt > now));
+			}
+		}
+
+		public sealed class ParamNameSearchResult
+		{
+			public IList<Guid> CategoryIds { get; set; } = new List<Guid>();
+
+			public bool IsUnvisited { get; set; }
+		}
+
+		[Table("param_name_item_categories")]
+		public sealed class ParamNameItemCategory
+		{
+			[Column("id")]
+			[PrimaryKey]
+			public Guid Id { get; set; }
+
+			[Column("category_id")]
+			public Guid CategoryId { get; set; }
+
+			[Column("media_item_id")]
+			public Guid MediaItemId { get; set; }
+		}
+
+		[Table("param_name_item_shares")]
+		public sealed class ParamNameItemShare
+		{
+			[Column("id")]
+			[PrimaryKey]
+			public Guid Id { get; set; }
+
+			[Column("media_item_id")]
+			public Guid MediaItemId { get; set; }
+
+			[Column("created_by_id")]
+			public Guid CreatedById { get; set; }
+
+			[Column("user_id")]
+			public Guid UserId { get; set; }
+
+			[Column("expires_at")]
+			public DateTime ExpiresAt { get; set; }
+		}
+
+		[Table("param_name_items")]
+		public sealed class ParamNameItem
+		{
+			[Column("id")]
+			[PrimaryKey]
+			public Guid Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParamNameItemCategory.MediaItemId))]
+			public IList<ParamNameItemCategory> Categories { get; set; } = new List<ParamNameItemCategory>();
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParamNameItemShare.MediaItemId))]
+			public IList<ParamNameItemShare> UserShare { get; set; } = new List<ParamNameItemShare>();
+		}
+
+		[Table]
+		sealed class NamedParameterItem
+		{
+			[Column("id"), PrimaryKey] public int    Id    { get; set; }
+			[Column("value")]          public string Value { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5371")]
+		public void DataParameterNamePreserved([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var testData = new[]
+			{
+				new NamedParameterItem { Id = 1, Value = "ONE" },
+				new NamedParameterItem { Id = 2, Value = "two" },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result = table
+				.Where(x => Sql.Expr<bool>("LOWER(\"value\") = LOWER({0})", new DataParameter("@p1", "ONE", DataType.NVarChar)))
+				.ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].Id.ShouldBe(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5371")]
+		public void DataParameterNamePreservedMultiple([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var testData = new[]
+			{
+				new NamedParameterItem { Id = 1, Value = "ONE" },
+				new NamedParameterItem { Id = 2, Value = "two" },
+				new NamedParameterItem { Id = 3, Value = "three" },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result = table
+				.Where(x => Sql.Expr<bool>($"LOWER({Sql.FieldExpr(x.Value)}) = LOWER({new DataParameter("@p1", "ONE", DataType.NVarChar)})") ||
+				             Sql.Expr<bool>($"LOWER({Sql.FieldExpr(x.Value)}) = LOWER({new DataParameter("@p2", "two", DataType.NVarChar)})"))
+				.OrderBy(x => x.Id)
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5371")]
+		public void DataParameterNameInSqlStatement([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var testData = new[]
+			{
+				new NamedParameterItem { Id = 1, Value = "ONE" },
+				new NamedParameterItem { Id = 2, Value = "two" },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var query = table
+				.Where(x => Sql.Expr<bool>($"UPPER({Sql.FieldExpr(x.Value)}) = UPPER({new DataParameter("@p1", "ONE", DataType.NVarChar)})"));
+
+			var parameters = query.GetStatement().CollectParameters();
+
+			parameters.Length.ShouldBe(1);
+			parameters[0].Name.ShouldBe("@p1");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5371")]
+		public void DataParameterNullName([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var testData = new[]
+			{
+				new NamedParameterItem { Id = 1, Value = "ONE" },
+				new NamedParameterItem { Id = 2, Value = "two" },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result = table
+				.Where(x => Sql.Expr<bool>($"LOWER({Sql.FieldExpr(x.Value)}) = LOWER({new DataParameter(null, "ONE", DataType.NVarChar)})"))
+				.ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].Id.ShouldBe(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5371")]
+		public void DataParameterEmptyName([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var testData = new[]
+			{
+				new NamedParameterItem { Id = 1, Value = "ONE" },
+				new NamedParameterItem { Id = 2, Value = "two" },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result = table
+				.Where(x => Sql.Expr<bool>($"LOWER({Sql.FieldExpr(x.Value)}) = LOWER({new DataParameter("", "ONE", DataType.NVarChar)})"))
+				.ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].Id.ShouldBe(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5371")]
+		public void DataParameterNullNameAndExplicitNameMixed([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var testData = new[]
+			{
+				new NamedParameterItem { Id = 1, Value = "ONE" },
+				new NamedParameterItem { Id = 2, Value = "two" },
+				new NamedParameterItem { Id = 3, Value = "three" },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result = table
+				.Where(x => Sql.Expr<bool>($"LOWER({Sql.FieldExpr(x.Value)}) = LOWER({new DataParameter("@p1", "ONE", DataType.NVarChar)})") ||
+				             Sql.Expr<bool>($"LOWER({Sql.FieldExpr(x.Value)}) = LOWER({new DataParameter(null, "two", DataType.NVarChar)})"))
+				.OrderBy(x => x.Id)
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
 		}
 	}
 }

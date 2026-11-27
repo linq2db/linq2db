@@ -386,16 +386,16 @@ namespace Tests.Linq
 			GetData(db, new List<int?> { 3 });
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3017")]
 		[NoBaselines("Multithreading")]
-		public void Issue3017([IncludeDataSources(/*TestProvName.AllSqlServer, */TestProvName.AllClickHouse)] string context)
+		public void ConcurrentInWithAnonymousKeysList([IncludeDataSources(/*TestProvName.AllSqlServer, */TestProvName.AllClickHouse)] string context)
 		{
 			var tasks = new List<Task>();
 
 			for (var i = 0; i < 30; i++)
 			{
 				var local = i;
-				tasks.Add(Task.Run(() => Issue3017Action(context)));
+				tasks.Add(Task.Run(() => InWithAnonymousKeysAction(context)));
 			}
 
 			Task.WaitAll(tasks.ToArray());
@@ -404,7 +404,7 @@ namespace Tests.Linq
 				Assert.That(task.IsFaulted, Is.False);
 		}
 
-		private async Task Issue3017Action(string context)
+		private async Task InWithAnonymousKeysAction(string context)
 		{
 			using var db = GetDataContext(context);
 

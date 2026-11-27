@@ -987,8 +987,8 @@ namespace Tests.DataProvider
 			Assert.That(db.LastQuery!, Does.Contain("@"));
 		}
 
-		[Test]
-		public void Issue2763Test([IncludeDataSources(CurrentProvider)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2763")]
+		public void GetSchemaTrimsPaddedSchemaNames([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using var db = GetDataConnection(context);
 			// DB2 SYSCAT.COLUMNS.TABSCHEMA column is padded with spaces to max(schema.length) length despite it being of varchar type

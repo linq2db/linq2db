@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			// IBM.Data.Db2 provider has a bug, where it could type nullable column in set as non-nullable, because first
 			// part of set use non-nullable column
-			// see tests: Issue4220Test, UnionCteWithFilter
+			// see tests: UnionAllSiblingEntitiesWithTypedNullPlaceholders, UnionCteWithFilter
 			// as workaround we apply "NVL(x, NULL)" wrap to force column being nullable
 			// Required pre-conditions:
 			// 1. column in SET nullable

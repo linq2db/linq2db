@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
@@ -13,6 +14,8 @@ using LinqToDB.SqlQuery;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using NodaTime;
 
 using NUnit.Framework;
 
@@ -751,9 +754,9 @@ namespace Tests.Linq
 			record.AnotherBoolValue.ShouldBe(boolValue ? 'T' : 'F');
 		}
 
-		public class Issue3684DateTimeNullConverter : ValueConverterFunc<DateTime?, System.Data.SqlTypes.SqlDateTime>
+		public class SqlDateTimeNullHandlingConverter : ValueConverterFunc<DateTime?, System.Data.SqlTypes.SqlDateTime>
 		{
-			public Issue3684DateTimeNullConverter() : base(
+			public SqlDateTimeNullHandlingConverter() : base(
 				model =>
 				{
 					if (model == null)
@@ -773,17 +776,17 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		public class Issue3684Table
+		public class SqlDateTimeConvTable
 		{
 			[PrimaryKey, Identity                                                  ] public int       Id                   { get; set; }
-			[ValueConverter(ConverterType = typeof(Issue3684DateTimeNullConverter))]
+			[ValueConverter(ConverterType = typeof(SqlDateTimeNullHandlingConverter))]
 			[Column(DataType = DataType.DateTime2, Precision = 0)                  ] public DateTime? FirstAppointmentTime { get; set; }
-			[ValueConverter(ConverterType = typeof(Issue3684DateTimeNullConverter))]
+			[ValueConverter(ConverterType = typeof(SqlDateTimeNullHandlingConverter))]
 			[Column(DataType = DataType.DateTime)                                  ] public DateTime? PassportDateOfIssue  { get; set; }
 		}
 
-		[Test]
-		public void Issue3684Test([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3684")]
+		public void ValueConverterFuncHandlesNullsForSqlDateTime([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			// remote context serialization for SqlDateTime
 			var ms = new MappingSchema();
@@ -791,10 +794,10 @@ namespace Tests.Linq
 			ms.SetConvertExpression<string, SqlDateTime>(value => DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture)));
 
 			using var db    = GetDataContext(context, ms);
-			using var table = db.CreateLocalTable<Issue3684Table>();
+			using var table = db.CreateLocalTable<SqlDateTimeConvTable>();
 
-			table.Insert(() => new Issue3684Table());
-			table.Insert(() => new Issue3684Table() { FirstAppointmentTime = TestData.DateTime0, PassportDateOfIssue = TestData.DateTime3 });
+			table.Insert(() => new SqlDateTimeConvTable());
+			table.Insert(() => new SqlDateTimeConvTable() { FirstAppointmentTime = TestData.DateTime0, PassportDateOfIssue = TestData.DateTime3 });
 
 			var data = table.OrderBy(_ => _.Id).ToArray();
 
@@ -836,30 +839,30 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		public class Issue3830TestTable
+		public class BoolConverterTable
 		{
 			[PrimaryKey                                                                        ] public int   Id    { get; set; }
 			[Column(DataType = DataType.Char, Length = 1), BoolConverter                       ] public bool  Bool1 { get; set; }
 			[Column(DataType = DataType.Char, Length = 1), BoolConverterNullable               ] public bool? Bool2 { get; set; }
 			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), BoolConverterNulls] public bool  Bool3 { get; set; }
 
-			public static readonly Issue3830TestTable[] TestData = new Issue3830TestTable[]
+			public static readonly BoolConverterTable[] TestData = new BoolConverterTable[]
 			{
-				new Issue3830TestTable() { Id = 1, Bool1 = true,  Bool2 = null,  Bool3 = false },
-				new Issue3830TestTable() { Id = 2, Bool1 = false, Bool2 = null,  Bool3 = true  },
-				new Issue3830TestTable() { Id = 3, Bool1 = false, Bool2 = true,  Bool3 = false },
-				new Issue3830TestTable() { Id = 4, Bool1 = true,  Bool2 = false, Bool3 = true  },
+				new BoolConverterTable() { Id = 1, Bool1 = true,  Bool2 = null,  Bool3 = false },
+				new BoolConverterTable() { Id = 2, Bool1 = false, Bool2 = null,  Bool3 = true  },
+				new BoolConverterTable() { Id = 3, Bool1 = false, Bool2 = true,  Bool3 = false },
+				new BoolConverterTable() { Id = 4, Bool1 = true,  Bool2 = false, Bool3 = true  },
 			};
 		}
 
-		[Test]
-		public void Issue3830Test([DataSources] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3830")]
+		public void BoolColumnConverterInPredicates([DataSources] string context, [Values] bool inline)
 		{
 			using var db        = GetDataContext(context);
 			db.InlineParameters = inline;
-			using var table     = db.CreateLocalTable(Issue3830TestTable.TestData);
+			using var table     = db.CreateLocalTable(BoolConverterTable.TestData);
 
-			foreach (var record in Issue3830TestTable.TestData)
+			foreach (var record in BoolConverterTable.TestData)
 			{
 				// bool_field=value
 				AssertRecord(record, table.Where(r => r.Bool1 == record.Bool1 && r.Bool2 == record.Bool2 && r.Bool3 == record.Bool3).ToArray());
@@ -875,7 +878,7 @@ namespace Tests.Linq
 				if (record.Bool2 != null ) AssertRecord(record, table.Where(r => r.Bool2 != null && r.Bool1 == record.Bool1 && r.Bool3 == record.Bool3).ToArray());
 			}
 
-			static void AssertRecord(Issue3830TestTable record, Issue3830TestTable[] result)
+			static void AssertRecord(BoolConverterTable record, BoolConverterTable[] result)
 			{
 				Assert.That(result, Has.Length.EqualTo(1));
 				using (Assert.EnterMultipleScope())
@@ -888,13 +891,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue3830OrderByTest([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3830")]
+		public void OrderByBoolColumnWithConverter([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(Issue3830TestTable.TestData);
+			using var table = db.CreateLocalTable(BoolConverterTable.TestData);
 
-			var expected = Issue3830TestTable.TestData
+			var expected = BoolConverterTable.TestData
 				.OrderBy(r => r.Bool1)
 				.ThenBy(r => r.Id)
 				.Select(r => r.Id)
@@ -935,7 +938,7 @@ namespace Tests.Linq
 				select p);
 		}
 
-		static class Issue5075
+		static class EnumConverterModel
 		{
 			public sealed class Table
 			{
@@ -976,12 +979,12 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5075")]
-		public void Issue5075Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void EnumWithStringConverterComparedToNullable([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue5075.Table.Data);
+			using var tb = db.CreateLocalTable(EnumConverterModel.Table.Data);
 
-			Issue5075.EnumValue? value = Issue5075.EnumValue.User;
+			EnumConverterModel.EnumValue? value = EnumConverterModel.EnumValue.User;
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -1010,7 +1013,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue5310Table
+		class ConvertedArrayColumnTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1029,32 +1032,32 @@ namespace Tests.Linq
 				Two = 2
 			}
 
-			public static readonly Issue5310Table[] Data =
+			public static readonly ConvertedArrayColumnTable[] Data =
 			[
 				new () { Id = 1 }
 			];
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5310")]
-		public void Issue5310Test([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		public void UpdateWithOutputAppliesValueConverter([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue5310Table.Data);
+			using var tb = db.CreateLocalTable(ConvertedArrayColumnTable.Data);
 
 			var data = tb
 				.Where(s => s.Id == 1)
-				.Set(s => s.Types, [Issue5310Table.PaymentType.One])
+				.Set(s => s.Types, [ConvertedArrayColumnTable.PaymentType.One])
 				.UpdateWithOutput((_, inserted) => inserted)
 				.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(1));
 			Assert.That(data[0].Types, Is.Not.Null.And.Length.EqualTo(1));
-			Assert.That(data[0].Types[0], Is.EqualTo(Issue5310Table.PaymentType.One));
+			Assert.That(data[0].Types[0], Is.EqualTo(ConvertedArrayColumnTable.PaymentType.One));
 		}
 
-		sealed class Issue5351YonConverterAttribute : ValueConverterAttribute
+		sealed class YesNoConverterAttribute : ValueConverterAttribute
 		{
-			public Issue5351YonConverterAttribute(string yes, string? no)
+			public YesNoConverterAttribute(string yes, string? no)
 			{
 				ValueConverter = new ValueConverter<bool, string?>(
 					b => b ? yes : no,
@@ -1095,10 +1098,10 @@ namespace Tests.Linq
 			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
 			public string? NoConversion { get; set; }
 
-			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), Issue5351YonConverter(yes: "X", no: null)]
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), YesNoConverter(yes: "X", no: null)]
 			public bool Test1 { get; set; }
 
-			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), Issue5351YonConverter(yes: "X", no: null)]
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), YesNoConverter(yes: "X", no: null)]
 			public bool Test2 { get; set; }
 		}
 
@@ -1163,7 +1166,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("({0} > 0)", ServerSideOnly = true, IsPredicate = true)]
-		static bool Issue5505IsPositive(int x) => throw new ServerSideOnlyException(nameof(Issue5505IsPositive));
+		static bool IsPositive(int x) => throw new ServerSideOnlyException(nameof(IsPositive));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
 		public void UpdateValuesWithUnrelatedFunctionConversion([DataSources] string context, [Values] bool inline)
@@ -1182,7 +1185,7 @@ namespace Tests.Linq
 			// character(1)").
 			var affected = db.GetTable<TableWithConverterValue>()
 				.Where(x => x.Id == 1)
-				.Set(x => x.Test1, x => Issue5505IsPositive(x.Id))
+				.Set(x => x.Test1, x => IsPositive(x.Id))
 				.Update();
 
 			if (context.SupportsRowcount())
@@ -1611,31 +1614,29 @@ namespace Tests.Linq
 			rows.Select(r => r.Code).ShouldBe(['A', null, 'B']);
 		}
 
-		#region Issue 5975 / 5976
-
-		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
-		static DateTime Issue5975FromStore(DateTime v) => v.AddHours(-1);
+		static DateTime HourShiftToStore  (DateTime v) => v.AddHours(1);
+		static DateTime HourShiftFromStore(DateTime v) => v.AddHours(-1);
 
 		[Table]
-		sealed class Issue5975Row
+		sealed class ShiftedDateRow
 		{
 			[PrimaryKey] public int       Id    { get; set; }
 			[Column]     public DateTime  Plain { get; set; }
 			[Column]     public DateTime? Date  { get; set; }
 		}
 
-		static MappingSchema Issue5975MappingSchema()
+		static MappingSchema HourShiftMappingSchema()
 		{
 			var ms = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
-				.Entity<Issue5975Row>()
+				.Entity<ShiftedDateRow>()
 					.Property(e => e.Plain)
-						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+						.HasConversion(v => HourShiftToStore(v), v => HourShiftFromStore(v))
 					.Property(e => e.Date)
 						.HasConversion(
-							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
-							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+							v => v != null ? (DateTime?)HourShiftToStore(v.Value) : null,
+							v => v != null ? (DateTime?)HourShiftFromStore(v.Value) : null)
 				.Build();
 
 			return ms;
@@ -1644,10 +1645,10 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
 		public void InsertServerSideValueIntoClientConvertedColumn([DataSources] string context)
 		{
-			using var db = GetDataContext(context, Issue5975MappingSchema());
-			using var t  = db.CreateLocalTable<Issue5975Row>();
+			using var db = GetDataContext(context, HourShiftMappingSchema());
+			using var t  = db.CreateLocalTable<ShiftedDateRow>();
 
-			t.Insert(() => new Issue5975Row { Id = 1, Plain = Sql.CurrentTimestamp, Date = Sql.CurrentTimestamp });
+			t.Insert(() => new ShiftedDateRow { Id = 1, Plain = Sql.CurrentTimestamp, Date = Sql.CurrentTimestamp });
 
 			var row = t.Single();
 			row.Date.ShouldNotBeNull();
@@ -1659,14 +1660,14 @@ namespace Tests.Linq
 			var stored = new DateTime(2020, 1, 1, 10, 0, 0);
 			var test   = new DateTime(2026, 6, 6, 1, 1, 1);
 
-			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var db = GetDataContext(context, HourShiftMappingSchema());
 			using var t  = db.CreateLocalTable(
 			[
-				new Issue5975Row { Id = 1, Plain = stored, Date = stored },
-				new Issue5975Row { Id = 2, Plain = stored, Date = null   },
+				new ShiftedDateRow { Id = 1, Plain = stored, Date = stored },
+				new ShiftedDateRow { Id = 2, Plain = stored, Date = null   },
 			]);
 
-			t.Update(x => new Issue5975Row { Date = x.Date != null ? test : Sql.DateAdd(Sql.DateParts.Day, 1, x.Plain) });
+			t.Update(x => new ShiftedDateRow { Date = x.Date != null ? test : Sql.DateAdd(Sql.DateParts.Day, 1, x.Plain) });
 
 			var rows = t.OrderBy(r => r.Id).ToArray();
 
@@ -1688,12 +1689,12 @@ namespace Tests.Linq
 		{
 			var value = new DateTime(2020, 1, 1, 10, 0, 0);
 
-			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var db = GetDataContext(context, HourShiftMappingSchema());
 			using var t  = db.CreateLocalTable(
 			[
-				new Issue5975Row { Id = 1, Plain = value, Date = value             },
-				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
-				new Issue5975Row { Id = 3, Plain = value, Date = null              },
+				new ShiftedDateRow { Id = 1, Plain = value, Date = value             },
+				new ShiftedDateRow { Id = 2, Plain = value, Date = value.AddDays(1) },
+				new ShiftedDateRow { Id = 3, Plain = value, Date = null              },
 			]);
 
 			t
@@ -1728,9 +1729,9 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
-				.Entity<Issue5975Row>()
+				.Entity<ShiftedDateRow>()
 					.Property(e => e.Plain)
-						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+						.HasConversion(v => HourShiftToStore(v), v => HourShiftFromStore(v))
 					.Property(e => e.Date)
 						.HasConversion(toStore, fromStore)
 				.Build();
@@ -1743,36 +1744,36 @@ namespace Tests.Linq
 			return spelling switch
 			{
 				NullableConversionSpelling.NullOnTheLeft => NullableSpellingMappingSchema(
-					v => null != v ? (DateTime?)Issue5975ToStore(v.Value)   : null,
-					v => null != v ? (DateTime?)Issue5975FromStore(v.Value) : null),
+					v => null != v ? (DateTime?)HourShiftToStore(v.Value)   : null,
+					v => null != v ? (DateTime?)HourShiftFromStore(v.Value) : null),
 
 				NullableConversionSpelling.HasValue => NullableSpellingMappingSchema(
-					v => v.HasValue ? (DateTime?)Issue5975ToStore(v.Value)   : null,
-					v => v.HasValue ? (DateTime?)Issue5975FromStore(v.Value) : null),
+					v => v.HasValue ? (DateTime?)HourShiftToStore(v.Value)   : null,
+					v => v.HasValue ? (DateTime?)HourShiftFromStore(v.Value) : null),
 
 				NullableConversionSpelling.EqualsNull => NullableSpellingMappingSchema(
-					v => v == null ? null : (DateTime?)Issue5975ToStore(v.Value),
-					v => v == null ? null : (DateTime?)Issue5975FromStore(v.Value)),
+					v => v == null ? null : (DateTime?)HourShiftToStore(v.Value),
+					v => v == null ? null : (DateTime?)HourShiftFromStore(v.Value)),
 
 				NullableConversionSpelling.NotHasValue => NullableSpellingMappingSchema(
-					v => !v.HasValue ? null : (DateTime?)Issue5975ToStore(v.Value),
-					v => !v.HasValue ? null : (DateTime?)Issue5975FromStore(v.Value)),
+					v => !v.HasValue ? null : (DateTime?)HourShiftToStore(v.Value),
+					v => !v.HasValue ? null : (DateTime?)HourShiftFromStore(v.Value)),
 
 				NullableConversionSpelling.DefaultForNull => NullableSpellingMappingSchema(
-					v => v != null ? Issue5975ToStore(v.Value)   : default(DateTime?),
-					v => v != null ? Issue5975FromStore(v.Value) : default(DateTime?)),
+					v => v != null ? HourShiftToStore(v.Value)   : default(DateTime?),
+					v => v != null ? HourShiftFromStore(v.Value) : default(DateTime?)),
 
 				NullableConversionSpelling.NewForNull => NullableSpellingMappingSchema(
-					v => v != null ? Issue5975ToStore(v.Value)   : new DateTime?(),
-					v => v != null ? Issue5975FromStore(v.Value) : new DateTime?()),
+					v => v != null ? HourShiftToStore(v.Value)   : new DateTime?(),
+					v => v != null ? HourShiftFromStore(v.Value) : new DateTime?()),
 
 				NullableConversionSpelling.GetValueOrDefault => NullableSpellingMappingSchema(
-					v => Issue5975ToStore(v.GetValueOrDefault()),
-					v => Issue5975FromStore(v.GetValueOrDefault())),
+					v => HourShiftToStore(v.GetValueOrDefault()),
+					v => HourShiftFromStore(v.GetValueOrDefault())),
 
 				NullableConversionSpelling.UnguardedValue => NullableSpellingMappingSchema(
-					v => Issue5975ToStore(v!.Value),
-					v => Issue5975FromStore(v!.Value)),
+					v => HourShiftToStore(v!.Value),
+					v => HourShiftFromStore(v!.Value)),
 
 				_ => throw new ArgumentOutOfRangeException(nameof(spelling)),
 			};
@@ -1790,9 +1791,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, NullableSpellingMappingSchema(spelling));
 			using var t  = db.CreateLocalTable(
 			[
-				new Issue5975Row { Id = 1, Plain = value, Date = value             },
-				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
-				new Issue5975Row { Id = 3, Plain = value, Date = null              },
+				new ShiftedDateRow { Id = 1, Plain = value, Date = value             },
+				new ShiftedDateRow { Id = 2, Plain = value, Date = value.AddDays(1) },
+				new ShiftedDateRow { Id = 3, Plain = value, Date = null              },
 			]);
 
 			t
@@ -1812,12 +1813,12 @@ namespace Tests.Linq
 			var value  = new DateTime(2020, 1, 1, 10, 0, 0);
 			var value2 = value.AddDays(1);
 
-			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var db = GetDataContext(context, HourShiftMappingSchema());
 			using var t  = db.CreateLocalTable(
 			[
-				new Issue5975Row { Id = 1, Plain = value, Date = value2 },
-				new Issue5975Row { Id = 2, Plain = value, Date = null   },
-				new Issue5975Row { Id = 3, Plain = value, Date = value2 },
+				new ShiftedDateRow { Id = 1, Plain = value, Date = value2 },
+				new ShiftedDateRow { Id = 2, Plain = value, Date = null   },
+				new ShiftedDateRow { Id = 3, Plain = value, Date = value2 },
 			]);
 
 			t
@@ -1929,8 +1930,8 @@ namespace Tests.Linq
 				.ShouldBe([1]);
 		}
 
-		static readonly Func<DateTime, DateTime> DelegateToStore   = Issue5975ToStore;
-		static readonly Func<DateTime, DateTime> DelegateFromStore = Issue5975FromStore;
+		static readonly Func<DateTime, DateTime> DelegateToStore   = HourShiftToStore;
+		static readonly Func<DateTime, DateTime> DelegateFromStore = HourShiftFromStore;
 		static readonly Func<DateTime, DateTime> OtherToStore      = v => v.AddHours(2);
 		static readonly Func<DateTime, DateTime> OtherFromStore    = v => v.AddHours(-2);
 
@@ -1952,7 +1953,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
-				.Entity<Issue5975Row>()
+				.Entity<ShiftedDateRow>()
 					.Property(e => e.Plain)
 						.HasConversion(PlainInvoking(plainToStore), PlainInvoking(plainFromStore))
 					.Property(e => e.Date)
@@ -1976,8 +1977,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, DelegateMappingSchema(DelegateToStore, DelegateFromStore));
 			using var t  = db.CreateLocalTable(
 			[
-				new Issue5975Row { Id = 1, Plain = value, Date = value             },
-				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
+				new ShiftedDateRow { Id = 1, Plain = value, Date = value             },
+				new ShiftedDateRow { Id = 2, Plain = value, Date = value.AddDays(1) },
 			]);
 
 			t
@@ -2105,8 +2106,8 @@ namespace Tests.Linq
 					v => v != null ? (DateTime?)v.Value.AddHours(-2) : null),
 
 				DivergentNullableConversion.ReversedGuard => NullableSpellingMappingSchema(
-					v => v != null ? null : (DateTime?)Issue5975ToStore(v.GetValueOrDefault()),
-					v => v != null ? null : (DateTime?)Issue5975FromStore(v.GetValueOrDefault())),
+					v => v != null ? null : (DateTime?)HourShiftToStore(v.GetValueOrDefault()),
+					v => v != null ? null : (DateTime?)HourShiftFromStore(v.GetValueOrDefault())),
 
 				DivergentNullableConversion.OtherDelegate => DelegateMappingSchema(OtherToStore, OtherFromStore),
 
@@ -2119,7 +2120,7 @@ namespace Tests.Linq
 			};
 
 			using var db = GetDataContext(context, ms);
-			using var t  = db.CreateLocalTable<Issue5975Row>();
+			using var t  = db.CreateLocalTable<ShiftedDateRow>();
 
 			var compared = () => t
 				.Where(r => r.Plain == r.Date)
@@ -2128,8 +2129,8 @@ namespace Tests.Linq
 			var refusal = string.Format(
 				CultureInfo.InvariantCulture,
 				ErrorHelper.Error_ValueConverter_DivergentOperands,
-				nameof(Issue5975Row.Plain),
-				nameof(Issue5975Row.Date));
+				nameof(ShiftedDateRow.Plain),
+				nameof(ShiftedDateRow.Date));
 
 			compared
 				.ShouldThrow<LinqToDBException>()
@@ -2291,14 +2292,14 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue5976RowA
+		sealed class NullableConvertedDateRowA
 		{
 			[PrimaryKey] public int       Id   { get; set; }
 			[Column]     public DateTime? Date { get; set; }
 		}
 
 		[Table]
-		sealed class Issue5976RowB
+		sealed class NullableConvertedDateRowB
 		{
 			[PrimaryKey] public int       Id   { get; set; }
 			[Column]     public DateTime? Date { get; set; }
@@ -2311,21 +2312,21 @@ namespace Tests.Linq
 			var ms    = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
-				.Entity<Issue5976RowA>()
+				.Entity<NullableConvertedDateRowA>()
 					.Property(e => e.Date)
 						.HasConversion(
-							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
-							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
-				.Entity<Issue5976RowB>()
+							v => v != null ? (DateTime?)HourShiftToStore(v.Value) : null,
+							v => v != null ? (DateTime?)HourShiftFromStore(v.Value) : null)
+				.Entity<NullableConvertedDateRowB>()
 					.Property(e => e.Date)
 						.HasConversion(
-							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
-							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+							v => v != null ? (DateTime?)HourShiftToStore(v.Value) : null,
+							v => v != null ? (DateTime?)HourShiftFromStore(v.Value) : null)
 				.Build();
 
 			using var db = GetDataContext(context, ms);
-			using var a  = db.CreateLocalTable([new Issue5976RowA { Id = 1, Date = value }]);
-			using var b  = db.CreateLocalTable([new Issue5976RowB { Id = 2, Date = value }]);
+			using var a  = db.CreateLocalTable([new NullableConvertedDateRowA { Id = 1, Date = value }]);
+			using var b  = db.CreateLocalTable([new NullableConvertedDateRowB { Id = 2, Date = value }]);
 
 			var rows = a
 				.Select(r => new { r.Id, r.Date })
@@ -2338,7 +2339,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue5976RowC
+		sealed class PlainConvertedDateRow
 		{
 			[PrimaryKey] public int      Id   { get; set; }
 			[Column]     public DateTime Date { get; set; }
@@ -2351,19 +2352,19 @@ namespace Tests.Linq
 			var ms    = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
-				.Entity<Issue5976RowA>()
+				.Entity<NullableConvertedDateRowA>()
 					.Property(e => e.Date)
 						.HasConversion(
-							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
-							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
-				.Entity<Issue5976RowC>()
+							v => v != null ? (DateTime?)HourShiftToStore(v.Value) : null,
+							v => v != null ? (DateTime?)HourShiftFromStore(v.Value) : null)
+				.Entity<PlainConvertedDateRow>()
 					.Property(e => e.Date)
-						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+						.HasConversion(v => HourShiftToStore(v), v => HourShiftFromStore(v))
 				.Build();
 
 			using var db = GetDataContext(context, ms);
-			using var a  = db.CreateLocalTable([new Issue5976RowA { Id = 1, Date = value }]);
-			using var c  = db.CreateLocalTable([new Issue5976RowC { Id = 2, Date = value }]);
+			using var a  = db.CreateLocalTable([new NullableConvertedDateRowA { Id = 1, Date = value }]);
+			using var c  = db.CreateLocalTable([new PlainConvertedDateRow { Id = 2, Date = value }]);
 
 			var rows = a
 				.Select(r => new { r.Id, r.Date })
@@ -2386,22 +2387,22 @@ namespace Tests.Linq
 			var ms    = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
-				.Entity<Issue5976RowA>()
+				.Entity<NullableConvertedDateRowA>()
 					.Property(e => e.Date)
 						.HasConversion(
-							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
-							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
-				.Entity<Issue5976RowC>()
+							v => v != null ? (DateTime?)HourShiftToStore(v.Value) : null,
+							v => v != null ? (DateTime?)HourShiftFromStore(v.Value) : null)
+				.Entity<PlainConvertedDateRow>()
 					.Property(e => e.Date)
-						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+						.HasConversion(v => HourShiftToStore(v), v => HourShiftFromStore(v))
 				.Build();
 
 			using var db = GetDataContext(context, ms);
-			using var c  = db.CreateLocalTable([new Issue5976RowC { Id = 1, Date = value }]);
+			using var c  = db.CreateLocalTable([new PlainConvertedDateRow { Id = 1, Date = value }]);
 			using var a  = db.CreateLocalTable(
 			[
-				new Issue5976RowA { Id = 2, Date = value },
-				new Issue5976RowA { Id = 3, Date = null  },
+				new NullableConvertedDateRowA { Id = 2, Date = value },
+				new NullableConvertedDateRowA { Id = 3, Date = null  },
 			]);
 
 			var rows = c
@@ -2414,8 +2415,6 @@ namespace Tests.Linq
 				.Select(r => r.Date)
 				.ShouldBe([value, value, null]);
 		}
-
-		#endregion
 
 		[Table]
 		sealed class DivergentConversionRow
@@ -2739,6 +2738,504 @@ namespace Tests.Linq
 					.Contains(total));
 
 			count.ShouldBe(3);
+		}
+
+		public class CustomStringField
+		{
+			public string Field1 { get; set; } = null!;
+
+			public static CustomStringField? FromString(string? str)
+			{
+				if (string.IsNullOrEmpty(str))
+					return null;
+				return new CustomStringField { Field1 = str! };
+			}
+
+			public override string ToString()
+			{
+				return Field1;
+			}
+		}
+
+		[Table("CustomFieldRecord")]
+		public class CustomFieldStringRecord
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string? Field1 { get; set; }
+		}
+
+		[Table("CustomFieldRecord")]
+		public class CustomFieldRecord
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public CustomStringField? Field1 { get; set; }
+		}
+
+		[Table("CustomFieldRecord")]
+		public class CustomFieldNVarCharRecord
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.NVarChar)]
+			public CustomStringField? Field1 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1373")]
+		public void InsertCustomTypeUntypedParameterConverter([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<string?, CustomStringField?>(s => CustomStringField.FromString(s));
+			ms.SetConvertExpression<CustomStringField, DataParameter>(
+				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<CustomFieldStringRecord>();
+			db.Insert(new CustomFieldNVarCharRecord()
+			{
+				Id = 1
+			});
+
+			db.Insert(new CustomFieldNVarCharRecord()
+			{
+				Id = 2,
+				Field1 = new CustomStringField()
+			});
+
+			db.Insert(new CustomFieldNVarCharRecord()
+			{
+				Id = 3,
+				Field1 = new CustomStringField() { Field1 = "test" }
+			});
+
+			AssertCustomFieldRows(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1373")]
+		public void InsertCustomTypeTypedParameterConverter([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<string?, CustomStringField?>(s => CustomStringField.FromString(s));
+			ms.SetConvertExpression<CustomStringField, DataParameter>(
+				_ => _ == null
+					? new DataParameter(null, null, DataType.NVarChar)
+					: new DataParameter(null, _.ToString(), DataType.NVarChar), false);
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<CustomFieldStringRecord>();
+			db.Insert(new CustomFieldRecord()
+			{
+				Id = 1
+			});
+
+			db.Insert(new CustomFieldRecord()
+			{
+				Id = 2,
+				Field1 = new CustomStringField()
+			});
+
+			db.Insert(new CustomFieldRecord()
+			{
+				Id = 3,
+				Field1 = new CustomStringField() { Field1 = "test" }
+			});
+
+			AssertCustomFieldRows(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1373")]
+		public void InsertCustomTypeTypedParameterConverterConditionalValue([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<string?, CustomStringField?>(s => CustomStringField.FromString(s));
+			ms.SetConvertExpression<CustomStringField, DataParameter>(
+				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<CustomFieldStringRecord>();
+			db.Insert(new CustomFieldRecord()
+			{
+				Id = 1
+			});
+
+			db.Insert(new CustomFieldRecord()
+			{
+				Id = 2,
+				Field1 = new CustomStringField()
+			});
+
+			db.Insert(new CustomFieldRecord()
+			{
+				Id = 3,
+				Field1 = new CustomStringField() { Field1 = "test" }
+			});
+
+			AssertCustomFieldRows(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1373")]
+		public void InsertExpressionCustomTypeUntypedParameterConverter([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<string?, CustomStringField?>(s => CustomStringField.FromString(s));
+			ms.SetConvertExpression<CustomStringField, DataParameter>(
+				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<CustomFieldStringRecord>();
+			db.GetTable<CustomFieldNVarCharRecord>().Insert(() => new CustomFieldNVarCharRecord()
+			{
+				Id = 1,
+				Field1 = null
+			});
+
+			db.GetTable<CustomFieldNVarCharRecord>().Insert(() => new CustomFieldNVarCharRecord()
+			{
+				Id = 2,
+				Field1 = new CustomStringField()
+			});
+
+			db.GetTable<CustomFieldNVarCharRecord>().Insert(() => new CustomFieldNVarCharRecord()
+			{
+				Id = 3,
+				Field1 = new CustomStringField() { Field1 = "test" }
+			});
+
+			AssertCustomFieldRows(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1373")]
+		public void InsertExpressionCustomTypeTypedParameterConverter([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<string?, CustomStringField?>(s => CustomStringField.FromString(s));
+			ms.SetConvertExpression<CustomStringField?, DataParameter>(
+				_ => _ == null
+					? new DataParameter(null, null, DataType.NVarChar)
+					: new DataParameter(null, _.ToString(), DataType.NVarChar), false);
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<CustomFieldStringRecord>();
+			db.GetTable<CustomFieldRecord>().Insert(() => new CustomFieldRecord()
+			{
+				Id = 1,
+				Field1 = null
+			});
+
+			db.GetTable<CustomFieldRecord>().Insert(() => new CustomFieldRecord()
+			{
+				Id = 2,
+				Field1 = new CustomStringField()
+			});
+
+			db.GetTable<CustomFieldRecord>().Insert(() => new CustomFieldRecord()
+			{
+				Id = 3,
+				Field1 = new CustomStringField() { Field1 = "test" }
+			});
+
+			AssertCustomFieldRows(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1373")]
+		public void InsertExpressionCustomTypeTypedParameterConverterConditionalValue([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<string?, CustomStringField?>(s => CustomStringField.FromString(s));
+			ms.SetConvertExpression<CustomStringField, DataParameter>(
+				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<CustomFieldStringRecord>();
+			db.GetTable<CustomFieldRecord>().Insert(() => new CustomFieldRecord()
+			{
+				Id = 1,
+				Field1 = null
+			});
+
+			db.GetTable<CustomFieldRecord>().Insert(() => new CustomFieldRecord()
+			{
+				Id = 2,
+				Field1 = new CustomStringField()
+			});
+
+			db.GetTable<CustomFieldRecord>().Insert(() => new CustomFieldRecord()
+			{
+				Id = 3,
+				Field1 = new CustomStringField() { Field1 = "test" }
+			});
+
+			AssertCustomFieldRows(db);
+		}
+
+		private static void AssertCustomFieldRows(Model.ITestDataContext db)
+		{
+			var result = db.GetTable<CustomFieldRecord>().OrderBy(_ => _.Id).ToArray();
+			Assert.That(result, Has.Length.EqualTo(3));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Field1, Is.Null);
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Field1, Is.Null);
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Not.Null);
+			}
+
+			Assert.That(result[2].Field1!.Field1, Is.EqualTo("test"));
+		}
+
+		[Table]
+		sealed class NodaLocalDateTimeTable
+		{
+			[Column] public int Id    { get; set; }
+			[Column] public LocalDateTime Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2560")]
+		public void InsertCustomTimeStructWithConvertersAndValueToSql([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetDataType(typeof(LocalDateTime), new SqlDataType(new DbDataType(typeof(DateTime), DataType.DateTime)));
+
+			ms.SetConverter<LocalDateTime, DataParameter>(timeStamp =>
+				new DataParameter
+				{
+					Value = new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
+						timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond),
+					DataType = DataType.DateTime
+				});
+
+			ms.SetConverter<LocalDateTime, DateTime>(timeStamp =>
+				new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
+					timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond));
+
+			ms.SetValueToSqlConverter(typeof(LocalDateTime), (sb, dt, v) =>
+				{
+					var d = (LocalDateTime)v;
+					var d1 = new DateTime(d.Year, d.Month, d.Day, d.Hour,
+						d.Minute, d.Second, d.Millisecond);
+
+					sb.Append($"'{d1}'");
+				}
+			);
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<NodaLocalDateTimeTable>())
+			{
+				var item = new NodaLocalDateTimeTable
+				{
+					Value = LocalDateTime.FromDateTime(TestData.DateTime),
+				};
+
+				db.Insert(item);
+			}
+		}
+
+		[Table]
+		sealed class CustomTypeConvertedTable
+		{
+			[Column] [PrimaryKey] public int Id { get; set; }
+
+			private string? _value;
+
+			[Column(DataType = DataType.NVarChar)]
+			public AnredeAuswahlliste? Value
+			{
+				get => new AnredeAuswahlliste(_value);
+				set => _value = value?.Value;
+			}
+		}
+
+		public class AnredeAuswahlliste
+		{
+			public string? Value { get; set; }
+
+			public const string Herr = "Herr";
+
+			public const string Frau = "Frau";
+			
+			public AnredeAuswahlliste(string? value)
+			{
+				Value = value;
+			}
+
+			public static implicit operator AnredeAuswahlliste(string value)
+				=> new AnredeAuswahlliste(value);
+
+			public static implicit operator string?(AnredeAuswahlliste auswahlliste)
+				=> auswahlliste.Value;
+
+			public static bool operator ==(AnredeAuswahlliste? leftSide, string? rightSide)
+				=> leftSide?.Value == rightSide;
+
+			public static bool operator !=(AnredeAuswahlliste? leftSide, string? rightSide)
+				=> leftSide?.Value != rightSide;
+
+			public override bool Equals(object? obj)
+			{
+				return base.Equals(obj);
+			}
+
+			public override int GetHashCode()
+			{
+				return base.GetHashCode();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2566")]
+		public void CustomTypeWithConvertersInPredicate([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var items = new[]
+			{
+				new CustomTypeConvertedTable { Id = 1, Value = AnredeAuswahlliste.Frau },
+				new CustomTypeConvertedTable { Id = 2, Value = AnredeAuswahlliste.Herr }
+			};
+
+			var ms = new MappingSchema();
+			ms.SetConverter<string, AnredeAuswahlliste>(s => new AnredeAuswahlliste(s));
+			ms.SetConverter<AnredeAuswahlliste, DataParameter>(v => new DataParameter("", v.Value));
+
+			using var db = GetDataContext(context, ms);
+			using var dataClasses = db.CreateLocalTable(items);
+			var simple = dataClasses
+					.Where(m => m.Value == AnredeAuswahlliste.Frau)
+					.ToList();
+
+			Assert.That(simple, Has.Count.EqualTo(1));
+
+			var inList = dataClasses
+					.Where(m => m.Value!.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
+					.ToList();
+
+			Assert.That(inList, Has.Count.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2566")]
+		public void CustomTypeWithFluentConversionInPredicate([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var items = new[]
+			{
+				new CustomTypeConvertedTable { Id = 1, Value = AnredeAuswahlliste.Frau },
+				new CustomTypeConvertedTable { Id = 2, Value = AnredeAuswahlliste.Herr }
+			};
+
+			var ms = new MappingSchema();
+			var builder = new FluentMappingBuilder(ms);
+			builder.Entity<CustomTypeConvertedTable>().Property(e => e.Value).HasConversion(v => v!.Value, s => new AnredeAuswahlliste(s)).Build();
+
+			using var db = GetDataContext(context, ms);
+			using var dataClasses = db.CreateLocalTable(items);
+			var simple = dataClasses
+					.Where(m => m.Value == AnredeAuswahlliste.Frau)
+					.ToList();
+
+			Assert.That(simple, Has.Count.EqualTo(1));
+
+			var inList = dataClasses
+					.Where(m => m.Value!.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
+					.ToList();
+
+			Assert.That(inList, Has.Count.EqualTo(2));
+		}
+
+		public readonly struct WrappedShort(short value) : IEquatable<WrappedShort>
+		{
+			[ExpressionMethod(nameof(GetRawValueExpression))]
+			public short RawValue
+			{
+				get;
+			} = value;
+
+			/*
+			public static implicit operator short(WrappedShort v) => v.RawValue;
+			public static implicit operator WrappedShort(short v) => new(v);
+			*/
+
+			public override bool Equals     (object? obj)        => obj is WrappedShort other && RawValue == other.RawValue;
+			public override int  GetHashCode()                   => RawValue.GetHashCode();
+			public          bool Equals     (WrappedShort other) => RawValue == other.RawValue;
+
+			private static Expression<Func<WrappedShort, short>> GetRawValueExpression()
+			{
+				return x => (short)(object)x;
+			}
+		}
+
+		[Table]
+		sealed class GroupStatsType
+		{
+			[Column, PrimaryKey]       public int    Id          { get; set; }
+			[Column]                   public int    GroupId     { get; set; }
+			[Column(CanBeNull = true)] public short? StatsTypeId { get; set; }
+		}
+
+		[Table]
+		sealed class StatsType
+		{
+			[Column(DataType = DataType.Int16), PrimaryKey] public WrappedShort Id       { get; set; }
+			[Column(CanBeNull = false)]                     public string       FullName { get; set; } = default!;
+		}
+
+		static MappingSchema CreateWrappedShortMappingSchema()
+		{
+			var ms      = new MappingSchema();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<StatsType>()
+				.Property(e => e.Id)
+				.HasConversion(v => v.RawValue, v => new WrappedShort(v));
+
+			builder.Build();
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5454")]
+		public void StructRawValueLeftJoin([DataSources] string context)
+		{
+			var groupData = new[]
+			{
+				new GroupStatsType { Id = 1, GroupId = 10, StatsTypeId = 1 },
+				new GroupStatsType { Id = 2, GroupId = 20, StatsTypeId = 2 },
+				new GroupStatsType { Id = 3, GroupId = 30, StatsTypeId = null },
+			};
+
+			var typeData = new[]
+			{
+				new StatsType { Id = new WrappedShort(1), FullName = "Type1" },
+				new StatsType { Id = new WrappedShort(2), FullName = "Type2" },
+			};
+
+			using var db     = GetDataContext(context, CreateWrappedShortMappingSchema());
+			using var groups = db.CreateLocalTable(groupData);
+			using var types  = db.CreateLocalTable(typeData);
+
+			// Issue #5454: x.Id.RawValue == g.StatsTypeId throws
+			// "The LINQ expression '(int?)(int)x.Id.RawValue' could not be converted to SQL"
+			var query =
+				from g in groups
+				from st in types.LeftJoin(x => x.Id.RawValue == g.StatsTypeId)
+				select new
+				{
+					g.StatsTypeId,
+					StatsTypeName = st.FullName,
+					g.GroupId,
+				};
+
+			var result = query.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(3));
 		}
 	}
 }

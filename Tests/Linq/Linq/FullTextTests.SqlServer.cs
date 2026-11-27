@@ -15,9 +15,8 @@ namespace Tests.Linq
 	[Category(TestCategory.FTS)]
 	public partial class FullTextTests : TestBase
 	{
-		#region Issue 386 Tests
-		[Test]
-		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/386")]
+		public void FreeTextTableInnerJoinByExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using var db = new NorthwindDB(context);
 			var q =
@@ -31,8 +30,8 @@ namespace Tests.Linq
 			db.LastQuery!.ShouldContain("FREETEXTTABLE([Categories], ([Description]), @term)");
 		}
 
-		[Test]
-		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/386")]
+		public void FreeTextTableLeftJoinByExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using var db = new NorthwindDB(context);
 			var q
@@ -45,7 +44,6 @@ namespace Tests.Linq
 
 			db.LastQuery!.ShouldContain("FREETEXTTABLE([Categories], ([Description]), N'sweetest candy bread and dry meat')");
 		}
-		#endregion
 
 		#region FreeTextTable
 		[Test]
@@ -1900,7 +1898,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5191")]
-		public void ConditionConvertIssue([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		public void ContainsPredicateOverJoinedTables([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using var db = new NorthwindDB(context);
 

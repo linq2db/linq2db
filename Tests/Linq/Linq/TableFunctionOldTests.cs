@@ -229,44 +229,5 @@ namespace Tests.Linq
 
 			q.ToList();
 		}
-
-		[Test, Category(TestCategory.FTS)]
-		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
-		{
-			using var db = new NorthwindDB(context);
-			var q =
-					from t in db.Product
-					join c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat") on t.CategoryID equals c.Key
-					orderby t.ProductName descending
-					select t;
-			var list = q.ToList();
-			Assert.That(list, Is.Not.Empty);
-		}
-
-		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.AllNorthwind)] string context)
-		{
-			using var db = new NorthwindDB(context);
-			var q =
-					from t in db.Product
-					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
-					orderby t.ProductName descending
-					select t;
-			var list = q.ToList();
-			Assert.That(list, Is.Not.Empty);
-		}
-
-		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
-		{
-			using var db = new NorthwindDB(context);
-			var q
-					= from t in db.Product
-					  from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
-					  orderby t.ProductName descending
-					  select t;
-			var list = q.ToList();
-			Assert.That(list, Is.Not.Empty);
-		}
 	}
 }

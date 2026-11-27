@@ -398,9 +398,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Issue 5254
-
-		static class Issue5254Types
+		static class ClientConversionUnmappedTypes
 		{
 			public sealed class Output
 			{
@@ -574,23 +572,23 @@ namespace Tests.Linq
 		public void ClientConversion_UnmappedOperators([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();
-			Issue5254Types.TenderId.LinqToDbMapping(ms);
+			ClientConversionUnmappedTypes.TenderId.LinqToDbMapping(ms);
 
 			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable(Issue5254Types.Tender.Data);
+			using var tb = db.CreateLocalTable(ClientConversionUnmappedTypes.Tender.Data);
 
 			// pass
-			AssertQuery(tb.Select(i => new Issue5254Types.Output { Id = (Guid)i.Id }));
+			AssertQuery(tb.Select(i => new ClientConversionUnmappedTypes.Output { Id = (Guid)i.Id }));
 
-			var res = tb.Where(r => r.Id == Guid.Empty).Select(i => new Issue5254Types.Output { Id = (Guid)i.Id }).FirstOrDefault();
+			var res = tb.Where(r => r.Id == Guid.Empty).Select(i => new ClientConversionUnmappedTypes.Output { Id = (Guid)i.Id }).FirstOrDefault();
 			Assert.That(res, Is.Null);
 
-			res = tb.Select(i => new Issue5254Types.Output { Id = (Guid)i.Id }).FirstOrDefault();
+			res = tb.Select(i => new ClientConversionUnmappedTypes.Output { Id = (Guid)i.Id }).FirstOrDefault();
 			Assert.That(res, Is.Not.Null);
-			Assert.That(res.Id, Is.EqualTo((Issue5254Types.ShortId)(Guid)Issue5254Types.Tender.Data[0].Id));
+			Assert.That(res.Id, Is.EqualTo((ClientConversionUnmappedTypes.ShortId)(Guid)ClientConversionUnmappedTypes.Tender.Data[0].Id));
 		}
 
-		static class Issue5254ServerTypes
+		static class ClientConversionMappedTypes
 		{
 			public sealed class Output
 			{
@@ -692,19 +690,17 @@ namespace Tests.Linq
 		public void ClientConversion_MappedOperators([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();
-			Issue5254ServerTypes.TenderId.LinqToDbMapping(ms);
+			ClientConversionMappedTypes.TenderId.LinqToDbMapping(ms);
 
 			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable(Issue5254ServerTypes.Tender.Data);
+			using var tb = db.CreateLocalTable(ClientConversionMappedTypes.Tender.Data);
 
 			// pass
-			AssertQuery(tb.Select(i => new Issue5254ServerTypes.Output { Id = (Guid)i.Id }));
+			AssertQuery(tb.Select(i => new ClientConversionMappedTypes.Output { Id = (Guid)i.Id }));
 
 			// bad mapping
-			_ = tb.Select(i => new Issue5254ServerTypes.Output { Id = (Guid)i.Id }).FirstOrDefault();
+			_ = tb.Select(i => new ClientConversionMappedTypes.Output { Id = (Guid)i.Id }).FirstOrDefault();
 		}
-
-		#endregion
 
 		#region Prefer client-side
 		class ImplicitValue<TData> : IEquatable<ImplicitValue<TData>>
