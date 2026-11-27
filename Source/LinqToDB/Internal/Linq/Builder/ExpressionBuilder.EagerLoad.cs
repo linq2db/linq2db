@@ -423,7 +423,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		static Type BuildValueTupleType(Type[] types)
+		internal static Type BuildValueTupleType(Type[] types)
 		{
 			if (types.Length == 0)
 				throw new ArgumentException("Cannot build ValueTuple for 0 fields.", nameof(types));
@@ -441,7 +441,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return typeof(ValueTuple<,,,,,,,>).MakeGenericType(topTypes);
 		}
 
-		static Expression BuildValueTupleNew(Type tupleType, Expression[] args)
+		internal static Expression BuildValueTupleNew(Type tupleType, Expression[] args)
 		{
 			if (args.Length <= 7)
 			{
@@ -615,6 +615,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (e.NodeType != ExpressionType.Extension || e is not SqlEagerLoadExpression eagerLoad)
 						return e;
+
+					// A query batch stream has a harvester of its own whatever the strategy: it is read after the main row, so
+					// it shares nothing with a buffered load of the same sequence.
+					if (eagerLoad.Stream != null)
+						return ProcessStreamedEagerLoad(eagerLoad, queryParameter, localHarvesters);
 
 					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
 						return cachedExpression;

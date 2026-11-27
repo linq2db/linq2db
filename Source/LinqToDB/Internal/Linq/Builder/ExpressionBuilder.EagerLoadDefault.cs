@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -144,6 +145,86 @@ namespace LinqToDB.Internal.Linq.Builder
 			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 
 			return resultExpression;
+		}
+
+		static MethodInfo _buildStreamHarvesterQueryMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildStreamHarvesterQuery), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
+
+		// A stream part of an explicit query batch: a top-level part, so a detached query of its own, read after the main row.
+		Expression ProcessStreamedEagerLoad(SqlEagerLoadExpression eagerLoad, ParameterExpression queryParameter, List<Harvester> harvesters)
+		{
+			var detailType     = TypeHelper.GetEnumerableElementType(eagerLoad.SequenceExpression.Type);
+			var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, eagerLoad.SequenceExpression, new SelectQuery()));
+
+			return _buildStreamHarvesterQueryMethodInfo
+				.MakeGenericMethod(detailType)
+				.InvokeExt<Expression>(this, new object[] { detailSequence, queryParameter, harvesters, eagerLoad.Stream!, eagerLoad.Type });
+		}
+
+		Expression BuildStreamHarvesterQuery<T>(
+			IBuildContext        sequence,
+			ParameterExpression  queryParameter,
+			List<Harvester>      harvesters,
+			QueryBatchStreamInfo stream,
+			Type                 sourceType)
+		{
+			var query = new Query<T>(DataContext);
+
+			query.Init(sequence);
+			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
+
+			var harvesterCount = harvesters.Count;
+
+			if (!BuildQuery(query, sequence, queryParameter, ref harvesters!, []))
+				return query.ErrorExpression!;
+
+			// A collection inside a stream part would be read into a list before the stream, which the stream exists to avoid.
+			if (harvesters.Count != harvesterCount)
+				throw new LinqToDBException(ErrorHelper.Error_QueryBatch_StreamCollectionPart);
+
+			var idx = harvesters.Count;
+
+			harvesters.Add(new StreamHarvester<T>(query, stream));
+
+			return Expression.Convert(Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)), sourceType);
+		}
+
+		// The harvester of a query batch stream. It is combinable as a detached child is, but its step follows the main row and
+		// is never harvested: the batch reads its rows through the source in its slot (IStreamHarvester).
+		sealed class StreamHarvester<T>(Query<T> query, QueryBatchStreamInfo stream) : Harvester, IStepMaterializer, IStreamHarvester
+		{
+			public QueryBatchStreamInfo Stream => stream;
+
+			// Sequential: nothing runs here; the source runs the part when the batch reads it, still inside Execute.
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
+				=> new SequentialQueryBatchStreamSource<T>(query, dataContext, expressions, context);
+
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+				=> Task.FromResult(Execute(dataContext, expressions, context));
+
+			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
+			{
+				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, parameters, values);
+			}
+
+			public bool CanCombine => query.GetResultFromReader != null;
+
+			public QueryInfo? GetCombinableQueryInfo()
+				=> query.QueryInfo;
+
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
+			{
+				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values, context);
+			}
+
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> throw new InvalidOperationException("A query batch stream step is read by the batch, not harvested.");
+
+			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+				=> throw new InvalidOperationException("A query batch stream step is read by the batch, not harvested.");
+
+			public object CreateCombinedSource(QueryBatchStreamCursor cursor, int stepIndex, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext context)
+				=> new CombinedQueryBatchStreamSource<T>(cursor, stepIndex, query, dataContext, expressions, context);
 		}
 
 		// A detached child is a standalone single-statement SELECT (no per-master correlation) whose whole result

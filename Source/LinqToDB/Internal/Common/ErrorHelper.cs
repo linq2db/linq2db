@@ -30,6 +30,18 @@
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
 		public const string Error_QueryHints_In_QueryBatch         = "QueryBatch cannot run while the context has pending QueryHints or NextQueryHints.";
 		public const string Error_QueryBatch_TaskPart              = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch.";
+		public const string Error_QueryBatch_NotExecuted           = "The query batch has not been executed.";
+		public const string Error_QueryBatch_AlreadyExecuted       = "The query batch has already been executed.";
+		public const string Error_QueryBatch_Running               = "The query batch is being executed.";
+		public const string Error_QueryBatch_StreamsOpen           = "The query batch has streams that are not read yet.";
+		public const string Error_QueryBatch_StreamNotReady        = "The query batch stream cannot be read: its batch has not been executed.";
+		public const string Error_QueryBatch_StreamClosed          = "The query batch stream is closed: its batch failed or was disposed before the stream was read to its end.";
+		public const string Error_QueryBatch_StreamWrongMode       = "The query batch stream is read the way its batch ran: with foreach after Execute, with await foreach after ExecuteAsync.";
+		public const string Error_QueryBatch_StreamAlreadyRead     = "The query batch stream has already been read, or was skipped by reading a later stream.";
+		public const string Error_QueryBatch_StreamCollectionPart  = "A query batch stream part cannot load a collection.";
+		public const string Error_QueryBatch_StreamClientPart      = "A query batch stream part must query the database, not a client-side sequence.";
+
+		internal const string Error_CombinedCommand_FewerResultSets = "Combined command returned fewer result sets than the scenario planned.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";

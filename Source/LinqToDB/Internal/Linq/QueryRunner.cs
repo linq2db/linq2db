@@ -744,10 +744,12 @@ namespace LinqToDB.Internal.Linq
 		// a very large fan-out). Non-combinable harvesters (KeyedQuery / CteUnion / detached / buffer / no-op) run sequentially
 		// FIRST (in index order; they may depend on each other), then the combinable children + main are modelled as a
 		// SqlCommandScenario of Reader steps and grouped by PlanScenario. Each combinable child result set is buffered into
-		// its HarvesterResult; the main result set (always the last step of the last group) streams lazily from that group's
-		// reader, which this enumerable owns. Created only when the provider supports multi-statement batches with multiple
-		// result sets and at least one harvester is combinable (see TryGetCombinedEagerEnumerable); a purely non-combinable
-		// load falls back to the sequential InitHarvesters path.
+		// its HarvesterResult; the main result set streams lazily from its group's reader, which this enumerable owns. It is
+		// the last step unless an explicit query batch has stream parts: their steps follow it, and once its row is read the
+		// reader passes to a QueryBatchStreamCursor that reads them, running any group the statement limit split off. Created
+		// only when the provider supports multi-statement batches with multiple result sets and at least one harvester is
+		// combinable (see TryGetCombinedEagerEnumerable); a purely non-combinable load falls back to the sequential
+		// InitHarvesters path.
 		sealed class EagerResultEnumerable<T> : IResultEnumerable<T>
 		{
 			readonly IDataContext      _dataContext;
@@ -760,6 +762,11 @@ namespace LinqToDB.Internal.Linq
 			// index (the main query is the last step); combinable + main are the combined groups, self-executing are singletons.
 			readonly int[]             _combinableIndexes;
 			readonly int[]             _nonCombinableIndexes;
+			// An explicit query batch's streams: combinable steps that follow the main, in command order (callbacks, then
+			// handles, each in the order they were added). Read by the batch after the main row, never harvested.
+			readonly int[]             _streamIndexes;
+			// Every step rendered into the combined commands besides the main: the children and the streams.
+			readonly int[]             _renderedIndexes;
 
 			public EagerResultEnumerable(
 				IDataContext      dataContext,
@@ -776,17 +783,41 @@ namespace LinqToDB.Internal.Linq
 
 				var combinable    = new List<int>(harvesters.Length);
 				var nonCombinable = new List<int>(harvesters.Length);
+				List<int>? streams = null;
 
 				for (var i = 0; i < harvesters.Length; i++)
 				{
-					if (IsCombinable(harvesters[i]))
-						combinable.Add(i);
-					else
+					if (!IsCombinable(harvesters[i]))
 						nonCombinable.Add(i);
+					else if (harvesters[i] is IStreamHarvester)
+						(streams ??= new List<int>()).Add(i);
+					else
+						combinable.Add(i);
 				}
 
 				_combinableIndexes    = combinable.ToArray();
 				_nonCombinableIndexes = nonCombinable.ToArray();
+				_streamIndexes        = streams == null ? [] : OrderStreams(harvesters, streams);
+				_renderedIndexes      = _streamIndexes.Length == 0 ? _combinableIndexes : [.. _combinableIndexes, .. _streamIndexes];
+			}
+
+			// Callbacks first, then handles, each in the order they were added: the order the batch reads them in.
+			static int[] OrderStreams(Harvester[] harvesters, List<int> streams)
+			{
+				if (streams.Count > 1)
+				{
+					streams.Sort((x, y) =>
+					{
+						var sx = ((IStreamHarvester)harvesters[x]).Stream;
+						var sy = ((IStreamHarvester)harvesters[y]).Stream;
+
+						return sx.IsCallback != sy.IsCallback
+							? (sx.IsCallback ? -1 : 1)
+							: sx.Index.CompareTo(sy.Index);
+					});
+				}
+
+				return streams.ToArray();
 			}
 
 			static bool IsCombinable(Harvester harvester)
@@ -871,7 +902,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				var values = new SqlParameterValues();
 
-				foreach (var i in _combinableIndexes)
+				foreach (var i in _renderedIndexes)
 					((IStepMaterializer)_harvesters[i]).AddCombinableParameterValues(values, _expressions, _dataContext, _parameters, context);
 
 				SetParameters(_query, _expressions, _dataContext, _parameters, values, context);
@@ -892,7 +923,7 @@ namespace LinqToDB.Internal.Linq
 				var mainStepIndex = _harvesters.Length;
 				var steps         = new SqlCommandStep[mainStepIndex + 1];
 
-				foreach (var i in _combinableIndexes)
+				foreach (var i in _renderedIndexes)
 					steps[i] = new SqlCommandStep { Statement = GetStepStatement(i), Kind = SqlStepKind.Reader };
 
 				foreach (var i in _nonCombinableIndexes)
@@ -916,14 +947,21 @@ namespace LinqToDB.Internal.Linq
 			// the context slot its result lands in. Self-executing harvesters are NOT here — they run as their own commands
 			// before the batch — so the slots are deliberately sparse, which is why CombinedReaderStep carries the slot rather
 			// than relying on position.
+			// An explicit batch's streams follow the main, so the batch row is read, and its strict reads checked, before any
+			// stream row.
 			CombinedReaderStep[] BuildBatchSteps()
 			{
-				var result = new CombinedReaderStep[_combinableIndexes.Length + 1];
+				var result = new CombinedReaderStep[_combinableIndexes.Length + 1 + _streamIndexes.Length];
 
 				for (var i = 0; i < _combinableIndexes.Length; i++)
 					result[i] = new CombinedReaderStep(_combinableIndexes[i], GetStepStatement(_combinableIndexes[i]));
 
 				result[_combinableIndexes.Length] = new CombinedReaderStep(_harvesters.Length, GetStepStatement(_harvesters.Length));
+
+				for (var i = 0; i < _streamIndexes.Length; i++)
+				{
+					result[_combinableIndexes.Length + 1 + i] = new CombinedReaderStep(_streamIndexes[i], GetStepStatement(_streamIndexes[i]));
+				}
 
 				return result;
 			}
@@ -977,7 +1015,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					// The children's statements are read here too, and GetCommand prepares each of them in place under its own
 					// monitor. Taken main first, then children in index order; no other site holds two QueryInfo monitors.
-					using var childMonitors = new CombinableMonitors(_harvesters, _combinableIndexes);
+					using var childMonitors = new CombinableMonitors(_harvesters, _renderedIndexes);
 
 					var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
 					var values         = CollectParameterValues(context);
@@ -1025,6 +1063,11 @@ namespace LinqToDB.Internal.Linq
 				var closeAfterUse = ((IDataContext)dataConnection).CloseAfterUse;
 				((IDataContext)dataConnection).CloseAfterUse = false;
 
+				var cursor        = CreateStreamSources(context);
+				var terminalGroup = -1;
+				var yielded       = false;
+				var completed     = false;
+
 				DataReaderWrapper? mainReader = null;
 
 				try
@@ -1037,17 +1080,52 @@ namespace LinqToDB.Internal.Linq
 						group => steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
 						(stepIndex, groupIndex) => context.SetResult(stepIndex, _harvesters[stepIndex].Harvest(_dataContext, _expressions, context, reader: null)),
 						(i, dr) => context.SetResult(i, _harvesters[i].Harvest(_dataContext, _expressions, context, dr)),
-						terminalStepIndex: _harvesters.Length);
+						terminalStepIndex: _harvesters.Length,
+						terminalGroup: cursor == null ? null : g => terminalGroup = g);
 
 					if (mainReader != null)
+					{
 						foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, context, mainReader.DataReader!))
+						{
+							yielded = true;
 							yield return item;
+						}
+					}
+
+					completed = true;
 				}
 				finally
 				{
-					((IDataContext)dataConnection).CloseAfterUse = closeAfterUse;
-					mainReader?.Dispose();
+					// The batch row read in full: an explicit batch's streams take the reader over, with the connection and the
+					// CloseAfterUse restore. A run that yielded no row - an empty batch row the batch then refuses - binds no
+					// stream, so nothing would own the reader: everything is released here, as before.
+					if (cursor != null && completed && yielded && mainReader != null)
+					{
+						cursor.Attach(dataConnection, _dataContext, closeAfterUse, mainReader, groups, (group, groupIndex) => commandByGroup[groupIndex]!, terminalGroup, _harvesters.Length);
+					}
+					else
+					{
+						cursor?.Fail();
+						((IDataContext)dataConnection).CloseAfterUse = closeAfterUse;
+						mainReader?.Dispose();
+					}
 				}
+			}
+
+			// Each stream slot holds its source before the main row is mapped, since the stream steps are never harvested.
+			QueryBatchStreamCursor? CreateStreamSources(SqlCommandExecutionContext context)
+			{
+				if (_streamIndexes.Length == 0)
+					return null;
+
+				var cursor = new QueryBatchStreamCursor(_streamIndexes);
+
+				foreach (var i in _streamIndexes)
+				{
+					context.SetResult(i, ((IStreamHarvester)_harvesters[i]).CreateCombinedSource(cursor, i, _dataContext, _expressions, context));
+				}
+
+				return cursor;
 			}
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -1071,6 +1149,11 @@ namespace LinqToDB.Internal.Linq
 					var closeAfterUse = ((IDataContext)dataConnection).CloseAfterUse;
 					((IDataContext)dataConnection).CloseAfterUse = false;
 
+					var cursor        = CreateStreamSources(context);
+					var terminalGroup = -1;
+					var yielded       = false;
+					var completed     = false;
+
 					DataReaderWrapper? mainReader = null;
 
 					try
@@ -1082,18 +1165,36 @@ namespace LinqToDB.Internal.Linq
 							async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _harvesters[stepIndex].HarvestAsync(_dataContext, _expressions, context, null, cancellationToken).ConfigureAwait(false)),
 							async (i, dr) => context.SetResult(i, await _harvesters[i].HarvestAsync(_dataContext, _expressions, context, dr, cancellationToken).ConfigureAwait(false)),
 							terminalStepIndex: _harvesters.Length,
-							cancellationToken).ConfigureAwait(false);
+							cancellationToken,
+							terminalGroup: cursor == null ? null : g => terminalGroup = g).ConfigureAwait(false);
 
 						if (mainReader != null)
+						{
 							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, context, mainReader.DataReader!).WithCancellation(cancellationToken).ConfigureAwait(false))
+							{
+								yielded = true;
 								yield return item;
+							}
+						}
+
+						completed = true;
 					}
 					finally
 					{
-						((IDataContext)dataConnection).CloseAfterUse = closeAfterUse;
+						// See the sync GetEnumerator: a batch row read in full hands the reader to an explicit batch's streams;
+						// one that yielded no row releases it here.
+						if (cursor != null && completed && yielded && mainReader != null)
+						{
+							cursor.Attach(dataConnection, _dataContext, closeAfterUse, mainReader, groups, (group, groupIndex) => commandByGroup[groupIndex]!, terminalGroup, _harvesters.Length);
+						}
+						else
+						{
+							cursor?.Fail();
+							((IDataContext)dataConnection).CloseAfterUse = closeAfterUse;
 
-						if (mainReader != null)
-							await mainReader.DisposeAsync().ConfigureAwait(false);
+							if (mainReader != null)
+								await mainReader.DisposeAsync().ConfigureAwait(false);
+						}
 					}
 				}
 			}

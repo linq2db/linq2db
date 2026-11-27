@@ -363,6 +363,14 @@ namespace LinqToDB.Internal.Linq
 			if (!IsAnyHarvesters())
 				return null;
 
+			// An explicit query batch with a stream part reads it while the caller's code runs (a callback, or a handle after
+			// Execute), which a transaction this query opened must never span; the caller opens one for a single snapshot.
+			foreach (var harvester in _harvesters!)
+			{
+				if (harvester is IStreamHarvester)
+					return null;
+			}
+
 			var dc = dataContext switch
 			{
 				DataConnection dataConnection => dataConnection,

@@ -45,9 +45,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Collect all eager loads in this expression
 			var cteUnionLoads = new List<SqlEagerLoadExpression>();
 
+			// A query batch stream is read as a result set of its own, never through the union.
 			expression.Visit(cteUnionLoads, static (ctx, e) =>
 			{
-				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
+				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression { Stream: null } eagerLoad)
 					ctx.Add(eagerLoad);
 			});
 

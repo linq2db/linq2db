@@ -44,9 +44,9 @@ namespace LinqToDB.Internal.Linq
 	}
 
 	/// <summary>
-	/// Implemented only by combinable harvesters (Default strategy, <c>Harvester&lt;TKey,T&gt;</c>): they render a single
-	/// command and materialize from a reader positioned at their own result set, so sibling combinable harvesters may be
-	/// merged into one multi-result-set command (combined eager loading). Non-combinable harvesters do not implement this
+	/// Implemented only by combinable harvesters (the detached, keyed-detail, CteUnion and query batch stream ones): they render
+	/// a single command and materialize from a reader positioned at their own result set, so sibling combinable harvesters may
+	/// be merged into one multi-result-set command (combined eager loading). Non-combinable harvesters do not implement this
 	/// and run sequentially via <see cref="Harvester.Execute"/>.
 	/// </summary>
 	interface IStepMaterializer
@@ -86,5 +86,17 @@ namespace LinqToDB.Internal.Linq
 		/// Asynchronous sibling of <see cref="MaterializeFromReader"/>.
 		/// </summary>
 		Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken);
+	}
+
+	/// <summary>
+	/// Implemented by the harvester of an explicit query batch's stream part. Combined, its step follows the main row and is
+	/// never harvested: its slot holds a source the batch reads from the held reader. Sequential, its preamble stores a source
+	/// that runs the part as a query of its own when the batch reads it.
+	/// </summary>
+	interface IStreamHarvester
+	{
+		QueryBatchStreamInfo Stream { get; }
+
+		object CreateCombinedSource(QueryBatchStreamCursor cursor, int stepIndex, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext context);
 	}
 }
