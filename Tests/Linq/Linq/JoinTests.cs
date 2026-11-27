@@ -830,8 +830,8 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue("Oracle 11g bug: merged outer-joined view returns COALESCE constant for null-extended row", Configurations = [TestProvName.AllOracle11])]
-		[Test]
-		public void Issue5970Test([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool parameterDependent)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5970")]
+		public void LeftJoinOverCoalescedProjection([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool parameterDependent)
 		{
 			using var db = GetDataContext(context);
 
@@ -1144,8 +1144,8 @@ namespace Tests.Linq
 		[Sql.TableExpression("JSON_TABLE('[ {\"ParentID\": 1}, {\"Value1\": 2} ]', '$[*]' COLUMNS( ParentID INT PATH '$.ParentID', Value1 INT PATH '$.Value1')")]
 		private static ITable<Parent> JsonTable() => throw new ServerSideOnlyException(nameof(JsonTable));
 
-		[Test]
-		public void BltIssue257([DataSources] string context)
+		[Test(Description = "https://github.com/igor-tkachev/bltoolkit/issues/257")]
+		public void GroupByDateAfterJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -2615,8 +2615,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
-		public void Issue1815([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1815")]
+		public void LeftJoinTernaryProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var stLinks = db.CreateLocalTable(StLink.Data);
@@ -2655,8 +2655,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1815WithServerEvaluation1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1815")]
+		public void LeftJoinTernaryAsSqlInInnerProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var stLinks = db.CreateLocalTable(StLink.Data);
@@ -2695,8 +2695,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1815WithServerEvaluation2([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1815")]
+		public void LeftJoinTernaryAsSqlInOuterProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var stLinks = db.CreateLocalTable(StLink.Data);
@@ -2765,8 +2765,8 @@ namespace Tests.Linq
 			public static StMain[] Data = [];
 		}
 
-		[Test]
-		public void Issue1816v1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1816")]
+		public void NavigationInOuterJoinPredicate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var stVersion = db.CreateLocalTable(StVersion.Data);
@@ -2783,8 +2783,8 @@ namespace Tests.Linq
 			q.ToList();
 		}
 
-		[Test]
-		public void Issue1816v2([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1816")]
+		public void NavigationInOuterJoinPredicateWithProjectedNavigation([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var stVersion = db.CreateLocalTable(StVersion.Data);
@@ -2802,7 +2802,6 @@ namespace Tests.Linq
 			q.ToList();
 		}
 
-		#region issue 1455
 		public class Alert
 		{
 			[PrimaryKey] public int Id { get; set; }
@@ -2843,9 +2842,9 @@ namespace Tests.Linq
 			public DateTime? TransactionDate      { get; set; }
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1455")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupedAuditOuterJoinsContains([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
@@ -2902,9 +2901,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1455")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupedAuditOuterJoinsSqlLike([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// UseGuardGrouping: For Sybase, which do not support Window functions
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
@@ -2961,9 +2960,7 @@ namespace Tests.Linq
 					}).ToArray();
 			}
 		}
-		#endregion
 
-		#region issue 2421
 		[Table]
 		public class UserDTO
 		{
@@ -3017,8 +3014,8 @@ namespace Tests.Linq
 		}
 
 		// to sdanyliv: we generate same sql for sqlite and it works there, so fix should affect only access
-		[Test]
-		public void Issue2421([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2421")]
+		public void NestedAssociationSubqueryInProjection([DataSources] string context)
 		{
 			using var db                  = GetDataContext(context);
 			using var users               = db.CreateLocalTable<UserDTO>();
@@ -3038,7 +3035,6 @@ namespace Tests.Linq
 
 			var result = query.ToArray();
 		}
-		#endregion
 
 		[ActiveIssue(1224, Configurations = new[]
 		{
@@ -3065,43 +3061,43 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		private class Issue4160Person
+		private class LookupPerson
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public string Code { get; set; } = default!;
 
-			public static readonly Issue4160Person[] Data = new[]
+			public static readonly LookupPerson[] Data = new[]
 			{
-				new Issue4160Person() { Id = 1, Code = "SD" },
-				new Issue4160Person() { Id = 2, Code = "SD" },
-				new Issue4160Person() { Id = 3, Code = "SH" },
+				new LookupPerson() { Id = 1, Code = "SD" },
+				new LookupPerson() { Id = 2, Code = "SD" },
+				new LookupPerson() { Id = 3, Code = "SH" },
 			};
 		}
 
 		[Table]
-		private class Issue4160City
+		private class LookupCity
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public string  Code { get; set; } = default!;
 			[Column] public string? Name { get; set; }
 
-			public static readonly Issue4160City[] Data = new[]
+			public static readonly LookupCity[] Data = new[]
 			{
-				new Issue4160City() { Id = 1, Code = "SD", Name = "SYDNEY" },
-				new Issue4160City() { Id = 2, Code = "SD", Name = "SUNDAY" },
-				new Issue4160City() { Id = 3, Code = "SH", Name = "SYDHIP" }
+				new LookupCity() { Id = 1, Code = "SD", Name = "SYDNEY" },
+				new LookupCity() { Id = 2, Code = "SD", Name = "SUNDAY" },
+				new LookupCity() { Id = 3, Code = "SH", Name = "SYDHIP" }
 			};
 		}
 
 		[ActiveIssue(4160, Configuration = TestProvName.AllOracle12, ErrorMessage = "Assert.That(data, Has.Count.EqualTo(2))",
 			Details = "Oracle 12 returns one row where two are due - the invalid sub-query SQL #4160 describes, still wrong on that version.")]
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4160")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Issue4160Test1([DataSources] string context)
+		public void DistinctOverFirstOrDefaultSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
-			using var persons = db.CreateLocalTable(Issue4160Person.Data);
-			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+			using var persons = db.CreateLocalTable(LookupPerson.Data);
+			using var cities  = db.CreateLocalTable(LookupCity.Data);
 
 			var query = (
 			 from pe in persons
@@ -3120,12 +3116,12 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[Test]
-		public void Issue4160Test2([DataSources(TestProvName.AllOracle12)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4160")]
+		public void DistinctOverTakeOneOuterJoin([DataSources(TestProvName.AllOracle12)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
-			using var persons = db.CreateLocalTable(Issue4160Person.Data);
-			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+			using var persons = db.CreateLocalTable(LookupPerson.Data);
+			using var cities  = db.CreateLocalTable(LookupCity.Data);
 
 			var data = (
 				from pe in persons
@@ -3205,7 +3201,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
-		public void Issue2912Test1([DataSources] string context)
+		public void LetFirstOrDefaultChildInProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3216,7 +3212,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
-		public void Issue2912Test2([DataSources] string context)
+		public void ChainedGroupJoinsDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3231,7 +3227,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
-		public void Issue2912Test3([DataSources] string context)
+		public void GroupJoinThenLetFirstOrDefault([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3244,7 +3240,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
-		public void Issue3311Test1([DataSources] string context)
+		public void SelectQueryCorrelatedCrossApply([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3257,7 +3253,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
-		public void Issue3311Test2([DataSources] string context)
+		public void SelectQueryCorrelatedOuterApply([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3274,7 +3270,7 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		// PostgreSQL 9.3+ (LATERAL); 9.2 excluded
-		public void Issue3311Test3([DataSources(ProviderName.PostgreSQL92)] string context)
+		public void LeftJoinInsideAsSubQueryCorrelated([DataSources(ProviderName.PostgreSQL92)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3287,7 +3283,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test1([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		public void CompareNullsJoinOnNullableStringKey([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
 		{
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
@@ -3302,7 +3298,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllAccess)] string context, [Values] CompareNulls compareNulls)
+		public void CompareNullsJoinOnConcatenatedKey([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllAccess)] string context, [Values] CompareNulls compareNulls)
 		{
 			// Access excluded: it has no native Coalesce. AccessSqlExpressionConvertVisitor
 			// lowers `Coalesce(x, '')` to `IIF(x IS NULL, '', x)`, which contains a literal
@@ -3327,7 +3323,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test3([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		public void CompareNullsJoinOnNullableIntKey([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
 		{
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
@@ -3343,20 +3339,20 @@ namespace Tests.Linq
 		// Only the LikeClr mode is broken here, so the two SQL modes stay in this test and LikeClr moves to its own
 		// gated one below - a gate over the whole [Values] set would mark two working cases as failing.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test4([DataSources(false, TestProvName.AllClickHouse)] string context, [Values(CompareNulls.LikeSql, CompareNulls.LikeSqlExceptParameters)] CompareNulls compareNulls)
+		public void CompareNullsJoinOnArithmeticKey([DataSources(false, TestProvName.AllClickHouse)] string context, [Values(CompareNulls.LikeSql, CompareNulls.LikeSqlExceptParameters)] CompareNulls compareNulls)
 		{
-			Issue3560Test4Core(context, compareNulls);
+			AssertCompareNullsJoinOnArithmeticKey(context, compareNulls);
 		}
 
 		[ActiveIssue(3560, ErrorMessage = "Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Fails on every provider: the join key is an arithmetic expression and the compare-nulls rewrite does not reach through it.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test4LikeClr([DataSources(false, TestProvName.AllClickHouse)] string context)
+		public void CompareNullsJoinOnArithmeticKeyLikeClr([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			Issue3560Test4Core(context, CompareNulls.LikeClr);
+			AssertCompareNullsJoinOnArithmeticKey(context, CompareNulls.LikeClr);
 		}
 
-		void Issue3560Test4Core(string context, CompareNulls compareNulls)
+		void AssertCompareNullsJoinOnArithmeticKey(string context, CompareNulls compareNulls)
 		{
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
@@ -3374,7 +3370,6 @@ namespace Tests.Linq
 			}
 		}
 
-		#region Issue 4714
 		public class YearMap
 		{
 			public DateTime StartDate { get; set; }
@@ -3401,7 +3396,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4714")]
-		public void Issue4714Test([DataSources] string context)
+		public void CrossJoinAfterInnerJoinInSelectMany([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var sampleTable = db.CreateLocalTable<Sample>();
@@ -3423,7 +3418,6 @@ namespace Tests.Linq
 					(year, source) => new { source.Id, year.Year, year.StartDate, year.EndDate })
 				.ToList();
 		}
-		#endregion
 
 		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
@@ -3697,5 +3691,855 @@ namespace Tests.Linq
 				.Join(GrandChild.Where(g => g.ParentID == p.ParentID), c => (int?)c.ChildID, g => g.ChildID, (c, g) => g)
 				.Any(g => g.GrandChildID > 0));
 #endif
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/67")]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void GroupJoinCountFilteredByPositiveCount([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				join c in Child on p.ParentID equals c.ParentID into ch
+				select new { p.ParentID, count = ch.Count() } into t
+				where t.count > 0
+				select t,
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID into ch
+				select new { p.ParentID, count = ch.Count() } into t
+				where t.count > 0
+				select t);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1084")]
+		public void TupleKeyJoinSelectsViaCopyConstructor([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(PersonWithTrackedCtors.Data))
+			using (db.CreateLocalTable(StudentWithStringNumber.Data))
+			{
+				var result = from k in db.GetTable<PersonWithTrackedCtors>()
+							 join ks in db.GetTable<StudentWithStringNumber>() on
+								Tuple.Create(k.Id, k.Number.ToString()) equals Tuple.Create(ks.Id, ks.Number)
+								into joinedTable
+							 from g in joinedTable.DefaultIfEmpty()
+							 select new PersonWithTrackedCtors(k)
+							 {
+								 IsBlocked        = (k.StatusBitmask & 0x80) != 0,
+								 IsBlockedStudent = (g.StatusBitmask & 0x80) != 0
+							 };
+
+				var res = result.ToList();
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].Default, Is.False);
+					Assert.That(res[1].Default, Is.False);
+					Assert.That(res[0].Copy, Is.True);
+					Assert.That(res[1].Copy, Is.True);
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1084")]
+		public void TupleKeyJoinWithoutDefaultConstructorThrows([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<PersonWithoutDefaultCtor>())
+			using (db.CreateLocalTable<StudentWithStringNumber>())
+			{
+				var result = from k  in db.GetTable<PersonWithoutDefaultCtor>()
+							 join ks in db.GetTable<StudentWithStringNumber>() on
+								Tuple.Create(k.Id, k.Number.ToString()) equals Tuple.Create(ks.Id, ks.Number)
+								into joinedTable
+							 from g in joinedTable.DefaultIfEmpty()
+							 select new PersonWithoutDefaultCtor(k)
+							 {
+								 IsBlocked        = (k.StatusBitmask & 0x80) != 0,
+								 IsBlockedStudent = (g.StatusBitmask & 0x80) != 0
+							 };
+
+				// because for k we need default constructor, which is missing
+				Assert.That(() => result.ToList(), Throws.TypeOf<InvalidOperationException>());
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1084")]
+		public void TupleKeyJoinWithDefaultConstructor([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<PersonWithDefaultCtor>())
+			using (db.CreateLocalTable<StudentWithStringNumber>())
+			{
+				var result = from k  in db.GetTable<PersonWithoutDefaultCtor>()
+							 join ks in db.GetTable<StudentWithStringNumber>() on
+								Tuple.Create(k.Id, k.Number.ToString()) equals Tuple.Create(ks.Id, ks.Number)
+								into joinedTable
+							 from g in joinedTable.DefaultIfEmpty()
+							 select new PersonWithDefaultCtor()
+							 {
+								 IsBlocked        = (k.StatusBitmask & 0x80) != 0,
+								 IsBlockedStudent = (g.StatusBitmask & 0x80) != 0
+							 };
+
+				result.ToList();
+			}
+		}
+
+		[Table("TupleJoinPerson")]
+		sealed class PersonWithoutDefaultCtor
+		{
+			public PersonWithoutDefaultCtor(PersonWithoutDefaultCtor k)
+			{
+			}
+
+			[PrimaryKey] public int Id        { get; set; }
+			[Column] public int Number        { get; set; }
+			[Column] public int StatusBitmask { get; set; }
+
+			public bool IsBlocked        { get; set; }
+			public bool IsBlockedStudent { get; set; }
+		}
+
+		[Table("TupleJoinPerson")]
+		sealed class PersonWithDefaultCtor
+		{
+			public PersonWithDefaultCtor()
+			{
+			}
+
+			[PrimaryKey] public int Id        { get; set; }
+			[Column] public int Number        { get; set; }
+			[Column] public int StatusBitmask { get; set; }
+
+			public bool IsBlocked        { get; set; }
+			public bool IsBlockedStudent { get; set; }
+		}
+
+		[Table("TupleJoinPerson")]
+		sealed class PersonWithTrackedCtors
+		{
+			public bool Default;
+			public bool Copy;
+			public PersonWithTrackedCtors()
+			{
+				Default = true;
+			}
+
+			public PersonWithTrackedCtors(PersonWithTrackedCtors k)
+			{
+				Copy = true;
+			}
+
+			[PrimaryKey] public int Id            { get; set; }
+			[Column] public int Number        { get; set; }
+			[Column] public int StatusBitmask { get; set; }
+
+			public bool IsBlocked        { get; set; }
+			public bool IsBlockedStudent { get; set; }
+
+			public static PersonWithTrackedCtors[] Data { get; } = new[]
+			{
+				new PersonWithTrackedCtors() { Id = 1, Number = 1 },
+				new PersonWithTrackedCtors() { Id = 2, Number = 2 }
+			};
+		}
+
+		[Table("TupleJoinStudent")]
+		sealed class StudentWithStringNumber
+		{
+			[PrimaryKey] public int     Id            { get; set; }
+			[Column] public string? Number        { get; set; }
+			[Column] public int     StatusBitmask { get; set; }
+
+			public static StudentWithStringNumber[] Data { get; } = new[]
+			{
+				new StudentWithStringNumber() { Id = 1, Number = "1" },
+				new StudentWithStringNumber() { Id = 2, Number = "2" }
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/1397")]
+		public void InnerJoinFilterOverConcatQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					from m in db.Parent
+					from id in
+						(
+							from t in db.Parent
+							where t.ParentID == 1
+							select t.ParentID
+						)
+						.Concat
+						(
+							from t in db.Parent
+							where t.ParentID == 2
+							select t.ParentID
+						)
+						.InnerJoin(id => id == m.ParentID)
+					select m;
+
+			var expected =
+					from m in db.Parent
+					from id in
+						(
+							from t in db.Parent
+							where t.ParentID == 1
+							select t.ParentID
+						)
+						.Concat
+						(
+							from t in db.Parent
+							where t.ParentID == 2
+							select t.ParentID
+						)
+					where id == m.ParentID
+					select m;
+
+			AreEqual(expected, query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/1397")]
+		public void InnerJoinTwoSourceOverConcatQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					db.Parent.InnerJoin(
+						db.Parent.Where(t => t.ParentID == 1).Select(t => t.ParentID).Concat(
+						db.Parent.Where(t => t.ParentID == 2).Select(t => t.ParentID)),
+					(m, id) => m.ParentID == id, (m, id) => m);
+
+			var expected =
+					from m in db.Parent
+					from id in
+						(
+							from t in db.Parent
+							where t.ParentID == 1
+							select t.ParentID
+						)
+						.Concat
+						(
+							from t in db.Parent
+							where t.ParentID == 2
+							select t.ParentID
+						)
+					where id == m.ParentID
+					select m;
+
+			AreEqual(expected, query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1441")]
+		public void InnerJoinOnReassignedQueryVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var authorsTable = db.CreateLocalTable<JoinAuthor>();
+			using var booksTable = db.CreateLocalTable<JoinBook>();
+			IQueryable<JoinAuthor> authors = authorsTable;
+
+			var onlyWithBooks = true; // Some filter logic
+
+			if (onlyWithBooks)
+			{
+				authors =
+					from author in authors
+					from book in booksTable.InnerJoin(book => book.AuthorId == author.Id)
+					select author;
+			}
+
+			var authorsList = authors.ToList();
+
+			// Consume authors list
+		}
+
+		[Table("JoinAuthors")]
+		internal sealed class JoinAuthor
+		{
+			[PrimaryKey, Column(CanBeNull = false)]
+			public int Id { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
+			public string Name { get; set; } = null!;
+		}
+
+		[Table("JoinBooks")]
+		internal sealed class JoinBook
+		{
+			[PrimaryKey, Column(CanBeNull = false)]
+			public int Id { get; set; }
+
+			[Column(CanBeNull = false)]
+			public int AuthorId { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.NVarChar, Length = 100)]
+			public string Title { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1556")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void InnerJoinPredicateWithAnyOnChildCollection([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in db.Parent
+				from c in db.Child
+				where p.ParentID == c.ParentID || c.GrandChildren.Any(y => y.ParentID == p.ParentID)
+				select new { p, c }
+				,
+				db.Parent
+					.InnerJoin(db.Child,
+						(p, c) => p.ParentID == c.ParentID || c.GrandChildren.Any(y => y.ParentID == p.ParentID),
+						(p, c) => new { p, c }));
+		}
+
+		[Table("Parent", IsColumnAttributeRequired = false)]
+		public class NullableKeyParent
+		{
+			public int? ParentID;
+		}
+
+		[Table("Child", IsColumnAttributeRequired = false)]
+		public class NullableKeyChild
+		{
+			public int? ParentID;
+			public int? ChildID;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/175")]
+		public void InnerJoinOnNullableKeys([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q = from c in db.GetTable<NullableKeyChild>()
+					join p in db.GetTable<NullableKeyParent>() on c.ParentID equals p.ParentID
+					select c;
+
+			Assert.That(q, Is.Not.Empty);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2470")]
+		public void GroupJoinWithSelectManyTakeSubquery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<GroupJoinOrder>())
+			using (db.CreateLocalTable<GroupJoinOrderItem>())
+			{
+				var query = db.GetTable<GroupJoinOrder>()
+					.GroupJoin(
+						db.GetTable<GroupJoinOrder>().SelectMany(
+							Order => db.GetTable<GroupJoinOrderItem>()
+								.Where(OrderItem => Order.Id == OrderItem.OrderId)
+								.OrderBy(orderItem => orderItem.Id)
+								.Take(1)
+						),
+						Order => Order.Id,
+						OrderItem => OrderItem.OrderId,
+						(outer, inner) => new { outer, inner })
+					.SelectMany(
+						t => t.inner.DefaultIfEmpty(),
+						(source, collection) => new { source.outer, collection })
+					.ToArray();
+			}
+		}
+
+		[Table(Schema = "dbo", Name = "GroupJoinOrder")]
+		public class GroupJoinOrder
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+			[Column, NotNull] public string Name { get; set; } = null!;
+
+			[Association(ThisKey = "Id", OtherKey = "OrderId", CanBeNull = true)]
+			public IEnumerable<GroupJoinOrderItem> Items { get; set; } = null!;
+		}
+
+		[Table(Schema = "dbo", Name = "GroupJoinOrderItem")]
+		public class GroupJoinOrderItem
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+			[Column, NotNull] public int OrderId { get; set; }
+			[Column, NotNull] public string Product { get; set; } = null!;
+
+			[Association(ThisKey = "OrderId", OtherKey = "Id", CanBeNull = false)]
+			public GroupJoinOrder Order { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3506")]
+		public void InnerJoinNullableKeyHasValueThenValueAccess([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var cats = new[]
+			{
+				new { OwnerId = (int?)1 }
+			};
+
+			var owners = new[]
+			{
+				new { Id = 1 }
+			};
+
+			using var db = GetDataContext(context);
+			using var catsTable = db.CreateLocalTable("catz", cats);
+			using var ownerTable = db.CreateLocalTable("owners", owners);
+			var result = catsTable
+					.InnerJoin(
+					ownerTable,
+					(cat, owner) =>
+						cat.OwnerId.HasValue
+						// .Value
+						&& cat.OwnerId.Value == owner.Id,
+					(cat, owner) => cat)
+				.Count();
+
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3506")]
+		public void InnerJoinNullableKeyHasValueThenDirectCompare([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var cats = new[]
+			{
+				new { OwnerId = (int?)1 }
+			};
+
+			var owners = new[]
+			{
+				new { Id = 1 }
+			};
+
+			using var db = GetDataContext(context);
+			using var catsTable = db.CreateLocalTable("catz", cats);
+			using var ownerTable = db.CreateLocalTable("owners", owners);
+			var result = catsTable
+					.InnerJoin(
+					ownerTable,
+					(cat, owner) =>
+						cat.OwnerId.HasValue
+						// no .Value
+						&& cat.OwnerId == owner.Id,
+					(cat, owner) => cat)
+				.Count();
+
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3586")]
+		public void ComplexWhereWithAny([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (db.CreateLocalTable<AnyJoinInventory>())
+			using (db.CreateLocalTable<AnyJoinLoadCarrier>())
+			using (db.CreateLocalTable<AnyJoinOutfeedReservation>())
+			using (db.CreateLocalTable<AnyJoinResourceType>())
+			using (db.CreateLocalTable<AnyJoinResourcePoint>())
+			using (db.CreateLocalTable<AnyJoinMaterial>())
+			using (db.CreateLocalTable<AnyJoinBatch>())
+			using (db.CreateLocalTable<AnyJoinInfeedPosition>())
+			{
+				var inventoryQry = db.GetTable<AnyJoinInventory>();
+				var lcQry = db.GetTable<AnyJoinLoadCarrier>();
+				var reservation = db.GetTable<AnyJoinOutfeedReservation>();
+
+				var qry =
+					from inventory in inventoryQry
+					join res in lcQry on inventory.ResourceID equals res.Id into reslist
+					from r in reslist.DefaultIfEmpty()
+					join restp in db.GetTable<AnyJoinResourceType>() on r.TypeID equals restp.Id into rtplst
+					from rtp in rtplst.DefaultIfEmpty()
+					join resp in db.GetTable<AnyJoinResourcePoint>() on r.ResourcePointID equals resp.Id into resplst
+					from rp in resplst.DefaultIfEmpty()
+					join mat1 in db.GetTable<AnyJoinMaterial>() on inventory.MaterialID equals mat1.Id into mat1list
+					from material in mat1list.DefaultIfEmpty()
+					join bat1 in db.GetTable<AnyJoinBatch>() on new {inventory.MaterialID, inventory.BatchNumber} equals new {bat1.MaterialID, bat1.BatchNumber} into bat1list
+					from batch in bat1list.DefaultIfEmpty()
+					join resvir in db.GetTable<AnyJoinOutfeedReservation>() on inventory.Id equals resvir.InventoryResourceID into resvirlist
+					join infAdv in db.GetTable<AnyJoinInfeedPosition>() on inventory.InfeedAdviceID equals infAdv.Id into infList
+					from infeed in infList.DefaultIfEmpty()
+					where inventory.Status == AnyJoinStatus.Inactive
+					select new AnyJoinCombined()
+					{
+						InventoryResource = inventory,
+						LoadCarrier = r,
+						ResourceType = rtp,
+						Material = material,
+						Batch = batch,
+						Reservations =
+							reservation.Any(resvr => resvr.ResourceID == inventory.ResourceID && !resvr.InventoryResourceID.HasValue) ? inventory.Quantity : ((decimal?)reservation.Where(resvir => resvir.InventoryResourceID == inventory.Id).Sum(resvir => resvir.Quantity) ?? 0m),
+						ResourcePoint = rp,
+						InfeedAdviceNumber = infeed.InfeedAdviceNumber,
+						InfeedAdvicePosition = infeed.InfeedAdvicePosition
+					};
+
+				var anyTest = db.GetTable<AnyJoinInventory>().Where(x => qry.Any(y => y.InventoryResource!.Id == x.Id))
+					.ToArray();
+			}
+		}
+
+		public enum AnyJoinStatus
+		{
+			Active,
+			Inactive
+		}
+
+		public class AnyJoinCombined
+		{
+			public AnyJoinInventory? InventoryResource { get; set; }
+			public AnyJoinLoadCarrier? LoadCarrier { get; set; }
+			public AnyJoinResourceType? ResourceType { get; set; }
+			public AnyJoinMaterial? Material { get; set; }
+			public AnyJoinBatch? Batch { get; set; }
+			public decimal Reservations { get; set; }
+
+			public AnyJoinResourcePoint? ResourcePoint { get; set; }
+			public string? InfeedAdviceNumber { get; set; }
+			public string? InfeedAdvicePosition { get; set; }
+		}
+
+		[Table]
+		public class AnyJoinInventory
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; } 
+			[Column] public AnyJoinStatus Status { get; set; }
+			[Column] public Guid ResourceID { get; set; }
+			[Column] public Guid MaterialID { get; set; }
+			[Column] public string? BatchNumber { get; set; }
+			[Column] public Guid InfeedAdviceID { get; set; }
+			[Column] public decimal Quantity { get; set; }
+		}
+
+		[Table]
+		public class AnyJoinResourceType
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; }
+		}
+
+		[Table]
+		public class AnyJoinResourcePoint
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; }
+		}
+
+		[Table]
+		public class AnyJoinOutfeedReservation
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; }
+			[Column] public Guid? InventoryResourceID { get; set; }
+			[Column] public Guid? ResourceID { get; set; }
+			[Column] public decimal Quantity { get; set; }
+		}
+
+		[Table]
+		public class AnyJoinInfeedPosition
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; }
+			[Column] public Guid InventoryResourceID { get; set; }
+			[Column] public string? InfeedAdviceNumber { get; set; }
+			[Column] public string? InfeedAdvicePosition { get; set; }
+		}
+
+		public class AnyJoinMaterial
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; }
+		}
+
+		public class AnyJoinBatch
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; }
+			[Column] public Guid MaterialID { get; set; }
+			[Column] public string? BatchNumber { get; set; }
+		}
+
+		[Table]
+		public class AnyJoinLoadCarrier
+		{
+			[Column, PrimaryKey] public Guid Id { get; set; }
+			[Column] public Guid TypeID { get; set; }
+			[Column] public Guid ResourcePointID { get; set; }
+		}
+
+		static List<AggJoinCoverage> GetAggJoinCoverages() => new List<AggJoinCoverage>
+		{
+			new AggJoinCoverage { Id = 1, TestId = 1, TesteeId = 1, Status = 14650, Distance = 10.5m, Placement = 2 },
+			new AggJoinCoverage { Id = 2, TestId = 2, TesteeId = 2, Status = 14650, Distance = 5.3m, Placement  = 1 }
+		};
+
+		static List<AggJoinTest> GetAggJoinTests() => new List<AggJoinTest>
+		{
+			new AggJoinTest { Id = 1 },
+			new AggJoinTest { Id = 2 }
+		};
+
+		static List<AggJoinTestee> GetAggJoinTestees() => new List<AggJoinTestee>
+		{
+			new AggJoinTestee { Id = 1, WorkblankId = 1 },
+			new AggJoinTestee { Id = 2, WorkblankId = 2 }
+		};
+
+		static List<AggJoinOutfit> GetAggJoinOutfits() => new List<AggJoinOutfit>
+		{
+			new AggJoinOutfit { WorkblankId = 1, AccountId = 1 },
+			new AggJoinOutfit { WorkblankId = 2, AccountId = 2 }
+		};
+
+		static List<AggJoinAccount> GetAggJoinAccounts() => new List<AggJoinAccount>
+		{
+			new AggJoinAccount { Id = 1, Name = "John", Surname = "Doe" },
+			new AggJoinAccount { Id = 2, Name = "Jane", Surname = "Smith" }
+		};
+
+		static List<AggJoinExecutant> GetAggJoinExecutants() => new List<AggJoinExecutant>
+		{
+			new AggJoinExecutant { Id = 1, TestId = 1 },
+			new AggJoinExecutant { Id = 2, TestId = 2 }
+		};
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4800")]
+		public void JoinUsingAggregateResult([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var testeeCoverageTable = db.CreateLocalTable(GetAggJoinCoverages());
+			using var testTable = db.CreateLocalTable(GetAggJoinTests());
+			using var executantTable = db.CreateLocalTable(GetAggJoinExecutants());
+			using var testeeTable = db.CreateLocalTable(GetAggJoinTestees());
+			using var outfitTable = db.CreateLocalTable(GetAggJoinOutfits());
+			using var accountTable = db.CreateLocalTable(GetAggJoinAccounts());
+
+			var query =
+				from coverage in db.GetTable<AggJoinCoverage>()
+				join test in db.GetTable<AggJoinTest>() on coverage.TestId equals test.Id
+				join executant in db.GetTable<AggJoinExecutant>() on test.Id equals executant.TestId into executants
+				from executant in executants.DefaultIfEmpty()
+				join testee in db.GetTable<AggJoinTestee>() on coverage.TesteeId equals testee.Id into testees
+				from testee in testees.DefaultIfEmpty()
+				join outfit in db.GetTable<AggJoinOutfit>() on testee.WorkblankId equals outfit.WorkblankId into outfits
+				from outfit in outfits.DefaultIfEmpty()
+				join account in db.GetTable<AggJoinAccount>() on outfit.AccountId equals account.Id into accounts
+				from account in accounts.DefaultIfEmpty()
+				where coverage.Status == 14650
+				select new
+				{
+					Coverage = coverage,
+					Test     = test,
+					Account  = account
+				} into item
+				group item by new { item.Coverage.Token, item.Coverage.TesteeId, item.Coverage.TestId, item.Coverage.StructureId, item.Coverage.SoleId, item.Coverage.Distance, item.Coverage.Placement } into elements
+				select new
+				{
+					elements.Key.Token,
+					elements.Key.TesteeId,
+					elements.Key.TestId,
+					elements.Key.StructureId,
+					elements.Key.SoleId,
+					elements.Key.Distance,
+					elements.Key.Placement,
+					Win = elements.Key.Placement == 1 ? 1 : 0
+				} into entry
+				group entry by entry.Token into elements
+				select new
+				{
+					elements.Key,
+					TesteeId    = elements.Min(item => item.TesteeId),
+					StructureId = elements.Min(item => item.StructureId),
+					SoleId      = elements.Min(item => item.SoleId),
+					Wins        = elements.Sum(item => item.Win),
+					Runs        = elements.Select(item => item.TestId).Count(),
+					Distance    = elements.Average(item => item.Distance),
+					Placement   = elements.Average(item => item.Placement)
+				};
+
+			var query2 =
+				from q in query
+				join t in testeeTable on q.TesteeId equals t.Id into gj
+				from t in gj.DefaultIfEmpty()
+				select new { q.TesteeId };
+
+			var result = query2.ToList();
+
+			result.Count.ShouldBe(1);
+		}
+
+		// Data Model Classes
+		public class AggJoinTest
+		{
+			[PrimaryKey] public int    Id   { get; set; }
+			public string Name { get; set; } = default!;
+		}
+
+		public class AggJoinExecutant
+		{
+			[PrimaryKey] public int Id     { get; set; }
+			public int TestId { get; set; }
+		}
+
+		public class AggJoinTestee
+		{
+			[PrimaryKey] public int Id          { get; set; }
+			public int WorkblankId { get; set; }
+		}
+
+		public class AggJoinOutfit
+		{
+			[PrimaryKey] public int WorkblankId { get; set; }
+			[PrimaryKey] public int AccountId   { get; set; }
+		}
+
+		public class AggJoinAccount
+		{
+			[PrimaryKey] public int    Id      { get; set; }
+			public string Name    { get; set; } = default!;
+			public string Surname { get; set; } = default!;
+		}
+
+		public class AggJoinCoverage
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int     TestId      { get; set; }
+			public int     TesteeId    { get; set; }
+			public int     StructureId { get; set; }
+			public int     SoleId      { get; set; }
+			public decimal Distance    { get; set; }
+			public int     Placement   { get; set; }
+			public int     Status      { get; set; }
+			public string Token { get; set; } = default!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4891")]
+		public void InnerJoinWithGenericResultType([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<GenericJoinProduct>())
+			using (db.CreateLocalTable<GenericJoinCategory>())
+			{
+				var productId = TestData.Guid1;
+
+				var query = GenericJoinHelper.InnerJoin<GenericJoinProduct, GenericJoinCategory, GenericJoinProductCategory>(
+					db.GetTable<GenericJoinProduct>(),
+					db.GetTable<GenericJoinCategory>(),
+					(product, category) => product.Id == category.ProductId)
+					.Where(x => x.Source1.Id == productId);
+
+				var result = query.ToArray();
+				Assert.That(result, Has.Length.Zero);
+			}
+		}
+
+		public class GenericJoinBaseEntity
+		{
+			public virtual Guid Id { get; set; }
+		}
+
+		public class GenericJoinProduct : GenericJoinBaseEntity
+		{
+			public string? ProductName { get; set; }
+		}
+
+		public class GenericJoinCategory : GenericJoinBaseEntity
+		{
+			public string? CategoryName { get; set; }
+
+			public Guid ProductId { get; set; }
+		}
+
+		public class GenericJoinProductCategory : IGenericJoinResult<GenericJoinProduct, GenericJoinCategory>
+		{
+			public GenericJoinProduct Source1 { get; set; } = default!;
+
+			public GenericJoinCategory Source2 { get; set; } = default!;
+		}
+
+		public interface IGenericJoinResult<T1, T2>
+		{
+			T1 Source1 { get; set; }
+
+			T2 Source2 { get; set; }
+		}
+
+		public static class GenericJoinHelper
+		{
+			public static IQueryable<TResult> InnerJoin<T1, T2, TResult>(IQueryable<T1> query1, IQueryable<T2> query2, Expression<Func<T1, T2, bool>> predicate)
+				where T1 : GenericJoinBaseEntity
+				where T2 : GenericJoinBaseEntity
+				where TResult : IGenericJoinResult<T1, T2>, new()
+			{
+				return query1
+					.InnerJoin(query2, predicate, (product, category) =>
+						new TResult
+						{
+							Source1 = product,
+							Source2 = category,
+						});
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/928")]
+		public void JoinGroupedSubqueryWithDefaultIfEmpty([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var subquery =
+					from p in db.Parent
+					where db.Child.Select(ch => ch.ParentID).Contains(p.ParentID)
+					group p by p.ParentID into g
+					select new { ParentID = g.Key, Sum = g.Sum(x => x.ParentID) };
+
+			var q3 =
+					from p1 in db.Parent//subquery
+					from p2 in subquery.Where(o => o.ParentID == p1.ParentID).DefaultIfEmpty()
+					select new { p1, p2 };
+
+			q3.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/928")]
+		public void JoinGroupedSubqueryInSelectMany([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var subquery =
+					from p in db.Parent
+					where db.Child.Select(ch => ch.ParentID).Contains(p.ParentID)
+					group p by p.ParentID into g
+					select new { ParentID = g.Key, Sum = g.Sum(x => x.ParentID) };
+
+			var q3 =
+					from p1 in db.Parent//subquery
+					from p2 in subquery.Where(o => o.ParentID == p1.ParentID)
+					select new { p1, p2 };
+
+			q3.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/928")]
+		public void JoinGroupedSubqueryWithLeftJoinMethod([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var subquery =
+					from p in db.Parent
+					where db.Child.Select(ch => ch.ParentID).Contains(p.ParentID)
+					group p by p.ParentID into g
+					select new { ParentID = g.Key, Sum1 = g.Sum(x => x.ParentID) };
+
+			var q3 =
+					from p1 in db.Parent
+					from p2 in subquery.LeftJoin(o => o.ParentID == p1.ParentID)
+					select new { p1, p2 };
+
+			q3.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/928")]
+		public void GroupedSubqueryGroupJoinWithItself([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var subquery =
+					from p in db.Parent
+					where db.Child.Select(ch => ch.ParentID).Contains(p.ParentID)
+					group p by p.ParentID into g
+					select new { ParentID = g.Key, Sum = g.Sum(x => x.ParentID) };
+
+			var q3 =
+					from p1 in subquery
+					join p2 in subquery on p1.ParentID equals p2.ParentID into gp2
+					from p2 in gp2.DefaultIfEmpty()
+					select new { p1, p2 };
+
+			q3.ToList();
+		}
 	}
 }

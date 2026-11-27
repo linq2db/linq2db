@@ -241,8 +241,8 @@ namespace Tests.DataProvider
 			public int[]? Ints { get; set; }
 		}
 		
-		[Test]
-		public void TVPCachingIssue(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3248")]
+		public void TableValuedParameterQueryCacheReuse(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var external = new DataConnection(context);

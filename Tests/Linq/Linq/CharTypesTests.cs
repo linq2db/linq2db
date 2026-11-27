@@ -230,5 +230,171 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		sealed class CharFieldRecord
+		{
+			[PrimaryKey(1)]
+			[Identity] public int Id { get; set; }
+
+			public char CharFld { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1279")]
+		public void CharPropertyRoundTrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<CharFieldRecord>();
+			var val = 'P';
+
+			db.Insert(new CharFieldRecord { CharFld = val });
+
+			var result = db.GetTable<CharFieldRecord>().First().CharFld;
+
+			Assert.That(result, Is.EqualTo(val));
+		}
+
+		[Table("AllTypes")]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		private sealed class AllTypesCharRow
+		{
+			[Column]
+			[Column("CHARDATATYPE", Configuration = ProviderName.DB2)]
+			public char charDataType { get; set; }
+		}
+
+		[Table("AllTypes")]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		private sealed class AllTypesNullableCharRow
+		{
+			[Column]
+			[Column("CHARDATATYPE", Configuration = ProviderName.DB2)]
+			public char? charDataType { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1287")]
+		public void NullableCharComparedToLiteral([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			var list = db.GetTable<AllTypesNullableCharRow>().Where(_ => _.charDataType == '1').ToList();
+
+			Assert.That(list, Has.Count.EqualTo(1));
+			Assert.That(list[0].charDataType, Is.EqualTo('1'));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1287")]
+		public void CharComparedToLiteral([DataSources(ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			var list = db.GetTable<AllTypesCharRow>().Where(_ => _.charDataType == '1').ToList();
+
+			Assert.That(list, Has.Count.EqualTo(1));
+			Assert.That(list[0].charDataType, Is.EqualTo('1'));
+		}
+
+		public class CharKindsEntity
+		{
+			[Column(DataType = DataType.Char)]     public string? CharValue;
+			[Column(DataType = DataType.VarChar)]  public string? VarCharValue;
+			[Column(DataType = DataType.NChar)]    public string? NCharValue;
+			[Column(DataType = DataType.NVarChar)] public string? NVarCharValue;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/271")]
+		public void NPrefixOnlyForUnicodeColumnLiterals([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CharKindsEntity>();
+
+			var q =
+					from e in db.GetTable<CharKindsEntity>()
+					where
+						e.CharValue     == "CharValue"     &&
+						e.VarCharValue  == "VarCharValue"  &&
+						e.NCharValue    == "NCharValue"    &&
+						e.NVarCharValue == "NVarCharValue"
+					select e;
+
+			var sql = q.ToSqlQuery().Sql;
+
+			Assert.That(sql, Does.Not.Contain("N'CharValue'"));
+			Assert.That(sql, Does.Not.Contain("N'VarCharValue'"));
+
+			Assert.That(sql, Does.Contain("N'NCharValue'"));
+			Assert.That(sql, Does.Contain("N'NVarCharValue'"));
+
+			q.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/271")]
+		public void NPrefixOnlyForUnicodeColumnArrayContains([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CharKindsEntity>();
+
+			var @char     = new[] { "CharValue"     };
+			var @varChar  = new[] { "VarCharValue"  };
+			var @nChar    = new[] { "NCharValue"    };
+			var @nVarChar = new[] { "NVarCharValue" };
+
+			var q =
+					from e in db.GetTable<CharKindsEntity>()
+					where
+						@char    .Contains(e.CharValue    ) &&
+						@varChar .Contains(e.VarCharValue ) &&
+						@nChar   .Contains(e.NCharValue   ) &&
+						@nVarChar.Contains(e.NVarCharValue)
+					select e;
+
+			var sql = q.ToSqlQuery().Sql;
+
+			Assert.That(sql, Does.Not.Contain("N'CharValue'"));
+			Assert.That(sql, Does.Not.Contain("N'VarCharValue'"));
+
+			Assert.That(sql, Does.Contain("N'NCharValue'"));
+			Assert.That(sql, Does.Contain("N'NVarCharValue'"));
+
+			q.ToArray();
+		}
+
+		[Table("Person", IsColumnAttributeRequired = false)]
+		public class PersonWithGender
+		{
+			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID"), Identity, PrimaryKey] public int     ID;
+			[NotNull]                                  public string  FirstName { get; set; } = null!;
+			[NotNull]                                  public string  LastName = null!;
+			[Nullable]                                 public string? MiddleName;
+			                                           public char    Gender;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/88")]
+		public void CharColumnComparedWithLiteralAndVariable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var llc = db
+					.GetTable<PersonWithGender>()
+					.Where(_ => _.ID == 1 && _.Gender == 'M');
+
+			var lrc = db
+					.GetTable<PersonWithGender>()
+					.Where(_ => _.ID == 1 && 'M' == _.Gender);
+
+			var gender = 'M';
+			var llp = db
+					.GetTable<PersonWithGender>()
+					.Where(_ => _.ID == 1 && _.Gender == gender);
+
+			var lrp = db
+					.GetTable<PersonWithGender>()
+					.Where(_ => _.ID == 1 && gender == _.Gender);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(llc, Is.Not.Empty);
+				Assert.That(lrc, Is.Not.Empty);
+				Assert.That(llp, Is.Not.Empty);
+				Assert.That(lrp, Is.Not.Empty);
+			}
+
+		}
 	}
 }

@@ -267,21 +267,21 @@ namespace Tests.Extensions
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
-		public void Issue4333Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void CreateTempTableWithIdentityColumn([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var data = new[]
 			{
-				new Issue4333Table { Name = "Bar" },
-				new Issue4333Table { Name = "Baz" },
+				new IdentityTempRecord { Name = "Bar" },
+				new IdentityTempRecord { Name = "Baz" },
 			};
 
-			using var table = db.CreateTempTable<Issue4333Table>(data);
+			using var table = db.CreateTempTable<IdentityTempRecord>(data);
 		}
 
 		[Table]
-		sealed class Issue4333Table
+		sealed class IdentityTempRecord
 		{
 			[PrimaryKey, Identity] public int Id { get; set; }
 			[Column] public string? Name { get; set; }

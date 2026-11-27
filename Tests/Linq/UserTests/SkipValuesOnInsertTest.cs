@@ -9,7 +9,7 @@ namespace Tests.UserTests
 {
 	public class SkipValuesOnInsertTest: TestBase
 	{
-		[Table("PR_1598_Insert_Table")]
+		[Table("SkipOnInsertTable")]
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]
@@ -20,7 +20,7 @@ namespace Tests.UserTests
 			public int? Age { get; set; }
 		}
 
-		[Table("PR_1598_Mixed_Table")]
+		[Table("SkipOnInsertMixed")]
 		public class TestTableMixed
 		{
 			[Column("Id"), PrimaryKey]
@@ -31,7 +31,7 @@ namespace Tests.UserTests
 			public int? Age { get; set; }
 		}
 
-		[Table("PR_1598_Insert_Null_Table")]
+		[Table("SkipOnInsertNulls")]
 		public class TestTableNull
 		{
 			[Column("Id"), PrimaryKey]
@@ -42,7 +42,7 @@ namespace Tests.UserTests
 			public int? Age { get; set; }
 		}
 
-		[Table("PR_1598_Insert_Fluent_Table")]
+		[Table("SkipOnInsertFluent")]
 		public class TestTableFluent
 		{
 			[Column("Id"), PrimaryKey]
@@ -53,7 +53,7 @@ namespace Tests.UserTests
 			public int? Age { get; set; }
 		}
 
-		[Table("PR_1598_Insert_Enum_Table")]
+		[Table("SkipOnInsertEnum")]
 		public class TestTableEnum
 		{
 			public enum GenderType

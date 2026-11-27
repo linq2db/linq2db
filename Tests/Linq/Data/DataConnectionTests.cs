@@ -393,8 +393,8 @@ namespace Tests.Data
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
-		[Test]
-		public void TestServiceCollection_Issue4326_Positive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4326")]
+		public void TestServiceCollection_ServiceTypeWithImplementationOptions([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfiguration(context));
@@ -404,8 +404,8 @@ namespace Tests.Data
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
-		[Test]
-		public void TestServiceCollection_Issue4326_Compat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4326")]
+		public void TestServiceCollection_ServiceTypeWithServiceTypeOptions([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfiguration(context));
@@ -457,8 +457,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void TestServiceCollection_Issue4476([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4476")]
+		public void TestServiceCollection_CommandTimeoutPreserved([DataSources(false)] string context)
 		{
 			var collection = new ServiceCollection();
 
@@ -487,9 +487,8 @@ namespace Tests.Data
 			}
 		}
 
-		#region issue 4811
-		[Test]
-		public void Issue4811Test1()
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4811")]
+		public void TestServiceCollection_DistinctConnectionStringPerContextType()
 		{
 			var collection = new ServiceCollection();
 			var cs1 = "cs1";
@@ -525,7 +524,7 @@ namespace Tests.Data
 		[ActiveIssue(4811, ErrorMessage = "Assert.That(c2.ConnectionString, Is.EqualTo(cs2))",
 			Details = "the second registration comes back with the first one's connection string - #4811's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4811")]
-		public void Issue4811Test2()
+		public void TestServiceCollection_DistinctConnectionStringPerContextTypeWithPlainOptions()
 		{
 			var collection = new ServiceCollection();
 			var cs1 = "cs1";
@@ -543,8 +542,6 @@ namespace Tests.Data
 				Assert.That(c2.ConnectionString, Is.EqualTo(cs2));
 			}
 		}
-
-		#endregion
 
 		// informix connection limits interfere with test
 		[Test]
@@ -729,7 +726,6 @@ namespace Tests.Data
 			Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 		}
 
-		#region issue 962
 		[Table("Categories")]
 		public class Category
 		{
@@ -767,8 +763,8 @@ namespace Tests.Data
 			};
 		}
 
-		[Test]
-		public void TestDisposeFlagCloning962Test1([DataSources(false)] string context, [Values] bool withScope)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/962")]
+		public void DisposeFlagIsKeptOnConnectionCloning([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
 				context == ProviderName.DB2                     ||
@@ -805,7 +801,6 @@ namespace Tests.Data
 			using var tp     = db.CreateLocalTable(Product.Data);
 			var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
 		}
-		#endregion
 
 		[Table]
 		sealed class TransactionScopeTable
@@ -813,8 +808,8 @@ namespace Tests.Data
 			[Column] public int Id { get; set; }
 		}
 
-		[Test]
-		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2676")]
+		public void TransactionScopeIgnoredForAlreadyOpenedConnection([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -848,8 +843,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2676")]
+		public void TransactionScopeEnlistsConnectionOpenedInsideScope([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -881,8 +876,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2676")]
+		public void TransactionScopeEnlistsExplicitlyForOpenedConnection([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1437,6 +1432,247 @@ namespace Tests.Data
 			using var cn2 = GetDataContext(context, ms);
 
 			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1486")]
+		public void LoadWithOnConnectionFactoryDataConnection([DataSources(false)] string context)
+		{
+			using var db = new ConnectionFactoryDataConnection(context);
+			db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
+		}
+
+		public class ConnectionFactoryDataConnection : DataConnection
+		{
+			public ConnectionFactoryDataConnection(string configuration)
+				: base(new DataOptions().UseConnectionFactory(GetDataProvider(configuration), _ => GetConnection(configuration)))
+			{
+				// to avoid mapper conflict with SequentialAccess test provider
+				AddMappingSchema(new MappingSchema());
+			}
+
+			private static new IDataProvider GetDataProvider(string configuration)
+			{
+				return DataConnection.GetDataProvider(configuration);
+			}
+
+			private static DbConnection GetConnection(string configuration)
+			{
+				string connStr = GetConnectionString(configuration);
+
+				return DataConnection.GetDataProvider(configuration).CreateConnection(connStr);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		public void ContextDisposeReleasesPooledConnection([ConnectionLifetimeContextSource] string context)
+		{
+			for (var i = 0; i < 1000; i++)
+				using (var db = GetDataContext(context))
+				{
+					AreEqual(Person.Where(_ => _.ID == 1), db.Person.Where(_ => _.ID == 1));
+				}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		public void DataConnectionDisposeReleasesPooledConnection([ConnectionLifetimeContextSource(false)] string context)
+		{
+			for (var i = 0; i < 1000; i++)
+				using (var db = (DataConnection)GetDataContext(context))
+				{
+					AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1));
+				}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		public void DataContextClosesConnectionAfterQuery([ConnectionLifetimeContextSource(false)] string context)
+		{
+			for (var i = 0; i < 1000; i++)
+			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
+				var dc = new DataContext(context);
+#pragma warning restore CA2000 // Dispose objects before losing scope
+				AreEqual(Person.Where(_ => _.ID == 1), dc.GetTable<Person>().Where(_ => _.ID == 1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		public void DataConnectionDisposeReleasesPooledConnectionAsync([ConnectionLifetimeContextSource(false)] string context)
+		{
+			for (var i = 0; i < 1000; i++)
+				using (var db = (DataConnection)GetDataContext(context))
+				{
+					AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1).ToArrayAsync().Result);
+				}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		public void DataContextClosesConnectionAfterQueryAsync([ConnectionLifetimeContextSource(false)] string context)
+		{
+			for (var i = 0; i < 1000; i++)
+			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
+				var dc = new DataContext(context);
+#pragma warning restore CA2000 // Dispose objects before losing scope
+				AreEqual(Person.Where(_ => _.ID == 1), dc.GetTable<Person>().Where(_ => _.ID == 1).ToArrayAsync().Result);
+			}
+		}
+
+		IEnumerable<Person> GetPersonsQueryFromDisposedContext(string context)
+		{
+			using var db = GetDataContext(context);
+			return db.GetTable<Person>().Where(_ => _.ID == 1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		public void DeferredQueryOnDisposedContextThrows([ConnectionLifetimeContextSource] string context)
+		{
+			Assert.That(() =>
+			{
+				AreEqual(Person.Where(_ => _.ID == 1), GetPersonsQueryFromDisposedContext(context));
+			}, Throws.TypeOf<ObjectDisposedException>());
+		}
+
+		IEnumerable<Person> GetPersonsEnumerableFromDisposedContext(string context)
+		{
+			using var db = GetDataContext(context);
+			return db.GetTable<Person>().Where(_ => _.ID == 1).AsEnumerable();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		public void EnumerableQueryOnDisposedContextThrows([ConnectionLifetimeContextSource] string context)
+		{
+			Assert.That(() =>
+			{
+				AreEqual(Person.Where(_ => _.ID == 1), GetPersonsEnumerableFromDisposedContext(context));
+			}, Throws.TypeOf<ObjectDisposedException>());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/445")]
+		[Explicit("Too slow")]
+		[NoBaselines("Output depends on pool size")]
+		public void UndisposedContextsExhaustConnectionPool([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			Assert.That(() =>
+			{
+				for (var i = 0; i < 1000; i++)
+				{
+					var db = GetDataContext(context);
+					AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1));
+				}
+			}, Throws.TypeOf<InvalidOperationException>());
+		}
+
+		[AttributeUsage(AttributeTargets.Parameter)]
+		sealed class ConnectionLifetimeContextSourceAttribute : IncludeDataSourcesAttribute
+		{
+			public ConnectionLifetimeContextSourceAttribute(bool includeLinqService = true)
+				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse, TestProvName.AllDuckDB)
+			{ }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4883")]
+		public async Task AsyncQueryOpensConnectionAsyncInDataConnection()
+		{
+			using var dbConn = new AsyncOpenTrackingConnection();
+			using var db     = new DataConnection(new DataOptions().UseConnection(new TestNoopProvider(), dbConn));
+
+			_ = await db.GetTable<AsyncOpenEntity>().SingleOrDefaultAsync();
+		
+			Assert.That(dbConn.OpenedAsync, Is.True);
+		}
+	
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4883")]
+		public async Task AsyncQueryOpensConnectionAsyncInDataContext()
+		{
+			using var dbConn = new AsyncOpenTrackingConnection();
+			using var db     = new DataContext(new DataOptions().UseConnection(new TestNoopProvider(), dbConn));
+
+			_ = await db.GetTable<AsyncOpenEntity>().SingleOrDefaultAsync();
+		
+			Assert.That(dbConn.OpenedAsync, Is.True);
+		}
+
+		class AsyncOpenEntity;
+
+		class AsyncOpenTrackingConnection() : TestNoopConnection(string.Empty)
+		{
+			public bool OpenedAsync { get; private set; }
+
+			public override void Open()
+			{
+				OpenedAsync = false;
+				base.Open();
+			}
+
+			public override Task OpenAsync(CancellationToken cancellationToken)
+			{
+				OpenedAsync = true;
+				base.Open();
+				return Task.CompletedTask;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/927")]
+		public void ExternalConnectionDisposing([Values] bool dispose)
+		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
+			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
+
+			using (var db = new DataConnection(new DataOptions().UseConnection(new TestNoopProvider(), connection, dispose)))
+			{
+				var c = db.OpenDbConnection();
+				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
+				Assert.That(connection.IsDisposed, Is.EqualTo(dispose));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/927")]
+		public void InternalConnectionDisposed()
+		{
+			TestNoopConnection? connection;
+
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(new TestNoopProvider(), "")))
+			{
+				connection = db.OpenDbConnection() as TestNoopConnection;
+				Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
+				Assert.That(connection.IsDisposed, Is.True);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/927")]
+		public void ExternalConnectionNotClosed()
+		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
+			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
+			connection.Open();
+
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
+
+			using (var db = new DataConnection(new DataOptions().UseConnection(new TestNoopProvider(), connection, false)))
+			{
+				var c = db.TryGetDbConnection();
+				Assert.That(c, Is.Not.Null);
+				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(connection.IsDisposed, Is.False);
+			}
 		}
 	}
 }

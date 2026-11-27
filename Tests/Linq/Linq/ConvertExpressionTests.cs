@@ -1006,24 +1006,23 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region issue 3791
 		[Table]
-		public class Issue3791Table
+		public class GuidConvertedOwner
 		{
 			[Identity, PrimaryKey] public int     Id      { get; set; }
 			[Column              ] public string? OtherId { get; set; }
 
-			[Association(ThisKey = nameof(OtherId), OtherKey = nameof(Issue3791GuidTable.Id))]
-			public Issue3791GuidTable? Association { get; set; }
+			[Association(ThisKey = nameof(OtherId), OtherKey = nameof(GuidConvertedTarget.Id))]
+			public GuidConvertedTarget? Association { get; set; }
 		}
 		[Table(IsColumnAttributeRequired = false)]
-		public class Issue3791GuidTable
+		public class GuidConvertedTarget
 		{
 			[PrimaryKey] public Guid Id { get; set; }
 		}
 
-		[Test]
-		public void Issue3791Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3791")]
+		public void AssociationBetweenStringAndGuidWithConvertExpression([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<Guid, string>(a => a.ToString());
@@ -1031,11 +1030,10 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			using var table = db.CreateLocalTable<Issue3791Table>();
-			using var _     = db.CreateLocalTable<Issue3791GuidTable>();
+			using var table = db.CreateLocalTable<GuidConvertedOwner>();
+			using var _     = db.CreateLocalTable<GuidConvertedTarget>();
 
 			table.LoadWith(a => a.Association).ToList();
 		}
-		#endregion
 	}
 }

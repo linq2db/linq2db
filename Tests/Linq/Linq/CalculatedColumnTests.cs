@@ -281,5 +281,346 @@ namespace Tests.Linq
 				Assert.That(res[2].InterpolatedExpression, Is.EqualTo("Value3"));
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1900")]
+		public void ExpressionColumnOverDynamicPropertyFilter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new []{ new DynamicPropertyExprSource
+			{
+				Name = "Some",
+				Age = 10,
+				Options = 4
+			}}))
+			{
+				var result = db.GetTable<DynamicPropertyExprPerson>().Where(p => p.Type == 4 || p.Type == 5).ToList();
+				Assert.That(result, Has.Count.EqualTo(1));
+			}
+		}
+
+		[Table("PersonOptions")]
+		public class DynamicPropertyExprPerson
+		{
+			[Column("AGE")]
+			public int Age {get; set;}
+			[Column("NAME")]
+			public string? Name {get; set;}
+
+			[ExpressionMethod(nameof(GetTypeExpr), IsColumn = true)]
+			public int Type {get; set;}
+
+			public static Expression<Func<DynamicPropertyExprPerson, int>> GetTypeExpr()
+			{
+				return p => Sql.Property<int>(p, "OPTIONS") & 0xF;
+			}
+		}
+
+		[Table("PersonOptions")]
+		public class DynamicPropertyExprSource
+		{
+			[Column("AGE")]
+			public int Age {get; set;}
+			[Column("NAME")]
+			public string? Name {get; set;}
+
+			[Column("OPTIONS")]
+			public int Options { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1969")]
+		public void ExpressionColumnSubqueryCountInJoinFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(new[]
+			{
+				new CountColumnConfig{Id = 1, Name = "Some1"},
+				new CountColumnConfig{Id = 2, Name = "Some2"}
+			}))
+			using (db.CreateLocalTable(new[]
+			{
+				new CountColumnKompo{Number = 1, Typ = 1} ,
+				new CountColumnKompo{Number = 1, Typ = 2}, 
+				new CountColumnKompo{Number = 2, Typ = 3} 
+			}))
+			{
+				var query =
+					from k in db.GetTable<CountColumnKompo>()
+					from c in db.GetTable<CountColumnConfig>().InnerJoin(c => c.Id == k.Number)
+					where c.CountOf > 1
+					select c;
+				var res = query.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].CountOf, Is.EqualTo(2));
+					Assert.That(res[1].CountOf, Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Table("CONFIG")]
+		public partial class CountColumnConfig
+		{
+			[Column("ID"),      PrimaryKey,  NotNull] public int     Id   { get; set; } 
+			[Column("NAME"),    Nullable            ] public string? Name { get; set; } 
+	  
+			[ExpressionMethod(nameof(GetFromExpr), IsColumn = true)]
+			public int CountOf{ get; set; }
+
+			static Expression<Func<IDataContext, CountColumnConfig, int>> GetFromExpr()
+			{
+				return (db, p) => db.GetTable<CountColumnKompo>().Where(k => k.Number == p.Id).Count();
+			}
+		}
+
+		[Table("KOMPO")]
+		public partial class CountColumnKompo
+		{
+			[Column("TYP"),    PrimaryKey, NotNull] public int Typ    { get; set; }
+			[Column("NUMBER"),             NotNull] public int Number { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1983")]
+		public void ExpressionMethodSubselectColumnInOrFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<CardCountPerson>())
+			using (db.CreateLocalTable<CardCountCard>())
+			{
+				var q = from p in db.GetTable<CardCountPerson>()
+						select new CardCountPerson()
+						{
+							Id = p.Id,
+							CountOfCards = db.GetTable<CardCountCard>().Count(card => card.PersonId == p.Id && card.CardType == 2)
+						};
+
+				// works
+				q.Where(cu => cu.CountOfCards == 0 || cu.CountOfCards != 0).ToList();
+
+				// workaround
+				db.GetTable<CardCountPerson>().Where(cu => cu.CountOfCards3 == 0 || cu.CountOfCards3 != 0).ToList();
+
+				// fails
+				db.GetTable<CardCountPerson>().Where(cu => cu.CountOfCards2 == 0 || cu.CountOfCards2 != 0).ToList();
+			}
+		}
+
+		public class CardCountPerson
+		{
+			public int     Id            { get; set; }
+			public string? Name          { get; set; }
+			public int     CountOfCards  { get; set; }
+			[ExpressionMethod(nameof(CountOfCardExpr), IsColumn = true)]
+			public int     CountOfCards2 { get; set; }
+
+			public static Expression<Func<CardCountPerson, IDataContext, int>> CountOfCardExpr()
+			{
+				return (p, db) => db.GetTable<CardCountCard>().Count(card => card.PersonId == p.Id && card.CardType == 2);
+			}
+
+			[ExpressionMethod(nameof(CountOfCardExpr3), IsColumn = true)]
+			public int    CountOfCards3 { get; set; }
+
+			public static Expression<Func<CardCountPerson, IDataContext, int>> CountOfCardExpr3()
+			{
+				return (p, db) => p.Cards.Where(card => card.CardType == 2).Count();
+			}
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CardCountCard.PersonId))]
+			public IEnumerable<CardCountCard> Cards { get; set; } = null!;
+		}
+
+		public class CardCountCard
+		{
+			public int     Id         { get; set; }
+			public int     CardType   { get; set; }
+			public string? CardNumber { get; set; }
+			public int     PersonId   { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3001")]
+		public void ExpressionColumnUsingExpressionAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
+			string context)
+		{
+			using var db          = GetDataContext(context);
+			using var houseTable  = db.CreateLocalTable(new[] {new CalcColHouse  {Id = 1, Levels   = 2}});
+			using var personTable = db.CreateLocalTable(new[] {new CalcColPerson {Id = 1, HouseId  = 1}});
+			using var petTable    = db.CreateLocalTable(new[] {new CalcColPet    {Id = 1, PersonId = 1}});
+
+			var data = petTable
+				.Select(x => new {x.Id, x.IsHouseMultiLevel})
+				.First();
+
+			data.IsHouseMultiLevel.ShouldBeTrue();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3001")]
+		public void ExpressionColumnUsingExpressionAssociationWithMissingHouse([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool preferClient)
+		{
+			using var db          = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var houseTable  = db.CreateLocalTable(new[] {new CalcColHouse  {Id = 1, Levels   = 2}});
+			using var personTable = db.CreateLocalTable(new[] {new CalcColPerson {Id = 1, HouseId  = 1}, new CalcColPerson {Id = 2, HouseId  = 99}});
+			using var petTable    = db.CreateLocalTable(new[] {new CalcColPet    {Id = 1, PersonId = 1}, new CalcColPet    {Id = 2, PersonId = 2}});
+
+			var data = petTable
+				.OrderBy(x => x.Id)
+				.Select(x => new {x.Id, x.IsHouseMultiLevel, x.HasNoLevels})
+				.ToList();
+
+			data.Select(x => (x.Id, x.IsHouseMultiLevel, x.HasNoLevels)).ShouldBe(new[] {(1, true, false), (2, false, true)});
+
+			// A predicate keeps SQL NULL, so a missing house satisfies neither filter, unlike the projection.
+			petTable.Where(x => x.HasNoLevels).Select(x => x.Id).ToList().ShouldBeEmpty();
+			petTable.Where(x => x.IsHouseMultiLevel).Select(x => x.Id).ToList().ShouldBe(new[] {1});
+		}
+
+		public class CalcColHouse
+		{
+			[Column] [PrimaryKey] public int Id;
+
+			[Column]
+			public int Levels { get; set; }
+		}
+
+		public class CalcColPerson
+		{
+			[Column] public int HouseId;
+
+			[Column] [PrimaryKey] public int Id;
+
+			[Association(ThisKey = nameof(HouseId), OtherKey = "Id", CanBeNull = true)]
+			public CalcColHouse House { get; set; } = null!;
+		}
+
+		public class CalcColPet
+		{
+			[Column] [PrimaryKey] public int Id;
+
+			[Column] public int PersonId;
+
+			[Association(ThisKey = nameof(PersonId), OtherKey = "Id", CanBeNull = false)]
+			public CalcColPerson Person { get; set; } = null!;
+
+			[ExpressionMethod(nameof(HouseExpression))]
+			public CalcColHouse House { get; set; } = null!;
+
+			[ExpressionMethod(nameof(IsHouseMultiLevelExpression), IsColumn = true)]
+			public bool IsHouseMultiLevel { get; set; }
+
+			[ExpressionMethod(nameof(HasNoLevelsExpression), IsColumn = true)]
+			public bool HasNoLevels { get; set; }
+
+			private static Expression<Func<CalcColPet, CalcColHouse>> HouseExpression()
+			{
+				return entity => entity.Person.House;
+			}
+
+			private static Expression<Func<CalcColPet, bool>> IsHouseMultiLevelExpression()
+			{
+				// Replacing code below to entity.Parent.House.Levels > 1 will make column work
+				return entity => entity.House.Levels > 1;
+			}
+
+			private static Expression<Func<CalcColPet, bool>> HasNoLevelsExpression() => entity => entity.House.Levels < 1;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3043")]
+		public void CalculatedFieldOverExpressionAssociationChain([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db          = GetDataContext(context);
+			using var cityTable   = db.CreateLocalTable(new[] {new AssocChainCity {Id   = 1, Name   = "City", Population = 100}});
+			using var streetTable = db.CreateLocalTable(new[] {new AssocChainStreet {Id = 1, CityId = 1}, new AssocChainStreet {Id = 2, CityId = 99}});
+			using var houseTable  = db.CreateLocalTable(new[] {new AssocChainHouse {Id  = 1, StreetId = 1}, new AssocChainHouse {Id  = 2, StreetId = 2}});
+			using var personTable = db.CreateLocalTable(new[] {new AssocChainPerson {Id = 1, HouseId = 1}, new AssocChainPerson {Id = 2, HouseId = 2}});
+			using var petTable    = db.CreateLocalTable(new[] {new AssocChainPet {Id = 1, PersonId = 1}, new AssocChainPet {Id = 2, PersonId = 2}});
+
+			var data = petTable
+				.OrderBy(x => x.Id)
+				.Select(x => new
+				{
+					x.Id,
+					x.House!.Street!.CityInfo
+				})
+				.ToList();
+
+			data.Select(x => (x.Id, x.CityInfo)).ShouldBe(new (int, string?)[] {(1, "City 100"), (2, " 0")});
+		}
+
+		public class AssocChainCity
+		{
+			[Column, PrimaryKey]
+			public int Id;
+
+			[Column]
+			public string Name { get; set; } = null!;
+
+			[Column]
+			public int Population { get; set; }
+		}
+
+		public class AssocChainStreet
+		{
+			[Column, PrimaryKey]
+			public int Id;
+
+			[Column]
+			public int CityId { get; set; }
+	
+			[Association(ThisKey = nameof(CityId), OtherKey = "Id", CanBeNull = true)]
+			public AssocChainCity? City { get; set; }
+	
+			[ExpressionMethod(nameof(CityInfoExpression))]
+			public string? CityInfo { get; set; }
+
+			private static Expression<Func<AssocChainStreet, string>> CityInfoExpression()
+			{
+				return entity => entity.City!.Name + " " + entity.City.Population;
+			}
+		}
+
+		public class AssocChainHouse
+		{
+			[Column, PrimaryKey]
+			public int Id;
+
+			[Column]
+			public int StreetId { get; set; }
+	
+			[Association(ThisKey = nameof(StreetId), OtherKey = "Id", CanBeNull = true)]
+			public AssocChainStreet? Street { get; set; }
+		}
+
+		public class AssocChainPerson
+		{
+			[Column, PrimaryKey]
+			public int Id;
+
+			[Column]
+			public int HouseId;
+
+			[Association(ThisKey = nameof(HouseId), OtherKey = "Id", CanBeNull = true)]
+			public AssocChainHouse? House { get; set; }
+		}
+
+		public class AssocChainPet
+		{
+			[Column, PrimaryKey]
+			public int Id;
+
+			[Column]
+			public int PersonId;
+
+			[Association(ThisKey = nameof(PersonId), OtherKey = "Id", CanBeNull = false)]
+			public AssocChainPerson Person { get; set; } = null!;
+
+			[ExpressionMethod(nameof(HouseExpression))]
+			public AssocChainHouse? House { get; set; }
+
+			private static Expression<Func<AssocChainPet, AssocChainHouse>> HouseExpression()
+			{
+				return entity => entity.Person.House!;
+			}
+		}
 	}
 }

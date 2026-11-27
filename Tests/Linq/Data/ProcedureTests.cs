@@ -426,7 +426,7 @@ namespace Tests.Data
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4431")]
-		public void Issue4431Test([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool closeAfterUse)
+		public void QueryProcClosesConnectionOnlyWithCloseAfterUse([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool closeAfterUse)
 		{
 			var interceptor = new CountingContextInterceptor();
 			using var db = GetDataContext(context, o => o.UseInterceptor(interceptor));

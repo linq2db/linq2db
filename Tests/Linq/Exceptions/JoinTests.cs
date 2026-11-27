@@ -107,8 +107,8 @@ namespace Tests.Exceptions
 			AreEqual(expected, result);
 		}
 
-		[Test]
-		public void Issue498Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/498")]
+		public void GroupByOverAssociationSelectMany([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var expected1 = from x in Parent
@@ -132,8 +132,8 @@ namespace Tests.Exceptions
 			AreEqual(expected2, result2);
 		}
 
-		[Test]
-		public void Issue589([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/589")]
+		public void JoinDerivedTakeOneWithDefaultIfEmpty([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 			var result =

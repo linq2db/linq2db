@@ -465,17 +465,17 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
-		public void Issue5628SequenceDefaultExpressionIsNotIdentity([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void SequenceDefaultExpressionIsNotIdentity([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
 
 			// Fixed per test rather than TestUtils.GetNext(): the suffix reaches the captured DDL, so a
 			// process-wide counter makes the baseline depend on how many tests ran before this one. The
-			// five Issue5628 tests each own a number, which is all the uniqueness they need.
+			// five sequence-default tests each own a number, which is all the uniqueness they need.
 			var suffix       = 1;
-			var tableName    = $"issue5628_sample_messages_{suffix}";
-			var codeSequence = $"issue5628_code_seq_{suffix}";
-			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+			var tableName    = $"seqdef_messages_{suffix}";
+			var codeSequence = $"seqdef_code_seq_{suffix}";
+			var itemSequence = $"seqdef_item_id_seq_{suffix}";
 
 			try
 			{
@@ -514,13 +514,13 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
-		public void Issue5628ParenthesizedSequenceDefaultIsIdentity([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void ParenthesizedSequenceDefaultIsIdentity([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
 
 			var suffix       = 2;
-			var tableName    = $"issue5628_parenthesized_default_{suffix}";
-			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+			var tableName    = $"seqdef_parenthesized_{suffix}";
+			var itemSequence = $"seqdef_item_id_seq_{suffix}";
 
 			try
 			{
@@ -557,14 +557,14 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
-		public void Issue5628DuplicateSequenceDefaultsPreferPrimaryKey([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void DuplicateSequenceDefaultsPreferPrimaryKey([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
 
 			var suffix       = 3;
-			var tableName    = $"issue5628_two_defaults_pk_{suffix}";
-			var codeSequence = $"issue5628_code_seq_{suffix}";
-			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+			var tableName    = $"seqdef_two_pk_{suffix}";
+			var codeSequence = $"seqdef_code_seq_{suffix}";
+			var itemSequence = $"seqdef_item_id_seq_{suffix}";
 
 			try
 			{
@@ -599,14 +599,14 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
-		public void Issue5628DuplicateSequenceDefaultsWithoutPrimaryKeyUseFirstColumn([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void DuplicateSequenceDefaultsWithoutPrimaryKeyUseFirstColumn([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
 
 			var suffix       = 4;
-			var tableName    = $"issue5628_two_defaults_no_pk_{suffix}";
-			var codeSequence = $"issue5628_code_seq_{suffix}";
-			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+			var tableName    = $"seqdef_two_no_pk_{suffix}";
+			var codeSequence = $"seqdef_code_seq_{suffix}";
+			var itemSequence = $"seqdef_item_id_seq_{suffix}";
 
 			try
 			{
@@ -640,13 +640,13 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
-		public void Issue5628RealIdentityPreferredOverSequenceDefault([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
+		public void RealIdentityPreferredOverSequenceDefault([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 
 			var suffix       = 5;
-			var tableName    = $"issue5628_real_identity_{suffix}";
-			var codeSequence = $"issue5628_code_seq_{suffix}";
+			var tableName    = $"seqdef_real_identity_{suffix}";
+			var codeSequence = $"seqdef_code_seq_{suffix}";
 
 			try
 			{

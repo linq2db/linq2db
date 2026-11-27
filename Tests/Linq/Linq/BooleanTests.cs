@@ -726,7 +726,7 @@ namespace Tests.Linq
 		static bool FtxContains(string columnOrColumns, string search) => throw new ServerSideOnlyException(nameof(FtxContains));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4933")]
-		public void IssueFunctionPredicate([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		public void FunctionAsPredicateIsNotComparedToTrue([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using var db = new NorthwindDB(context);
 

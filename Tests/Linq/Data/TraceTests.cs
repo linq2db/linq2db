@@ -869,7 +869,7 @@ namespace Tests.Data
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3663")]
-		public void Issue3663Test([DataSources(false)] string context)
+		public void TraceInfoSqlTextDoesNotThrowObjectDisposed([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context, o => o.UseTracing(Trace));
 			db.Person.ToArray();

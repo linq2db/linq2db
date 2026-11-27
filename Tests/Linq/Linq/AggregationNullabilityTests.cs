@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -321,5 +323,49 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Table]
+		sealed class MaxEmptySetTable
+		{
+			[Column] public int Id    { get; set; }
+			[Column] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2588")]
+		public async Task MaxAsyncOverEmptySetNullability([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<MaxEmptySetTable>())
+			{ 
+				await Assert.ThatAsync(() => db.GetTable<MaxEmptySetTable>()
+					.Where(x => x.Id == 0)
+					.Select(x => x.Value)
+					.MaxAsync(),
+					Throws.TypeOf<InvalidOperationException>());
+
+				var value1 = await db.GetTable<MaxEmptySetTable>()
+					.Where(x => x.Id == 0)
+					.Select(x => Sql.ToNullable(x.Value))
+					.MaxAsync();
+
+				Assert.That(value1, Is.Null);
+
+				var value2 = await db.GetTable<MaxEmptySetTable>()
+					.Where(x => x.Id == 0)
+					.Select(x => (int?)x.Value)
+					.DefaultIfEmpty(0)
+					.MaxAsync();
+
+				Assert.That(value2, Is.Zero);
+
+				var value3 = await db.GetTable<MaxEmptySetTable>()
+					.Where(x => x.Id == 0)
+					.Select(x => x.Value)
+					.DefaultIfEmpty(5)
+					.MaxAsync();
+
+				Assert.That(value3, Is.EqualTo(5));
+			}
+		}
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Data.Linq;
 using System.IO;
 using System.Linq;
 
@@ -250,7 +251,6 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		#region Issue 1918
 		// Stream columns are unimplemented everywhere, so each provider dies at whichever stage it first meets
 		// the unsupported type. Grouped by that stage rather than by wording.
 		[ActiveIssue(1918, Configurations = [TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllPostgreSQL],
@@ -270,10 +270,10 @@ namespace Tests.Linq
 			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllMySql, ProviderName.DB2],
 			Details = "no-declaration: unvalidated: not reachable from this workstation - no container for most, and Informix/DB2 evidence is inadmissible here because the IBM CLI driver replaces the server text with a codepage-conversion message.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1918")]
-		public void Issue1918Test([DataSources] string context)
+		public void StreamBlobRoundTrip([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue1918Table>();
+			using var tb = db.CreateLocalTable<StreamBlobTable>();
 
 			using (var stream = new MemoryStream())
 			{
@@ -282,7 +282,7 @@ namespace Tests.Linq
 				stream.WriteByte(2);
 				stream.Position = 0;
 
-				var entity = new Issue1918Table()
+				var entity = new StreamBlobTable()
 				{
 					Id = 1,
 					Blob = stream
@@ -304,12 +304,196 @@ namespace Tests.Linq
 			Assert.That(data, Is.EqualTo(new byte[] { 1, 2 }));
 		}
 
-		[Table("Issue4163Table")]
-		sealed class Issue1918Table
+		[Table("StreamBlobTable")]
+		sealed class StreamBlobTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.Blob)] public Stream? Blob { get; set; }
 		}
-		#endregion
+
+		[Table]
+		public class BinaryColumnRecord
+		{
+			[PrimaryKey]
+			public int    ID     { get; set; }
+			[Column(Length = 10)]
+			public byte[]? Array  { get; set; }
+			[Column(Length = 10)]
+			public Binary? Binary { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1303")]
+		public void BinaryAndByteArrayColumnRoundTrip([DataSources] string context, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context);
+			using var tbl = db.CreateLocalTable<BinaryColumnRecord>();
+			// Informix: apply inlining to insert to test binary parameters
+			if (context.IsAnyOf(TestProvName.AllInformix))
+				db.InlineParameters = inlineParameters;
+
+			tbl.Insert(() => new BinaryColumnRecord()
+			{
+				ID = 1,
+				Array = new byte[] { 1, 2, 3 },
+				Binary = new Binary(new byte[] { 4, 5 })
+			});
+
+			db.InlineParameters = inlineParameters;
+
+			var byId     = tbl.Where(_ => _.ID == 1).Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(byId.ID, Is.EqualTo(1));
+				Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array!), Is.True);
+				Assert.That(new byte[] { 4, 5 }.SequenceEqual(byId.Binary!.ToArray()), Is.True);
+			}
+
+			// Informix: doesn't support blobs in conditions
+			if (!context.IsAnyOf(TestProvName.AllInformix))
+			{
+				var byArray  = tbl.Where(_ => _.Array  == new byte[] { 1, 2, 3 })         .Single();
+				var byBinary = tbl.Where(_ => _.Binary == new Binary(new byte[] { 4, 5 })).Single();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(byArray.ID, Is.EqualTo(1));
+					Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array!), Is.True);
+					Assert.That(new byte[] { 4, 5 }.SequenceEqual(byArray.Binary!.ToArray()), Is.True);
+
+					Assert.That(byBinary.ID, Is.EqualTo(1));
+					Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array!), Is.True);
+					Assert.That(new byte[] { 4, 5 }.SequenceEqual(byBinary.Binary!.ToArray()), Is.True);
+				}
+			}
+		}
+
+		public class SByteColumnsRecord
+		{
+			[PrimaryKey] public int ID { get; set; }
+			public sbyte TestField { get; set; }
+			public sbyte? TestNullable { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1351")]
+		public void CompareSByteAndNullableSByteColumns([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SByteColumnsRecord>();
+			table.Where(_ => _.TestField == 0).ToArray(); // Compare `sbyte`
+			table.Where(_ => _.TestNullable != 1).ToArray(); // Compare `sbyte?` to non-null
+		}
+
+		public class BlobValueEntity
+		{
+			[Column, PrimaryKey]
+			public int Id;
+
+			[Column(Length = 100)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.DB2)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.Firebird)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.Oracle)]
+			[Column(DataType = DataType.VarBinary, Configuration = ProviderName.ClickHouse)]
+			[Column(DataType = DataType.Blob,      Configuration = ProviderName.PostgreSQL, DbType = "bytea")]
+			[Column(                               Configuration = ProviderName.Informix,   DbType = "byte")]
+			public byte[]? BlobValue;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/421")]
+		public void BlobInsertAndUpdateWithParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<BlobValueEntity>())
+			{
+				db.Into(db.GetTable<BlobValueEntity>())
+					.Value(p => p.Id,        1)
+					.Value(p => p.BlobValue, new byte[] { 1, 2, 3 })
+					.Insert();
+
+				var v = db.GetTable<BlobValueEntity>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
+
+				db.GetTable<BlobValueEntity>()
+					.Where(_ => _.Id == 1)
+					.Set(_ => _.BlobValue, new byte[] {3, 2, 1})
+					.Update();
+
+				v = db.GetTable<BlobValueEntity>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/421")]
+		public void BlobInsertAndUpdateWithInlinedParameters([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<BlobValueEntity>())
+			{
+				db.InlineParameters = true;
+
+				db.Into(db.GetTable<BlobValueEntity>())
+					.Value(p => p.Id,        1)
+					.Value(p => p.BlobValue, new byte[] { 1, 2, 3 })
+					.Insert();
+
+				var v = db.GetTable<BlobValueEntity>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
+
+				db.GetTable<BlobValueEntity>()
+					.Where(_ => _.Id == 1)
+					.Set(_ => _.BlobValue, new byte[] {3, 2, 1})
+					.Update();
+
+				v = db.GetTable<BlobValueEntity>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/421")]
+		public void BlobEntityInsert([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<BlobValueEntity>())
+			{
+				var e = new BlobValueEntity() {Id = 1, BlobValue = new byte[] {1, 2, 3}};
+
+				db.Insert(e);
+
+				var v = db.GetTable<BlobValueEntity>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
+
+				e.BlobValue = new byte[] {3, 2, 1};
+
+				v = db.GetTable<BlobValueEntity>().First(_ => _.Id == 1);
+
+				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/421")]
+		public void BlobEntityInsertIntoNamedTableWithInlinedParameters([DataSources] string context)
+		{
+			var tableName = nameof(BlobValueEntity);
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<BlobValueEntity>(tableName);
+			db.InlineParameters = true;
+
+			var e = new BlobValueEntity() { Id = 1, BlobValue = new byte[] { 1, 2, 3 } };
+
+			db.Insert(e, tableName);
+
+			var v = table.First(_ => _.Id == 1);
+
+			AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
+
+			e.BlobValue = new byte[] { 3, 2, 1 };
+
+			v = table.First(_ => _.Id == 1);
+
+			AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
+		}
 	}
 }

@@ -33,7 +33,7 @@ namespace Tests.UserTests
 			public override SkipModification Affects { get; }
 		}
 
-		[Table("PR_1598_SkipCustom_Table")]
+		[Table("SkipCustomValuesTable")]
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]

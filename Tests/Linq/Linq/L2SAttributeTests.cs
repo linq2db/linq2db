@@ -82,18 +82,18 @@ namespace Tests.Linq
 		[ActiveIssue(3691, Configuration = ProviderName.SQLiteMS, ErrorMessage = "near \")\": syntax error",
 			Details = "as the Access half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3691")]
-		public void Issue3691Test([DataSources] string context)
+		public void CreateLocalTableFromSystemTableAttributeWithoutColumns([DataSources] string context)
 		{
 			var ms = new LinqToDB.Mapping.MappingSchema();
 			ms.AddMetadataReader(new SystemComponentModelDataAnnotationsSchemaAttributeReader());
 			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
 
 			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable<Issue3691Table>();
+			using var tb = db.CreateLocalTable<SystemTableWithoutColumns>();
 		}
 
-		[Table(Name = "Issue3691Table")]
-		sealed class Issue3691Table
+		[Table(Name = "SystemTableWithoutColumns")]
+		sealed class SystemTableWithoutColumns
 		{
 			public int Id { get; set; }
 		}

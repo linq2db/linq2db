@@ -2,11 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Numerics;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -18,6 +20,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -40,6 +43,10 @@ using NUnit.Framework.Internal.Builders;
 using Shouldly;
 
 using Tests.Model;
+
+using FormattableStringFactory = System.Runtime.CompilerServices.FormattableStringFactory;
+using JsonSerializer = System.Text.Json.JsonSerializer;
+using JsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
 
 namespace Tests.DataProvider
 {
@@ -863,8 +870,8 @@ namespace Tests.DataProvider
 			public string? cdni_cd_cod_numero_item1;
 		}
 
-		[Test]
-		public void Issue140([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/140")]
+		public void QueryIntColumnIntoStringField([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 			var list = db.Query<TestTeamplate>("select 1 as cdni_cd_cod_numero_item1").ToList();
@@ -2171,8 +2178,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void Issue1742_Timestamp(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1742")]
+		public void DateTimeKindParameterToTimestampFunction(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[ValueSource(nameof(DateTimeKinds))] DateTimeKindTestCase value,
 			[Values(DataType.Undefined, DataType.Date)] DataType dataType,
@@ -2219,8 +2226,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void Issue1742_Date(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1742")]
+		public void DateTimeKindParameterToDateFunction(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[ValueSource(nameof(DateTimeKinds))] DateTimeKindTestCase value,
 			[ValueSource(nameof(DateTypes))] DataTypeTestCase type)
@@ -2233,8 +2240,8 @@ namespace Tests.DataProvider
 			Assert.That(result.Value, Is.EqualTo(42));
 		}
 
-		[Test]
-		public void Issue1742_TimestampTZ(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1742")]
+		public void DateTimeKindParameterToTimestampTzFunction(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[ValueSource(nameof(DateTimeKinds))] DateTimeKindTestCase value,
 			[ValueSource(nameof(TSTZTypes))] DataTypeTestCase type)
@@ -2248,7 +2255,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("AllTypes")]
-		public class Issue1429Table
+		public class IntervalAllTypes
 		{
 			[Column, PrimaryKey, Identity]         public int             ID                { get; set; }
 			[Column]                               public TimeSpan?       timeDataType      { get; set; }
@@ -2256,34 +2263,34 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.Interval)] public TimeSpan?       intervalDataType2 { get; set; }
 		}
 
-		[Test]
-		public void Issue1429_Interval([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1429")]
+		public void InsertIntervalColumnsFromTimeSpanAndNpgsqlInterval([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
-			var maxId = db.GetTable<Issue1429Table>().Select(_ => _.ID).Max();
+			var maxId = db.GetTable<IntervalAllTypes>().Select(_ => _.ID).Max();
 			try
 			{
-				db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+				db.GetTable<IntervalAllTypes>().Insert(() => new IntervalAllTypes()
 				{
 					timeDataType = TimeSpan.FromMinutes(1),
 					intervalDataType = new NpgsqlInterval(1, 2, 3),
 					intervalDataType2 = TimeSpan.FromMinutes(1),
 				});
 
-				db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+				db.GetTable<IntervalAllTypes>().Insert(() => new IntervalAllTypes()
 				{
 					intervalDataType = new NpgsqlInterval(5, 6, 7),
 					intervalDataType2 = TimeSpan.FromDays(3),
 				});
 
-				db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+				db.GetTable<IntervalAllTypes>().Insert(() => new IntervalAllTypes()
 					{
 						timeDataType = TimeSpan.FromDays(3)
 					});
 			}
 			finally
 			{
-				db.GetTable<Issue1429Table>().Delete(_ => _.ID > maxId);
+				db.GetTable<IntervalAllTypes>().Delete(_ => _.ID > maxId);
 			}
 		}
 
@@ -2573,36 +2580,36 @@ $function$
 		}
 
 		[Table("AllTypes")]
-		public class Issue3895Table
+		public class TimestampKindAllTypes
 		{
 			[Column, PrimaryKey, Identity                  ] public int       ID                  { get; set; }
 			[Column                                        ] public DateTime? timestampDataType   { get; set; }
 			[Column(DbType = "timestamp with time zone")   ] public DateTime? timestampTZDataType { get; set; }
 		}
 
-		[Test]
-		public void TestIssue3895([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] DateTimeKind kind)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3895")]
+		public void TimestampKindParameterReusedAcrossColumns([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] DateTimeKind kind)
 		{
 			using var db = GetDataContext(context);
 
 			var dt = new DateTime(TestData.DateTime.Ticks, kind);
 
-			_ = db.GetTable<Issue3895Table>()
+			_ = db.GetTable<TimestampKindAllTypes>()
 				// also tests that same value used as two parameters with different kinds/db types
 				.Where(e => e.timestampDataType == dt && e.timestampTZDataType == dt)
 				.ToArray();
 		}
 
-		[Test]
-		public void TestIssue3895BulkCopy(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3895")]
+		public void BulkCopyTimestampKinds(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[Values] DateTimeKind kind,
 			[Values] BulkCopyType bulkCopyType)
 		{
-			var tableName = "TestIssue3895BulkCopy";
+			var tableName = "BulkCopyTsKinds";
 
 			using var db  = GetDataContext(context);
-			using var t   = db.CreateLocalTable<Issue3895Table>(tableName: tableName);
+			using var t   = db.CreateLocalTable<TimestampKindAllTypes>(tableName: tableName);
 			var dt        = new DateTime(TestData.DateTime.Ticks, kind);
 
 			var options   = new BulkCopyOptions()
@@ -2611,7 +2618,7 @@ $function$
 				BulkCopyType = bulkCopyType
 			};
 
-			db.BulkCopy(options, new[] { new Issue3895Table() { timestampDataType = dt, timestampTZDataType = dt } });
+			db.BulkCopy(options, new[] { new TimestampKindAllTypes() { timestampDataType = dt, timestampTZDataType = dt } });
 		}
 
 		// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
@@ -2677,10 +2684,9 @@ $function$
 			idColumn!.IsPrimaryKey.ShouldBe(!context.IsAnyOf(TestProvName.PostgreSQL10));
 		}
 
-		#region Issue 4556
 		// TODO: enable remote context (requires dictionary serialization support)
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
-		public void Issue4556Test_ByDataType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
+		public void MergeEmptyAndNonEmptyJsonSourceByDataType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
 		{
 			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
 			builder.EnableDynamicJson();
@@ -2689,25 +2695,25 @@ $function$
 			DataOptions OptionsBuilder(DataOptions o) => o.UseConnectionFactory(GetDataProvider(context), _ => dataSource.CreateConnection());
 
 			using var db = GetDataContext(context, OptionsBuilder);
-			using var tb  = db.CreateLocalTable<Issue4556Table1>();
+			using var tb  = db.CreateLocalTable<JsonByDataTypeTable>();
 
 			// test empty set typing
 			tb.Merge()
-				.Using(Array.Empty<Issue4556Table1>())
+				.Using(Array.Empty<JsonByDataTypeTable>())
 				.OnTargetKey()
 				.InsertWhenNotMatched()
 				.Merge();
 
 			// test non-empty set typing with more than 1 row
 			tb.Merge()
-				.Using(Issue4556Table1.TestData)
+				.Using(JsonByDataTypeTable.TestData)
 				.OnTargetKey()
 				.InsertWhenNotMatched()
 				.Merge();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
-		public void Issue4556Test_ByDbType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
+		public void MergeEmptyAndNonEmptyJsonSourceByDbType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
 		{
 			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
 			builder.EnableDynamicJson();
@@ -2716,24 +2722,24 @@ $function$
 			DataOptions OptionsBuilder(DataOptions o) => o.UseConnectionFactory(GetDataProvider(context), _ => dataSource.CreateConnection());
 
 			using var db = GetDataContext(context, OptionsBuilder);
-			using var tb  = db.CreateLocalTable<Issue4556Table2>();
+			using var tb  = db.CreateLocalTable<JsonByDbTypeTable>();
 
 			// test empty set typing
 			tb.Merge()
-				.Using(Array.Empty<Issue4556Table2>())
+				.Using(Array.Empty<JsonByDbTypeTable>())
 				.OnTargetKey()
 				.InsertWhenNotMatched()
 				.Merge();
 
 			// test non-empty set typing with more than 1 row
 			tb.Merge()
-				.Using(Issue4556Table2.TestData)
+				.Using(JsonByDbTypeTable.TestData)
 				.OnTargetKey()
 				.InsertWhenNotMatched()
 				.Merge();
 		}
 
-		sealed class Issue4556Table1
+		sealed class JsonByDataTypeTable
 		{
 			[PrimaryKey, Identity] public int Id { get; set; }
 
@@ -2749,9 +2755,9 @@ $function$
 			[Column(DataType = DataType.BinaryJson, Name = "Headers_jsonb")]
 			public Dictionary<string, string>? HeadersJsonB { get; set; }
 
-			public static Issue4556Table1[] TestData =
+			public static JsonByDataTypeTable[] TestData =
 			[
-				new Issue4556Table1()
+				new JsonByDataTypeTable()
 				{
 					PayloadJson = "true",
 					PayloadJsonB = "123",
@@ -2764,7 +2770,7 @@ $function$
 						{ "key2", "value3" }
 					}
 				},
-				new Issue4556Table1()
+				new JsonByDataTypeTable()
 				{
 					PayloadJson = "\"some string\"",
 					PayloadJsonB = "-124",
@@ -2780,7 +2786,7 @@ $function$
 			];
 		}
 
-		sealed class Issue4556Table2
+		sealed class JsonByDbTypeTable
 		{
 			[PrimaryKey, Identity] public int Id { get; set; }
 
@@ -2796,9 +2802,9 @@ $function$
 			[Column(DbType = "jsonb", Name = "Headers_jsonb")]
 			public Dictionary<string, string>? HeadersJsonB { get; set; }
 
-			public static Issue4556Table2[] TestData =
+			public static JsonByDbTypeTable[] TestData =
 			[
-				new Issue4556Table2()
+				new JsonByDbTypeTable()
 				{
 					PayloadJson = "true",
 					PayloadJsonB = "123",
@@ -2811,7 +2817,7 @@ $function$
 						{ "key2", "value3" }
 					}
 				},
-				new Issue4556Table2()
+				new JsonByDbTypeTable()
 				{
 					PayloadJson = "\"some string\"",
 					PayloadJsonB = "-124",
@@ -2826,12 +2832,9 @@ $function$
 				}
 			];
 		}
-		#endregion
-
-		#region 4487
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4487")]
-		public void Issue4487Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		public void InsertAndReadPgEnumAndEnumArray([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			IDataProvider dataProvider;
 			string?       connectionString;
@@ -2850,42 +2853,42 @@ $function$
   'type2',
   'type3'
 )");
-				using var _ = db1.CreateLocalTable<Issue4487Table>();
+				using var _ = db1.CreateLocalTable<PgEnumColumnsTable>();
 
 				var builder = new NpgsqlDataSourceBuilder(connectionString);
-				builder.MapEnum<Issue4487Enum>("item_type_enum");
+				builder.MapEnum<PgItemEnum>("item_type_enum");
 				var dataSource = builder.Build();
 
 				using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
 
-				db.GetTable<Issue4487Table>()
+				db.GetTable<PgEnumColumnsTable>()
 					.Value(x => x.Id, 1)
-					.Value(x => x.Value, Issue4487Enum.Type1)
+					.Value(x => x.Value, PgItemEnum.Type1)
 					.Insert();
 
-				db.Execute("insert into \"Issue4487Table\"(\"Id\", \"Values\") values (2, '{type3,type2}')");
+				db.Execute("insert into \"PgEnumColumnsTable\"(\"Id\", \"Values\") values (2, '{type3,type2}')");
 
-				db.GetTable<Issue4487Table>()
+				db.GetTable<PgEnumColumnsTable>()
 					.Value(x => x.Id, 3)
-					.Value(x => x.Values, [Issue4487Enum.Type1, Issue4487Enum.Type2])
+					.Value(x => x.Values, [PgItemEnum.Type1, PgItemEnum.Type2])
 					.Insert();
 
-				var result = db.GetTable<Issue4487Table>().OrderBy(r => r.Id).ToArray();
+				var result = db.GetTable<PgEnumColumnsTable>().OrderBy(r => r.Id).ToArray();
 
 				Assert.That(result, Has.Length.EqualTo(3));
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(1));
-					Assert.That(result[0].Value, Is.EqualTo(Issue4487Enum.Type1));
+					Assert.That(result[0].Value, Is.EqualTo(PgItemEnum.Type1));
 					Assert.That(result[0].Values, Is.Null);
 
 					Assert.That(result[1].Id, Is.EqualTo(2));
 					Assert.That(result[1].Value, Is.Null);
-					Assert.That(result[1].Values, Is.EqualTo(new Issue4487Enum[] { Issue4487Enum.Type3, Issue4487Enum.Type2 }));
+					Assert.That(result[1].Values, Is.EqualTo(new PgItemEnum[] { PgItemEnum.Type3, PgItemEnum.Type2 }));
 
 					Assert.That(result[2].Id, Is.EqualTo(3));
 					Assert.That(result[2].Value, Is.Null);
-					Assert.That(result[2].Values, Is.EqualTo(new Issue4487Enum[] { Issue4487Enum.Type1, Issue4487Enum.Type2 }));
+					Assert.That(result[2].Values, Is.EqualTo(new PgItemEnum[] { PgItemEnum.Type1, PgItemEnum.Type2 }));
 				}
 			}
 			finally
@@ -2895,16 +2898,16 @@ $function$
 		}
 
 		[Table]
-		sealed class Issue4487Table
+		sealed class PgEnumColumnsTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			[Column(DbType = "item_type_enum", DataType = DataType.Enum)] public Issue4487Enum? Value { get; set; }
-			[Column(DbType = "item_type_enum[]", DataType = DataType.Enum)] public Issue4487Enum[]? Values { get; set; }
+			[Column(DbType = "item_type_enum", DataType = DataType.Enum)] public PgItemEnum? Value { get; set; }
+			[Column(DbType = "item_type_enum[]", DataType = DataType.Enum)] public PgItemEnum[]? Values { get; set; }
 		}
 
 		[PgName("item_type_enum")]
-		enum Issue4487Enum
+		enum PgItemEnum
 		{
 			[PgName("type1")]
 			[MapValue("type1")]
@@ -2916,9 +2919,6 @@ $function$
 			[MapValue("type3")]
 			Type3,
 		}
-		#endregion
-
-		#region issue 4250
 
 		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
 		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new ServerSideOnlyException(nameof(Distance));
@@ -2926,25 +2926,21 @@ $function$
 		[ActiveIssue(4250, ErrorTypeName = "System.FormatException", ErrorMessage = "The input string 'point1' was not in a correct format.",
 			Details = "a named parameter inside Sql.Expression is read as a format placeholder - #4250's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
-		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void NamedParameterInSqlExpression([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			db.GetTable<AllTypes>().Select(r => Distance(r.pointDataType, r.pointDataType)).ToArray();
 		}
 
-		#endregion
-
-		#region issue 4348
-
 		[Sql.Expression("{0} @> '[{1}]'", ServerSideOnly = true, IsPredicate = true, InlineParameters = true)]
 		static bool JsonContains(string? json, int value) => throw new ServerSideOnlyException(nameof(JsonContains));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
-		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		public void JsonbContainsWithNullCheck([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4348Table>();
+			using var tb = db.CreateLocalTable<JsonbContainsTable>();
 
 			var storeId = 1;
 			tb
@@ -2954,10 +2950,10 @@ $function$
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
-		public void Issue4348Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		public void JsonbContainsWithConstantConditionAndNullCheck([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4348Table>();
+			using var tb = db.CreateLocalTable<JsonbContainsTable>();
 
 			var storeId = 1;
 			tb
@@ -2967,24 +2963,20 @@ $function$
 		}
 
 		[Table]
-		sealed class Issue4348Table
+		sealed class JsonbContainsTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column(DbType = "jsonb")] public string? Value { get; set; }
 		}
-
-		#endregion
-
-		#region issue 4780
 
 		// for tests to work, we need pg-specific metadata provider, which provides enum mappings:
 		// - from Pg* attributes
 		// - schema tables
 		// - using npgsql-specific naming conventions
 		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
-			Details = "the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\". Needs the pg-specific metadata provider described above. The 4780 in these names is npgsql's issue, not linq2db's - linq2db 4780 is an unrelated merged PR.")]
+			Details = "the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\". Needs the pg-specific metadata provider described above. The 4780 in the Description is npgsql's issue, not linq2db's - linq2db 4780 is an unrelated merged PR.")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
-		public void Issue4780Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		public void EnumVariableComparison([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			IDataProvider dataProvider;
 			string?       connectionString;
@@ -2998,21 +2990,21 @@ $function$
 			try
 			{
 				db1.Execute(@"create type bar_enum as enum ('item_one', 'item_two');");
-				using var _ = db1.CreateLocalTable<Issue4780Table>();
+				using var _ = db1.CreateLocalTable<BarEnumTable>();
 
 				var builder = new NpgsqlDataSourceBuilder(connectionString);
-				builder.MapEnum<Issue4780Enum>("item_type_enum");
+				builder.MapEnum<BarItemEnum>("item_type_enum");
 				var dataSource = builder.Build();
 
 				using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
 
-				db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemOne });
-				db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemTwo });
+				db.Insert(new BarEnumTable() { Bar = BarItemEnum.ItemOne });
+				db.Insert(new BarEnumTable() { Bar = BarItemEnum.ItemTwo });
 
-				var variable = Issue4780Enum.ItemOne;
+				var variable = BarItemEnum.ItemOne;
 
 				db.InlineParameters = inline;
-				var record = db.GetTable<Issue4780Table>().Where(f => f.Bar == variable).Single();
+				var record = db.GetTable<BarEnumTable>().Where(f => f.Bar == variable).Single();
 
 				Assert.That(record.Bar, Is.EqualTo(variable));
 			}
@@ -3023,9 +3015,9 @@ $function$
 		}
 
 		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
-			Details = "as Issue4780Test1 - the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\".")]
+			Details = "as EnumVariableComparison - the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\".")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
-		public void Issue4780Test2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		public void EnumArrayContainsComparison([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			IDataProvider dataProvider;
 			string?       connectionString;
@@ -3039,25 +3031,25 @@ $function$
 			try
 			{
 				db1.Execute(@"create type bar_enum as enum ('item_one', 'item_two');");
-				using var _ = db1.CreateLocalTable<Issue4780Table>();
+				using var _ = db1.CreateLocalTable<BarEnumTable>();
 
 				var builder = new NpgsqlDataSourceBuilder(connectionString);
-				builder.MapEnum<Issue4780Enum>("item_type_enum");
+				builder.MapEnum<BarItemEnum>("item_type_enum");
 				var dataSource = builder.Build();
 
 				using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
 
-				db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemOne });
-				db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemTwo });
+				db.Insert(new BarEnumTable() { Bar = BarItemEnum.ItemOne });
+				db.Insert(new BarEnumTable() { Bar = BarItemEnum.ItemTwo });
 
 				var items = new[]
 					{
-						Issue4780Enum.ItemOne,
-						Issue4780Enum.ItemTwo
+						BarItemEnum.ItemOne,
+						BarItemEnum.ItemTwo
 					};
 
 				db.InlineParameters = inline;
-				var record = db.GetTable<Issue4780Table>().Where(f => items.Contains(f.Bar)).ToArray();
+				var record = db.GetTable<BarEnumTable>().Where(f => items.Contains(f.Bar)).ToArray();
 
 				Assert.That(record, Has.Length.EqualTo(2));
 			}
@@ -3067,32 +3059,28 @@ $function$
 			}
 		}
 
-		enum Issue4780Enum
+		enum BarItemEnum
 		{
 			ItemOne,
 			ItemTwo
 		}
 
 		[Table]
-		sealed class Issue4780Table
+		sealed class BarEnumTable
 		{
 			[Column(IsIdentity = true)] public int Id { get; set; }
-			[Column(CanBeNull = true, DataType = DataType.Enum)] public Issue4780Enum Bar { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.Enum)] public BarItemEnum Bar { get; set; }
 		}
-
-		#endregion
-
-		#region Issue 2796
 
 		[ActiveIssue(2796, SkipForNonLinqService = true, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Cannot write DateTime with",
 			Details = "the tstzrange's DateTime kind does not survive the remote transport - #2796's mapping gap, remote only.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
-		public void Issue2796Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void InsertTstzRangeAsDateTime([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue2796Table>();
+			using var tb = db.CreateLocalTable<TstzRangeTable>();
 
-			var record = new Issue2796Table()
+			var record = new TstzRangeTable()
 			{
 				RangeMappedAsDateTime = new NpgsqlRange<DateTime>(TestData.DateTime6Utc, TestData.DateTime6Utc.AddDays(1))
 			};
@@ -3107,12 +3095,12 @@ $function$
 		[ActiveIssue(2796, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Cannot convert value{0}NpgsqlTypes.NpgsqlRange",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. One attribute covers both transports: the remote message carries the inner type name, which is what Matches looks for there.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
-		public void Issue2796Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void InsertTstzRangeAsDateTimeOffset([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue2796Table>();
+			using var tb = db.CreateLocalTable<TstzRangeTable>();
 
-			var record = new Issue2796Table()
+			var record = new TstzRangeTable()
 			{
 				RangeMappedAsDateTimeOffset = new NpgsqlRange<DateTimeOffset>(TestData.DateTimeOffset6Utc, TestData.DateTimeOffset6Utc.AddDays(1))
 			};
@@ -3125,7 +3113,7 @@ $function$
 		}
 
 		[Table("test")]
-		public class Issue2796Table
+		public class TstzRangeTable
 		{
 
 			[Column(DbType = "tstzrange")]
@@ -3135,10 +3123,8 @@ $function$
 			public NpgsqlRange<DateTime>? RangeMappedAsDateTime { get; set; }
 		}
 
-		#endregion
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3352")]
-		public void Issue3352Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void SchemaLoadsOverloadedFunctions([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			// ensure we load schema correctly and issue is in scaffold code
 			using var db = GetDataConnection(context);
@@ -3154,16 +3140,15 @@ $function$
 			var overload3 = functions.Where(f => f.Parameters.Count == 3 && !f.Parameters.Any(p => p.ParameterName == "input2" && p.SystemType == typeof(short))).Single();
 		}
 
-		#region Issue 4672
 		[Table]
-		sealed class Issue4672Table
+		sealed class PeriodIntervalTable
 		{
 			[Column(IsIdentity = true)] public int Id { get; set; }
 			[Column(DbType = "interval")] public NodaTime.Period? Interval { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4672")]
-		public void Issue4672Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline, [Values] BulkCopyType copyType)
+		public void BulkCopyNodaTimePeriodInterval([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline, [Values] BulkCopyType copyType)
 		{
 			IDataProvider dataProvider;
 			string?       connectionString;
@@ -3178,12 +3163,12 @@ $function$
 			var dataSource = builder.Build();
 
 			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
-			using var tb = db.CreateLocalTable<Issue4672Table>();
+			using var tb = db.CreateLocalTable<PeriodIntervalTable>();
 
 			db.InlineParameters = inline;
 
 			// https://github.com/npgsql/npgsql/issues/5867
-			var item = new Issue4672Table() { Id = 1, Interval = NodaTime.Period.FromTicks(TestData.Interval.Ticks).Normalize() };
+			var item = new PeriodIntervalTable() { Id = 1, Interval = NodaTime.Period.FromTicks(TestData.Interval.Ticks).Normalize() };
 			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, [item]);
 
 			var record = tb.Single();
@@ -3191,11 +3176,9 @@ $function$
 			// Period equality is not correct
 			Assert.That(record.Interval!.Ticks, Is.EqualTo(item.Interval.Ticks));
 		}
-		#endregion
 
-		#region Issue 5549
 		[Table]
-		sealed class Issue5549Table
+		sealed class InstantColumnsTable
 		{
 			// NodaTime.Instant has no built-in linq2db DataType, so the column DDL type must be
 			// given explicitly (the Npgsql NodaTime plugin maps Instant <-> timestamptz). The CLR
@@ -3207,8 +3190,8 @@ $function$
 
 		// Solution 2 helper: translate a custom coalesce into a real SqlCoalesceExpression via an extension
 		// builder, so the compared Instant? parameter can borrow a column descriptor — unlike the opaque
-		// [Sql.Expression] template (Issue5549CoalesceRaw), which exposes none.
-		sealed class Issue5549CoalesceBuilder : Sql.IExtensionCallBuilder
+		// [Sql.Expression] template (InstantCoalesceRaw), which exposes none.
+		sealed class InstantCoalesceBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
@@ -3217,14 +3200,14 @@ $function$
 			}
 		}
 
-		[Sql.Extension("", BuilderType = typeof(Issue5549CoalesceBuilder), ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceBuilt));
+		[Sql.Extension("", BuilderType = typeof(InstantCoalesceBuilder), ServerSideOnly = true)]
+		static NodaTime.Instant? InstantCoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(InstantCoalesceBuilt));
 
 		[Sql.Expression("coalesce({0},{1})", ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceRaw));
+		static NodaTime.Instant? InstantCoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(InstantCoalesceRaw));
 
 		// Npgsql NodaTime plugin handles Instant at the ADO layer; linq2db has no built-in DataType for it.
-		(NpgsqlDataSource DataSource, IDataProvider Provider) Issue5549Setup(string context)
+		(NpgsqlDataSource DataSource, IDataProvider Provider) CreateNodaTimeDataSource(string context)
 		{
 			IDataProvider dataProvider;
 			string?       connectionString;
@@ -3239,26 +3222,26 @@ $function$
 			return (builder.Build(), dataProvider);
 		}
 
-		static NodaTime.Instant Issue5549Populate(IDataContext db)
+		static NodaTime.Instant PopulateInstantRows(IDataContext db)
 		{
 			// Fixed instant (not SystemClock) so the captured baseline SQL is deterministic; the test
 			// only relies on relative arithmetic (now - 7d / 1h / 2h) and row counts.
 			var now = NodaTime.Instant.FromUtc(2020, 1, 1, 0, 0, 0);
-			db.Insert(new Issue5549Table { ClosedAt = null,                               CreatedAt = now });
-			db.Insert(new Issue5549Table { ClosedAt = now - NodaTime.Duration.FromHours(1), CreatedAt = now - NodaTime.Duration.FromHours(2) });
+			db.Insert(new InstantColumnsTable { ClosedAt = null,                               CreatedAt = now });
+			db.Insert(new InstantColumnsTable { ClosedAt = now - NodaTime.Duration.FromHours(1), CreatedAt = now - NodaTime.Duration.FromHours(2) });
 			return now;
 		}
 
 		// Solution 1: built-in COALESCE via the ?? operator (produces a SqlCoalesceExpression).
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5549")]
-		public void Issue5549Test_BuiltInCoalesce([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void InstantCoalesceBuiltInOperator([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var (dataSource, dataProvider) = Issue5549Setup(context);
+			var (dataSource, dataProvider) = CreateNodaTimeDataSource(context);
 
 			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
-			using var tb = db.CreateLocalTable<Issue5549Table>();
+			using var tb = db.CreateLocalTable<InstantColumnsTable>();
 
-			var               now      = Issue5549Populate(db);
+			var               now      = PopulateInstantRows(db);
 			NodaTime.Instant? fromDate = now - NodaTime.Duration.FromDays(7);
 
 			var results = tb.Where(e => (e.ClosedAt ?? e.CreatedAt) >= fromDate).ToList();
@@ -3268,17 +3251,17 @@ $function$
 
 		// Solution 2: custom helper translated to a COALESCE node via an extension builder.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5549")]
-		public void Issue5549Test_ExtensionBuilder([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void InstantCoalesceExtensionBuilder([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var (dataSource, dataProvider) = Issue5549Setup(context);
+			var (dataSource, dataProvider) = CreateNodaTimeDataSource(context);
 
 			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
-			using var tb = db.CreateLocalTable<Issue5549Table>();
+			using var tb = db.CreateLocalTable<InstantColumnsTable>();
 
-			var               now      = Issue5549Populate(db);
+			var               now      = PopulateInstantRows(db);
 			NodaTime.Instant? fromDate = now - NodaTime.Duration.FromDays(7);
 
-			var results = tb.Where(e => Issue5549CoalesceBuilt(e.ClosedAt, e.CreatedAt) >= fromDate).ToList();
+			var results = tb.Where(e => InstantCoalesceBuilt(e.ClosedAt, e.CreatedAt) >= fromDate).ToList();
 
 			Assert.That(results, Has.Count.EqualTo(2));
 		}
@@ -3286,24 +3269,23 @@ $function$
 		// Solution 3: register the unmapped type so the opaque [Sql.Expression] template works too
 		// (SetScalarType; equivalent to the reporter's SetDataType workaround).
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5549")]
-		public void Issue5549Test_ScalarType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void InstantCoalesceScalarType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var (dataSource, dataProvider) = Issue5549Setup(context);
+			var (dataSource, dataProvider) = CreateNodaTimeDataSource(context);
 
 			var ms = new MappingSchema();
 			ms.SetScalarType(typeof(NodaTime.Instant));
 
 			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()).UseMappingSchema(ms));
-			using var tb = db.CreateLocalTable<Issue5549Table>();
+			using var tb = db.CreateLocalTable<InstantColumnsTable>();
 
-			var               now      = Issue5549Populate(db);
+			var               now      = PopulateInstantRows(db);
 			NodaTime.Instant? fromDate = now - NodaTime.Duration.FromDays(7);
 
-			var results = tb.Where(e => Issue5549CoalesceRaw(e.ClosedAt, e.CreatedAt) >= fromDate).ToList();
+			var results = tb.Where(e => InstantCoalesceRaw(e.ClosedAt, e.CreatedAt) >= fromDate).ToList();
 
 			Assert.That(results, Has.Count.EqualTo(2));
 		}
-		#endregion
 
 		sealed class JsonComparisonTable1
 		{
@@ -3371,7 +3353,7 @@ $function$
 			}
 		}
 
-		sealed class Issue5325Table
+		sealed class UtcNowComparisonTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -3383,10 +3365,10 @@ $function$
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5325")]
-		public void Issue5325Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		public void UtcNowComparisonUsesTimezoneFunction([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var tb = db.CreateLocalTable<Issue5325Table>();
+			using var tb = db.CreateLocalTable<UtcNowComparisonTable>();
 
 			_ = tb.Where(r => r.Timestamp == DateTime.UtcNow).ToList();
 			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
@@ -3411,6 +3393,532 @@ $function$
 
 			_ = tb.Where(r => r.TimestampTZN == DateTimeOffset.UtcNow).ToList();
 			Assert.That(db.LastQuery, Does.Contain("now()"));
+		}
+
+		[Table("pgtimestamptest")]
+		public class PgTimestampBulkCopyRow
+		{
+			[Column("id")] public int Id { get; set; }
+			[Column("updatedon")] public DateTime UpdatedOn { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3342")]
+		public void BulkCopyProviderSpecificDateTimeIntoTimestampTz([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.AddScalarType(typeof(DateTimeOffset), DataType.DateTimeOffset);
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<PgTimestampBulkCopyRow>();
+			var dc = ((DataConnection)db);
+			var sql = "ALTER TABLE pgtimestamptest ALTER COLUMN updatedon TYPE timestamptz;";
+			dc.Execute(sql);
+
+			var obj = new PgTimestampBulkCopyRow() { Id = 0, UpdatedOn = DateTime.UtcNow };
+
+			var ret =
+					dc.BulkCopy(new BulkCopyOptions
+					{
+						CheckConstraints = false,
+						BulkCopyType = BulkCopyType.ProviderSpecific,
+						MaxBatchSize = 5000,
+						UseInternalTransaction = false,
+						NotifyAfter = 2000,
+						BulkCopyTimeout = 0,
+						TableName = "pgtimestamptest",
+					}, new [] {obj });
+		}
+
+		[Table(Schema = "public", Name = "schedule")]
+		public class EnumSchedule
+		{
+			[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
+			[Column("unit", DataType = DataType.Enum)] public ScheduleTimeUnit Unit { get; set; } // USER-DEFINED
+			[Column("unit_nullable", DataType = DataType.Enum)] public ScheduleTimeUnit? UnitNullable { get; set; } // USER-DEFINED
+			[Column("amount")] public int Amount { get; set; } // integer
+		}
+
+		[Table(Schema = "public", Name = "schedule")]
+		public class EnumScheduleWithDbType
+		{
+			[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
+			[Column("unit", DataType = DataType.Enum, DbType = "time_unit")] public ScheduleTimeUnit Unit { get; set; } // USER-DEFINED
+			[Column("unit_nullable", DataType = DataType.Enum, DbType = "time_unit")] public ScheduleTimeUnit? UnitNullable { get; set; } // USER-DEFINED
+			[Column("amount")] public int Amount { get; set; } // integer
+		}
+
+		public enum ScheduleTimeUnit
+		{
+			[MapValue("hour")]
+			Hour,
+			[MapValue("day")]
+			Day,
+		}
+
+		private DataOptions SetupScheduleEnumOptions(string context, bool withTable)
+		{
+			var mappingSchema = new MappingSchema();
+
+			const string initScript = @"
+DROP TABLE IF EXISTS schedule;
+DROP TYPE IF EXISTS time_unit;
+CREATE TYPE time_unit AS ENUM ('hour', 'day');";
+
+			const string createTableScript = @"
+CREATE TABLE IF NOT EXISTS schedule
+(
+  id SERIAL CONSTRAINT schedule_pk PRIMARY KEY,
+  unit                 time_unit   NOT NULL,
+  unit_nullable        time_unit       NULL,
+  amount               int         NOT NULL
+);
+INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','day',2),('day','day',3);";
+
+			// executing separately, we have to reload just created types
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db = GetDataConnection(context))
+			{
+				db.Execute(initScript);
+				if (withTable)
+					db.Execute(createTableScript);
+
+				dataProvider     = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.MapEnum<ScheduleTimeUnit>("time_unit");
+			var dataSource = builder.Build();
+
+			return new DataOptions()
+				.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection())
+				.UseMappingSchema(mappingSchema);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3453")]
+		public void NativeEnumMapping([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			var       unit         = ScheduleTimeUnit.Day;
+			ScheduleTimeUnit? unitNullable = ScheduleTimeUnit.Day;
+			ScheduleTimeUnit? unitNull     = null;
+
+			using var db = GetDataConnection(SetupScheduleEnumOptions(context, true));
+			db.Insert(new EnumSchedule { Unit = ScheduleTimeUnit.Hour, Amount = 1 });
+
+			db.GetTable<EnumSchedule>().ToList().Count().ShouldBe(4);
+
+			db.GetTable<EnumSchedule>().Where(x => x.Unit == unit).ToList().Count().ShouldBe(3);
+			db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
+			db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
+			db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == ScheduleTimeUnit.Day).ToList().Count().ShouldBe(3);
+
+			db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
+
+			var alItems = db.GetTable<EnumSchedule>().ToArray();
+
+			alItems[0].Unit.ShouldBe(ScheduleTimeUnit.Day);
+			alItems[1].Unit.ShouldBe(ScheduleTimeUnit.Day);
+			alItems[2].Unit.ShouldBe(ScheduleTimeUnit.Day);
+			alItems[3].Unit.ShouldBe(ScheduleTimeUnit.Hour);
+
+			alItems[0].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+			alItems[1].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+			alItems[2].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+			alItems[3].UnitNullable.ShouldBeNull();
+
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3453")]
+		public void NativeEnumBulkCopyWithDbType([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values] BulkCopyType bcType)
+		{
+			var data = new[]
+			{
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Day, UnitNullable  = ScheduleTimeUnit.Day, Amount = 1 },
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Day, UnitNullable  = ScheduleTimeUnit.Day, Amount = 2 },
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Day, UnitNullable  = ScheduleTimeUnit.Day, Amount = 3 },
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Hour, UnitNullable = null, Amount         = 1 },
+			};
+
+			var       unit         = ScheduleTimeUnit.Day;
+			ScheduleTimeUnit? unitNullable = ScheduleTimeUnit.Day;
+			ScheduleTimeUnit? unitNull     = null;
+
+			using (var db = GetDataConnection(SetupScheduleEnumOptions(context, false)))
+			using (db.CreateLocalTable<EnumScheduleWithDbType>())
+			{
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bcType }, data);
+
+				db.GetTable<EnumSchedule>().ToList().Count().ShouldBe(4);
+
+				db.GetTable<EnumSchedule>().Where(x => x.Unit         == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == ScheduleTimeUnit.Day).ToList().Count().ShouldBe(3);
+
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
+
+				var alItems = db.GetTable<EnumSchedule>().ToArray();
+
+				alItems[0].Unit.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[1].Unit.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[2].Unit.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[3].Unit.ShouldBe(ScheduleTimeUnit.Hour);
+
+				alItems[0].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[1].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[2].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[3].UnitNullable.ShouldBeNull();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3453")]
+		public async Task NativeEnumBulkCopyWithDbTypeAsync([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values] BulkCopyType bcType)
+		{
+			var data = new[]
+			{
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Day, UnitNullable  = ScheduleTimeUnit.Day, Amount = 1 },
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Day, UnitNullable  = ScheduleTimeUnit.Day, Amount = 2 },
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Day, UnitNullable  = ScheduleTimeUnit.Day, Amount = 3 },
+				new EnumScheduleWithDbType { Unit = ScheduleTimeUnit.Hour, UnitNullable = null, Amount         = 1 },
+			};
+
+			var       unit         = ScheduleTimeUnit.Day;
+			ScheduleTimeUnit? unitNullable = ScheduleTimeUnit.Day;
+			ScheduleTimeUnit? unitNull     = null;
+
+			using (var db = GetDataConnection(SetupScheduleEnumOptions(context, false)))
+			using (db.CreateLocalTable<EnumScheduleWithDbType>())
+			{
+				await db.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = bcType }, data);
+
+				db.GetTable<EnumSchedule>().ToList().Count().ShouldBe(4);
+
+				db.GetTable<EnumSchedule>().Where(x => x.Unit         == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == ScheduleTimeUnit.Day).ToList().Count().ShouldBe(3);
+
+				db.GetTable<EnumSchedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
+
+				var alItems = db.GetTable<EnumSchedule>().ToArray();
+
+				alItems[0].Unit.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[1].Unit.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[2].Unit.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[3].Unit.ShouldBe(ScheduleTimeUnit.Hour);
+
+				alItems[0].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[1].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[2].UnitNullable.ShouldBe(ScheduleTimeUnit.Day);
+				alItems[3].UnitNullable.ShouldBeNull();
+			}
+		}
+
+		[Table]
+		public partial class EnumTypeUser
+		{
+			[PrimaryKey                                                 ] public int          Id             { get; set; }
+			[Column(DataType = DataType.Enum, DbType = "user_type_enum")] public UserTypeEnum Type           { get; set; }
+			[Column                                                     ] public int?         OrganizationId { get; set; }
+
+			[ExpressionMethod(nameof(InYourOrganizationSelector))]
+			public bool InYourOrganization(EnumTypeUser callingUser) => throw new ServerSideOnlyException(nameof(InYourOrganization));
+
+			static Expression<Func<EnumTypeUser, EnumTypeUser, bool>> InYourOrganizationSelector()
+			{
+				return (user, callingUser) => (user.Type == UserTypeEnum.Organization && user.Id == callingUser.Id)
+						|| (user.Type == UserTypeEnum.Organization && callingUser.Type == UserTypeEnum.OrganizationUser && user.Id == callingUser.OrganizationId)
+						|| (user.Type == UserTypeEnum.OrganizationUser && callingUser.Type == UserTypeEnum.Organization && user.OrganizationId == callingUser.Id)
+						|| (user.Type == UserTypeEnum.OrganizationUser && callingUser.Type == UserTypeEnum.OrganizationUser && user.OrganizationId == callingUser.OrganizationId);
+			}
+
+			public static readonly EnumTypeUser[] Data = new[]
+			{
+				new EnumTypeUser() { Id = 1, Type = UserTypeEnum.Organization },
+				new EnumTypeUser() { Id = 2, Type = UserTypeEnum.Organization },
+				new EnumTypeUser() { Id = 3, Type = UserTypeEnum.OrganizationUser, OrganizationId = 1 },
+				new EnumTypeUser() { Id = 4, Type = UserTypeEnum.OrganizationUser, OrganizationId = 2 },
+			};
+		}
+
+		[PgName("user_type_enum")]
+		public enum UserTypeEnum
+		{
+			[PgName("org")]
+			[MapValue("org")]
+			Organization = 1,
+
+			[PgName("org_user")]
+			[MapValue("org_user")]
+			OrganizationUser = 2,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3548")]
+		public void EnumComparisonInExpressionMethodFilter([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+
+			using (var db = GetDataConnection(context))
+			{
+				db.Execute("DROP TABLE IF EXISTS \"EnumTypeUser\";DROP TYPE IF EXISTS user_type_enum;CREATE TYPE user_type_enum AS ENUM('org', 'org_user');");
+				dataProvider     = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.MapEnum<UserTypeEnum>();
+			var dataSource = builder.Build();
+
+			var options = new DataOptions()
+				.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection());
+
+			try
+			{
+				using var db = GetDataConnection(options);
+				using var _  = db.CreateLocalTable(EnumTypeUser.Data);
+
+				((NpgsqlConnection)db.OpenDbConnection()).ReloadTypes();
+
+				var user  = new EnumTypeUser() { Id = 1, Type = UserTypeEnum.Organization };
+				var users = db.GetTable<EnumTypeUser>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
+
+				Assert.That(users, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(users[0], Is.EqualTo("1"));
+					Assert.That(users[1], Is.EqualTo("3"));
+				}
+
+				user  = new EnumTypeUser() { Id = 4, Type = UserTypeEnum.OrganizationUser, OrganizationId = 2 };
+				users = db.GetTable<EnumTypeUser>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
+
+				Assert.That(users, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(users[0], Is.EqualTo("2"));
+					Assert.That(users[1], Is.EqualTo("4"));
+				}
+			}
+			finally
+			{
+				using var db = GetDataContext(context);
+				try
+				{
+					db.Execute("DROP TYPE IF EXISTS user_type_enum;");
+				}
+				catch
+				{
+				}
+			}
+		}
+
+		// Repro of issue #5125 (https://github.com/linq2db/linq2db/issues/5125).
+		// The original repro (non-nullable string + [AllowNull] + [ExpressionMethod] using
+		// `string.IsNullOrEmpty` + interpolated string, projected via `new T { ... }` after
+		// OrderBy on a calculated expression) emitted an invalid SQL where Length(...) inside
+		// the subquery referenced the outer alias `x_1` instead of `x`. That was fixed by #5126.
+		//
+		// The v6.2.0+ follow-up regression reported in the same issue is reproduced here: when
+		// the calling code installs an IExpressionPreprocessor that wraps OrderBy lambdas in
+		// Sql.Expr<T>($"{0} NULLS FIRST"), the optimizer extracts the wrapped expression as a
+		// subquery column but keeps the NULLS FIRST directive inside the column expression,
+		// producing PostgreSQL like:
+		//     CASE WHEN ... THEN ... ELSE ... END NULLS FIRST as c1
+		// which fails with `42601: syntax error at or near "NULLS"`. The NULLS FIRST directive
+		// must stay in the outer ORDER BY clause, not inside the subquery column.
+		[Table("InterpolatedOrderEntity", IsColumnAttributeRequired = false)]
+		public class InterpolatedOrderEntity
+		{
+			public int     Id     { get; set; }
+			public string? StrVal { get; set; }
+			public int     IntVal { get; set; }
+
+			[AllowNull]
+			[ExpressionMethod(nameof(Expr1Impl))]
+			public string Expr1 { get; set; } = null!;
+
+			private static Expression<Func<InterpolatedOrderEntity, IDataContext, string>> Expr1Impl() =>
+				(e, ctx) => !string.IsNullOrEmpty(e.StrVal) ? e.StrVal! : e.IntVal.ToString();
+
+			[AllowNull]
+			[ExpressionMethod(nameof(Expr2Impl))]
+			public string Expr2 { get; set; } = null!;
+
+			private static Expression<Func<InterpolatedOrderEntity, IDataContext, string>> Expr2Impl() =>
+				(e, ctx) => $"{(!string.IsNullOrEmpty(e.StrVal) ? e.StrVal : e.IntVal.ToString())}";
+		}
+
+		sealed class OrderByNullsFirstVisitor : ExpressionVisitor
+		{
+			static readonly MethodInfo SqlExprMethod =
+				typeof(Sql).GetMethods(BindingFlags.Public | BindingFlags.Static)
+					.First(m => m.Name == nameof(Sql.Expr) && m.IsGenericMethodDefinition
+						&& m.GetParameters().Length == 1
+						&& m.GetParameters()[0].ParameterType == typeof(FormattableString));
+
+			static readonly MethodInfo CreateFormattable =
+				typeof(FormattableStringFactory).GetMethod(
+					nameof(FormattableStringFactory.Create),
+					new[] { typeof(string), typeof(object[]) })!;
+
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				if (node.Method.DeclaringType == typeof(Queryable)
+					&& node.Method.Name == nameof(Queryable.OrderBy))
+				{
+					var lambda = (LambdaExpression)((UnaryExpression)node.Arguments[1]).Operand;
+					var body   = lambda.Body;
+
+					var sqlExprCall = Expression.Call(
+						SqlExprMethod.MakeGenericMethod(body.Type),
+						Expression.Call(
+							CreateFormattable,
+							Expression.Constant("{0} NULLS FIRST"),
+							Expression.NewArrayInit(typeof(object), Expression.Convert(body, typeof(object)))
+						)
+					);
+
+					var newLambda = Expression.Lambda(sqlExprCall, lambda.Parameters);
+					return Expression.Call(node.Method, Visit(node.Arguments[0]), newLambda);
+				}
+
+				return base.VisitMethodCall(node);
+			}
+		}
+
+		sealed class InterpolatedDataConnection : DataConnection, IExpressionPreprocessor
+		{
+			public InterpolatedDataConnection(string configurationString) : base(configurationString)
+			{
+			}
+
+			public Expression ProcessExpression(Expression expression)
+				=> new OrderByNullsFirstVisitor().Visit(expression);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5125")]
+		public void OrderByPreprocessorNullsFirstOnCalculatedColumn([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			var data = new[]
+			{
+				new InterpolatedOrderEntity { Id = 1, StrVal = null,     IntVal = 11 },
+				new InterpolatedOrderEntity { Id = 2, StrVal = "",       IntVal = 12 },
+				new InterpolatedOrderEntity { Id = 3, StrVal = "Value3", IntVal = 13 },
+			};
+
+			using var db = new InterpolatedDataConnection(context);
+			using var tb = db.CreateLocalTable(data);
+
+			var query = tb
+				.OrderBy(x => x.Expr1)
+				.Select(x => new InterpolatedOrderEntity
+				{
+					Id    = x.Id,
+					Expr1 = x.Expr1,
+					Expr2 = x.Expr2
+				});
+
+			var list = query.ToList();
+
+			list.Count.ShouldBe(3);
+		}
+
+		public sealed record JsonbUpdateData
+		{
+			public string? SomeKey { get; init; }
+			public bool?   Updated { get; init; }
+		}
+
+		sealed class JsonbUpdateDataConverterAttribute : ValueConverterAttribute
+		{
+			public JsonbUpdateDataConverterAttribute()
+			{
+				ValueConverter = new ValueConverter<JsonbUpdateData?, string?>(
+					v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+					s => s == null ? null : JsonSerializer.Deserialize<JsonbUpdateData>(s, (JsonSerializerOptions?)null),
+					handlesNulls: true);
+			}
+		}
+
+		[Table]
+		sealed class JsonbConvertedTable
+		{
+			[PrimaryKey]                                                                  public int       Id   { get; set; }
+			[Column(DataType = DataType.BinaryJson, CanBeNull = true), JsonbUpdateDataConverter] public JsonbUpdateData? Data { get; set; }
+		}
+
+		[Sql.Expression("jsonb_set({0}, ARRAY[{1}], {2}::jsonb)", ServerSideOnly = true, InlineParameters = true)]
+		static T? JsonbSet<T>(T? jsonb, string key, string value)
+		{
+			throw new ServerSideOnlyException(nameof(JsonbSet));
+		}
+
+		/// <summary>
+		/// Regression: UPDATE with a <c>ServerSideOnly</c> SQL function targeting a column
+		/// that has a value converter fails translation because the builder wraps the
+		/// function result with the converter's ToProvider expression.
+		/// <see href="https://github.com/linq2db/linq2db/issues/5505"/>
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
+		public void UpdateWithServerSideOnlyAndValueConverter([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<JsonbConvertedTable>();
+
+			db.Insert(new JsonbConvertedTable { Id = 1, Data = new JsonbUpdateData { SomeKey = "abc" } });
+
+			var affected = table
+				.Where(x => x.Id == 1)
+				.Set(x => x.Data, x => JsonbSet(x.Data, "Updated", "true"))
+				.Update();
+
+			affected.ShouldBe(1);
+
+			var result = table.First(x => x.Id == 1);
+			result.Data.ShouldNotBeNull();
+			result.Data.SomeKey.ShouldBe("abc");
+			result.Data.Updated.ShouldBe(true);
+		}
+
+		public class PgIdentityClient
+		{
+			public int Id { get; set; }
+
+			public bool Has { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1438")]
+		public void InsertWithInt32IdentityOnPostgreSql95ExplicitNpgsqlConnection([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool avoidProviderSpecificApi)
+		{
+			var provider = PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95);
+			var cs       = DataConnection.GetConnectionString(context);
+
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<PgIdentityClient>()
+					.HasTableName("PgIdentityClient")
+					.Property(x => x.Id)
+						.IsPrimaryKey()
+						.IsIdentity()
+				.Build();
+
+			using var cn = new NpgsqlConnection(cs);
+			using var db = new DataConnection(new DataOptions().UseConnection(provider, cn));
+			db.AddMappingSchema(ms);
+			using var tbl = db.CreateLocalTable<PgIdentityClient>();
+			var id = db.InsertWithInt32Identity(new PgIdentityClient()
+			{
+				Has = true
+			});
+
+			var record = tbl.Where(_ => _.Id == id).Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.Id, Is.EqualTo(id));
+				Assert.That(record.Has, Is.True);
+			}
 		}
 	}
 

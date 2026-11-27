@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
@@ -669,7 +671,7 @@ namespace Tests.xUpdate
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue2330TestOld([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
+		public void UpdateFromJoinWithMaxSubqueryOld([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -688,7 +690,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue2330Test([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
+		public void UpdateFromJoinWithMaxSubquery([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -705,22 +707,20 @@ namespace Tests.xUpdate
 			});
 		}
 
-		#region Issue 2815
-
 		[ActiveIssue(2815, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Feature not supported by database: Correlated UPDATE",
 			Details = "ClickHouse is refused by linq2db before any SQL is sent, so it is the one provider here with a stable message. Does not collide with the co-sited ThrowsRequiresCorrelatedSubquery(simple: true), which covers YDB only.")]
 		[ActiveIssue(2815, Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllNativeAccess ],
-			Details = "no-declaration: one mechanism - the generated UPDATE references a table that is not in scope for it - reported eight ways: 'The multi-part identifier \"u.Id\" could not be bound', 'no such column: Issue2815Table1.Id', 'Unknown column u.Id in on clause', ORA-00904 invalid identifier, 42P01 invalid reference to FROM-clause entry, a SqlCe parse error, a DuckDB binder error, and Access splitting between an ODBC 42000 and an OleDb 'Syntax error in JOIN operation'. LibRed parses the form and is excluded.")]
+			Details = "no-declaration: one mechanism - the generated UPDATE references a table that is not in scope for it - reported eight ways: 'The multi-part identifier \"u.Id\" could not be bound', 'no such column: UpdateFromTarget.Id', 'Unknown column u.Id in on clause', ORA-00904 invalid identifier, 42P01 invalid reference to FROM-clause entry, a SqlCe parse error, a DuckDB binder error, and Access splitting between an ODBC 42000 and an OleDb 'Syntax error in JOIN operation'. LibRed parses the form and is excluded.")]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue2815Test1([DataSources(false)] string context)
+		public void UpdateFromChainedLeftJoinsOld([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue2815Table1>();
-			using var t2 = db.CreateLocalTable<Issue2815Table2>();
-			using var t3 = db.CreateLocalTable<Issue2815Table3>();
+			using var t1 = db.CreateLocalTable<UpdateFromTarget>();
+			using var t2 = db.CreateLocalTable<UpdateFromIsoLookup>();
+			using var t3 = db.CreateLocalTable<UpdateFromChannelLookup>();
 
 			var query = (from ext in t1
 						 from source in t2.LeftJoin(c => c.ISO == ext.SRC_BIC)
@@ -736,7 +736,7 @@ namespace Tests.xUpdate
 						 where ext.NOT_HANDLED == 2 && ext.TRANS_CHANNEL == null
 						 select channel);
 
-			query.Update(t1, x => new Issue2815Table1()
+			query.Update(t1, x => new UpdateFromTarget()
 			{
 				TRANS_CHANNEL = ((TransChannel?)x.Trans_Channel) ?? TransChannel.Swift,
 				IDF = x.Idf
@@ -746,12 +746,12 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllNativeAccess)] string context)
+		public void UpdateFromChainedLeftJoins([DataSources(false, ProviderName.SqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable(Issue2815Table1.Data);
-			using var t2 = db.CreateLocalTable(Issue2815Table2.Data);
-			using var t3 = db.CreateLocalTable(Issue2815Table3.Data);
+			using var t1 = db.CreateLocalTable(UpdateFromTarget.Data);
+			using var t2 = db.CreateLocalTable(UpdateFromIsoLookup.Data);
+			using var t3 = db.CreateLocalTable(UpdateFromChannelLookup.Data);
 
 			var query = (from ext in t1
 						 from source in t2.LeftJoin(c => c.ISO == ext.SRC_BIC)
@@ -767,7 +767,7 @@ namespace Tests.xUpdate
 						 where ext.NOT_HANDLED == 2 && ext.TRANS_CHANNEL == null
 						 select new {channel, ext });
 
-			var cnt = query.Update(q => q.ext, x => new Issue2815Table1()
+			var cnt = query.Update(q => q.ext, x => new UpdateFromTarget()
 			{
 				TRANS_CHANNEL = ((TransChannel?)x.channel.Trans_Channel) ?? TransChannel.Swift,
 				IDF = (int?)x.channel.Idf ?? 0
@@ -777,7 +777,7 @@ namespace Tests.xUpdate
 
 			var res = t1.OrderBy(r => r.SRC_BIC).ThenBy(r => r.DES_BIC).ToArray();
 
-			AreEqual(res, Issue2815Table1.Expected, ComparerBuilder.GetEqualityComparer<Issue2815Table1>());
+			AreEqual(res, UpdateFromTarget.Expected, ComparerBuilder.GetEqualityComparer<UpdateFromTarget>());
 		}
 
 		enum EnumType
@@ -795,7 +795,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		sealed class Issue2815Table1
+		sealed class UpdateFromTarget
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public int SRC_BIC { get; set; }
@@ -805,68 +805,68 @@ namespace Tests.xUpdate
 			[Column] public int NOT_HANDLED { get; set; }
 			[Column] public TransChannel? TRANS_CHANNEL { get; set; }
 
-			public static readonly Issue2815Table1[] Data =
+			public static readonly UpdateFromTarget[] Data =
 			[
-				new Issue2815Table1() { Id = 1, SRC_BIC = 1, DES_BIC = 1, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 2, SRC_BIC = 2, DES_BIC = 3, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
-				new Issue2815Table1() { Id = 3, SRC_BIC = 4, DES_BIC = 4, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 4, SRC_BIC = 5, DES_BIC = 6, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 5, SRC_BIC = 7, DES_BIC = 7, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 6, SRC_BIC = 8, DES_BIC = 8, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 7, SRC_BIC = 9, DES_BIC = 9, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 8, SRC_BIC = 9, DES_BIC = 10, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 9, SRC_BIC = 11, DES_BIC = 11, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = TransChannel.Swift },
-				new Issue2815Table1() { Id = 10, SRC_BIC = 12, DES_BIC = 12, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 11, SRC_BIC = 12, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 12, SRC_BIC = 13, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 13, SRC_BIC = 14, DES_BIC = 14, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 1, SRC_BIC = 1, DES_BIC = 1, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 2, SRC_BIC = 2, DES_BIC = 3, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new UpdateFromTarget() { Id = 3, SRC_BIC = 4, DES_BIC = 4, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 4, SRC_BIC = 5, DES_BIC = 6, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 5, SRC_BIC = 7, DES_BIC = 7, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 6, SRC_BIC = 8, DES_BIC = 8, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 7, SRC_BIC = 9, DES_BIC = 9, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 8, SRC_BIC = 9, DES_BIC = 10, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 9, SRC_BIC = 11, DES_BIC = 11, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = TransChannel.Swift },
+				new UpdateFromTarget() { Id = 10, SRC_BIC = 12, DES_BIC = 12, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 11, SRC_BIC = 12, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 12, SRC_BIC = 13, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 13, SRC_BIC = 14, DES_BIC = 14, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
 			];
 
-			public static readonly Issue2815Table1[] Expected =
+			public static readonly UpdateFromTarget[] Expected =
 			[
-				new Issue2815Table1() { Id = 1, SRC_BIC = 1, DES_BIC = 1, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 2, SRC_BIC = 2, DES_BIC = 3, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
-				new Issue2815Table1() { Id = 3, SRC_BIC = 4, DES_BIC = 4, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 4, SRC_BIC = 5, DES_BIC = 6, IDF = 5, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
-				new Issue2815Table1() { Id = 5, SRC_BIC = 7, DES_BIC = 7, IDF = 4, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
-				new Issue2815Table1() { Id = 6, SRC_BIC = 8, DES_BIC = 8, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
-				new Issue2815Table1() { Id = 7, SRC_BIC = 9, DES_BIC = 9, IDF = 6, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Tardy },
-				new Issue2815Table1() { Id = 8, SRC_BIC = 9, DES_BIC = 10, IDF = 6, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Tardy },
-				new Issue2815Table1() { Id = 9, SRC_BIC = 11, DES_BIC = 11, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = TransChannel.Swift },
-				new Issue2815Table1() { Id = 10, SRC_BIC = 12, DES_BIC = 12, IDF = 9, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
-				new Issue2815Table1() { Id = 11, SRC_BIC = 12, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
-				new Issue2815Table1() { Id = 12, SRC_BIC = 13, DES_BIC = 13, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
-				new Issue2815Table1() { Id = 13, SRC_BIC = 14, DES_BIC = 14, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
+				new UpdateFromTarget() { Id = 1, SRC_BIC = 1, DES_BIC = 1, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 2, SRC_BIC = 2, DES_BIC = 3, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new UpdateFromTarget() { Id = 3, SRC_BIC = 4, DES_BIC = 4, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 4, SRC_BIC = 5, DES_BIC = 6, IDF = 5, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new UpdateFromTarget() { Id = 5, SRC_BIC = 7, DES_BIC = 7, IDF = 4, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new UpdateFromTarget() { Id = 6, SRC_BIC = 8, DES_BIC = 8, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
+				new UpdateFromTarget() { Id = 7, SRC_BIC = 9, DES_BIC = 9, IDF = 6, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Tardy },
+				new UpdateFromTarget() { Id = 8, SRC_BIC = 9, DES_BIC = 10, IDF = 6, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Tardy },
+				new UpdateFromTarget() { Id = 9, SRC_BIC = 11, DES_BIC = 11, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = TransChannel.Swift },
+				new UpdateFromTarget() { Id = 10, SRC_BIC = 12, DES_BIC = 12, IDF = 9, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new UpdateFromTarget() { Id = 11, SRC_BIC = 12, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new UpdateFromTarget() { Id = 12, SRC_BIC = 13, DES_BIC = 13, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
+				new UpdateFromTarget() { Id = 13, SRC_BIC = 14, DES_BIC = 14, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
 			];
 		}
 
 		[Table]
-		sealed class Issue2815Table2
+		sealed class UpdateFromIsoLookup
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public int ISO { get; set; }
 			[Column] public bool SEPA { get; set; }
 
-			public static readonly Issue2815Table2[] Data =
+			public static readonly UpdateFromIsoLookup[] Data =
 			[
-				new Issue2815Table2() { Id = 1, ISO = 2, SEPA = true },
-				new Issue2815Table2() { Id = 2, ISO = 3 },
-				new Issue2815Table2() { Id = 3, ISO = 4, SEPA = true },
-				new Issue2815Table2() { Id = 4, ISO = 5, SEPA = true },
-				new Issue2815Table2() { Id = 5, ISO = 6, SEPA = true },
-				new Issue2815Table2() { Id = 6, ISO = 7, SEPA = true },
-				new Issue2815Table2() { Id = 7, ISO = 8, SEPA = true },
-				new Issue2815Table2() { Id = 8, ISO = 9 },
-				new Issue2815Table2() { Id = 9, ISO = 10, SEPA = true },
-				new Issue2815Table2() { Id = 10, ISO = 11 },
-				new Issue2815Table2() { Id = 11, ISO = 12, SEPA = true },
-				new Issue2815Table2() { Id = 12, ISO = 13 },
-				new Issue2815Table2() { Id = 13, ISO = 14, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 1, ISO = 2, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 2, ISO = 3 },
+				new UpdateFromIsoLookup() { Id = 3, ISO = 4, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 4, ISO = 5, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 5, ISO = 6, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 6, ISO = 7, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 7, ISO = 8, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 8, ISO = 9 },
+				new UpdateFromIsoLookup() { Id = 9, ISO = 10, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 10, ISO = 11 },
+				new UpdateFromIsoLookup() { Id = 11, ISO = 12, SEPA = true },
+				new UpdateFromIsoLookup() { Id = 12, ISO = 13 },
+				new UpdateFromIsoLookup() { Id = 13, ISO = 14, SEPA = true },
 			];
 		}
 
 		[Table]
-		sealed class Issue2815Table3
+		sealed class UpdateFromChannelLookup
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public int TreasuryCenter { get; set; }
@@ -875,25 +875,294 @@ namespace Tests.xUpdate
 			[Column] public TransChannel Trans_Channel { get; set; }
 			[Column] public int Idf { get; set; }
 
-			public static readonly Issue2815Table3[] Data =
+			public static readonly UpdateFromChannelLookup[] Data =
 			[
-				new Issue2815Table3() { Id = 1, TreasuryCenter = 1, BIC = 1, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 1 },
-				new Issue2815Table3() { Id = 2, TreasuryCenter = 2, BIC = 2, Sepa = EnumType.SepaCrossBorder, Trans_Channel = TransChannel.Tardy, Idf = 2 },
-				new Issue2815Table3() { Id = 3, TreasuryCenter = 1, BIC = 3, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Swift, Idf = 3 },
-				new Issue2815Table3() { Id = 4, TreasuryCenter = 2, BIC = 4, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 4 },
-				new Issue2815Table3() { Id = 5, TreasuryCenter = 1, BIC = 5, Sepa = EnumType.SepaCrossBorder, Trans_Channel = TransChannel.Swift, Idf = 5 },
-				new Issue2815Table3() { Id = 6, TreasuryCenter = 2, BIC = 6, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 6 },
-				new Issue2815Table3() { Id = 7, TreasuryCenter = 1, BIC = 7, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 4 },
-				new Issue2815Table3() { Id = 8, TreasuryCenter = 1, BIC = 9, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 6 },
-				new Issue2815Table3() { Id = 9, TreasuryCenter = 1, BIC = 10, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 7 },
-				new Issue2815Table3() { Id = 10, TreasuryCenter = 1, BIC = 11, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 8 },
-				new Issue2815Table3() { Id = 11, TreasuryCenter = 1, BIC = 12, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 9 },
-				new Issue2815Table3() { Id = 12, TreasuryCenter = 1, BIC = 13, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 10 },
-				new Issue2815Table3() { Id = 13, TreasuryCenter = 1, BIC = 14, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Swift, Idf = 11 },
-				new Issue2815Table3() { Id = 14, TreasuryCenter = 1, BIC = 15, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 11 },
+				new UpdateFromChannelLookup() { Id = 1, TreasuryCenter = 1, BIC = 1, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 1 },
+				new UpdateFromChannelLookup() { Id = 2, TreasuryCenter = 2, BIC = 2, Sepa = EnumType.SepaCrossBorder, Trans_Channel = TransChannel.Tardy, Idf = 2 },
+				new UpdateFromChannelLookup() { Id = 3, TreasuryCenter = 1, BIC = 3, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Swift, Idf = 3 },
+				new UpdateFromChannelLookup() { Id = 4, TreasuryCenter = 2, BIC = 4, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 4 },
+				new UpdateFromChannelLookup() { Id = 5, TreasuryCenter = 1, BIC = 5, Sepa = EnumType.SepaCrossBorder, Trans_Channel = TransChannel.Swift, Idf = 5 },
+				new UpdateFromChannelLookup() { Id = 6, TreasuryCenter = 2, BIC = 6, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 6 },
+				new UpdateFromChannelLookup() { Id = 7, TreasuryCenter = 1, BIC = 7, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 4 },
+				new UpdateFromChannelLookup() { Id = 8, TreasuryCenter = 1, BIC = 9, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 6 },
+				new UpdateFromChannelLookup() { Id = 9, TreasuryCenter = 1, BIC = 10, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 7 },
+				new UpdateFromChannelLookup() { Id = 10, TreasuryCenter = 1, BIC = 11, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 8 },
+				new UpdateFromChannelLookup() { Id = 11, TreasuryCenter = 1, BIC = 12, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 9 },
+				new UpdateFromChannelLookup() { Id = 12, TreasuryCenter = 1, BIC = 13, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 10 },
+				new UpdateFromChannelLookup() { Id = 13, TreasuryCenter = 1, BIC = 14, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Swift, Idf = 11 },
+				new UpdateFromChannelLookup() { Id = 14, TreasuryCenter = 1, BIC = 15, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 11 },
 			];
 		}
 
-		#endregion
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3186")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateThroughChainedInnerJoinsTargetSecond([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(ElementServiceRow.TestData()))
+			using (db.CreateLocalTable(ComponentCategoryRow.TestData()))
+			using (db.CreateLocalTable(ComponentRow.TestData()))
+			{
+				var query = db.GetTable<ElementServiceRow>()
+					.Where(ie => ie.id == "TestProcessService")
+					.InnerJoin(db.GetTable<ComponentCategoryRow>(),
+						(sr, ctg) => sr.id == ctg.service_id,
+						(sr, ctg) => ctg);
+
+				query.InnerJoin(db.GetTable<ComponentRow>(),
+						(ct, cm) => ct.id == cm.category_id && !cm.is_deleted,
+						(ct, cm) => ct
+					).Set(r => r.is_deleted, true)
+					.Update();
+
+				db.GetTable<ComponentCategoryRow>().Where(x => x.is_deleted && x.service_id == "TestProcessService").ToList().Count.ShouldBe(2);
+				db.GetTable<ComponentCategoryRow>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").ToList().Count.ShouldBe(2);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3186")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateThroughChainedInnerJoinsTargetFirst([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(ElementServiceRow.TestData()))
+			using (db.CreateLocalTable(ComponentCategoryRow.TestData()))
+			using (db.CreateLocalTable(ComponentRow.TestData()))
+			{
+				var query = db.GetTable<ComponentCategoryRow>()
+					.InnerJoin(db.GetTable<ElementServiceRow>()
+							.Where(ie => ie.id == "TestProcessService"),
+						(ctg, sr) => sr.id == ctg.service_id,
+						(ctg, sr) => ctg);
+
+				query.InnerJoin(db.GetTable<ComponentRow>(),
+						(ct, cm) => ct.id == cm.category_id && !cm.is_deleted,
+						(ct, cm) => ct
+					).Set(r => r.is_deleted, true)
+					.Update();
+
+				db.GetTable<ComponentCategoryRow>().Where(x => x.is_deleted && x.service_id == "TestProcessService").ToList().Count.ShouldBe(2);
+				db.GetTable<ComponentCategoryRow>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").ToList().Count.ShouldBe(2);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3186")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateThroughInnerThenLeftJoinTargetFirst([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(ElementServiceRow.TestData()))
+			using (db.CreateLocalTable(ComponentCategoryRow.TestData()))
+			using (db.CreateLocalTable(ComponentRow.TestData()))
+			{
+				var query = db.GetTable<ComponentCategoryRow>()
+					.InnerJoin(db.GetTable<ElementServiceRow>()
+							.Where(ie => ie.id == "TestProcessService"),
+						(ctg, sr) => sr.id == ctg.service_id,
+						(ctg, sr) => ctg);
+
+				query.LeftJoin(db.GetTable<ComponentRow>(),
+						(ct, cm) => ct.id == cm.category_id && !cm.is_deleted,
+						(ct, cm) => ct
+					).Set(r => r.is_deleted, true)
+					.Update();
+
+				db.GetTable<ComponentCategoryRow>().Where(x => x.is_deleted && x.service_id == "TestProcessService").ToList().Count.ShouldBe(2);
+				db.GetTable<ComponentCategoryRow>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").ToList().Count.ShouldBe(2);
+			}
+		}
+
+		[Table]
+		sealed class ElementServiceRow
+		{
+			[Column(IsPrimaryKey = true, Length = 100, CanBeNull = false)]
+			public string id { get; set; } = null!;
+
+			[Column(CanBeNull = false)] 
+			public bool is_process_service { get; set; }
+
+			[Column(CanBeNull = false)] 
+			public bool is_deleted { get; set; }
+
+			public static ElementServiceRow[] TestData()
+			{
+				return new[]
+				{
+					new ElementServiceRow { id = "TestProcessService", is_process_service = true },
+					new ElementServiceRow { id = "TestElementService", is_process_service = false }
+				};
+			}
+		}
+
+		[Table]
+		sealed class ComponentCategoryRow
+		{
+			[Column(IsPrimaryKey = true, Length = 100, CanBeNull = false)]
+			public string id { get; set; } = null!;
+
+			[Column(Length = 100, CanBeNull = false)]
+			public string service_id { get; set; } = null!;
+
+			[Column(CanBeNull = false)] 
+			public bool is_deleted { get; set; }
+
+			public static ComponentCategoryRow[] TestData()
+			{
+				return new[]
+				{
+					new ComponentCategoryRow { id = "TestProcessCategory1", service_id = "TestProcessService" },
+					new ComponentCategoryRow { id = "TestProcessCategory2", service_id = "TestProcessService" },
+					new ComponentCategoryRow { id = "TestElementCategory1", service_id = "TestElementService" },
+					new ComponentCategoryRow { id = "TestElementCategory2", service_id = "TestElementService" },
+				};
+			}
+		}
+
+		[Table]
+		sealed class ComponentRow
+		{
+			[Column(IsPrimaryKey = true, Length = 100, CanBeNull = false)]
+			public string id { get; set; } = null!;
+
+			[Column(Length = 100, CanBeNull = false)]
+			public string category_id { get; set; } = null!;
+
+			[Column(Length = 100, CanBeNull = false)]
+			public string service_id { get; set; } = null!;
+
+			[Column(CanBeNull = false)] 
+			public bool is_deleted { get; set; }
+
+			public static ComponentRow[] TestData()
+			{
+				return new []
+				{
+					new ComponentRow{ id = "TestProcessComponent1", category_id = "TestProcessCategory1", service_id = "TestProcessService" },
+					new ComponentRow{ id = "TestProcessComponent2", category_id = "TestProcessCategory2", service_id = "TestProcessService" },
+					new ComponentRow{ id = "TestElementComponent1", category_id = "TestElementCategory1", service_id = "TestElementService" },
+					new ComponentRow{ id = "TestElementComponent2", category_id = "TestElementCategory2", service_id = "TestElementService" },
+				};
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3649")]
+		public async Task UpdateFromGroupedSourceViaSet([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db      = (DataConnection)GetDataContext(context);
+			using var totals  = db.CreateLocalTable<GroupedUpdateTotal>();
+			using var entries = db.CreateLocalTable<GroupedUpdateEntry>();
+
+			await totals.InnerJoin(
+					entries
+						.GroupBy(e => e.TotalId, (totalId, en) => new { TotalId = totalId, SumAggr = en.Sum(i => i.Sum) }),
+					(t, eg) => t.Id == eg.TotalId, (t, eg) => new { t, eg }
+				)
+				.Set(r => r.t.Sum, r => r.t.Sum + r.eg.SumAggr)
+				.UpdateAsync();
+
+			db.LastQuery!.ShouldNotContain("JOIN");
+		}
+
+		[Obsolete("Remove test after API removed")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3649")]
+		public async Task UpdateTargetJoinedToGroupedSourceOld([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db      = (DataConnection)GetDataContext(context);
+			using var totals  = db.CreateLocalTable<GroupedUpdateTotal>();
+			using var entries = db.CreateLocalTable<GroupedUpdateEntry>();
+
+			await totals.InnerJoin(
+					entries
+						.GroupBy(e => e.TotalId,
+							(totalId, en) => new { TotalId = totalId, SumAggr = en.Sum(i => i.Sum) }),
+					(t, eg) => t.Id == eg.TotalId, (t, eg) => new { OldSum = t.Sum, eg.SumAggr, t.Label }
+				)
+				.Where(r => r.Label == "spendings")
+				.UpdateAsync(totals, g =>
+					new GroupedUpdateTotal { Sum = g.OldSum + g.SumAggr });
+
+				db.LastQuery!.ShouldNotContain("JOIN");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3649")]
+		public async Task UpdateTargetJoinedToGroupedSource([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db      = (DataConnection)GetDataContext(context);
+			using var totals  = db.CreateLocalTable<GroupedUpdateTotal>();
+			using var entries = db.CreateLocalTable<GroupedUpdateEntry>();
+
+			await totals.InnerJoin(
+					entries
+						.GroupBy(e => e.TotalId,
+							(totalId, en) => new { TotalId = totalId, SumAggr = en.Sum(i => i.Sum) }),
+					(t, eg) => t.Id == eg.TotalId, (t, eg) => new { t, eg.SumAggr }
+				)
+				.Where(r => r.t.Label == "spendings")
+				.UpdateAsync(q => q.t, g =>
+					new GroupedUpdateTotal { Sum = g.t.Sum + g.SumAggr });
+
+			db.LastQuery!.ShouldNotContain("JOIN");
+		}
+
+		[Obsolete("Remove test after API removed")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3649")]
+		public async Task UpdateGroupedSourceJoinedToTargetOld([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db      = (DataConnection)GetDataContext(context);
+			using var totals  = db.CreateLocalTable<GroupedUpdateTotal>();
+			using var entries = db.CreateLocalTable<GroupedUpdateEntry>();
+
+			await
+				entries
+					.GroupBy(e => e.TotalId, (totalId, en) => new { TotalId = totalId, SumAggr = en.Sum(i => i.Sum) })
+					.InnerJoin(totals, (eg, t) =>
+						t.Id == eg.TotalId, (eg, t) => new { OldSum = t.Sum, eg.SumAggr, t.Label })
+					.Where(r => r.Label == "spendings")
+					.UpdateAsync(totals, g =>
+						new GroupedUpdateTotal
+						{
+							Sum = g.OldSum + g.SumAggr
+						});
+
+			db.LastQuery!.ShouldNotContain("JOIN");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3649")]
+		public async Task UpdateGroupedSourceJoinedToTarget([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db      = (DataConnection)GetDataContext(context);
+			using var totals  = db.CreateLocalTable<GroupedUpdateTotal>();
+			using var entries = db.CreateLocalTable<GroupedUpdateEntry>();
+
+			await
+				entries
+					.GroupBy(e => e.TotalId, (totalId, en) => new { TotalId = totalId, SumAggr = en.Sum(i => i.Sum) })
+					.InnerJoin(totals, (eg, t) =>
+						t.Id == eg.TotalId, (eg, t) => new { t, eg.SumAggr })
+					.Where(r => r.t.Label == "spendings")
+					.UpdateAsync(q => q.t, g =>
+						new GroupedUpdateTotal
+						{
+							Sum = g.t.Sum + g.SumAggr
+						});
+
+			db.LastQuery!.ShouldNotContain("JOIN");
+		}
+
+		[Table]
+		sealed class GroupedUpdateTotal
+		{
+			[Column]              public int     Id    { get; set; }
+			[Column]              public int     Sum   { get; set; }
+			[Column(Length = 50)] public string? Label { get; set; }
+		}
+
+		[Table]
+		sealed class GroupedUpdateEntry
+		{
+			[Column] public int Id    { get; set; }
+			[Column] public int TotalId    { get; set; }
+			[Column] public int Sum   { get; set; }
+		}
 	}
 }

@@ -198,5 +198,71 @@ namespace Tests.xUpdate
 			else
 				Assert.That(actual, Is.EqualTo(expected));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4923")]
+		public void MergeWithSubqueryInInsertAndUpdateSetters([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var users = new[]
+			{
+				new MergeSubqueryUserDto { Name = "U1", DepartmentName = "D1"}
+			};
+
+			var departments = new[]
+			{
+				new MergeSubqueryDepartment {Id = 1, Name = "D1"},
+				new MergeSubqueryDepartment {Id = 2, Name = "D2"}
+			};
+
+			using var dt = db.CreateLocalTable<MergeSubqueryDepartment>(departments);
+			using var ut = db.CreateLocalTable<MergeSubqueryUser>();
+
+			db.GetTable<MergeSubqueryUser>()
+				.Merge()
+				.Using(users)
+				.On(u => u.Name, dto => dto.Name)
+				.InsertWhenNotMatched(dto => new MergeSubqueryUser
+				{
+					Name = dto.Name,
+					DepartmentId = db.GetTable<MergeSubqueryDepartment>()
+						.Where(d => d.Name == dto.DepartmentName)
+						.Select(x => x.Id)
+						.First()
+
+				})
+				.UpdateWhenMatched((_, dto) => new MergeSubqueryUser
+				{
+					DepartmentId = db.GetTable<MergeSubqueryDepartment>()
+						.Where(d => d.Name == dto.DepartmentName)
+						.Select(x => x.Id)
+						.First()
+				})
+				.Merge();
+		}
+
+		public class MergeSubqueryDepartment
+		{
+			[Column(IsPrimaryKey = true)]
+			public int    Id   { get; set; }
+			[Column]
+			public string Name { get; set; } = null!;
+		}
+
+		public class MergeSubqueryUser
+		{
+			[Column(IsPrimaryKey = true, IsIdentity = true)]
+			public int    Id           { get; set; }
+			[Column]
+			public string Name         { get; set; } = null!;
+			[Column]
+			public int    DepartmentId { get; set; }
+		}
+
+		public class MergeSubqueryUserDto
+		{
+			public string Name           { get; set; } = null!;
+			public string DepartmentName { get; set; } = null!;
+		}
 	}
 }

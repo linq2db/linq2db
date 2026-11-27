@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -2373,10 +2376,10 @@ namespace Tests.Linq
 			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/672")]
 		// Sybase is not listed: DataSources excludes it below, so it never runs this test.
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
+		public void GroupByNameSelectFirstWithGuardDisabled([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			using (db.CreateLocalTable<Stone>())
@@ -2399,17 +2402,17 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue680Table
+		sealed class GroupByTimeStampTable
 		{
 			[PrimaryKey] public int Id;
 			[Column] public DateTime TimeStamp;
 		}
 
-		[Test]
-		public void Issue680Test([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/680")]
+		public void GroupByCountWithPredicateSingleSelect([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var table = db.CreateLocalTable<Issue680Table>();
+			using var table = db.CreateLocalTable<GroupByTimeStampTable>();
 			var result = (from record in table
 						  group record by record.TimeStamp into g
 						  select new
@@ -2423,8 +2426,8 @@ namespace Tests.Linq
 			Assert.That(index, Is.EqualTo(-1));
 		}
 
-		[Test]
-		public void Issue434Test1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/434")]
+		public void GroupJoinToListFilterByCapturedString([DataSources] string context)
 		{
 			var input = "test";
 
@@ -2436,8 +2439,8 @@ namespace Tests.Linq
 			}).Where(p => p.Name.ToLower().Contains(input.ToLower())).ToList();
 		}
 
-		[Test]
-		public void Issue434Test2([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/434")]
+		public void GroupJoinToListFilterByConstantString([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
@@ -2447,7 +2450,7 @@ namespace Tests.Linq
 			}).Where(p => p.Name.ToLower().Contains("test".ToLower())).ToList();
 		}
 
-		[Table(Name = "Issue913Test")]
+		[Table(Name = "GroupByInstrument")]
 		public class Instrument
 		{
 			[Column, PrimaryKey, NotNull] public int InstrumentID { get; set; } // int
@@ -2467,8 +2470,8 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
-		[Test]
-		public void Issue913Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/913")]
+		public void GroupByEnumComparisonKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Instrument.Data);
@@ -2497,7 +2500,7 @@ namespace Tests.Linq
 			}
 		}
 
-		sealed class Issue1078Table
+		sealed class GroupByActiveFlagTable
 		{
 			[PrimaryKey]
 			public int UserID { get; set; }
@@ -2506,25 +2509,25 @@ namespace Tests.Linq
 			[Column]
 			public bool Active { get; set; }
 
-			public static readonly Issue1078Table[] TestData = new []
+			public static readonly GroupByActiveFlagTable[] TestData = new []
 			{
-				new Issue1078Table() { UserID = 1, SiteID = 1, Active = true  },
-				new Issue1078Table() { UserID = 2, SiteID = 1, Active = false },
-				new Issue1078Table() { UserID = 3, SiteID = 1, Active = true  },
-				new Issue1078Table() { UserID = 4, SiteID = 2, Active = false },
-				new Issue1078Table() { UserID = 5, SiteID = 2, Active = true  },
-				new Issue1078Table() { UserID = 6, SiteID = 2, Active = false },
-				new Issue1078Table() { UserID = 7, SiteID = 2, Active = false },
-				new Issue1078Table() { UserID = 8, SiteID = 3, Active = false },
-				new Issue1078Table() { UserID = 9, SiteID = 4, Active = true  },
+				new GroupByActiveFlagTable() { UserID = 1, SiteID = 1, Active = true  },
+				new GroupByActiveFlagTable() { UserID = 2, SiteID = 1, Active = false },
+				new GroupByActiveFlagTable() { UserID = 3, SiteID = 1, Active = true  },
+				new GroupByActiveFlagTable() { UserID = 4, SiteID = 2, Active = false },
+				new GroupByActiveFlagTable() { UserID = 5, SiteID = 2, Active = true  },
+				new GroupByActiveFlagTable() { UserID = 6, SiteID = 2, Active = false },
+				new GroupByActiveFlagTable() { UserID = 7, SiteID = 2, Active = false },
+				new GroupByActiveFlagTable() { UserID = 8, SiteID = 3, Active = false },
+				new GroupByActiveFlagTable() { UserID = 9, SiteID = 4, Active = true  },
 			};
 		}
 
-		[Test]
-		public void Issue1078Test([DataSources(TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1078")]
+		public void GroupByConditionalValueCount([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable(Issue1078Table.TestData);
+			using var table = db.CreateLocalTable(GroupByActiveFlagTable.TestData);
 			var query =
 				from u in table
 				group u.Active ? 1 : 0 by u.SiteID into grp
@@ -2558,18 +2561,18 @@ namespace Tests.Linq
 			}
 		}
 
-		sealed class Issue1192Table
+		sealed class GroupByConstantKeyTable
 		{
 			[PrimaryKey] public int IdId { get; internal set; }
 			public int MyOtherId { get; internal set; }
 			public int Status { get; internal set; }
 		}
 
-		[Test]
-		public void Issue1198Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1198")]
+		public void GroupByConstantKeyCountWithPredicate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue1192Table>();
+			using var table = db.CreateLocalTable<GroupByConstantKeyTable>();
 			var stats = (from t in table
 						 where t.MyOtherId == 12
 						 group t by 1 into g
@@ -2579,8 +2582,8 @@ namespace Tests.Linq
 						 }).FirstOrDefault();
 		}
 
-		[Test]
-		public void Issue2306Test1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2306")]
+		public void GuardGroupingOffOnThenDisableGuard([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
@@ -2598,27 +2601,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue2306Test2([DataSources] string context)
-		{
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
-			{
-				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
-			}
-
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
-			{
-				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
-			}
-
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
-			{
-				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
-			}
-		}
-
-		[Test]
-		public void Issue2306Test3([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2306")]
+		public void GuardGroupingOnThenOffThenDisableGuard([DataSources] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
@@ -2637,7 +2621,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IssueGroupByNonTableColumn([DataSources] string context)
+		public void GroupByConcatenatedConstants([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var query = db.Person
@@ -2667,8 +2651,8 @@ namespace Tests.Linq
 			Assert.That(query, Is.Empty);
 		}
 
-		[Test]
-		public void Issue3668Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3668")]
+		public void GroupByWithPositionalParametersOfDifferentTypes([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2690,7 +2674,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		public class Issue3761Table
+		public class GroupByYearMonthPartsTable
 		{
 			[Column, NotNull, PrimaryKey] public int?      LETO     { get; set; }
 			[Column, NotNull, PrimaryKey] public int?      STEVILKA { get; set; }
@@ -2698,12 +2682,12 @@ namespace Tests.Linq
 			[Column                     ] public decimal?  SKUPAJ   { get; set; }
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3761")]
 		// PostgreSQL 9.4+ (make_timestamp)
-		public void Issue3761Test1([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByYearMonthParts([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue3761Table>();
+			using var table = db.CreateLocalTable<GroupByYearMonthPartsTable>();
 
 			var query = table.Where(n => n.DATUM < new DateTime(2019, 1, 1))
 				.GroupBy(
@@ -2723,12 +2707,12 @@ namespace Tests.Linq
 			Assert.That(query.GetSelectQuery().GroupBy.Items, Has.Count.EqualTo(2));
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3761")]
 		// PostgreSQL 9.4+ (make_timestamp); GROUPING SETS 9.5+
-		public void Issue3761Test2([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByYearMonthPartsInUnionAll([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue3761Table>();
+			using var table = db.CreateLocalTable<GroupByYearMonthPartsTable>();
 
 			var query = table.Where(n => n.DATUM < new DateTime(2019, 1, 1))
 				.GroupBy(
@@ -2769,11 +2753,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue3872([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3872")]
+		public void GroupByMaxConcatWithPlainSelect([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue3761Table>();
+			using var table = db.CreateLocalTable<GroupByYearMonthPartsTable>();
 
 			var query1 = db.Person.GroupBy(_ => 1).Select(r => r.Max(r => r.ID));
 
@@ -2799,7 +2783,6 @@ namespace Tests.Linq
 			}
 		}
 
-		#region Issue 4098
 		sealed class Transaction
 		{
 			[PrimaryKey]				public int     Id         { get; set; }
@@ -2867,8 +2850,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
-		public void Issue4098WithCte([CteContextSource] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4098")]
+		public void GroupedSubqueryJoinedWithCte([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2931,8 +2914,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue4098([DataSources(TestProvName.AllNativeAccess)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4098")]
+		public void GroupedSubqueryJoinedMultiKey([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2992,7 +2975,6 @@ namespace Tests.Linq
 				Assert.That(retval[1].TOTALUNITS, Is.EqualTo(700));
 			}
 		}
-		#endregion
 
 		[Test]
 		public void GroupSubqueryTest1([DataSources] string context)
@@ -3104,9 +3086,8 @@ namespace Tests.Linq
 			joinQuery.OrderBy.Items.Count.ShouldBe(2);
 		}
 
-		#region issue 4256
-		[Test]
-		public void TestIssue4256AnonymousClass([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4256")]
+		public void GroupByAnonymousTypeBooleanConversion([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3131,8 +3112,8 @@ namespace Tests.Linq
 			public override int GetHashCode() => IsActive.GetHashCode() ^ Other.GetHashCode();
 		}
 
-		[Test]
-		public void TestIssue4256Class([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4256")]
+		public void GroupByClassBooleanConversion([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3157,8 +3138,8 @@ namespace Tests.Linq
 			public override int GetHashCode() => (IsActive?.GetHashCode() ?? 0) ^ Other.GetHashCode();
 		}
 
-		[Test]
-		public void TestIssue4256ClassNullableFlag([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4256")]
+		public void GroupByClassNullableFlagBooleanConversion([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3172,7 +3153,6 @@ namespace Tests.Linq
 					.GroupBy(it => it)
 					.Select(it => it.Key));
 		}
-		#endregion
 
 		[Test]
 		public void NoGuardException([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
@@ -3394,7 +3374,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_WithToList([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		public void NestedGroupByHavingOnOuterKeyWithToList([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestAggregateTable>();
@@ -3480,7 +3460,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_WithoutToList([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		public void NestedGroupByHavingOnOuterKeyWithoutToList([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestAggregateTable>();
@@ -3599,7 +3579,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2821")]
-		public void Issue2821Test([DataSources] string context)
+		public void GroupBySelfJoinOnMaxCompositeKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3626,7 +3606,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4349")]
-		public void Issue4349Test([DataSources] string context)
+		public void GroupByConstantKeyOrderByConditional([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3644,7 +3624,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
-		public void Issue3486Test1([DataSources(false)] string context)
+		public void GroupByCompositeKeySingleSelect([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3664,7 +3644,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
-		public void Issue3486Test2([DataSources(false)] string context)
+		public void GroupByCompositeKeyLetSingleSelect([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3685,7 +3665,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test1([DataSources(false)] string context)
+		public void GroupByConstantKeyHavingCountMessage([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3704,7 +3684,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test2([DataSources(false)] string context)
+		public void HavingCountWithoutGroupBy([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3722,7 +3702,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_HavingConditionTranslation([DataSources] string context)
+		public void HavingKeyIsNullOrNotEqual([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3747,7 +3727,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_PlaceholderDuplicate([DataSources] string context)
+		public void GroupByDuplicateKeyMembersWithOrderAndTake([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3769,7 +3749,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_UnusedColumnsElimination([DataSources] string context)
+		public void GroupByDuplicateKeyMembersLongCount([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3843,7 +3823,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
-		public void Issue_FilterByOrderedGroupBy([DataSources] string context)
+		public void FilterByOrderedLimitedGroupBy([DataSources] string context)
 		{
 			using var db  = GetDataContext(context);
 
@@ -3885,7 +3865,7 @@ namespace Tests.Linq
 				}, ed => ed.Property(r => r.Value).IsPrimaryKey().IsNotNull().HasLength(50), tableOptions: TableOptions.None);
 		}
 
-		static class Issue5070
+		static class GroupByInnerJoinProjectionTables
 		{
 			public sealed class CustomerPrice
 			{
@@ -3903,11 +3883,11 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5070")]
-		public void Issue5070Test([DataSources] string context)
+		public void GroupByInnerJoinProjectionWithNullIf([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue5070.CustomerPrice>();
-			using var t2 = db.CreateLocalTable<Issue5070.Inventory>();
+			using var t1 = db.CreateLocalTable<GroupByInnerJoinProjectionTables.CustomerPrice>();
+			using var t2 = db.CreateLocalTable<GroupByInnerJoinProjectionTables.Inventory>();
 
 			var forceInactive = true;
 
@@ -3981,7 +3961,7 @@ namespace Tests.Linq
 			_ = t1.Where(r => r.Id == 1).Select(r => r.Ref.Ref.Prop).SingleOrDefault();
 		}
 
-		static class Issue5317
+		static class GroupByFirstReferenceTables
 		{
 			[Table]
 			public sealed class TestTable
@@ -4012,11 +3992,11 @@ namespace Tests.Linq
 
 		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5317")]
-		public void Issue5317Test([DataSources] string context)
+		public void GroupByFirstReferenceAfterGroupJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5317.TestTable>();
-			using var tr = db.CreateLocalTable<Issue5317.Reference>();
+			using var tb = db.CreateLocalTable<GroupByFirstReferenceTables.TestTable>();
+			using var tr = db.CreateLocalTable<GroupByFirstReferenceTables.Reference>();
 
 			var query = from t1 in tb.LoadWith(x => x.Reference) // for AssertQuery
 						join t2 in tb on t1.Id equals t2.Id into g
@@ -4030,14 +4010,14 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		sealed class Issue5327Table
+		sealed class GroupByKeyValueTable
 		{
 			[PrimaryKey]
 			public int Id    { get; set; }
 			public int Key   { get; set; }
 			public int Value { get; set; }
 
-			public static readonly Issue5327Table[] Data =
+			public static readonly GroupByKeyValueTable[] Data =
 			[
 				new() { Id = 1, Key = 2, Value = 1 },
 				new() { Id = 2, Key = 2, Value = 2 },
@@ -4055,10 +4035,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5327")]
-		public void Issue5327Test1([DataSources] string context)
+		public void GroupByOrderByAggregateSelectKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue5327Table.Data);
+			using var tb = db.CreateLocalTable(GroupByKeyValueTable.Data);
 
 			var query = tb
 				.Select(c => new { c.Key, c.Value })
@@ -4072,10 +4052,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5327")]
-		public void Issue5327Test2([DataSources] string context)
+		public void GroupByOrderByAggregate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue5327Table.Data);
+			using var tb = db.CreateLocalTable(GroupByKeyValueTable.Data);
 
 			var query = tb
 				.Select(c => new { c.Key, c.Value})
@@ -4085,6 +4065,1244 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
+		}
+
+		[Table]
+		sealed class GroupedTask
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Association(ExpressionPredicate = nameof(ActualStageExp))]
+			public GroupedTaskStage? ActualStage { get; set; }
+
+			private static Expression<Func<GroupedTask, GroupedTaskStage, bool>> ActualStageExp()
+				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
+		}
+
+		[Table]
+		sealed class GroupedTaskStage
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column]
+			public int TaskId { get; set; }
+
+			[Column]
+			[Column(Configuration = ProviderName.DB2, DbType = "char")]
+			public bool Actual { get; set; }
+		}
+
+		private sealed class GroupByWrapper
+		{
+			public GroupByWrapper()
+			{
+			}
+
+			public LastInChain GroupByContainer { get; set; } = null!;
+		}
+
+		private sealed class LastInChain
+		{
+			public LastInChain()
+			{
+			}
+
+			public string  Name  { get; set; } = null!;
+			public object? Value { get; set; }
+		}
+
+		private sealed class AggregationWrapper
+		{
+			public AggregationWrapper()
+			{
+			}
+
+			public LastInChain GroupByContainer { get; set; } = null!;
+			public LastInChain Container        { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1225")]
+		public void GroupByWrapperKeyWithAssociationSum([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t = db.CreateLocalTable<GroupedTask>();
+			using var ts = db.CreateLocalTable<GroupedTaskStage>();
+			db.Insert(new GroupedTask { Id = 1 }, t.TableName);
+			db.Insert(new GroupedTask { Id = 2 }, t.TableName);
+			db.Insert(new GroupedTaskStage { Id = 2, TaskId = 1, Actual = true }, ts.TableName);
+
+			var query = t
+							.GroupBy(it => new GroupByWrapper()
+							{
+								GroupByContainer = new LastInChain()
+								{
+									Name = "Id",
+									Value = it.Id
+								}
+							})
+							.Select(it => new AggregationWrapper()
+							{
+								GroupByContainer = it.Key.GroupByContainer,
+								Container = new LastInChain()
+								{
+									Name = "TotalId",
+									Value = it
+										.AsQueryable()
+										.Sum(_ => (_.ActualStage == null)? null: (int?)_.ActualStage.Id)
+								}
+							});
+			var res = query.AsEnumerable().OrderBy(_ => _.GroupByContainer.Value).ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(2));
+			Assert.That(res[0].Container, Is.Not.Null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Container.Value, Is.EqualTo(2));
+				Assert.That(res[1].Container, Is.Not.Null);
+			}
+
+			Assert.That(res[1].Container.Value, Is.Null);
+		}
+
+		[Sql.Expression("COUNT(*) * 100E0 / SUM(COUNT(*)) OVER()", ServerSideOnly = true, IsAggregate = true)]
+		private static double GroupedCountPercents()
+		{
+			throw new ServerSideOnlyException(nameof(GroupedCountPercents));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/133")]
+		public void WindowExpressionOverGroupByWithWhere([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child
+					.GroupBy(_ => _.ParentID)
+					.Select(_ => new { CountPercents = GroupedCountPercents(), Sum = _.Sum(r => r.ParentID) })
+					.Where(_ => _.Sum != 36)
+					.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(5));
+
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/133")] // LinqService fails with decimals
+		public void WindowExpressionOverGroupByWithHaving([SupportsAnalyticFunctionsContext(false)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child
+					.GroupBy(_ => _.ParentID)
+					.Select(_ => new { CountPercents = GroupedCountPercents(), Sum = _.Sum(r => r.ParentID) })
+					.Having(_ => _.Sum != 36)
+					.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/133"), ActiveIssue(133, ErrorMessage = "Expected: 100.0d +/- 0.001d",
+			Details = "The percentages sum to 65 rather than 100 because the window runs over the filtered rows. Declared on the constraint's own text rather than the caller expression NUnit prints above it, which is not stable across environments. Same number on SQLite, SQL Server and PostgreSQL, direct and remote.")]
+		public void WindowFunctionExtensionOverGroupByWithWhere([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child
+					.GroupBy(_ => _.ParentID)
+					.Select(_ => new
+					{
+						CountPercents = _.Count() * 100d / Sql.Ext.Sum(_.Count()).Over().ToValue(),
+						Sum = _.Sum(r => r.ParentID)
+					})
+					.Where(_ => _.Sum != 36)
+					.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/133")]
+		public void WindowFunctionExtensionOverGroupByWithHaving([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child
+					.GroupBy(c => c.ParentID)
+					.Select(g => new
+					{
+						CountPercents = g.Count() * 100d / Sql.Ext.Sum(g.Count()).Over().ToValue(),
+						Sum = g.Sum(r => r.ParentID)
+					})
+					.Having(x => x.Sum != 36)
+					.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
+		}
+
+		public enum GroupedResourceStatus
+		{
+			Undefined = 0,
+			Used = 40,
+			Finished = 88
+		}
+
+		[Table]
+		public class GroupedResourceRecord
+		{
+			[Column]
+			public Guid Id { get; set; }
+
+			[Column(DataType = DataType.Int32)]
+			public GroupedResourceStatus Status { get; set; }
+
+			[Column]
+			public Guid ResourceID { get; set; }
+
+			[Column]
+			public DateTime? ModifiedTimeStamp { get; set; }
+		}
+
+		[Table]
+		public class GroupedLoadCarrier
+		{
+			[Column]
+			public Guid Id { get; set; }
+
+			[Column]
+			public string? ResourceLabel { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2375")]
+		public void GroupByJoinedColumnsWithHavingCount([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			using var itb = db.CreateLocalTable<GroupedResourceRecord>();
+			using var lctb = db.CreateLocalTable<GroupedLoadCarrier>();
+			var res = new GroupedLoadCarrier { Id = TestData.Guid1, ResourceLabel = "b" };
+			db.Insert(res);
+			var dto1 = new GroupedResourceRecord
+			{
+				ResourceID        = res.Id,
+				Status            = GroupedResourceStatus.Used,
+				ModifiedTimeStamp = TestData.DateTime - TimeSpan.FromHours(2),
+				Id                = TestData.Guid2
+			};
+			db.Insert(dto1);
+			var dto2 = new GroupedResourceRecord
+			{
+				ResourceID        = res.Id,
+				Status            = GroupedResourceStatus.Used,
+				ModifiedTimeStamp = TestData.DateTime- TimeSpan.FromHours(2),
+				Id                = TestData.Guid3
+			};
+			db.Insert(dto2);
+
+			var qry = from inventory in itb
+					  join lc in lctb on inventory.ResourceID equals lc.Id
+					  group inventory by new
+					  {
+						  inventory.Status,
+						  lc.ResourceLabel
+					  }
+							into grp
+					  where grp.Count() > 1
+					  select grp;
+
+			var groups = new List<KeyValuePair<string,IEnumerable<GroupedResourceRecord>>>();
+
+			foreach (var group in qry)
+			{
+				groups.Add(new KeyValuePair<string, IEnumerable<GroupedResourceRecord>>(group.Key.ResourceLabel, group.OrderBy(x => x.ModifiedTimeStamp).ToList()));
+			}
+
+			var sql = ((DataConnection)db).LastQuery;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2478")]
+		public void CrossApplyGroupedSubquery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					from p in db.GetTable<Parent>()
+					from c in (from t in db.GetTable<Child>()
+							   where t.ParentID == p.ParentID
+							   group t by 1
+						into g
+							   select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) })
+					select new { p.ParentID, Count = c == null ? 0 : c.Count, Sum = c == null ? 0 : c.Sum };
+
+			var result = query.ToArray();
+			var cnt    = query.Count();
+
+			Assert.That(cnt, Is.EqualTo(result.Length));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2478")]
+		public void CrossApplyGroupedSubqueryWithParameterFilter([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					from p in db.GetTable<Parent>()
+					from c in (from t in db.GetTable<Child>()
+							   where t.ParentID == p.ParentID
+							   group t by 1
+						into g
+							   select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) })
+					select new { p.ParentID, Count = c.Count, Sum = c.Sum };
+
+			query = query.Where(q => shouldFilter ? q.Count > 0 : isPositive);
+
+			var result = query.ToArray();
+			var cnt    = query.Count();
+
+			Assert.That(cnt, Is.EqualTo(result.Length));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2478")]
+		public void CrossApplyAggregateExtensionSubquery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					from p in db.GetTable<Parent>()
+					from c in (from t in db.GetTable<Child>()
+							   where t.ParentID == p.ParentID
+							   select new { Count = Sql.Ext.Count().ToValue(), Sum = Sql.Ext.Sum(t.ChildID).ToValue() })
+					select new { p.ParentID, Count = c == null ? 0 : c.Count, Sum = c == null ? 0 : c.Sum };
+
+			var result = query.ToArray();
+			var cnt    = query.Count();
+
+			Assert.That(cnt, Is.EqualTo(result.Length));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2478")]
+		public void CrossApplyGroupedSubqueryWithInequalityCorrelation([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					from p in db.GetTable<Parent>()
+					// where p.ParentID <= 2
+					from c in (from t in db.GetTable<Child>()
+							   where t.ParentID != p.ParentID && p.ParentID <= 2
+							   group t by 1
+						into g
+							   select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) })
+					select new { p.ParentID, Count = c == null ? 0 : c.Count, Sum = c == null ? 0 : c.Sum };
+
+			var result = query.ToArray();
+			var cnt    = query.Count();
+
+			Assert.That(cnt, Is.EqualTo(result.Length));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2478")]
+		public void OuterApplyGroupedSubquery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					from p in db.GetTable<Parent>()
+					from c in (from t in db.GetTable<Child>()
+							   where t.ParentID == p.ParentID
+							   group t by 1
+						into g
+							   select new { Count = g.Count() }).DefaultIfEmpty()
+					select new { p.ParentID, Count = c == null ? 0 : c.Count };
+
+			var result = query.ToArray();
+			var cnt    = query.Count();
+
+			Assert.That(cnt, Is.EqualTo(result.Length));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2478")]
+		public void GroupedSubqueryAnyRemovesExists([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var query =
+					from p in db.GetTable<Parent>()
+					where (from t in db.GetTable<Child>()
+						   where t.ParentID == p.ParentID
+						   group t by 1
+						into g
+						   select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) }).Any()
+					select p;
+
+			var result = query.ToArray();
+			var cnt    = query.Count();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(query.ToSqlQuery().Sql, Does.Not.Contain("EXISTS"));
+
+				Assert.That(cnt, Is.EqualTo(result.Length));
+			}
+		}
+
+		sealed class GroupedMessageLog
+		{
+			public long Id { get; set; }
+			public DateTime TimestampGenerated { get; set; }
+			public DateTime? TimestampGone { get; set; }
+			public string? MessageClassName { get; set; }
+			public string? ExternID1 { get; set; }
+			public string? TranslatedMessageGroup { get; set; }
+			public string? TranslatedMessage1 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2564")]
+		public void GroupByHourWithMinTrimAndDurationSum([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<GroupedMessageLog>()
+				.HasTableName("GroupedMessageLog")
+				.Property(e => e.Id).IsPrimaryKey()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			db.DropTable<GroupedMessageLog>(throwExceptionIfNotExists: false);
+			db.CreateTable<GroupedMessageLog>();
+			{
+				var from = TestData.DateTime.AddDays(-1);
+				var to   = TestData.DateTime;
+
+				var qry = (from m in db.GetTable<GroupedMessageLog>()
+						   where m.TimestampGone.HasValue &&
+								 m.TimestampGenerated >= @from &&
+								 m.TimestampGenerated <= to &&
+								 m.MessageClassName == "Error"
+						   group m by new { m.ExternID1, m.TranslatedMessageGroup, m.TimestampGenerated.Hour } into tgGroup
+						   select new
+						   {
+							   MessageText       = tgGroup.Min(x => x.TranslatedMessage1)!.Trim(),
+							   GroupName         = tgGroup.Key.TranslatedMessageGroup,
+							   Hour              = tgGroup.Key.Hour,
+							   Count             = tgGroup.Count(),
+							   DurationInSeconds = (long)tgGroup.Sum(x => (x.TimestampGone!.Value - x.TimestampGenerated).TotalMilliseconds),
+						   });
+
+				var data = qry.ToList();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/241")]
+		public void GroupByEntityAfterContainsFilter([NorthwindDataContext] string context)
+		{
+			using var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false));
+			var jj  = from o in db.Customer select o;
+			jj = jj.Where(x => x.CompanyName.Contains("t"));
+			var t1g = jj.GroupBy(_ => _).ToDictionary(_ => _.Key, _ => _.ToList());
+
+			Assert.That(t1g, Is.Not.Empty);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/264")]
+		public void GroupByTwoServerFunctionKeysSelectKey([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var actual = db.GetTable<LinqDataTypes>()
+					.GroupBy(_ => new { month = ServerMonth(_.DateTimeValue), year = ServerYear(_.DateTimeValue) })
+					.Select(_ => _.Key).ToList();
+
+			var expected = Types
+					.GroupBy(_ => new { month = ServerMonth(_.DateTimeValue), year = ServerYear(_.DateTimeValue) })
+					.Select(_ => _.Key).ToList();
+
+			AreEqual(expected, actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/264")]
+		public void GroupByServerFunctionKeySelectKey([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var actual = db.GetTable<LinqDataTypes>()
+					.GroupBy(_ => ServerMonth(_.DateTimeValue))
+					.Select(_ => _.Key).ToList();
+
+			var expected = Types
+					.GroupBy(_ => ServerMonth(_.DateTimeValue))
+					.Select(_ => _.Key).ToList();
+
+			AreEqual(expected, actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/264")]
+		public void GroupByTwoServerFunctionKeysCountAndSelectKeyParts([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var actualCount = db.GetTable<LinqDataTypes>()
+					.GroupBy(_ => new { month = ServerMonth(_.DateTimeValue), year = ServerYear(_.DateTimeValue) })
+					.Count();
+
+			var expectedCount = Types
+					.GroupBy(_ => new { month = ServerMonth(_.DateTimeValue), year = ServerYear(_.DateTimeValue) })
+					.Count();
+
+			Assert.That(actualCount, Is.EqualTo(expectedCount));
+
+			var actual = db.GetTable<LinqDataTypes>()
+					.GroupBy(_ => new { month = ServerMonth(_.DateTimeValue), year = ServerYear(_.DateTimeValue) })
+					.Select(_ => new { _.Key.month, _.Key.year }).ToList();
+
+			var expected = Types
+					.GroupBy(_ => new { month = ServerMonth(_.DateTimeValue), year = ServerYear(_.DateTimeValue) })
+					.Select(_ => new { _.Key.month, _.Key.year }).ToList();
+
+			AreEqual(expected, actual);
+		}
+
+		[Sql.Expression("MONTH({0})", ServerSideOnly = true)]
+		private static int ServerMonth(DateTime date)
+		{
+			return date.Month;
+		}
+
+		[Sql.Expression("YEAR({0})", ServerSideOnly = true)]
+		private static int ServerYear(DateTime date)
+		{
+			return date.Year;
+		}
+
+		[Table(Name = "CountDistinctTest")]
+		public class CountDistinctRow
+		{
+			[Column, PrimaryKey]
+			public int ID { get; set; }
+
+			[Column]
+			public int GroupCol { get; set; }
+
+			[Column]
+			public int LinkCol { get; set; }
+
+			[Column]
+			public int? NotUsed { get; set; }
+
+			public static CountDistinctRow[] MakeTestData()
+			{
+				return Enumerable.Range(0, 100)
+					.Select(i => new CountDistinctRow { ID = i, GroupCol = i / 20, LinkCol = i % 5 })
+					.ToArray();
+			}
+		}
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2662")]
+		public void GroupPropertyValueAndDistinct([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = CountDistinctRow.MakeTestData();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query =
+					from row in table
+					group row.LinkCol by row.GroupCol
+					into grp
+					select new {grp.Key, c1 = grp.Count(), c2 = grp.Distinct().Count()};
+
+			var expected =
+					from row in testData
+					group row.LinkCol by row.GroupCol
+					into grp
+					select new {grp.Key, c1 = grp.Count(), c2 = grp.Distinct().Count()};
+
+			Assert.That(query, Is.EqualTo(expected));
+		}
+
+		[Table]
+		sealed class GroupedProduct
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(CanBeNull = false)]
+			public string? Name { get; set; }
+
+			[Association(
+				ThisKey  = nameof(Id),
+				OtherKey = nameof(GroupedProductAttributeMap.ProductId))]
+			public GroupedProductAttributeMap? AtributeMapping { get; set; }
+		}
+
+		[Table]
+		sealed class GroupedProductAttribute
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(CanBeNull = false)]
+			public string? Name { get; set; }
+
+			[Association(
+				ThisKey  = nameof(Id),
+				OtherKey = nameof(GroupedProductAttributeMap.ProductAttributeId))]
+			public GroupedProductAttributeMap? AtributeMapping { get; set; }
+
+		}
+
+		[Table]
+		sealed class GroupedProductAttributeMap
+		{
+			[PrimaryKey]
+			public int ProductId { get; set; }
+
+			[PrimaryKey]
+			public int ProductAttributeId { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2665")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void GroupByEntityInCorrelatedAnySubquery([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<GroupedProduct>())
+			using (db.CreateLocalTable<GroupedProductAttribute>())
+			using (db.CreateLocalTable<GroupedProductAttributeMap>())
+			{
+				var query = from p in db.GetTable<GroupedProduct>()
+							join pam in  db.GetTable<GroupedProductAttributeMap>() on p.Id equals pam.ProductId
+							group p by p into groupedProduct
+							where groupedProduct.Count() == 1
+							select groupedProduct.Key;
+
+				var query2 = from pam in db.GetTable<GroupedProductAttributeMap>()
+							 join pa in db.GetTable<GroupedProductAttribute>() on pam.ProductAttributeId equals pa.Id
+							 where query.Any(p => p.Id >= pam.ProductId)
+							 select pa.Id;
+
+				var res = query2.ToList();
+
+				Assert.That(res, Is.Empty);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/352")]
+		public void GroupByWithCorrelatedFirstOrDefaultOnNorthwind([NorthwindDataContext] string context)
+		{
+			using var db = new NorthwindDB(context);
+			var zz =
+					from e in db.Employee
+					from et in db.EmployeeTerritory
+					where et.EmployeeID == e.EmployeeID
+					group e by new { e.EmployeeID }
+					into g
+					select new
+					{
+						g.Key.EmployeeID,
+						//g.FirstOrDefault().FirstName,
+						db.Employee.FirstOrDefault(em => em.EmployeeID == g.Key.EmployeeID)!.FirstName,
+					};
+
+			//    zz = zz.OrderBy(a => a.FirstName);
+
+			var res = zz.ToList();
+		}
+
+		[Table]
+		public class GroupedLeftJoinPrimary
+		{
+			[Column("id")] public int ID { get;   set; } // integer
+			[Column("id2")] public int ID2 { get; set; } // integer
+			[Column("id3")] public int ID3 { get; set; } // integer
+		}
+
+		[Table]
+		public class GroupedLeftJoinSecondary
+		{
+			[Column("id")] public int ID { get;   set; } // integer
+			[Column("id2")] public int ID2 { get; set; } // integer
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3636")]
+		public void GroupedLeftJoinWithParameterizedFilter([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context, [Values(2, 85)] int myId)
+		{
+			var data1 = new[] { new GroupedLeftJoinPrimary { ID = 1, ID2 = 2 }, new GroupedLeftJoinPrimary { ID = 2, ID2 = 2 }, new GroupedLeftJoinPrimary { ID = 2, ID2 = 85 } };
+			var data2 = new[] { new GroupedLeftJoinSecondary { ID = 1, ID2 = 2 }, new GroupedLeftJoinSecondary { ID = 2, ID2 = 2 }, new GroupedLeftJoinSecondary { ID = 2, ID2 = 85 } };
+
+			using var db     = GetDataContext(context, o => o.UseGuardGrouping(false));
+			using var table1 = db.CreateLocalTable(data1);
+			using var table2 = db.CreateLocalTable(data2);
+
+			var query =
+				from s in db.GetTable<GroupedLeftJoinPrimary>().Where(x => x.ID2 == myId)
+				join o in db.GetTable<GroupedLeftJoinSecondary>().Where(x => x.ID2 == myId) on s.ID equals o.ID into temp1
+				from order in temp1.DefaultIfEmpty()
+				group new { s, order } by s.ID
+				into g
+				select g;
+
+			var result      = query.OrderBy(x => x.Key).First();
+			var groupResult = result.ToArray();
+
+			groupResult.Select(x => x.s.ID2).ShouldAllBe(id => id == myId);
+
+			if (myId == 2)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(result.Key, Is.EqualTo(1));
+
+					Assert.That(groupResult, Has.Length.EqualTo(1));
+					Assert.That(groupResult[0].s.ID, Is.EqualTo(1));
+					Assert.That(groupResult[0].s.ID2, Is.EqualTo(2));
+					Assert.That(groupResult[0].s.ID3, Is.Zero);
+					Assert.That(groupResult[0].order.ID, Is.EqualTo(1));
+					Assert.That(groupResult[0].order.ID2, Is.EqualTo(2));
+				}
+			}
+			else
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(result.Key, Is.EqualTo(2));
+
+					Assert.That(groupResult, Has.Length.EqualTo(1));
+					Assert.That(groupResult[0].s.ID, Is.EqualTo(2));
+					Assert.That(groupResult[0].s.ID2, Is.EqualTo(85));
+					Assert.That(groupResult[0].s.ID3, Is.Zero);
+					Assert.That(groupResult[0].order.ID, Is.EqualTo(2));
+					Assert.That(groupResult[0].order.ID2, Is.EqualTo(85));
+				}
+			}
+		}
+
+		[Table]
+		public class GroupedSumProduct
+		{
+			[Column, PrimaryKey] public int Id { get; set; }
+			[Column] public string? Name { get; set; }
+		}
+
+		[Table]
+		public class GroupedSumLineItem
+		{
+			[Column, PrimaryKey] public int Id { get; set; }
+			[Column] public int ProductId { get; set; }
+			[Column] public int Quantity { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5256")]
+		public void NestedSubqueryWithGroupedAggregationsSumOfSums([DataSources] string context)
+		{
+			var productsData = new[]
+			{
+				new GroupedSumProduct { Id = 1, Name = "Product1" },
+				new GroupedSumProduct { Id = 2, Name = "Product2" },
+				new GroupedSumProduct { Id = 3, Name = "Product3" }
+			};
+
+			var purchaseOrderLineItemsData = new[]
+			{
+				new GroupedSumLineItem { Id = 1, ProductId = 1, Quantity = 10 },
+				new GroupedSumLineItem { Id = 2, ProductId = 1, Quantity = 20 },
+				new GroupedSumLineItem { Id = 3, ProductId = 2, Quantity = 15 },
+				new GroupedSumLineItem { Id = 4, ProductId = 2, Quantity = 25 },
+				new GroupedSumLineItem { Id = 5, ProductId = 3, Quantity = 5 }
+			};
+
+			using var db = GetDataContext(context);
+			using var products = db.CreateLocalTable(productsData);
+			using var purchaseOrderLineItems = db.CreateLocalTable(purchaseOrderLineItemsData);
+
+			// This query reproduces the issue: nested subquery with grouped aggregations
+			// where Sum() is applied both inside the group selection and on the outer result set
+			var query =
+				from product in db.GetTable<GroupedSumProduct>()
+				select new
+				{
+					ProductId = product.Id,
+					OnOrder = (
+						from s in db.GetTable<GroupedSumLineItem>()
+						group s by s.Id into testGroup
+						select testGroup.Sum(x => (decimal?)x.Quantity)
+					).Sum() ?? 0
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiredOuterJoins(TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllNativeAccess, TestProvName.AllDB2, TestProvName.AllOracle11)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5256")]
+		public void NestedSubqueryWithGroupedAggregationsFilteredSumOfSums([DataSources(TestProvName.AllSybase)] string context)
+		{
+			var productsData = new[]
+			{
+				new GroupedSumProduct { Id = 1, Name = "Product1" },
+				new GroupedSumProduct { Id = 2, Name = "Product2" },
+				new GroupedSumProduct { Id = 3, Name = "Product3" }
+			};
+
+			var purchaseOrderLineItemsData = new[]
+			{
+				new GroupedSumLineItem { Id = 1, ProductId = 1, Quantity = 10 },
+				new GroupedSumLineItem { Id = 2, ProductId = 1, Quantity = 20 },
+				new GroupedSumLineItem { Id = 3, ProductId = 2, Quantity = 15 },
+				new GroupedSumLineItem { Id = 4, ProductId = 2, Quantity = 25 },
+				new GroupedSumLineItem { Id = 5, ProductId = 3, Quantity = 5 }
+			};
+
+			using var db = GetDataContext(context);
+			using var products = db.CreateLocalTable(productsData);
+			using var purchaseOrderLineItems = db.CreateLocalTable(purchaseOrderLineItemsData);
+
+			// Variation with filtering by ProductId in the subquery
+			var query =
+				from product in db.GetTable<GroupedSumProduct>()
+				select new
+				{
+					ProductId = product.Id,
+					OnOrder = (
+						from s in db.GetTable<GroupedSumLineItem>()
+						where s.ProductId == product.Id
+						group s by s.Id into testGroup
+						select testGroup.Sum(x => (decimal?)x.Quantity)
+					).Sum() ?? 0
+				};
+
+			AssertQuery(query);
+		}
+
+		public enum AisleStatus
+		{
+			Available,
+			OutOfOrder,
+		}
+
+		public enum OptimizationLevel
+		{
+			Off,
+			On
+		}
+
+		public enum ChannelStatus
+		{
+			Available,
+		}
+
+		[Table]
+		public class GroupKeyAisle
+		{
+			[Column(IsPrimaryKey = true)] public Guid Id { get; set; }
+			[Column] public AisleStatus Status { get; set; }
+			[Column] public AisleStatus GroupStatus { get; set; }
+			[Column] public OptimizationLevel OptimizationMaxLevel { get; set; }
+
+			[Column] public string? AdditionalField1 { get; set; }
+			[Column] public string? AdditionalField2 { get; set; }
+			[Column] public string? AdditionalField3 { get; set; }
+		}
+
+		[Table]
+		public class GroupKeyAisleResourcePoint
+		{
+			[Column(IsPrimaryKey = true)] public Guid AisleId { get; set; }
+			[Column(IsPrimaryKey = true)] public Guid ResourcePointId { get; set; }
+		}
+
+		[Table]
+		public class GroupKeyResourcePoint
+		{
+			[Column(IsPrimaryKey = true)] public Guid Id { get; set; }
+			[Column] public int Nr { get; set; }
+			[Column] public bool IsSrm { get; set; }
+			[Column] public bool OutOfOrder { get; set; }
+		}
+
+		[Table]
+		public class GroupKeyShelf
+		{
+			[Column(IsPrimaryKey = true)] public Guid Id { get; set; }
+			[Column] public Guid AisleID { get; set; }
+			[Column] public bool ServerOnlyText { get; set; }
+			[Column] public int DepthCoordinate { get; set; }
+		}
+
+		[Table]
+		public class GroupKeyChannel
+		{
+			[Column(IsPrimaryKey = true)] public Guid Id { get; set; }
+			[Column] public ChannelStatus Status { get; set; }
+			[Column] public Guid AisleID { get; set; }
+		}
+
+		public class SRMInfeedPoint
+		{
+			public GroupKeyAisle? Aisle;
+			public readonly GroupKeyResourcePoint WmsResourcePoint;
+			public int SumCharge;
+			public int SumMaterial;
+			public int SumPallets;
+			public int MaxAisleBalanceDifference;
+			public int MaxDepthAvailableShelfs;
+			public int MaxDepthAllShelfs;
+			public int MaxHeightClassAllShelfs;
+			public int MaxWidthClassAllShelfs;
+			public int MaxLengthClassAllShelfs;
+			public decimal? MaxWeightAllShelfs;
+			public int CountFreeShelfs;
+			public Dictionary<int, int>? CountFreeShelfsAtHeightClass;
+			public int CountFreeChannels;
+			public int FreeMoves;
+
+			public SRMInfeedPoint(GroupKeyAisle aisle, GroupKeyResourcePoint wmsResourcePoint, int maxAisleBalanceDifference, int countFreeChannels)
+			{
+				Aisle = aisle;
+				WmsResourcePoint = wmsResourcePoint;
+				SumCharge = 0;
+				SumMaterial = 0;
+				SumPallets = 0;
+				MaxAisleBalanceDifference = maxAisleBalanceDifference <= 0 ? 1 : maxAisleBalanceDifference;
+				MaxDepthAvailableShelfs = Int32.MaxValue;
+				MaxDepthAllShelfs = Int32.MaxValue;
+				MaxHeightClassAllShelfs = Int32.MaxValue;
+				MaxWidthClassAllShelfs = Int32.MaxValue;
+				MaxLengthClassAllShelfs = Int32.MaxValue;
+				MaxWeightAllShelfs = null;
+				CountFreeShelfs = 0;
+				CountFreeChannels = countFreeChannels;
+				FreeMoves = Int32.MaxValue;
+				CountFreeShelfsAtHeightClass = null;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5362")]
+		public void GroupingKeyShouldFullyMaterialize([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var aisleId = TestData.Guid1;
+			var rpId    = TestData.Guid2;
+			var ssId    = TestData.Guid3;
+			var chId    = TestData.Guid4;
+
+			using var aisle = db.CreateLocalTable<GroupKeyAisle>([new GroupKeyAisle() { Id = aisleId, AdditionalField1 = "test", OptimizationMaxLevel = OptimizationLevel.On }]);
+			using var refTable = db.CreateLocalTable<GroupKeyAisleResourcePoint>([new GroupKeyAisleResourcePoint() { AisleId = aisleId, ResourcePointId = rpId }]);
+			using var rps = db.CreateLocalTable<GroupKeyResourcePoint>([new GroupKeyResourcePoint() { Id = rpId, IsSrm = true }]);
+			using var shelfs = db.CreateLocalTable<GroupKeyShelf>([new GroupKeyShelf() { Id = ssId, AisleID = aisleId }]);
+			using var channels = db.CreateLocalTable<GroupKeyChannel>([new GroupKeyChannel() { Id = chId, AisleID = aisleId }]);
+
+			var dict = (
+				from a in db.GetTable<GroupKeyAisle>()
+				join refrpa in db.GetTable<GroupKeyAisleResourcePoint>() on a.Id equals refrpa.AisleId
+				join rp in db.GetTable<GroupKeyResourcePoint>() on refrpa.ResourcePointId equals rp.Id
+				join ss in db.GetTable<GroupKeyShelf>() on a.Id equals ss.AisleID
+				where a.Status               != AisleStatus.OutOfOrder &&
+				      a.GroupStatus          != AisleStatus.OutOfOrder &&
+				      a.OptimizationMaxLevel > OptimizationLevel.Off   &&
+				      rp.IsSrm                                         &&
+				      !rp.OutOfOrder
+				group new { a, rp, ss } by new { a, rp }
+				into g
+				select new SRMInfeedPoint(
+					g.Key.a,
+					g.Key.rp,
+					g.Max(x => x.ss.DepthCoordinate),
+					(from c in db.GetTable<GroupKeyChannel>()
+						where c.Status  == ChannelStatus.Available &&
+						      c.AisleID == g.Key.a.Id
+						select c).Count())
+			).ToDictionary(srm => srm.Aisle!.Id);
+
+			dict!.First().Value!.Aisle!.AdditionalField1.ShouldBe("test");
+		}
+
+		[Table]
+		public class DateRanges
+		{
+			[Column] public int Year { get; set; }
+		}
+
+		[Table]
+		public class SmallerDateRanges
+		{
+			[Column] public int Year { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5381")]
+		public void JoinToNonGroupedAggregationQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var dateRangesData = new[]
+			{
+				new DateRanges { Year = 2020 },
+				new DateRanges { Year = 2021 },
+				new DateRanges { Year = 2022 }
+			};
+
+			var smallerDateRangesData = new[]
+			{
+				new SmallerDateRanges { Year = 2020 },
+				new SmallerDateRanges { Year = 2021 }
+			};
+
+			using var db = GetDataContext(context);
+			using var dateRanges = db.CreateLocalTable(dateRangesData);
+			using var smallerDateRanges = db.CreateLocalTable(smallerDateRangesData);
+
+			var aggregation =
+				from dr in dateRanges
+				group dr by Sql.GroupBy.None
+				into grouping
+				select new
+				{
+					MinYear = grouping.Min(d => d.Year), 
+					MaxYear = grouping.Max(d => d.Year)
+				};
+
+			var query =
+				from a in aggregation
+				from t in smallerDateRanges.Where(t => a.MinYear <= t.Year && a.MaxYear >= t.Year)
+				select t.Year;
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5381")]
+		public void JoinToNonGroupedAggregationWithCount([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var dateRangesData = new[]
+			{
+				new DateRanges { Year = 2020 },
+				new DateRanges { Year = 2021 },
+				new DateRanges { Year = 2022 }
+			};
+
+			var smallerDateRangesData = new[]
+			{
+				new SmallerDateRanges { Year = 2020 },
+				new SmallerDateRanges { Year = 2021 }
+			};
+
+			using var db = GetDataContext(context);
+			using var dateRanges = db.CreateLocalTable(dateRangesData);
+			using var smallerDateRanges = db.CreateLocalTable(smallerDateRangesData);
+
+			var aggregation =
+				from dr in dateRanges
+				group dr by Sql.GroupBy.None
+				into grouping
+				select new
+				{
+					MinYear = grouping.Min(d => d.Year), 
+					MaxYear = grouping.Max(d => d.Year), 
+					Count = grouping.Count()
+				};
+
+			var query =
+				from a in aggregation
+				from t in smallerDateRanges.Where(t => a.MinYear <= t.Year && a.MaxYear >= t.Year)
+				select new { t.Year, a.Count };
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByConcatKeyCount([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual   = db.GetTable<Person>()
+					.GroupBy(_ => Sql.Concat("test", _.Patient!.Diagnosis))
+					.Count();
+
+			var expected = Person
+					.GroupBy(_ => _.Patient == null ? null : Sql.Concat("test", _.Patient.Diagnosis))
+					.Count();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByConcatenatedKeyLongCount([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual    = db.GetTable<Person>()
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
+					.LongCount();
+
+			var expected = Person
+					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient!.Diagnosis)
+					.LongCount();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByHavingCount([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
+					.Having(_ => _.Key != null)
+					.Count();
+
+			var expected = Person
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
+					.Where(_ => _.Key != null)
+					.Count();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByHavingLongCount([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
+					.Having(_ => _.Key != null)
+					.LongCount();
+
+			var expected = Person
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
+					.Where(_ => _.Key != null)
+					.LongCount();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByKeySelectCount([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
+					.Select(_ => _.Key)
+					.Count();
+
+			var expected = Person
+					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.Select(_ => _.Key)
+					.Count();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByKeySelectLongCount([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
+					.Select(_ => _.Key)
+					.LongCount();
+
+			var expected = Person
+					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.Select(_ => _.Key)
+					.LongCount();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByHavingKeySelectCount([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
+					.Having(_ => _.Key != null)
+					.Select(_ => _.Key)
+					.Count();
+
+			var expected = Person
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
+					.Where(_ => _.Key != null)
+					.Select(_ => _.Key)
+					.Count();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/781")]
+		public void GroupByHavingKeySelectLongCount([DataSources(false,
+				TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase,
+				TestProvName.AllMySql, ProviderName.SqlCe)]
+			string context)
+		{
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
+					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
+					.Having(_ => _.Key != null)
+					.Select(_ => _.Key)
+					.LongCount();
+
+			var expected = Person
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
+					.Where(_ => _.Key != null)
+					.Select(_ => _.Key)
+					.LongCount();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/528")]
+		public void GroupByWithGroupItemsAsListLazy([DataSources] string context)
+		{
+			//using (new AllowMultipleQuery())
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+			var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
+
+			foreach (var re in result)
+			{
+				var ex = expected.Single(_ => _.Key == re.Key);
+
+				AreEqual(ex.Data, re.Data);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/528")]
+		public void GroupByWithGroupItemsAsListMaterialized([DataSources] string context)
+		{
+			//using (new AllowMultipleQuery())
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+			var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
+
+			foreach (var re in result)
+			{
+				var ex = expected.Single(_ => _.Key == re.Key);
+
+				AreEqual(ex.Data, re.Data);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/528")]
+		public void GroupByWithGroupAsEnumerableData([DataSources] string context)
+		{
+			//using (new AllowMultipleQuery())
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+			var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
+
+			foreach (var re in result)
+			{
+				var ex = expected.Single(_ => _.Key == re.Key);
+
+				AreEqual(ex.Data.ToList(), re.Data.ToList());
+			}
 		}
 	}
 }

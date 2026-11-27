@@ -500,8 +500,8 @@ namespace Tests.Linq
 			return ++_i % 2 == 0 ? "John" : null;
 		}
 
-		[Test, QueryCacheTest]
-		public void Issue288Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/288"), QueryCacheTest]
+		public void NullableFunctionParameterEvaluatedPerExecution([DataSources] string context)
 		{
 			_i = 0;
 
@@ -531,9 +531,8 @@ namespace Tests.Linq
 			public int?    Status;
 		}
 
-		// https://github.com/linq2db/linq2db/issues/191
-		[Test]
-		public void Issue191Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/191")]
+		public void NullableParametersWithStringContainsAndEmptyCheck([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<User>();

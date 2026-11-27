@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
@@ -318,6 +319,125 @@ namespace Tests.Linq
 				.Select(r => r.F)
 				.ToArray()
 				.ShouldBe(expected);
+		}
+
+		public class TernaryInvoice
+		{
+			public long InvoiceID { get; set; }
+			public long? InvoiceReferenceNumberID { get; set; }
+			public decimal? SettlementTotalOnIssue { get; set; }
+		}
+
+		public class TernaryInvoiceLine
+		{
+			public long InvoiceLineItemID { get; set; }
+			public decimal BillingAmountOverride { get; set; }
+			public bool Suppressed { get; set; }
+			public long OwningInvoiceID { get; set; }
+		}
+
+		public class TernaryInvoiceRef
+		{
+			public long    InvoiceReferenceNumberID { get; set; }
+			public string? ReferenceNumber          { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1838")]
+		public void NestedTernaryWithSubqueryProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var invoices = new TernaryInvoice[]{new TernaryInvoice
+			{
+				InvoiceID = 1,
+				InvoiceReferenceNumberID = 10,
+				SettlementTotalOnIssue = 3
+			}};
+
+			using (var db = GetDataContext(context))
+			using ( db.CreateLocalTable<TernaryInvoice>(invoices))
+			using ( db.CreateLocalTable<TernaryInvoiceLine>())
+			using ( db.CreateLocalTable<TernaryInvoiceRef>())
+			{
+				var invoiceAmount =
+					from i in db.GetTable<TernaryInvoice>()
+					from ili in  db.GetTable<TernaryInvoiceLine>().Where(x => x.OwningInvoiceID == i.InvoiceID && !x.Suppressed)
+					group new { i.InvoiceID, ili.BillingAmountOverride } by new { i.InvoiceID } into g
+					select new
+					{
+						InvoiceId = g.Key.InvoiceID,
+						Total = g.Sum(x => x.BillingAmountOverride)
+					};
+
+				var query = from i in  db.GetTable<TernaryInvoice>()
+					from r in db.GetTable<TernaryInvoiceRef>().Where(x => x.InvoiceReferenceNumberID == i.InvoiceReferenceNumberID).DefaultIfEmpty()
+					from ia in invoiceAmount.Where(x => x.InvoiceId == i.InvoiceID).DefaultIfEmpty()
+					select new 
+					{
+						InvoiceId = i.InvoiceID,
+						ReferenceNumber = r == null ? null : r.ReferenceNumber,
+						TotalSettlementAmount = i.SettlementTotalOnIssue != null ? i.SettlementTotalOnIssue : ia != null ? (decimal?)ia.Total : null
+					};
+
+				var query2 = from i in  db.GetTable<TernaryInvoice>()
+					from r in db.GetTable<TernaryInvoiceRef>().Where(x => x.InvoiceReferenceNumberID == i.InvoiceReferenceNumberID).DefaultIfEmpty()
+					from ia in invoiceAmount.Where(x => x.InvoiceId == i.InvoiceID).DefaultIfEmpty()
+					select new 
+					{
+						InvoiceId = i.InvoiceID,
+						ReferenceNumber = r == null ? null : r.ReferenceNumber,
+						TotalSettlementAmount = i.SettlementTotalOnIssue != null ? i.SettlementTotalOnIssue : null
+					};
+
+				var query3 = from i in  db.GetTable<TernaryInvoice>()
+					from r in db.GetTable<TernaryInvoiceRef>().Where(x => x.InvoiceReferenceNumberID == i.InvoiceReferenceNumberID).DefaultIfEmpty()
+					from ia in invoiceAmount.Where(x => x.InvoiceId == i.InvoiceID).DefaultIfEmpty()
+					select new 
+					{
+						InvoiceId = i.InvoiceID,
+						ReferenceNumber = r == null ? null : r.ReferenceNumber,
+						TotalSettlementAmount = ia != null ? (decimal?)ia.Total : null
+					};
+
+				var resut = query.ToArray();
+				var resut2 = query2.ToArray();
+				var resut3 = query3.ToArray();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2787")]
+		public void ConditionalInProjectionOverJoinGeneratesCase([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query  = (from pers in db.Person
+						  from patient in db.Patient.Where(x => x.PersonID == pers.ID)
+						  select new
+						  {
+							  Pers    = pers,
+							  Patient = patient
+						  });
+
+			var res = query.Select(x => new {a = x.Pers.ID == 3 ? x.Pers.FirstName : string.Empty}).ToList();
+
+			var lastQuery = ((DataConnection)db).LastQuery;
+
+			Assert.That(lastQuery?.ToLower().Contains("case"), Is.True);
+		}
+
+		[Table]
+		sealed class BetweenTernaryEntity
+		{
+			[Column] public int Id    { get; set; }
+			[Column] public int? Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2797")]
+		public void BetweenInTernaryIsNotComparedToBoolean([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<BetweenTernaryEntity>();
+			table.Select(e => Sql.AsSql(Sql.Between(e.Value, 2, 5) ? 0 : 1))
+				.ToList();
+			Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 		}
 	}
 }

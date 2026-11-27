@@ -328,7 +328,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class Issue1836
+		sealed class SqlGeographyRecord
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -336,10 +336,10 @@ namespace Tests.DataProvider
 			[Column]
 			public SqlGeography? HomeLocation { get; set; }
 
-			public static Issue1836[] Data { get; } = new[]
+			public static SqlGeographyRecord[] Data { get; } = new[]
 			{
-				new Issue1836() { Id = 1, HomeLocation = null },
-				new Issue1836() { Id = 2, HomeLocation = SqlGeography.Parse("LINESTRING(-122.360 47.656, -122.343 47.656)") },
+				new SqlGeographyRecord() { Id = 1, HomeLocation = null },
+				new SqlGeographyRecord() { Id = 2, HomeLocation = SqlGeography.Parse("LINESTRING(-122.360 47.656, -122.343 47.656)") },
 			};
 		}
 
@@ -357,7 +357,7 @@ namespace Tests.DataProvider
 
 			using (new SerializeAssemblyQualifiedName(true))
 			using (var db = GetDataContext(context))
-			using (var t  = db.CreateLocalTable(Issue1836.Data))
+			using (var t  = db.CreateLocalTable(SqlGeographyRecord.Data))
 			{
 				var records = t.OrderBy(_ => _.Id).ToList();
 
@@ -369,7 +369,7 @@ namespace Tests.DataProvider
 					Assert.That(records[1].Id, Is.EqualTo(2));
 					// missing API
 #if NETFRAMEWORK
-					Assert.That(Issue1836.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue, Is.True);
+					Assert.That(SqlGeographyRecord.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue, Is.True);
 #endif
 				}
 			}

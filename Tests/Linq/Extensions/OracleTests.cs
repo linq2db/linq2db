@@ -845,64 +845,62 @@ namespace Tests.Extensions
 				"UNION"));
 		}
 
-		#region Issue 4163
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
-		public void Issue4163Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		public void EnumNotEqualExplicitNullability([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
 			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
-			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+			using var tb = db.CreateLocalTable(PaymentExplicitNullability.Data);
 
-			var cnt = db.GetTable<Issue4163TableExplicitNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+			var cnt = db.GetTable<PaymentExplicitNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
 
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
-		public void Issue4163Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		public void EnumNotEqualUnknownNullability([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
 			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
-			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+			using var tb = db.CreateLocalTable(PaymentExplicitNullability.Data);
 
-			var cnt = db.GetTable<Issue4163TableUnknownNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+			var cnt = db.GetTable<PaymentUnknownNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
 
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
-		public void Issue4163Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		public void EnumNotEqualInferredNullability([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
 			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
-			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+			using var tb = db.CreateLocalTable(PaymentExplicitNullability.Data);
 
-			var cnt = db.GetTable<Issue4163TableInferredNullability>().Where(r => r.Method != PaymentMethodWithNull.Unknown).Count();
+			var cnt = db.GetTable<PaymentInferredNullability>().Where(r => r.Method != PaymentMethodWithNull.Unknown).Count();
 
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
-		[Table("Issue4163Table")]
-		sealed class Issue4163TableExplicitNullability
+		[Table("PaymentMethodNullability")]
+		sealed class PaymentExplicitNullability
 		{
 			[Column] public int Id { get; set; }
 			[Column(CanBeNull = true)] public PaymentMethod Method { get; set; }
 
-			public static readonly Issue4163TableExplicitNullability[] Data = new[]
+			public static readonly PaymentExplicitNullability[] Data = new[]
 			{
-				new Issue4163TableExplicitNullability() { Id = 1, Method = PaymentMethod.Unknown },
-				new Issue4163TableExplicitNullability() { Id = 2, Method = PaymentMethod.Cheque },
-				new Issue4163TableExplicitNullability() { Id = 3, Method = PaymentMethod.EFT },
+				new PaymentExplicitNullability() { Id = 1, Method = PaymentMethod.Unknown },
+				new PaymentExplicitNullability() { Id = 2, Method = PaymentMethod.Cheque },
+				new PaymentExplicitNullability() { Id = 3, Method = PaymentMethod.EFT },
 			};
 		}
 
-		[Table("Issue4163Table")]
-		sealed class Issue4163TableUnknownNullability
+		[Table("PaymentMethodNullability")]
+		sealed class PaymentUnknownNullability
 		{
 			[Column] public int Id { get; set; }
 			[Column] public PaymentMethod Method { get; set; }
 		}
 
-		[Table("Issue4163Table")]
-		sealed class Issue4163TableInferredNullability
+		[Table("PaymentMethodNullability")]
+		sealed class PaymentInferredNullability
 		{
 			[Column] public int Id { get; set; }
 			[Column] public PaymentMethodWithNull Method { get; set; }
@@ -934,7 +932,5 @@ namespace Tests.Extensions
 			[MapValue("E")]
 			EFT
 		}
-
-		#endregion
 	}
 }

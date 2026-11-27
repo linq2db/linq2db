@@ -100,8 +100,8 @@ namespace Tests.Linq
 
 	sealed class GenericExtensionTests : TestBase
 	{
-		[Test]
-		public void Issue326([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/326")]
+		public void GenericExtensionBuilderTypeArguments([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var result = db.GetTable<Parent>()
