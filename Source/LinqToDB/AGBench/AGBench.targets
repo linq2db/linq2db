@@ -11,6 +11,8 @@
 		<DefineConstants Condition="'$(AGB_XS)'=='true'">$(DefineConstants);AGB_XS</DefineConstants>
 		<DefineConstants Condition="'$(AGB_SUF)'=='true'">$(DefineConstants);AGB_SUF</DefineConstants>
 		<DefineConstants Condition="'$(AGB_GEN)'=='true'">$(DefineConstants);AGB_GEN</DefineConstants>
+		<!-- v2 filter spelling of every scenario (AGBenchAssembly.cs); the 1.1 text stays without it -->
+		<DefineConstants Condition="'$(AGB_V2)'=='true'">$(DefineConstants);AGB_V2</DefineConstants>
 	</PropertyGroup>
 	<!-- The same wiring the package gives: its props and targets, and the analyzer assembly. -->
 	<Import Project="$(AGB_SRC)\build\AspectGenerator.props" Condition="'$(AGB_ANY)'=='true'" />
