@@ -2794,13 +2794,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
 					return ReadPivotCellAs(cellAccess, node.NodeType, node.Type, node);
 
-				// Other passes keep the read's shape; an operand of the cell's own type is converted as the object it stood for.
-				var operand = Visit(cellAccess);
-
-				if (operand.Type == typeof(object))
-					return node.Update(operand);
-
-				return Expression.MakeUnary(node.NodeType, HasConversion(operand.Type, node.Type) ? operand : Expression.Convert(operand, typeof(object)), node.Type);
+				// Other passes (Extract) leave the read as written; the pass that builds the query reads it above.
+				return node;
 			}
 
 			if (PreferClientCalculation(node))

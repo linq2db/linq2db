@@ -1189,6 +1189,111 @@ namespace Tests.Linq
 				.ShouldBe(new[] { ("A", 0), ("B", 0) });
 		}
 
+		/// <summary>
+		/// A cell an unpivot column reads as another type stays that read through the operators composed after it: a filter
+		/// and a projection of the value read the provider's conversion, an empty cell reads as the type's default, and a type
+		/// the cell has no conversion to is named.
+		/// </summary>
+		[Test]
+		public void UnpivotsAConvertedCellThroughLaterOperators([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			// The provider's own cast of the fractional amount - Distinct puts it in SQL.
+			var castOfA = t
+				.Where(x => x.Year == 2010 && x.Category == "A")
+				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
+				.Single();
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010, 2020 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			var unpivoted = pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Name = name, Value = value },
+					x => x.Cells.Get<int>("Y2010"),
+					x => x.Cells.Get<int>("Y2020"));
+
+			unpivoted
+				.Where(u => u.Value == castOfA)
+				.Select(u => u.Key)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			unpivoted
+				.Where(u => u.Name == "Y2010")
+				.OrderBy(u => u.Key)
+				.Select(u => u.Value)
+				.ToList()
+				.ShouldBe(new[] { castOfA, 15 });
+
+			unpivoted
+				.Where(u => u.Name == "Y2020")
+				.Select(u => u.Value)
+				.ToList()
+				.ShouldBe(new[] { 0, 0 });
+
+			var expected = Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri));
+
+			var asUri = pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<Uri>("Y2010"));
+
+			Assert.That(
+				() => asUri
+					.Where(u => u.Value != null)
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+
+			Assert.That(
+				() => asUri
+					.Select(u => u.Value)
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(expected));
+		}
+
+		/// <summary>The value an unpivot column reads is converted in SQL, not after the rows are read.</summary>
+		// The SQL text differs per provider; SQLite's is a plain CAST.
+		[Test]
+		public void UnpivotConvertsACellReadInSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			var sql = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2010"))
+				.Select(u => u.Value)
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain("CAST(", Case.Insensitive);
+		}
+
 		/// <summary>An unpivot column's value can feed a subquery in the result selector.</summary>
 		[Test]
 		public void UnpivotValueFeedsASubquery([DataSources] string context)
