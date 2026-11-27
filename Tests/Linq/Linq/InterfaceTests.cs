@@ -1012,6 +1012,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2939")]
+		[ActiveIssue(6501, Configuration = TestProvName.AllInformix)]
 		public void JoinThroughInterfaceTypedQueryable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
