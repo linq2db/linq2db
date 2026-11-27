@@ -189,6 +189,7 @@ namespace Tests.Linq
 				.ShouldBe(PageIds(2, 3));
 		}
 
+		// Direct only: the trace counts commands on the client, and a remote context runs them on the server.
 		[Test]
 		public void SendsOneCommandWhateverTheOption([DataSources(false, NoFromlessSubquery)] string context, [Values] bool useCombinedCommands)
 		{
@@ -237,6 +238,7 @@ namespace Tests.Linq
 			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
 		}
 
+		// Direct only: the trace counts commands on the client, and a remote context runs them on the server.
 		[Test]
 		public void SelectOfTheSameShapeIsUnchanged([DataSources(false, NoFromlessSubquery)] string context)
 		{
@@ -360,7 +362,8 @@ namespace Tests.Linq
 			await BatchRefusesHints(db, items, trace, oneShot, isAsync);
 		}
 
-		// A DataContext takes its hints itself and hands them to a connection only when a command runs.
+		// A DataContext takes its hints itself and hands them to a connection only when a command runs. The refusal comes
+		// before any command, so SQLite stands for every provider.
 		[Test]
 		public async Task PendingHintsAreRefusedOnADataContext(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -705,6 +708,7 @@ namespace Tests.Linq
 			ScalarsOnly,
 		}
 
+		// Every provider but Jet / ACE (NoFromlessSubquery), remote included.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "terminal", AlsoWhenValue = Terminal.SingleOrDefaultEmpty)]
 		public void EveryTerminalReadsItsValue([DataSources(NoFromlessSubquery)] string context, [Values] Terminal terminal)
@@ -1036,6 +1040,7 @@ namespace Tests.Linq
 				.ShouldBe(PageIds(0, 2));
 		}
 
+		// One provider, as for TupleArity2: the positions are assembled before translation.
 		[Test]
 		public async Task TupleArity3([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
 		{
@@ -1054,6 +1059,7 @@ namespace Tests.Linq
 				.ShouldBe(PageIds(0, 2));
 		}
 
+		// One provider, as for TupleArity2: the positions are assembled before translation.
 		[Test]
 		public async Task TupleArity4([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
 		{
@@ -1073,6 +1079,7 @@ namespace Tests.Linq
 			longCount.ShouldBe(5L);
 		}
 
+		// One provider, as for TupleArity2: the positions are assembled before translation.
 		[Test]
 		public async Task TupleArity5([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
 		{
@@ -1093,6 +1100,7 @@ namespace Tests.Linq
 			anyNull.ShouldBeTrue();
 		}
 
+		// One provider, as for TupleArity2: the positions are assembled before translation.
 		[Test]
 		public async Task TupleArity6([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
 		{
@@ -1114,6 +1122,7 @@ namespace Tests.Linq
 			max.ShouldBe(10);
 		}
 
+		// One provider, as for TupleArity2: the positions are assembled before translation.
 		[Test]
 		public async Task TupleArity7([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
 		{
@@ -1138,6 +1147,7 @@ namespace Tests.Linq
 			average!.Value.ShouldBe(expectedAverage, 1e-9);
 		}
 
+		// Direct only: the trace counts commands on the client, and a remote context runs them on the server.
 		[Test]
 		public async Task AsyncMatchesSync([DataSources(false, NoFromlessSubquery)] string context)
 		{
@@ -1179,6 +1189,8 @@ namespace Tests.Linq
 			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
 		}
 
+		// Direct only: a remote context runs the collection as a command of its own, so its SQL baseline would differ from the
+		// direct one.
 		[Test]
 		public void CollectionsAreExplicitLoads([DataSources(false, NoFromlessSubquery)] string context)
 		{
@@ -1246,6 +1258,7 @@ namespace Tests.Linq
 				.ShouldBe(PageIds(0, 4));
 		}
 
+		// Direct only: the trace counts commands on the client, and a remote context runs them on the server.
 		[Test]
 		public void ReadsInOneTransaction([DataSources(false, NoFromlessSubquery)] string context, [Values] bool useTransaction)
 		{
@@ -1334,6 +1347,7 @@ namespace Tests.Linq
 			trace.Begins.ShouldBe(0);
 		}
 
+		// Direct only: the trace counts commands on the client, and a remote context runs them on the server.
 		[Test]
 		public void NoTransactionInsideAnExplicitOne([DataSources(false, NoFromlessSubquery)] string context)
 		{
@@ -1356,6 +1370,7 @@ namespace Tests.Linq
 			trace.Begins.ShouldBe(0);
 		}
 
+		// Direct only: the trace counts commands on the client, and a remote context runs them on the server.
 		[Test]
 		public void ScalarsOnlyIsOneStatementWithoutTransaction([DataSources(false, NoFromlessSubquery)] string context)
 		{
@@ -1661,6 +1676,7 @@ namespace Tests.Linq
 
 		// Where the batch combines, it loads with the Default strategy whatever the configured one, and KeyedQuery shows the
 		// override in the command count. Elsewhere the configured strategy stays, so the batch reads what db.Select reads.
+		// Direct only: the trace counts commands on the client, and a remote context runs them on the server.
 		[Test]
 		public void NestedCollectionCombinesWhateverTheDefaultStrategy(
 			[DataSources(false, NoFromlessSubquery)] string context,
@@ -1936,7 +1952,8 @@ namespace Tests.Linq
 			flags.IsMultiStatementBatchConnectionDependent.ShouldBe(provider == MySqlProvider.MySqlData);
 		}
 
-		// A remote context runs each statement on a call of its own, on providers that combine on a direct connection.
+		// A remote context runs each statement on a call of its own, on providers that combine on a direct connection. The test
+		// builds that remote context itself from the direct configuration.
 		[Test]
 		[UsesRemoteContext]
 		public void RemoteContextRunsStatementsOneAfterAnother(
@@ -2007,7 +2024,8 @@ namespace Tests.Linq
 			SingleValue,
 		}
 
-		// A scalar read is a subquery of the batch row, which SQL reads as NULL when it finds nothing.
+		// A scalar read is a subquery of the batch row, which SQL reads as NULL when it finds nothing. Direct only: a remote
+		// context runs the collection as a command of its own, so its SQL baseline would differ from the direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "read", AlsoWhenValue = EmptyRead.FirstValue)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "read", AlsoWhenValue = EmptyRead.SingleValue)]
@@ -2042,6 +2060,7 @@ namespace Tests.Linq
 		}
 
 		// Where the batch does not combine, the configured strategy builds it, and both rebuild the reader of the batch row.
+		// SQLite only: a ProcessQuery override stands for any connection that does not combine.
 		[Test]
 		public void EmptyScalarReadThrowsUnderTheConfiguredStrategy(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -2227,7 +2246,8 @@ namespace Tests.Linq
 			};
 		}
 
-		// A value that is no column of the row shows no more of the row than a NULL does.
+		// A value that is no column of the row shows no more of the row than a NULL does. Direct only: a remote context runs
+		// the collection as a command of its own, so its SQL baseline would differ from the direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
@@ -2247,6 +2267,8 @@ namespace Tests.Linq
 			batch.Message.ShouldBe(alone.Message);
 		}
 
+		// Direct only: a remote context runs the collection as a command of its own, so its SQL baseline would differ from the
+		// direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
@@ -2265,6 +2287,8 @@ namespace Tests.Linq
 			value.ShouldBe(part.Compile()());
 		}
 
+		// Direct only: a remote context runs the collection as a command of its own, so its SQL baseline would differ from the
+		// direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
@@ -2301,6 +2325,8 @@ namespace Tests.Linq
 			}
 		}
 
+		// Direct only: a remote context runs the collection as a command of its own, so its SQL baseline would differ from the
+		// direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void NullInARowReadsNull([DataSources(false, NoFromlessSubquery)] string context)
@@ -2352,6 +2378,8 @@ namespace Tests.Linq
 			ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 		}
 
+		// Direct only: a remote context runs the collection as a command of its own, so its SQL baseline would differ from the
+		// direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
@@ -2610,7 +2638,8 @@ namespace Tests.Linq
 			NestedEmptyReadUnderTheConfiguredStrategy(context, EagerLoadingStrategy.KeyedQuery, read);
 		}
 
-		// CteUnion builds a collection's rows as a set-operation branch, which leaves the check out.
+		// CteUnion builds a collection's rows as a set-operation branch, which leaves the check out; the entity read then fails
+		// as in #6252. SQLite only, as above.
 		[ActiveIssue(6497)]
 		[Test]
 		public void NestedEmptyReadThrowsUnderCteUnion(
@@ -2677,7 +2706,8 @@ namespace Tests.Linq
 			batch.Message.ShouldBe(empty.Message);
 		}
 
-		// A compiled batch combines as the batch does, so a configured strategy costs it no extra command.
+		// A compiled batch combines as the batch does, so a configured strategy costs it no extra command. Three providers that
+		// combine stand for the rest: the compiled path is chosen before any provider code.
 		[Test]
 		public async Task CompiledQueryBatchCombines(
 			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context,
@@ -2754,7 +2784,8 @@ namespace Tests.Linq
 			trace.Readers.ShouldBe(1);
 		}
 
-		// A compiled batch loads its collections before it reads the row, so the refusal must come first there too.
+		// A compiled batch loads its collections before it reads the row, so the refusal must come first there too. The
+		// refusal comes before any command, so SQLite stands for every provider.
 		[Test]
 		public async Task CompiledQueryBatchRefusesPendingHints(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -2850,7 +2881,8 @@ namespace Tests.Linq
 		}
 
 		// A batch is new API, so a First or Single nested in one of its parts follows LINQ too, for a value and for an entity.
-		// Sybase refuses the outer join a nested First needs; a nested Single translates there and throws as elsewhere.
+		// Sybase refuses the outer join a nested First needs; a nested Single translates there and throws as elsewhere. Direct
+		// only: a remote context runs the collection as a command of its own, so its SQL baseline would differ from the direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins, AlsoWhenParameter = "read", AlsoWhenValue = NestedRead.ScalarFirst)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins, AlsoWhenParameter = "read", AlsoWhenValue = NestedRead.EntityFirst)]
@@ -2896,7 +2928,8 @@ namespace Tests.Linq
 			batch.Message.ShouldBe(empty.Message);
 		}
 
-		// An entity Single reads its rows into the batch row, so two rows make two batch rows.
+		// An entity Single reads its rows into the batch row, so two rows make two batch rows. Direct only: a remote context
+		// runs the collection as a command of its own, so its SQL baseline would differ from the direct one.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "orDefault", AlsoWhenValue = true)]
 		public void TwoRowSingleThrowsAsThePartAlone(
