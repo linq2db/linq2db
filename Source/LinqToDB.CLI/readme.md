@@ -246,6 +246,47 @@ Scaffold configs (response files) are convenient in many ways:
 - with many options it is hard to work with command line
 - some options not available from CLI or hard to use due to CLI nature (e.g. various issues with escaping of parameters)
 
+### Target language (C# / F#)
+
+Use the `--target-language` option to select the language of the generated data model (`c#` is the default):
+
+`dotnet linq2db scaffold -p SQLite -c "Data Source=c:\Databases\MyDatabase.sqlite" --target-language f#`
+
+F# generation emits idiomatic code:
+
+- entities as records with mapping attributes on fields;
+- nullable scalar columns as `'T option`;
+- nullable scalar parameters of scalar and table function wrappers, and results of scalar and aggregate function
+  wrappers, as `Nullable<T>` / nullable strings, because their values reach the database without a column mapping
+  ([#6443](https://github.com/linq2db/linq2db/issues/6443)); aggregate value selectors and stored procedure
+  wrappers keep `'T option`. Pass an option column to such a parameter as `row.Column.Value`: it translates to the
+  column itself, NULL included (`Option.toNullable` / `Option.toObj` are not translated yet,
+  [#6452](https://github.com/linq2db/linq2db/issues/6452));
+- a single generated `.fs` file per run (F# has no partial types and uses order-sensitive compilation);
+- with `--nrt true` (the default), nullable reference members carry an F# 9 `| null` annotation, so the output
+  needs F# 9 (.NET 9 SDK or later); `<Nullable>enable</Nullable>` turns the nullness checks on but is not required to
+  compile it. With `--nrt false` they are plain, unannotated references and the output uses no F# 9 nullness syntax.
+
+Generated F# records rely on the `linq2db.FSharp` package: the consuming application must call
+`DataOptions.UseFSharp()` so that records and `option`-typed columns materialize correctly.
+
+F# record expressions must assign every field, including association fields, so each generated record has a
+`static member Empty` template with all fields defaulted. Create new records from it with copy-and-update:
+`{ Person.Empty with FirstName = "John"; LastName = "Doe" }`. `Empty` itself is only a template: its fields hold
+default values, i.e. `null` for non-nullable reference fields such as strings and associations.
+
+The generated file is a single `namespace rec`, so all generated types are mutually visible regardless of order; the
+generator qualifies its own references where an entity name shadows a framework type. Code that opens the generated
+namespace sees the same shadowing (e.g. an entity named `Task` hides `System.Threading.Tasks.Task`) and should
+qualify such types itself.
+
+Some options apply to C# only (partial classes / methods, entity base class, association extension methods,
+data context constructor selection, multi-file output, xml-doc warning suppression, procedure schema error
+directives); the `help scaffold` output shows a `Supported in:` line for such options, and specifying one together
+with `--target-language f#` is rejected, unless the value is the one F# generation always uses (e.g.
+`--single-file true`, `--partial-entities false`), which the `Supported in:` line names. F# generation is not
+available in T4 template mode (`-t t4`).
+
 ## Licensing
 
 The MIT license this package declares covers LINQ to DB's own code.

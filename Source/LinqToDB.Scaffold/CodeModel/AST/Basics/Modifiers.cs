@@ -77,5 +77,25 @@ namespace LinqToDB.CodeModel
 		/// <c><see langword="virtual"/></c> attribute on type members.
 		/// </summary>
 		Virtual   = 0x2000,
+		/// <summary>
+		/// Marks a type as a record. Only honored by language generators that have a distinct record syntax
+		/// (e.g. F# emits <c>type X = { ... }</c>); rejected by the C# generator.
+		/// </summary>
+		Record    = 0x4000,
+		/// <summary>
+		/// Marks a type as a grouping module. Only honored by language generators that group nested types under
+		/// a module (F# emits <c>module X = ...</c> so per-schema types stay isolated instead of being
+		/// lifted to namespace level); rejected by the C# generator.
+		/// </summary>
+		Module    = 0x8000,
+		/// <summary>
+		/// Marks a method whose calls are translated to SQL (scalar, table and aggregate function wrappers), so its
+		/// scalar parameter values and scalar result cross the SQL boundary without a column mapping. Only honored by
+		/// language generators that render nullable scalars as a wrapper type (F# renders a nullable scalar parameter or
+		/// return type itself as <c>Nullable&lt;T&gt;</c> / <see langword="string"/> (<c>string | null</c> with NRT)
+		/// instead of <c>'T option</c>; generic arguments, such as an aggregate's value selector, keep
+		/// <c>'T option</c>); ignored by the C# generator.
+		/// </summary>
+		SqlTranslated = 0x10000,
 	}
 }

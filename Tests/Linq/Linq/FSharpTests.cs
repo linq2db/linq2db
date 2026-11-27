@@ -141,6 +141,91 @@ namespace Tests.Linq
 			FSharp.Issue4646.TestOptionRoundtrip(db);
 		}
 
+		[Test(Description = "linq2db round-trips the CLI scaffolder's generated F# record shape (#1553)")]
+		public void GeneratedShape_EntityRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestGeneratedEntityRoundtrip(db);
+		}
+
+		[ActiveIssue(6443, ErrorMessage = "Microsoft.FSharp.Core.FSharpOption`1",
+			Details = "an option argument with no column descriptor is bound as the FSharpOption object: Microsoft.Data.Sqlite rejects it (no mapping to a provider type), System.Data.SQLite passes a non-number to abs and the 0.0 result cannot be read back as an option.")]
+		// SQLite: the built-in abs and json_each functions stand in for database functions
+		[Test(Description = "option arguments of hand-written F# scalar and table function wrappers reach the database as values")]
+		public void HandWrittenOptionFunctionArguments([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedModel.TestFunctionOptionArguments(db);
+		}
+
+		// SQLite: the built-in abs and length functions stand in for database functions
+		[Test(Description = "an F# option column passed through .Value to a Nullable<T> / string | null function parameter translates to the column")]
+		public void OptionColumnValueAsFunctionArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestOptionColumnValueAsFunctionArgument(db);
+		}
+
+		[ActiveIssue(6452, ErrorMessage = "OptionModule.ToNullable",
+			Details = "Option.toNullable over an option column has no translation in LinqToDB.FSharp.")]
+		// SQLite: the built-in abs function stands in for a database function
+		[Test(Description = "Option.toNullable over an F# option column passed to a function parameter translates to the column")]
+		public void OptionToNullableAsFunctionArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestOptionToNullableAsFunctionArgument(db);
+		}
+
+		[ActiveIssue(6452, ErrorMessage = "OptionModule.ToObj",
+			Details = "Option.toObj over an option column has no translation in LinqToDB.FSharp.")]
+		// SQLite: the built-in length function stands in for a database function
+		[Test(Description = "Option.toObj over an F# option column passed to a function parameter translates to the column")]
+		public void OptionToObjAsFunctionArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestOptionToObjAsFunctionArgument(db);
+		}
+
+		// SQLite: the linked model is the golden scaffolded from the SQLite TestData schema
+		[Test(Description = "queries, associations and Find methods of the scaffolder's generated F# model (#1553)")]
+		public void GeneratedCode_Queries([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedQueries(db);
+		}
+
+		// SQLite: the linked model is the fluent golden scaffolded from the SQLite TestData schema
+		[Test(Description = "the scaffolder's generated F# fluent mapping (static initializer) is applied (#1553)")]
+		public void GeneratedCode_FluentMapping([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedFluentMapping(db);
+		}
+
+		// SQL Server: calls the ExecuteProcIntParameters procedure through the SQL Server golden's wrapper
+		[Test(Description = "a generated F# stored-procedure wrapper accepts Some/None arguments and reads the output back (#1553)")]
+		public void GeneratedCode_ProcedureOptionParameters([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedProcedureOptionParameters(db);
+		}
+
+		// SQL Server: calls the GetParentByID and ScalarFunction functions through the SQL Server golden's wrappers
+		[Test(Description = "generated F# scalar and table function wrappers pass their arguments to the database as values (#1553)")]
+		public void GeneratedCode_FunctionArguments([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedFunctionArguments(db);
+		}
+
+		// SQL Server: calls the same functions through the fluent-mapped SQL Server golden
+		[Test(Description = "generated F# function wrappers of a fluent-mapped model pass their arguments to the database as values (#1553)")]
+		public void GeneratedCode_FluentFunctionArguments([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedFluentFunctionArguments(db);
+		}
+
 		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
 		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
 		{

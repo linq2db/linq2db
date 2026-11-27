@@ -205,13 +205,23 @@ namespace LinqToDB.Metadata
 
 			// generate:
 			// builder.HasAttribute(() => Type.Method(defaults), attr);
+			// or, for a language without lambda to untyped LambdaExpression conversion (F#):
+			// builder.HasAttribute<TContext>(ctx => Type.Method(defaults), attr);
+			var typedLambda = !context.LanguageProvider.Features.HasFlag(LanguageFeatures.LambdaExpressionConversion)
+				&& methodBuilder.Method.ReturnType != null;
+
 			var lambda = context.AST
 				.Lambda(
 					WellKnownTypes.System.Linq.Expressions.Expression(
-						methodBuilder.Method.ReturnType != null
-							? WellKnownTypes.System.Func(methodBuilder.Method.ReturnType.Type)
-							: WellKnownTypes.System.Action),
+						typedLambda
+							? WellKnownTypes.System.Func(methodBuilder.Method.ReturnType!.Type, context.TableFunctionsClass.Type)
+							: methodBuilder.Method.ReturnType != null
+								? WellKnownTypes.System.Func(methodBuilder.Method.ReturnType.Type)
+								: WellKnownTypes.System.Action),
 					true);
+
+			if (typedLambda)
+				lambda.Parameter(context.AST.LambdaParameter(context.AST.Name("ctx"), context.TableFunctionsClass.Type));
 
 			var fakeParameters = BuildDefaultArgs(context, methodBuilder.Method, metadata.IsAggregate == true);
 
@@ -223,11 +233,19 @@ namespace LinqToDB.Metadata
 				lambda.Body().Append(context.AST.Call(new CodeTypeReference(context.NonTableFunctionsClass.Type), methodBuilder.Method.Name, typeParams, false, fakeParameters));
 
 			_builderCalls.Add(
-				context.AST.Call(
-					_builderVar.Reference,
-					WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_HasAttribute,
-					lambda.Method,
-					attr));
+				typedLambda
+					? context.AST.Call(
+						_builderVar.Reference,
+						WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_HasAttribute,
+						new IType[] { context.TableFunctionsClass.Type },
+						false,
+						lambda.Method,
+						attr)
+					: context.AST.Call(
+						_builderVar.Reference,
+						WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_HasAttribute,
+						lambda.Method,
+						attr));
 		}
 
 		void IMetadataBuilder.BuildTableFunctionMetadata(IDataModelGenerationContext context, TableFunctionMetadata metadata, MethodBuilder methodBuilder)
@@ -313,9 +331,29 @@ namespace LinqToDB.Metadata
 			var parameters = new ICodeExpression[method.Parameters.Count];
 			for (var i = 0; i < parameters.Length; i++)
 				// no target-typing to avoid overloads conflict
-				parameters[i] = context.AST.Default(replaceTArg ? ReplaceTArg(method.Parameters[i].Type.Type) : method.Parameters[i].Type.Type, false);
+				parameters[i] = context.AST.Default(DefaultArgType(context, method, replaceTArg ? ReplaceTArg(method.Parameters[i].Type.Type) : method.Parameters[i].Type.Type), false);
 
 			return parameters;
+		}
+
+		/// <summary>
+		/// A <see cref="Modifiers.SqlTranslated"/> method's nullable scalar parameters are not rendered as options
+		/// (see <c>FSharpCodeGenerator.IsOptionType</c>, same predicate), so the default argument must not be one either.
+		/// </summary>
+		private static IType DefaultArgType(IDataModelGenerationContext context, CodeMethod method, IType type)
+		{
+			if (!method.Attributes.HasFlag(Modifiers.SqlTranslated)
+				|| !context.LanguageProvider.Features.HasFlag(LanguageFeatures.OptionTypes)
+				|| !type.IsNullable)
+				return type;
+
+			if (type.IsValueType)
+				return new GenericType([context.AST.Name("System")], context.AST.Name("Nullable"), true, false, [type.WithNullability(false)], true);
+
+			// string | null and string are one .NET type: the overload resolved is the same
+			return string.Equals(context.LanguageProvider.GetAlias(type.WithNullability(false)), "string", StringComparison.Ordinal)
+				? type.WithNullability(false)
+				: type;
 		}
 
 		private static IType ReplaceTArg(IType type)

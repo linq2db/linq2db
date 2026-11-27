@@ -25,14 +25,56 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		/// <param name="languageProvider">Language provider to use for data model codegeneration.</param>
 		/// <param name="nameConverter"><see cref="INameConversionProvider"/> pluralization service implementation.</param>
-		/// <param name="options">Scaffolding process customization options.</param>
+		/// <param name="options">Scaffolding process customization options. Options, not supported by
+		/// <paramref name="languageProvider"/> (see <see cref="ILanguageProvider.Features"/>), are reset on this object.</param>
 		/// <param name="interceptors">Optional custom scaffold interceptors.</param>
+		/// <exception cref="NotSupportedException"><see cref="DataModelOptions.BaseEntityClass"/> is set for a language with
+		/// <see cref="LanguageFeatures.RecordEntities"/>: records cannot inherit, and dropping the base class would change the model.</exception>
 		public Scaffolder(ILanguageProvider languageProvider, INameConversionProvider nameConverter, ScaffoldOptions options, ScaffoldInterceptors? interceptors)
 		{
 			Language        = languageProvider;
 			_namingServices = new NamingServices(nameConverter);
 			_options        = options;
 			_interceptors   = interceptors;
+
+			ApplyLanguageFeatures(languageProvider.Features, options);
+		}
+
+		private static void ApplyLanguageFeatures(LanguageFeatures features, ScaffoldOptions options)
+		{
+			if (!features.HasFlag(LanguageFeatures.MultipleFiles))
+				options.CodeGeneration.ClassPerFile = false;
+
+			if (!features.HasFlag(LanguageFeatures.TabIndentation))
+				options.CodeGeneration.Indent = options.CodeGeneration.Indent.Replace("\t", "    ", StringComparison.Ordinal);
+
+			if (!features.HasFlag(LanguageFeatures.PartialTypes))
+				options.DataModel.EntityClassIsPartial = false;
+
+			if (!features.HasFlag(LanguageFeatures.PartialMethods))
+			{
+				options.DataModel.GenerateInitDataContextMethod       = false;
+				options.DataModel.GenerateStaticInitDataContextMethod = false;
+			}
+
+			if (!features.HasFlag(LanguageFeatures.MultipleConstructors))
+			{
+				options.DataModel.HasDefaultConstructor        = false;
+				options.DataModel.HasConfigurationConstructor  = false;
+				options.DataModel.HasUntypedOptionsConstructor = false;
+				options.DataModel.HasTypedOptionsConstructor   = true;
+			}
+
+			if (features.HasFlag(LanguageFeatures.RecordEntities))
+			{
+				if (options.DataModel.BaseEntityClass != null)
+					throw new NotSupportedException($"Entity base class '{options.DataModel.BaseEntityClass}' is not supported: entities are records, which cannot inherit");
+
+				options.DataModel.GenerateAssociationExtensions = false;
+			}
+
+			if (!features.HasFlag(LanguageFeatures.ErrorDirective))
+				options.DataModel.GenerateProceduresSchemaError = false;
 		}
 
 		/// <summary>

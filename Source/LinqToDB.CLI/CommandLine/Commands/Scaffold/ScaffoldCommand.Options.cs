@@ -80,6 +80,22 @@ JSON file example:
 					false);
 
 			/// <summary>
+			/// Target language option.
+			/// </summary>
+			public static readonly CliOption TargetLanguage = new StringEnumCliOption(
+					"target-language",
+					null,
+					false,
+					false,
+					"target language for generated code",
+					"Selects the language of generated data model code. F# generation emits idiomatic records with option-typed nullable columns and requires the consuming project to call DataOptions.UseFSharp() (from the linq2db.FSharp package).",
+					null,
+					null,
+					false,
+					new (true,  true,  "c#", "C# (default)"),
+					new (false, false, "f#", "F# (records)"));
+
+			/// <summary>
 			/// Database provider option.
 			/// </summary>
 			public static readonly CliOption Provider = new StringEnumCliOption(
@@ -220,7 +236,7 @@ Customization using compiled assembly has several requirements:
 					"nrt",
 					null,
 					false,
-					"enable generation of nullable reference type annotations",
+					"enable generation of nullable reference type annotations (C# `?` / F# `| null`)",
 					null,
 					null,
 					null,
@@ -270,7 +286,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					_defaultOptions.CodeGeneration.SuppressMissingXmlDocWarnings,
-					_t4ModeOptions.CodeGeneration.SuppressMissingXmlDocWarnings);
+					_t4ModeOptions.CodeGeneration.SuppressMissingXmlDocWarnings)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Auto-generated code marker option.
@@ -298,7 +315,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					!_defaultOptions.CodeGeneration.ClassPerFile,
-					!_t4ModeOptions.CodeGeneration.ClassPerFile);
+					!_t4ModeOptions.CodeGeneration.ClassPerFile)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = true };
 
 			/// <summary>
 			/// Single-file generation mode option.
@@ -499,7 +517,8 @@ If you don't specify some property, CLI will use default value for current optio
 						"{ \"dataModel\": { \"base-entity\": \"My.Namespace.ParentClass+MyBaseNestedEntity\" } }",
 					},
 					null,
-					null);
+					null)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Enables partial class modifier on entity mapping classes.
@@ -513,7 +532,8 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					null,
 					_defaultOptions.DataModel.EntityClassIsPartial,
-					_t4ModeOptions.DataModel.EntityClassIsPartial);
+					_t4ModeOptions.DataModel.EntityClassIsPartial)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Generate <see cref="DataType"/> values on entity columns mappings option.
@@ -658,7 +678,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateInitDataContextMethod,
-					_t4ModeOptions.DataModel.GenerateInitDataContextMethod);
+					_t4ModeOptions.DataModel.GenerateInitDataContextMethod)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Generate StaticInitDataContext partial method on data context class option.
@@ -672,7 +693,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,
-					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod);
+					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Default data context contructor generation option.
@@ -686,7 +708,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasDefaultConstructor,
-					_t4ModeOptions.DataModel.HasDefaultConstructor);
+					_t4ModeOptions.DataModel.HasDefaultConstructor)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Data context contructor with configuration parameter generation option.
@@ -700,7 +723,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasConfigurationConstructor,
-					_t4ModeOptions.DataModel.HasConfigurationConstructor);
+					_t4ModeOptions.DataModel.HasConfigurationConstructor)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Data context contructor with non-generic options parameter generation option.
@@ -714,7 +738,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor,
-					_t4ModeOptions.DataModel.HasUntypedOptionsConstructor);
+					_t4ModeOptions.DataModel.HasUntypedOptionsConstructor)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Data context contructor with generic options parameter generation option.
@@ -728,7 +753,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor,
-					_t4ModeOptions.DataModel.HasTypedOptionsConstructor);
+					_t4ModeOptions.DataModel.HasTypedOptionsConstructor)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = true };
 
 			/// <summary>
 			/// Data context class name option.
@@ -817,7 +843,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateAssociationExtensions,
-					_t4ModeOptions.DataModel.GenerateAssociationExtensions);
+					_t4ModeOptions.DataModel.GenerateAssociationExtensions)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Type of association return type for association back reference with many cardinality option.
@@ -884,7 +911,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateProceduresSchemaError,
-					_t4ModeOptions.DataModel.GenerateProceduresSchemaError);
+					_t4ModeOptions.DataModel.GenerateProceduresSchemaError)
+					{ Languages = TargetLanguages.CSharp, FSharpValue = false };
 
 			/// <summary>
 			/// Skip mapping generation for stored procedure with schema load error option.

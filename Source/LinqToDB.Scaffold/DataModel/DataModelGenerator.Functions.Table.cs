@@ -45,6 +45,7 @@ namespace LinqToDB.DataModel
 
 			// generate mapping method with metadata
 			var method = context.DefineMethod(region.Methods(false), tableFunction.Method);
+			method.SetModifiers(method.Method.Attributes | Modifiers.SqlTranslated);
 
 			// generate method parameters, return type and body
 

@@ -110,7 +110,7 @@ namespace LinqToDB.Scaffold
 							_options.DataModel.FunctionTupleResultClassNameOptions,
 							func.Name.Name))
 					{
-						Modifiers = Modifiers.Public | Modifiers.Partial,
+						Modifiers = Modifiers.Public | PartialModifier,
 					};
 					funcModel.ReturnTuple = new TupleModel(@class)
 					{
@@ -365,12 +365,12 @@ namespace LinqToDB.Scaffold
 
 				var wrapperClass = new ClassModel(_options.CodeGeneration.ClassPerFile ? schemaClassName : dataContext.Class.FileName!, schemaClassName)
 				{
-					Modifiers = Modifiers.Public | Modifiers.Partial | Modifiers.Static,
+					Modifiers = Modifiers.Public | PartialModifier | Modifiers.Static,
 					Namespace = _options.CodeGeneration.Namespace,
 				};
 				var contextClass = new ClassModel("DataContext")
 				{
-					Modifiers = Modifiers.Public | Modifiers.Partial,
+					Modifiers = Modifiers.Public | PartialModifier,
 				};
 				schemaModel = new AdditionalSchemaModel(contextPropertyName, wrapperClass, contextClass);
 				dataContext.AdditionalSchemas.Add(schemaName, schemaModel);
@@ -432,7 +432,7 @@ namespace LinqToDB.Scaffold
 					_options.DataModel.ProcedureResultClassNameOptions,
 					(funcName.Package != null ? $"{funcName.Package}_" : null) + funcName.Name))
 			{
-				Modifiers = Modifiers.Partial | Modifiers.Public,
+				Modifiers = PartialModifier | Modifiers.Public,
 			};
 			var model = new ResultTableModel(resultClass);
 
