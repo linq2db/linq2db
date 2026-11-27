@@ -9,7 +9,6 @@ using NUnit.Framework;
 
 using Tests.Model;
 using Tests.SchemaProvider;
-using Tests.UserTests;
 
 namespace Tests.DataProvider
 {

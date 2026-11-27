@@ -22,7 +22,6 @@ using Shouldly;
 
 using Tests.Linq.Helpers.InExpression;
 using Tests.Model;
-using Tests.UserTests;
 
 namespace Tests.Linq
 {

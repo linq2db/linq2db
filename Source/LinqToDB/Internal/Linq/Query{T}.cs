@@ -161,7 +161,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-					// I hope fast tree optimization for unbalanced Binary Expressions. See Issue447Tests.
+					// I hope fast tree optimization for unbalanced Binary Expressions. See StackUseTests.
 					//
 					expr = BinaryExpressionAggregatorVisitor.Instance.Visit(expr);
 

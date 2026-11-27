@@ -1126,7 +1126,7 @@ namespace LinqToDB.Internal.Extensions
 						(string.Equals(map.TargetMethods[i].Name, getter1.Name, StringComparison.Ordinal) && map.TargetMethods[i].DeclaringType == getter1.DeclaringType)))
 						return true;
 
-				// (see Issue4031_Case01 test)
+				// (see ColumnMapping_ExternalBaseWithInterface test)
 				// This code tries to handle very special case when class implements interface
 				// using members of base class, declared in another assembly
 				// in such cases compiler generates proxy property accessors without property on target class

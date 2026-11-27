@@ -692,7 +692,7 @@ namespace Tests.Linq
 		// the FluentMappingBuilder registers the association on the concrete sealed type — this
 		// produces the DeclaringType != ConcreteType member shape that IsAssociationInRealization
 		// must resolve via the realized type. Mirrors the EF Core fixture
-		// LinqToDB.EntityFrameworkCore.Tests.IssueTests.Issue5547_ContainsThroughQueryableShapes.
+		// LinqToDB.EntityFrameworkCore.Tests.IssueTests.ContainsThroughQueryableShapes.
 		public interface IHasMembershipProfile
 		{
 			MembershipProfile Profile   { get; set; }

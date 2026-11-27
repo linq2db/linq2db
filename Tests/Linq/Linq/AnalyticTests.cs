@@ -2036,7 +2036,7 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
-		// also see Issue4626Test2 test in efcore tests
+		// also see StringAggregateInNestedGroupedSubquery test in efcore tests
 		// as fix I would expect to have:
 		// - skipped methods should be explicitly marked as optional
 		// - all other unmapped methods should throw

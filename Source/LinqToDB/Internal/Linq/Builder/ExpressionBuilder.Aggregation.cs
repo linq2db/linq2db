@@ -484,7 +484,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (root is ContextRefExpression refExpression)
 			{
-				// See Issue4458Test1, Issue4458Test2
+				// See FilterByNestedCollectionAfterGroupedLeftJoin, FilterBySubqueryAfterGroupedLeftJoin
 				if (refExpression.BuildContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
 				{
 					return TraverseToAggregate(SequenceHelper.CreateRef(defaultIfEmpty.Sequence));

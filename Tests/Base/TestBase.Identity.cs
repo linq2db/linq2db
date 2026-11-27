@@ -114,7 +114,7 @@ CREATE COLUMN TABLE ""Person"" (
 						sql = new[] { $"sp_chgattribute Person, 'identity_burn_max', 0, '{lastValue}'" };
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):
-						// specify schema explicitly because after temp table creation (Issue4671Test)
+						// specify schema explicitly because after temp table creation (EF IssueTests.IdentityColumnOfRegisteredEntityInLocalAndTempTable)
 						// default schema for this table changes to temp on windows (sqlite bug?)
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
 						break;
@@ -264,7 +264,7 @@ CREATE COLUMN TABLE ""AllTypes""
 						};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):
-						// specify schema explicitly because after temp table creation (Issue4671Test)
+						// specify schema explicitly because after temp table creation (EF IssueTests.IdentityColumnOfRegisteredEntityInLocalAndTempTable)
 						// default schema for this table changes to temp on windows (sqlite bug?)
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
 						break;

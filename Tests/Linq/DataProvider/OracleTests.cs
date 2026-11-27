@@ -3383,7 +3383,7 @@ namespace Tests.DataProvider
 
 #region DateTime
 
-		[Table("Test0431")]
+		[Table("OracleDateTimeTypes")]
 		public partial class TestDateTimeTypes
 		{
 			[Column(DataType =  DataType.Date)]                     public DateTime       Date             { get; set; }
