@@ -5,6 +5,7 @@ open System.Collections.Concurrent
 open System.Linq.Expressions
 open System.Reflection
 
+open LinqToDB.Extensions
 open LinqToDB.Internal.Common
 open LinqToDB.Internal.Extensions
 open LinqToDB.Mapping
@@ -120,17 +121,24 @@ type internal FSharpOptionMetadataReader() =
         member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
             let mt = memberInfo.GetMemberType()
             if FSharpOptionSupport.IsScalarOption mt then
-                // An option column is always nullable (the "none" case maps to NULL). A reference option is
+                // An option column is nullable by default (the "none" case maps to NULL). A reference option is
                 // nullable by virtue of its type, but a struct value-option ('T voption) is a non-nullable
                 // value type, so the column must be marked CanBeNull explicitly - otherwise the DDL emits
                 // NOT NULL and rejects the "none" case.
+                // Workaround: the default steps aside only for an unconfigured [<Nullable>] / [<NotNull>] declared
+                // on the member (a configured one already sorts ahead of it). It is blind to a [Nullable] supplied
+                // through fluent mapping or another metadata reader, which this attribute still shadows; a proper
+                // precedence model needs the mapping metadata redesign planned for v7 (#2502).
+                let hasOwnNullability =
+                    memberInfo.GetAttributes<NullableAttribute>()
+                    |> Array.exists (fun a -> String.IsNullOrEmpty a.Configuration)
                 // The DB type is intentionally left unset: with no explicit DataType, ColumnDescriptor resolves
                 // it from the value converter's provider type (the element, or Nullable<element>) against the
                 // active provider-inclusive schema, so provider-faithful facets (decimal precision/scale, string
                 // length, etc.) are preserved - unlike deriving here from MappingSchema.Default, which has no
                 // provider context and would truncate them (#5645; e.g. 'decimal option' -> decimal(18,0)).
                 [|
-                    ColumnAttribute(CanBeNull = true) :> MappingAttribute
+                    if not hasOwnNullability then NullableAttribute(true) :> MappingAttribute
                     ValueConverterAttribute(ValueConverter = FSharpOptionSupport.GetConverter mt) :> MappingAttribute
                 |]
             else

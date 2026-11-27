@@ -78,6 +78,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="ColumnAttribute"/>;
 		/// - <see cref="PrimaryKeyAttribute"/>;
 		/// - <see cref="IdentityAttribute"/>;
+		/// - <see cref="NullableAttribute"/> or <see cref="NotNullAttribute"/>;
 		/// - <see cref="ColumnAliasAttribute"/>.
 		/// Otherwise all supported members of scalar type will be used:
 		/// - public instance fields and properties;

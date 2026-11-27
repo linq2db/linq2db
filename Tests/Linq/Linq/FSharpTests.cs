@@ -150,6 +150,29 @@ namespace Tests.Linq
 			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
 		}
 
+		[Test(Description = "Auto 'T option mapping must not shadow an explicit [<Column>] (name, DataType, Length) on an option column")]
+		public void OptionMapping_ExplicitColumnPreserved([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionMappingPrecedence.VerifyExplicitColumnPreserved(db);
+		}
+
+		// SQLite: the test reads the entity descriptor only, so one provider suffices
+		[Test(Description = "an option member without [<Column>] is still a column when the table requires column attributes")]
+		public void OptionMapping_UnattributedOptionIsColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionMappingPrecedence.VerifyUnattributedOptionIsColumn(db);
+		}
+
+		// SQLite: the test reads the entity descriptor only, so one provider suffices
+		[Test(Description = "user [<NotNull>] / [<Nullable(false)>] / [<Column>] attributes on an option member override the option reader's defaults")]
+		public void OptionMapping_NullabilityAttributesHonoured([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionMappingPrecedence.VerifyNullabilityAttributesOnOptions(db);
+		}
+
 		[Test(Description = "Nullable<_> element option must not produce Nullable<Nullable<_>> (#195)")]
 		public void Option_NullableElementRoundtrip([DataSources] string context)
 		{

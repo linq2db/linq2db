@@ -85,6 +85,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="ColumnAttribute"/>;
 		/// - <see cref="PrimaryKeyAttribute"/>;
 		/// - <see cref="IdentityAttribute"/>;
+		/// - <see cref="NullableAttribute"/> or <see cref="NotNullAttribute"/>;
 		/// - <see cref="ColumnAliasAttribute"/>.
 		/// Otherwise, all supported members of scalar type will be used:
 		/// - public instance fields and properties;
@@ -363,7 +364,8 @@ namespace LinqToDB.Mapping
 				else if (
 					(!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type)) ||
 					MappingSchema.HasAttribute<IdentityAttribute  >(TypeAccessor.Type, member.MemberInfo) ||
-					MappingSchema.HasAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo))
+					MappingSchema.HasAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo) ||
+					MappingSchema.HasAttribute<NullableAttribute  >(TypeAccessor.Type, member.MemberInfo))
 				{
 					// Skip explicit interface implementations (e.g., ITuple.Length on ValueTuple) —
 					// these are infrastructure members, not data columns.
