@@ -5,9 +5,13 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -17,6 +21,67 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SqlExpressionOptimizationTests : TestBase
 	{
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6459")]
+		public void NestedBooleanConditionPreservesResult(
+			[Values] bool innerTrueValue,
+			[Values] bool? outerTrueValue,
+			[Values] bool? outerFalseValue,
+			[Values] bool conditionValue,
+			[Values] bool compareToTrue,
+			[Values] bool allowModify)
+		{
+			var parameter = new SqlParameter(new DbDataType(typeof(bool)), "condition", null);
+			var condition = new SqlPredicate.Expr(parameter);
+			var inner     = new SqlConditionExpression(condition, new SqlValue(innerTrueValue), new SqlValue(!innerTrueValue));
+			ISqlPredicate outerCondition = compareToTrue
+				? new SqlPredicate.ExprExpr(inner, SqlPredicate.Operator.Equal, new SqlValue(true), null)
+				: new SqlPredicate.Expr(inner);
+			var outer = new SqlConditionExpression(outerCondition, new SqlValue(typeof(bool?), outerTrueValue), new SqlValue(typeof(bool?), outerFalseValue));
+
+			var optimized = new SqlExpressionOptimizerVisitor(allowModify).Optimize(
+				new EvaluationContext(), NullabilityContext.NonQuery, new DataOptions(), new MappingSchema(), outer, false);
+			var evaluation = new EvaluationContext();
+			evaluation.Register(parameter, false, conditionValue);
+
+			optimized.TryEvaluateExpression(evaluation, out var actual)
+				.ShouldBeTrue();
+			actual.ShouldBe((conditionValue ? innerTrueValue : !innerTrueValue) ? outerTrueValue : outerFalseValue);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6459")]
+		public void NestedDynamicConditionPreservesResult(
+			[Values] bool innerTrueValue,
+			[Values] bool innerFalseValue,
+			[Values] bool conditionValue,
+			[Values] bool swapOuterValues,
+			[Values] bool compareToTrue,
+			[Values] bool allowModify)
+		{
+			var parameter  = new SqlParameter(new DbDataType(typeof(bool)), "condition", null);
+			var trueValue  = new SqlParameter(new DbDataType(typeof(bool)), "trueValue", null);
+			var falseValue = new SqlParameter(new DbDataType(typeof(bool)), "falseValue", null);
+			var condition  = new SqlPredicate.Expr(parameter);
+			var inner      = new SqlConditionExpression(condition, trueValue, falseValue);
+			ISqlPredicate outerCondition = compareToTrue
+				? new SqlPredicate.ExprExpr(inner, SqlPredicate.Operator.Equal, new SqlValue(true), null)
+				: new SqlPredicate.Expr(inner);
+			var outer = new SqlConditionExpression(outerCondition,
+				swapOuterValues ? falseValue : trueValue,
+				swapOuterValues ? trueValue : falseValue);
+
+			var optimized = new SqlExpressionOptimizerVisitor(allowModify).Optimize(
+				new EvaluationContext(), NullabilityContext.NonQuery, new DataOptions(), new MappingSchema(), outer, false);
+			var evaluation = new EvaluationContext();
+			evaluation.Register(parameter, false, conditionValue);
+			evaluation.Register(trueValue, false, innerTrueValue);
+			evaluation.Register(falseValue, false, innerFalseValue);
+
+			var innerResult = conditionValue ? innerTrueValue : innerFalseValue;
+			optimized.TryEvaluateExpression(evaluation, out var actual)
+				.ShouldBeTrue();
+			actual.ShouldBe(innerResult != swapOuterValues ? innerTrueValue : innerFalseValue);
+		}
+
 		[Test]
 		public void ConditionalWithBinary([DataSources] string context)
 		{

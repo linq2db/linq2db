@@ -304,19 +304,11 @@ namespace LinqToDB.Internal.SqlProvider
 			else if (element.Condition is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal, Expr1: SqlConditionExpression nestedCondition2, UnknownAsValue: null, Expr2: SqlValue { Value: true } })
 				nestedCondition = nestedCondition2;
 
-			if (nestedCondition != null)
+			if (nestedCondition is { TrueValue: SqlValue { Value: bool trueValue }, FalseValue: SqlValue { Value: bool falseValue } })
 			{
-				if (element.TrueValue.Equals(nestedCondition.TrueValue, SqlQuery.SqlExtensions.DefaultComparer)
-					&& element.FalseValue.Equals(nestedCondition.FalseValue, SqlQuery.SqlExtensions.DefaultComparer))
-				{
-					return nestedCondition;
-				}
-
-				if (element.TrueValue.Equals(nestedCondition.FalseValue, SqlQuery.SqlExtensions.DefaultComparer)
-					&& element.FalseValue.Equals(nestedCondition.TrueValue, SqlQuery.SqlExtensions.DefaultComparer))
-				{
-					return new SqlConditionExpression(nestedCondition.Condition, element.FalseValue, element.TrueValue);
-				}
+				return new SqlConditionExpression(nestedCondition.Condition,
+					trueValue  ? element.TrueValue : element.FalseValue,
+					falseValue ? element.TrueValue : element.FalseValue);
 			}
 
 			return element;
