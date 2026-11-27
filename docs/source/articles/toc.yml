@@ -4,6 +4,8 @@
   href: get-started/toc.yml
 - name: General Topics
   href: general/toc.yml
+- name: Database Model
+  href: model/toc.yml
 - name: SQL
   href: sql/toc.yml
 - name: How To
