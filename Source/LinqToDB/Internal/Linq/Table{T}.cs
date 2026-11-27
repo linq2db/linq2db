@@ -10,7 +10,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
-	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>
+	class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>
 		where T : notnull
 	{
 		public Table(IDataContext dataContext)
