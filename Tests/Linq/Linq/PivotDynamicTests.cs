@@ -922,14 +922,18 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
 
-			// The provider's own cast of the same amounts, which truncates or rounds as the cell's cast does.
+			// The provider's own cast of the same amounts - Distinct puts it in SQL - which truncates or rounds as the cell's does.
 			var cast = t
 				.Where(x => x.Year == 2010)
-				.OrderBy(x => x.Category)
 				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
 				.ToList();
 
-			var castOfA = cast[0];
+			var castOfA = t
+				.Where(x => x.Year == 2010 && x.Category == "A")
+				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
+				.Single();
 
 			var pivoted = t
 				.GroupBy(x => x.Category)
