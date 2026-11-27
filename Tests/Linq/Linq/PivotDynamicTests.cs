@@ -1985,6 +1985,62 @@ namespace Tests.Linq
 				.ShouldBe(new[] { "A", "A" });
 		}
 
+		/// <summary>A cell read survives a sub-query wrap: over an interface-typed member, in an unpivot column, and after one.</summary>
+		[Test]
+		public void ReadsCellsUnderASubQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			t
+				.Select(x => new { x.Category, x.Year, x.Amount })
+				.GroupBy(x => x.Category)
+				.Select(g => new InterfaceCellsRow
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.AsSubQuery()
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					Key   = g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			pivoted
+				.AsSubQuery()
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2000"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new[] { ("A", 10), ("B", 5) });
+
+			pivoted
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2000"))
+				.AsSubQuery()
+				.Where(u => u.Value == 10)
+				.Select(u => u.Key)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+		}
+
 		/// <summary>A result type declares the member through the dictionary interface.</summary>
 		[Test]
 		public void PivotsIntoAnInterfaceTypedMember([DataSources] string context)
