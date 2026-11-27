@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
@@ -126,9 +128,19 @@ namespace Tests.Scaffold
 				.ToList();
 
 			entities.Count.ShouldBe(2, types);
-			entities
-				.Count(t => t.DeclaringType == modules[0])
-				.ShouldBe(1, types);
+
+			var nested = entities
+				.Where(t => t.DeclaringType == modules[0])
+				.ToList();
+
+			nested.Count.ShouldBe(1, types);
+
+			// nested entity is the s2 table, not the default-schema one
+			nested[0]
+				.GetAttribute<TableAttribute>()
+				.ShouldNotBeNull()
+				.Database
+				.ShouldBe("s2");
 		}
 
 		// generation-only assertion: SQL Server and PostgreSQL are not available to this project
