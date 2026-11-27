@@ -182,7 +182,19 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
 
+			query.ThrowIfQueryBatchHasQueryHints(db);
+
 			using var transaction = query.StartLoadTransaction(db);
+
+			// A batch combines its statements on the eager element path, as ExpressionQuery runs it.
+			if (query.CombinedCommandsRequested && query.GetEagerElement != null)
+			{
+				var eagerValue = (T)query.GetEagerElement(db, expressions, parameters)!;
+
+				transaction?.Complete();
+
+				return eagerValue;
+			}
 
 			// A compiled query always carries its argument array, so InitHarvesters returns a context even when the
 			// query has no eager-load harvesters - the mapper and parameter accessors read the compiled args from it.
@@ -201,8 +213,21 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
 
+			query.ThrowIfQueryBatchHasQueryHints(db);
+			query.ThrowIfQueryBatchIsCancelled(cancellationToken);
+
 			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+
+			if (query.CombinedCommandsRequested && query.GetEagerElementAsync != null)
+			{
+				var eagerValue = (T)(await query.GetEagerElementAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false))!;
+
+				if (transaction != null)
+					await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
+				return eagerValue;
+			}
 
 			var context = await query.InitHarvestersAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
 

@@ -209,7 +209,8 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo DisableGuard              = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
 			public static readonly MethodInfo InlineParameters          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.InlineParameters());
 
-			public static readonly MethodInfo Select = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.Select(() => 1));
+			public static readonly MethodInfo Select     = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.Select(() => 1));
+			public static readonly MethodInfo QueryBatch = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.QueryBatch(() => 1));
 
 			public static readonly MethodInfo AsQueryable           = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsQueryable(null!));
 			public static readonly MethodInfo AsQueryableConfigured = MemberHelper.MethodOfGeneric<IEnumerable<object>>(e => e.AsQueryable(null!, b => b.Parameterize()));

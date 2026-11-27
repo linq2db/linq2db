@@ -261,7 +261,7 @@ namespace LinqToDB
 					{
 						var expr = (MethodCallExpression)pi;
 
-						if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
+						if ((expr.Method.DeclaringType == typeof(AsyncExtensions) || expr.Method.DeclaringType == typeof(LinqExtensions)) &&
 							expr.Method.HasAttribute<AsyncExtensions.ElementAsyncAttribute>())
 						{
 							var type = expr.Type.GetGenericArguments()[0];

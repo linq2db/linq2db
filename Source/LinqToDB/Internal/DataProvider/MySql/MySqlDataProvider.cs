@@ -66,6 +66,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// runs as a DbBatch there; MySql.Data has no DbBatch and always sends the concatenated text, so a MySql.Data
 			// connection string with AllowBatch=false rejects a combined command and needs UseCombinedCommands off.
 			SqlProviderFlags.IsMultiStatementBatchSupported = true;
+			// That remedy cannot reach a QueryBatch, which combines without the option, so MySql.Data combines only with it.
+			SqlProviderFlags.IsMultiStatementBatchConnectionDependent = provider == MySqlProvider.MySqlData;
 			SqlProviderFlags.IsMultipleResultSetsSupported  = true;
 			// Bounded by max_allowed_packet (server default 16-64 MB, minimum 4 MB); 1 MB stays safe if configured low.
 			SqlProviderFlags.MaxCombinedCommandLength       = 1_000_000;

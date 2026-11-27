@@ -121,7 +121,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!buildInfo.IsSubQuery)
 				{
-					if (!builder.IsSupportedSubquery(resultSelectContext, resultSelectContext, out var errorMessage))
+					if (!builder.IsSupportedSubquery(resultSelectContext, resultSelectContext, loadedSeparately: false, out var errorMessage))
 						return BuildSequenceResult.Error(methodCall, errorMessage);
 				}
 
