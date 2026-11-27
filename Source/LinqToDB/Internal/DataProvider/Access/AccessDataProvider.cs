@@ -65,6 +65,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.Unspecified;
 			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                          = false;
+			SqlProviderFlags.IsNestedJoinsSupported                                = false;
 			SqlProviderFlags.IsMultiTablesSupportsJoins                            = false;
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability              = true;
 			SqlProviderFlags.SupportsPredicatesComparison                          = true;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider.Ydb;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -750,7 +751,13 @@ namespace Tests.Linq
 			// but access returns wrong number of records if orderby applied to subquery with take
 			var orderUnsupported = context.IsAnyOf(TestProvName.AllAccess);
 
-			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
+			// The YDB server drops the session after the #46197 assertion, so the next case can draw it dead from the
+			// pool and fail BadSession instead of the gated error; the YDB policy retries that on a fresh session.
+			using var db = GetDataContext(context, o =>
+			{
+				o = o.UseParameterizeTakeSkip(withParameters);
+				return context.IsAnyOf(TestProvName.AllYdb) ? o.UseRetryPolicy(new YdbRetryPolicy()) : o;
+			});
 			var types = db.Types.ToList();
 
 			var q1 = types.Concat(types).Take(15);
