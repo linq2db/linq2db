@@ -1128,6 +1128,8 @@ namespace Tests.xUpdate
 
 			using var db = GetDataConnection(context, o => o.UseTracing(e =>
 			{
+				DataConnection.DefaultOnTraceConnection(e);
+
 				if (e.TraceInfoStep != TraceInfoStep.BeforeExecute)
 					return;
 
@@ -1202,7 +1204,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task EagerLoadOverOutputCommitsWhenEnumerationEnds([IncludeDataSources(FeatureOutputQuery)] string context, [Values] EnumerationEnd end)
+		public async Task EagerLoadOverOutputCommitsBeforeFirstRow([IncludeDataSources(FeatureOutputQuery)] string context, [Values] EnumerationEnd end)
 		{
 			using var db     = GetDataConnection(context);
 			using var input  = db.CreateLocalTable(new[]
@@ -1225,7 +1227,7 @@ namespace Tests.xUpdate
 						.ToList(),
 				});
 
-			// the load transaction spans the enumeration and commits when it ends, early or not
+			// the load transaction covers the reads only: the main rows are buffered and it commits before the first one is returned
 			switch (end)
 			{
 				case EnumerationEnd.Completed:
@@ -1243,6 +1245,7 @@ namespace Tests.xUpdate
 					var moved = enumerator.MoveNext();
 
 					moved.ShouldBeTrue();
+					db.Transaction.ShouldBeNull();
 					break;
 				}
 
@@ -1268,6 +1271,7 @@ namespace Tests.xUpdate
 					var moved = await enumerator.MoveNextAsync();
 
 					moved.ShouldBeTrue();
+					db.Transaction.ShouldBeNull();
 					break;
 				}
 
@@ -1363,6 +1367,8 @@ namespace Tests.xUpdate
 				.UseEagerLoadingTransaction(false)
 				.UseTracing(e =>
 				{
+					DataConnection.DefaultOnTraceConnection(e);
+
 					if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.BeginTransaction)
 						begun++;
 				}));
@@ -1420,6 +1426,8 @@ namespace Tests.xUpdate
 				.UseCombinedCommands(combined)
 				.UseTracing(e =>
 				{
+					DataConnection.DefaultOnTraceConnection(e);
+
 					if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.CommitTransaction)
 						committed++;
 				}));
@@ -1435,7 +1443,7 @@ namespace Tests.xUpdate
 
 			committed = 0;
 
-			// the child does not read the output, so it is detached: the main query streams the insert with its reader open
+			// the child does not read the output, so it is detached: the main rows are still buffered, and the load transaction commits after their reader closes
 			var query = input
 				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
 				.Select(e => new
@@ -1485,6 +1493,7 @@ namespace Tests.xUpdate
 				.Count()
 				.ShouldBe(3);
 		}
+
 		[Test]
 		public void QueryBatchWithOutputCount([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
@@ -1492,6 +1501,8 @@ namespace Tests.xUpdate
 
 			using var db = GetDataConnection(context, o => o.UseTracing(e =>
 			{
+				DataConnection.DefaultOnTraceConnection(e);
+
 				if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.CommitTransaction)
 					committed++;
 			}));

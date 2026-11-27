@@ -1162,8 +1162,11 @@ namespace LinqToDB
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
 		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
-		/// does not undo it; run the query in a transaction when it must be undone. Eager loading on a direct connection opens one
-		/// implicitly unless <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off, and such a failure then rolls the insert back.
+		/// does not undo it; run the query in a transaction when it must be undone. On a direct connection, eager loading and
+		/// <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/> read all the rows in an implicit transaction before
+		/// returning the first one, unless <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off. A failure while the rows are
+		/// materialized or the children are loaded rolls the insert back; a failure in the code that consumes the rows comes after
+		/// the commit and does not.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">
@@ -1210,8 +1213,11 @@ namespace LinqToDB
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
 		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
-		/// does not undo it; run the query in a transaction when it must be undone. Eager loading on a direct connection opens one
-		/// implicitly unless <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off, and such a failure then rolls the insert back.
+		/// does not undo it; run the query in a transaction when it must be undone. On a direct connection, eager loading and
+		/// <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/> read all the rows in an implicit transaction before
+		/// returning the first one, unless <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off. A failure while the rows are
+		/// materialized or the children are loaded rolls the insert back; a failure in the code that consumes the rows comes after
+		/// the commit and does not.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">
