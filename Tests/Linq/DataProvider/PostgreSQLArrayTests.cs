@@ -253,5 +253,52 @@ namespace Tests.DataProvider
 				result.Length.ShouldBe(1);
 			}
 		}
+
+		[Table]
+		public class ValueIsEqualToAnyWarehouse
+		{
+			[Column, PrimaryKey] public int     Id                   { get; set; }
+			[Column            ] public int     ClearingWarehouseId  { get; set; }
+			[Column            ] public bool    IsActive             { get; set; }
+		}
+
+		/// <summary>
+		/// Reproduces the issue: query using ValueIsEqualToAny with array causes cache miss on every execution.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5302"), QueryCacheTest]
+		public void ValueIsEqualToAnyCacheTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
+		{
+			var testData = new[]
+			{
+				new ValueIsEqualToAnyWarehouse { Id = 1, ClearingWarehouseId = 10, IsActive = true  },
+				new ValueIsEqualToAnyWarehouse { Id = 2, ClearingWarehouseId = 20, IsActive = true  },
+				new ValueIsEqualToAnyWarehouse { Id = 3, ClearingWarehouseId = 30, IsActive = false },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var isActive     = iteration == 1;
+			var warehouseIds = iteration == 1 ? new[] { 10, 20 } : new[] { 30 };
+
+			var query = table
+				.Where(w => w.IsActive == isActive)
+				.Where(w => Sql.Ext.PostgreSQL().ValueIsEqualToAny(w.ClearingWarehouseId, warehouseIds));
+
+			var cacheMiss = query.GetCacheMissCount();
+			var result    = query.ToArray();
+
+			if (iteration == 1)
+			{
+				result.Length.ShouldBe(2);
+				result.Select(r => r.Id).OrderBy(id => id).ToArray().ShouldBe(new[] { 1, 2 });
+			}
+			else
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+				result.Length.ShouldBe(1);
+				result[0].Id.ShouldBe(3);
+			}
+		}
 	}
 }

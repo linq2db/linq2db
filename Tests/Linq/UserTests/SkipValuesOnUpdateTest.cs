@@ -9,7 +9,7 @@ namespace Tests.UserTests
 {
 	public class SkipValuesOnUpdateTest : TestBase
 	{
-		[Table("PR_1598_Update_Table")]
+		[Table("SkipOnUpdateTable")]
 		public class TestTable
 		{
 			[Column("Id"), PrimaryKey]
@@ -20,7 +20,7 @@ namespace Tests.UserTests
 			public int? Age { get; set; }
 		}
 
-		[Table("PR_1598_Update_Null_Table")]
+		[Table("SkipOnUpdateNulls")]
 		public class TestTableNull
 		{
 			[Column("Id"), PrimaryKey]
@@ -31,7 +31,7 @@ namespace Tests.UserTests
 			public int? Age { get; set; }
 		}
 
-		[Table("PR_1598_Update_Fluent_Table")]
+		[Table("SkipOnUpdateFluent")]
 		public class TestTableFluent
 		{
 			[Column("Id"), PrimaryKey]
@@ -42,7 +42,7 @@ namespace Tests.UserTests
 			public int? Age { get; set; }
 		}
 
-		[Table("PR_1598_Update_Enum_Table")]
+		[Table("SkipOnUpdateEnum")]
 		public class TestTableEnum
 		{
 			public enum GenderType

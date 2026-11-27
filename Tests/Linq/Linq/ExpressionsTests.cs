@@ -901,7 +901,6 @@ namespace Tests.Linq
 			throw new ServerSideOnlyException(nameof(Func3));
 		}
 
-		#region issue 2688
 		[Test]
 		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
@@ -1003,20 +1002,18 @@ namespace Tests.Linq
 		{
 			throw new ServerSideOnlyException(nameof(GetTernaryExpressionValueFunction));
 		}
-		#endregion
 
-		#region issue 2431
 		[Table]
-		sealed class Issue2431Table
+		sealed class JsonColumnTable
 		{
 			[Column] public int Id;
 			[Column(DataType = DataType.NVarChar)] public JsonType? Json;
 
-			public static readonly Issue2431Table[] Data = new []
+			public static readonly JsonColumnTable[] Data = new []
 			{
-				new Issue2431Table() { Id = 1 },
-				new Issue2431Table() { Id = 2 },
-				new Issue2431Table() { Id = 3 }
+				new JsonColumnTable() { Id = 1 },
+				new JsonColumnTable() { Id = 2 },
+				new JsonColumnTable() { Id = 3 }
 			};
 
 			public sealed class JsonType
@@ -1025,12 +1022,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue2431Test([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2431")]
+		public void ExpressionMethodGenericJsonPathInConditional([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable(Issue2431Table.Data);
-			db.GetTable<Issue2431Table>().Where(r => JsonExtractPathText(r.Json, json => json!.Text) == "test" ? true : false).ToList();
+			using var table = db.CreateLocalTable(JsonColumnTable.Data);
+			db.GetTable<JsonColumnTable>().Where(r => JsonExtractPathText(r.Json, json => json!.Text) == "test" ? true : false).ToList();
 		}
 
 		[ExpressionMethod(nameof(JsonExtractPathExpression))]
@@ -1050,11 +1047,9 @@ namespace Tests.Linq
 			=> throw new ServerSideOnlyException(nameof(JsonExtractPathText));
 
 		private static string JsonPath<TColumn, TJsonProp>(Expression<Func<TColumn, TJsonProp>> extractor) => "'{json, text}'";
-		#endregion
 
-		#region issue 2434
 		[Table]
-		sealed class Issue2434Table
+		sealed class FullNameColumnTable
 		{
 			[PrimaryKey] public int     Id;
 			[Column] public string? FirstName;
@@ -1063,58 +1058,55 @@ namespace Tests.Linq
 			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
 			public string? FullName { get; set; }
 
-			private static Expression<Func<Issue2434Table, string>> FullNameExpr() => t => $"{t.FirstName} {t.LastName}";
+			private static Expression<Func<FullNameColumnTable, string>> FullNameExpr() => t => $"{t.FirstName} {t.LastName}";
 		}
 
-		[Test]
-		public void Issue2434Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2434")]
+		public void OrderByExpressionMethodColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue2434Table>();
+			using var tb = db.CreateLocalTable<FullNameColumnTable>();
 			tb.OrderBy(x => x.FullName).ToArray();
 		}
-		#endregion
 
-		#region issue 3472
 		[Table]
-		public class Issue3472TableDC
+		public class PersonsCountDcTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 
 			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
 			public int PersonsCount { get; set; }
 
-			private static Expression<Func<Issue3472TableDC, DataConnection, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+			private static Expression<Func<PersonsCountDcTable, DataConnection, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
 		}
 
-		[Table(nameof(Issue3472TableDC))]
-		public class Issue3472TableDCTX
+		[Table(nameof(PersonsCountDcTable))]
+		public class PersonsCountDcTxTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 
 			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
 			public int PersonsCount { get; set; }
 
-			private static Expression<Func<Issue3472TableDCTX, DataContext, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+			private static Expression<Func<PersonsCountDcTxTable, DataContext, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3472")]
 		[ThrowsRequiresCorrelatedSubquery]
-		public void Issue3472Test([DataSources] string context)
+		public void ExpressionMethodColumnWithContextParameter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			if (db is DataConnection)
 			{
-				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDC() { Id = 1 } });
+				using var tb = db.CreateLocalTable(new[] { new PersonsCountDcTable() { Id = 1 } });
 				tb.ToArray();
 			}
 			else
 			{
-				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDCTX() { Id = 1 } });
+				using var tb = db.CreateLocalTable(new[] { new PersonsCountDcTxTable() { Id = 1 } });
 				tb.ToArray();
 			}
 		}
-		#endregion
 
 		#region Null check generated
 
@@ -1213,46 +1205,45 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Issue 4613
 		[Table]
-		class Issue4613Service
+		class ProjectionServiceTable
 		{
 			[PrimaryKey] public int IdContract { get; set; }
 		}
 
 		[Table]
-		class Issue4613Contract
+		class ProjectionContractTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 		}
 
-		class Issue4613ServiceProjection
+		class ServiceProjection
 		{
 			public int IdContract { get; set; }
 		}
 
-		static class Issue4613Expressions
+		static class ServiceProjectionExpressions
 		{
 			[ExpressionMethod(nameof(ToServiceProjectionExpr))]
-			public static Issue4613ServiceProjection ToServiceProjection(Issue4613Service serv)
+			public static ServiceProjection ToServiceProjection(ProjectionServiceTable serv)
 				=> throw new ServerSideOnlyException(nameof(ToServiceProjection));
 
-			static Expression<Func<Issue4613Service, Issue4613ServiceProjection>> ToServiceProjectionExpr()
-				=> (serv) => new Issue4613ServiceProjection { IdContract = serv.IdContract };
+			static Expression<Func<ProjectionServiceTable, ServiceProjection>> ToServiceProjectionExpr()
+				=> (serv) => new ServiceProjection { IdContract = serv.IdContract };
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4613")]
-		public void Issue4613Test([DataSources] string context)
+		public void ExpressionMethodProjectionInJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue4613Service>();
-			using var t2 = db.CreateLocalTable<Issue4613Contract>();
+			using var t1 = db.CreateLocalTable<ProjectionServiceTable>();
+			using var t2 = db.CreateLocalTable<ProjectionContractTable>();
 
 			var query = (
 				from servProj in (
-				from serv in db.GetTable<Issue4613Service>()
-				select Issue4613Expressions.ToServiceProjection(serv))
-				join contract in db.GetTable<Issue4613Contract>() on servProj.IdContract equals contract.Id
+				from serv in db.GetTable<ProjectionServiceTable>()
+				select ServiceProjectionExpressions.ToServiceProjection(serv))
+				join contract in db.GetTable<ProjectionContractTable>() on servProj.IdContract equals contract.Id
 				select new
 				{
 					Contract = contract,
@@ -1262,11 +1253,7 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
-		#endregion
-
-		#region Issue 5040
-
-		static class Issue5040
+		static class ProtectedEntityFilterModel
 		{
 			public interface IBaseEntity;
 
@@ -1405,22 +1392,369 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5040")]
-		public void Issue5040Test([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		public void QueryFilterOverInterfaceExpressionMethodProperty([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
 		{
 			var ms = new MappingSchema();
 			var fb = new FluentMappingBuilder(ms);
-			Issue5040.ModelBuilderExtensions.ProcessEntity<Issue5040.Account>(fb);
+			ProtectedEntityFilterModel.ModelBuilderExtensions.ProcessEntity<ProtectedEntityFilterModel.Account>(fb);
 			fb.Build();
 
 			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
-			using var t1 = db.CreateLocalTable<Issue5040.Account>();
-			using var t2 = db.CreateLocalTable<Issue5040.Permission>();
-			using var t3 = db.CreateLocalTable<Issue5040.User>();
+			using var t1 = db.CreateLocalTable<ProtectedEntityFilterModel.Account>();
+			using var t2 = db.CreateLocalTable<ProtectedEntityFilterModel.Permission>();
+			using var t3 = db.CreateLocalTable<ProtectedEntityFilterModel.User>();
 
 			t1.ToList();
 		}
 
-		#endregion
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1700")]
+		public void ExpressionMethodSubqueryUnderOuterApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+		{
+			var groupId = 5;
+
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<OuterApplyItem>();
+			using var t2 = db.CreateLocalTable<OuterApplyItemType>();
+			using var t3 = db.CreateLocalTable<OuterApplyAppType>();
+			using var t4 = db.CreateLocalTable<OuterApplyAppSubType>();
+
+			var items     = db.GetTable<OuterApplyItem>().AsQueryable();
+			var itemTypes = db.GetTable<OuterApplyItemType>().AsQueryable();
+			var types     = db.GetTable<OuterApplyAppType>().AsQueryable();
+			var subTypes  = db.GetTable<OuterApplyAppSubType>().AsQueryable();
+
+			var data = (
+				from item in items.Where(i => i.GroupId == groupId)
+				let itemSubTypeDescription = SubTypeSummary(itemTypes, types, subTypes, item)
+				select new { item.ItemId, Description1 = item.Description, Description2 = itemSubTypeDescription.Description });
+
+			var all_items = data.ToList();
+		}
+
+		[Table]
+		class OuterApplyItemType
+		{
+			[Column] public int AppTypeId { get; set; }
+			[Column] public int ItemId { get; set; }
+		}
+
+		[Table]
+		class OuterApplyItem
+		{
+			[Column] public int GroupId { get; set; }
+			[Column] public int ItemId { get; set; }
+			[Column] public string? Description { get; set; }
+		}
+
+		[Table]
+		class OuterApplyAppType
+		{
+			[Column] public int AppTypeId { get; set; }
+			[Column] public DateTime CreatedDate { get; set; }
+		}
+
+		[Table]
+		class OuterApplyAppSubType
+		{
+			[Column] public int AppTypeId { get; set; }
+			[Column] public int AppSubTypeId { get; set; }
+			[Column] public string? Description { get; set; }
+			[Column] public DateTime CreatedDate { get; set; }
+		}
+
+		[ExpressionMethod(nameof(SubTypeSummaryImpl))]
+		static OuterApplySubTypeSummary SubTypeSummary(IQueryable<OuterApplyItemType> itemTypes, IQueryable<OuterApplyAppType> types, IQueryable<OuterApplyAppSubType> subTypes, OuterApplyItem item)
+		{
+			throw new ServerSideOnlyException(nameof(SubTypeSummary));
+		}
+
+		public class OuterApplySubTypeSummary
+		{
+			public int AppSubTypeId { get; set; }
+			public string? Description { get; set; }
+			public DateTime MaxSubtypeCreatedDate { get; set; }
+			public DateTime MaxTypeCreatedDate { get; set; }
+			public int MaxTypeId { get; set; }
+			public int CountDistinctTypeId { get; set; }
+			public int CountDistinctSubTypeId { get; set; }
+		}
+
+		static Expression<Func<IQueryable<OuterApplyItemType>, IQueryable<OuterApplyAppType>, IQueryable<OuterApplyAppSubType>, OuterApplyItem, OuterApplySubTypeSummary?>> SubTypeSummaryImpl()
+		{
+			return (itemTypes, types, subTypes, item) => (
+					from sub in
+						from itemtype in itemTypes
+						from type in types.LeftJoin(t => t.AppTypeId == itemtype.AppTypeId)
+						from subtype in subTypes.LeftJoin(u => u.AppTypeId == type.AppTypeId)
+						where itemtype.ItemId == item.ItemId
+							  && type.AppTypeId == itemtype.AppTypeId
+							  && subtype.AppTypeId == type.AppTypeId
+						select new
+						{
+							subtype.Description,
+							subtype.AppSubTypeId,
+							subtypeCreatedDate = subtype.CreatedDate,
+							typeCreatedDate = type.CreatedDate,
+							type.AppTypeId
+						}
+					group sub by new { sub.Description, sub.AppSubTypeId }
+					into grpby
+					select new OuterApplySubTypeSummary
+					{
+						AppSubTypeId = grpby.Key.AppSubTypeId,
+						Description = grpby.Key.Description,
+						MaxSubtypeCreatedDate = grpby.Max(i => i.subtypeCreatedDate),
+						MaxTypeCreatedDate = grpby.Max(i => i.typeCreatedDate),
+						MaxTypeId = grpby.Max(i => i.AppTypeId),
+						CountDistinctTypeId = grpby.CountExt(i => i.AppTypeId, Sql.AggregateModifier.Distinct),
+						CountDistinctSubTypeId = grpby.CountExt(i => i.AppSubTypeId, Sql.AggregateModifier.Distinct)
+					}
+				)
+				.OrderByDescending(ord1 => ord1.CountDistinctTypeId)
+				.ThenByDescending(ord2 => ord2.MaxSubtypeCreatedDate)
+				.ThenByDescending(ord3 => ord3.MaxTypeCreatedDate)
+				.ThenByDescending(ord4 => ord4.MaxTypeId)
+				.FirstOrDefault();
+		}
+
+		public class ExpressionMethodCar
+		{
+			public int Id { get; set; }
+			public string Name { get; set; } = null!;
+		}
+
+		public static class ExpressionMethodCarExtensions
+		{
+			[ExpressionMethod(nameof(FilterBySpecialStringExpression))]
+			public static bool FilterBySpecialString(ExpressionMethodCar car, bool? isSpecial = false)
+			{
+				return !isSpecial.HasValue || (isSpecial.Value && car.Name == "Special") || (!isSpecial.Value && car.Name != "Special");
+			}
+
+			public static Expression<Func<ExpressionMethodCar, bool?, bool>> FilterBySpecialStringExpression()
+			{
+				return (x, isSpecial) => isSpecial == null || (isSpecial.Value && x.Name == "Special") || (!isSpecial.Value && x.Name != "Special");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2800")]
+		public void ExpressionMethodWithNullableBooleanParameter([DataSources] string context)
+		{
+			var fluentMappingBuilder = new FluentMappingBuilder(new MappingSchema());
+
+			var carBuilder = fluentMappingBuilder.Entity<ExpressionMethodCar>();
+			carBuilder.Property(x => x.Id).IsPrimaryKey();
+			carBuilder.Property(x => x.Name).HasLength(50);
+
+			fluentMappingBuilder.Build();
+
+			var records = new ExpressionMethodCar[]
+			{
+				new ExpressionMethodCar { Id = 1, Name = "Special" },
+				new ExpressionMethodCar { Id = 2, Name = "NoSpecial" }
+			};
+
+			using var db = GetDataContext(context, fluentMappingBuilder.MappingSchema);
+			using var carTable = db.CreateLocalTable<ExpressionMethodCar>(records);
+			var isSpecial = (bool?)null;
+			AssertQuery(carTable.Where(x => ExpressionMethodCarExtensions.FilterBySpecialString(x, isSpecial)));
+			isSpecial = false;
+			AssertQuery(carTable.Where(x => ExpressionMethodCarExtensions.FilterBySpecialString(x, isSpecial)));
+			isSpecial = true;
+			AssertQuery(carTable.Where(x => ExpressionMethodCarExtensions.FilterBySpecialString(x, isSpecial)));
+
+			AssertQuery(carTable.Where(x => ExpressionMethodCarExtensions.FilterBySpecialString(x, null)));
+			AssertQuery(carTable.Where(x => ExpressionMethodCarExtensions.FilterBySpecialString(x, false)));
+			AssertQuery(carTable.Where(x => ExpressionMethodCarExtensions.FilterBySpecialString(x, true)));
+		}
+
+		static class SettingNameIds
+		{
+			public const string UserNumberMaxValueId = "UserNumberMaxValue";
+		}
+
+		class NumberFormatUser
+		{
+			public int    Id         { get; set; }
+			public int    HospitalId { get; set; }
+			public string Name       { get; set; } = null!;
+			public int    UserNumber { get; set; }
+
+			[Association(ThisKey = nameof(HospitalId), OtherKey = nameof(NumberFormatHospital.Id), CanBeNull = true)]
+			public NumberFormatHospital Hospital { get; set; } = null!;
+		}
+
+		public class NumberFormatHospital
+		{
+			public int    Id   { get; set; }
+			public string Name { get; set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(NumberFormatHospitalSetting.HospitalId), CanBeNull = true)]
+			public List<NumberFormatHospitalSetting> Settings { get; set; } = null!;
+
+			[ExpressionMethod(nameof(GetSettingValueImpl))]
+			public string? GetSettingValue(string settingId) => throw new ServerSideOnlyException(nameof(GetSettingValue));
+
+			static Expression<Func<NumberFormatHospital, string, string?>> GetSettingValueImpl()
+			{
+				return (h, settingId) => h.Settings
+					.Where(sv => sv.SettingId == settingId)
+					.Select(sv => sv.SettingValue)
+					.SingleOrDefault();
+			}
+
+			[ExpressionMethod(nameof(GetUserNumberMaxValueImpl))]
+			public int GetUserNumberMaxValue() => throw new ServerSideOnlyException(nameof(GetUserNumberMaxValue));
+
+			static Expression<Func<NumberFormatHospital, int>> GetUserNumberMaxValueImpl()
+			{
+				return h => Sql.ConvertTo<int?>.From(h.GetSettingValue(SettingNameIds.UserNumberMaxValueId)) ?? 9000;
+			}
+		}
+
+		[ExpressionMethod(nameof(FormatUserFromUserNumberImpl))]
+		static string FormatUserNumber(NumberFormatUser user)
+		{
+			throw new ServerSideOnlyException(nameof(FormatUserNumber));
+		}
+
+		static Expression<Func<NumberFormatUser, string>> FormatUserFromUserNumberImpl()
+		{
+			return u => u.UserNumber >= 0 && u.UserNumber.ToString().Length < u.Hospital.GetUserNumberMaxValue().ToString().Length
+				? u.UserNumber.ToString().PadLeft(u.Hospital.GetUserNumberMaxValue().ToString().Length, '0')
+				: u.UserNumber.ToString();
+		}
+
+		public class NumberFormatHospitalSetting
+		{
+			public int    Id           { get; set; }
+			public int    HospitalId   { get; set; }
+			public string SettingId    { get; set; } = null!;
+			public string SettingValue { get; set; } = null!;
+
+			[Association(ThisKey = nameof(HospitalId), OtherKey = nameof(NumberFormatHospital.Id), CanBeNull = true)]
+			public NumberFormatHospital Hospital { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5283")]
+		public void ExpressionMethodOverNestedAssociationInProjectionFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var userTable = db.CreateLocalTable(new[]
+			{
+				new NumberFormatUser { Id = 1, HospitalId = 1, Name = "User 1", UserNumber = 1 },
+				new NumberFormatUser { Id = 2, HospitalId = 1, Name = "User 2", UserNumber = 2 },
+				new NumberFormatUser { Id = 3, HospitalId = 1, Name = "User 3", UserNumber = 3 },
+				new NumberFormatUser { Id = 4, HospitalId = 2, Name = "User 4", UserNumber = 9001 },
+				new NumberFormatUser { Id = 5, HospitalId = 2, Name = "User 5", UserNumber = 9002 },
+				new NumberFormatUser { Id = 6, HospitalId = 2, Name = "User 6", UserNumber = 9003 }
+			});
+			using var hospitalTable = db.CreateLocalTable(new[]
+			{
+				new NumberFormatHospital { Id = 1, Name = "Hospital 1" },
+				new NumberFormatHospital { Id = 2, Name = "Hospital 2" }
+			});
+			using var hospitalSettingTable = db.CreateLocalTable(new[]
+			{
+				new NumberFormatHospitalSetting { Id = 1, HospitalId = 1, SettingId = SettingNameIds.UserNumberMaxValueId, SettingValue = "100" },
+				new NumberFormatHospitalSetting { Id = 2, HospitalId = 2, SettingId = SettingNameIds.UserNumberMaxValueId, SettingValue = "10000" }
+			});
+
+			var searchLexems = new[] { "001", "002", "003", "9001", "9002", "9003" };
+
+			var query =
+				from user in db.GetTable<NumberFormatUser>()
+				select new
+				{
+					Data = new
+					{
+						UserNumberFormatted = FormatUserNumber(user)
+					}
+				};
+
+			query = query.Where(u => searchLexems.Any(l => l == u.Data.UserNumberFormatted));
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(3);
+		}
+
+		[Table(Name = "Person")]
+		public class PersonWithDoctorAssociation //: Person
+		{
+			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID"), Identity, PrimaryKey]
+			public int ID;
+			[NotNull] public string FirstName { get; set; } = null!;
+			[NotNull] public string LastName = null!;
+			[Nullable] public string? MiddleName;
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(Model.Doctor.PersonID), CanBeNull = true)]
+			public Doctor? Doctor { get; set; }
+		}
+
+		public class PersonWithDoctorDto
+		{
+			public int    Id;
+			public string Name = null!;
+
+			public DoctorTaxonomyDto? Doc;
+		}
+
+		public class DoctorTaxonomyDto
+		{
+			public int    PersonId;
+			public string Taxonomy = null!;
+		}
+
+		[ExpressionMethod("MapPersonToDtoExpr")]
+		private static PersonWithDoctorDto MapToDto(PersonWithDoctorAssociation person)
+		{
+			return MapPersonToDtoExpr().CompileExpression()(person);
+		}
+
+		[ExpressionMethod("MapDoctorToDtoExpr")]
+		private static DoctorTaxonomyDto MapToDto(Doctor doctor)
+		{
+			return MapDoctorToDtoExpr().CompileExpression()(doctor);
+		}
+
+		private static Expression<Func<PersonWithDoctorAssociation, PersonWithDoctorDto>> MapPersonToDtoExpr()
+		{
+			return x => new PersonWithDoctorDto
+			{
+
+				Id   = x.ID,
+				Name = x.FirstName,
+				Doc  = x.Doctor != null ? MapToDto(x.Doctor) : null
+			};
+		}
+
+		private static Expression<Func<Doctor, DoctorTaxonomyDto>> MapDoctorToDtoExpr()
+		{
+			return x => new DoctorTaxonomyDto
+			{
+				PersonId = x.PersonID,
+				Taxonomy = x.Taxonomy
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/376")]
+		public void ExpressionMethodMapsAssociationToDto([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var l = db
+					.GetTable<PersonWithDoctorAssociation>()
+					.Where(_ => _.Doctor!.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
+					.Select(_ => MapToDto(_)).ToList();
+
+			Assert.That(l, Is.Not.Empty);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(l.Where(_ => _.Doc == null), Is.Not.Empty);
+				Assert.That(l.Where(_ => _.Doc != null), Is.Not.Empty);
+			}
+		}
 	}
 
 	#region Extensions

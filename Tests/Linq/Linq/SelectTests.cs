@@ -1479,7 +1479,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		public class Table1788
+		public class NullableLeftJoinTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1487,9 +1487,9 @@ namespace Tests.Linq
 			[Column]
 			public int Value1 { get; set; }
 
-			public static Table1788[] Seed()
+			public static NullableLeftJoinTable[] Seed()
 			{
-				return new Table1788[]
+				return new NullableLeftJoinTable[]
 				{
 					new () { Id = 1, Value1 = 11 },
 					new () { Id = 2, Value1 = 22 },
@@ -1498,11 +1498,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1788Test1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1788")]
+		public void ToNullableHasValueOverLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable(Table1788.Seed());
+			using var table = db.CreateLocalTable(NullableLeftJoinTable.Seed());
 			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
@@ -1526,11 +1526,11 @@ namespace Tests.Linq
 				results);
 		}
 
-		[Test]
-		public void Issue1788Test2([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1788")]
+		public void ToNullableNotNullCompareOverLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable(Table1788.Seed());
+			using var table = db.CreateLocalTable(NullableLeftJoinTable.Seed());
 			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
@@ -1554,11 +1554,11 @@ namespace Tests.Linq
 				results);
 		}
 
-		[Test]
-		public void Issue1788Test3([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1788")]
+		public void NullableCastNotNullCompareOverLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable(Table1788.Seed());
+			using var table = db.CreateLocalTable(NullableLeftJoinTable.Seed());
 			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
@@ -1584,11 +1584,11 @@ namespace Tests.Linq
 				results);
 		}
 
-		[Test]
-		public void Issue1788Test4([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1788")]
+		public void NullableCastHasValueOverLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable(Table1788.Seed());
+			using var table = db.CreateLocalTable(NullableLeftJoinTable.Seed());
 			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
@@ -1809,41 +1809,41 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Table860_1
+		sealed class NestedAssocRoot
 		{
 			[Column] public int Id  { get; set; }
 			[Column] public int bId { get; set; }
 
-			[Association(ThisKey = nameof(bId), OtherKey = nameof(Table860_2.Id))]
-			public IList<Table860_2> Table2 { get; set; } = null!;
+			[Association(ThisKey = nameof(bId), OtherKey = nameof(NestedAssocMiddle.Id))]
+			public IList<NestedAssocMiddle> Table2 { get; set; } = null!;
 		}
 
 		[Table]
-		sealed class Table860_2
+		sealed class NestedAssocMiddle
 		{
 			[Column] public int Id  { get; set; }
 			[Column] public int cId { get; set; }
 
-			[Association(ThisKey = nameof(cId), OtherKey = nameof(Table860_3.Id))]
-			public Table860_3? Table3 { get; set; }
+			[Association(ThisKey = nameof(cId), OtherKey = nameof(NestedAssocLeaf.Id))]
+			public NestedAssocLeaf? Table3 { get; set; }
 		}
 
 		[Table]
-		sealed class Table860_3
+		sealed class NestedAssocLeaf
 		{
 			[Column] public int     Id   { get; set; }
 			[Column] public string? Prop { get; set; }
 		}
 
-		[Test]
-		public void Issue860Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/860")]
+		public void AnyOverNullCheckedAssociationCollection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<Table860_1>())
-			using (db.CreateLocalTable<Table860_2>())
-			using (db.CreateLocalTable<Table860_3>())
+			using (db.CreateLocalTable<NestedAssocRoot>())
+			using (db.CreateLocalTable<NestedAssocMiddle>())
+			using (db.CreateLocalTable<NestedAssocLeaf>())
 			{
-				var q = db.GetTable<Table860_1>()
+				var q = db.GetTable<NestedAssocRoot>()
 					.Where(it => (
 						(it.Table2 == null)
 							? null
@@ -1894,7 +1894,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region SequentialAccess (#2116)
+		#region SequentialAccess
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
 		public void SequentialAccessTest([DataSources] string context)
 		{
@@ -1960,7 +1960,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4520")]
-		public void Issue4520Test([DataSources] string context)
+		public void SubqueryScalarComparisonInProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1974,10 +1974,8 @@ namespace Tests.Linq
 				.ToList();
 		}
 
-		#region Issue 3372
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
-		public void Issue3372Test1([DataSources] string context)
+		public void ConditionalAnonymousProjectionOverAssociationLastName([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1996,7 +1994,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
-		public void Issue3372Test2([DataSources] string context)
+		public void ConditionalAnonymousProjectionOverAssociationMiddleName([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2013,10 +2011,9 @@ namespace Tests.Linq
 
 			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
 		}
-		#endregion
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4198")]
-		public void Issue4198Test([DataSources] string context)
+		public void CastToSameTypeInProjectionThenFilter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2028,9 +2025,8 @@ namespace Tests.Linq
 			var r = q.Count();
 		}
 
-		#region 4199
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
-		public void Issue4199Test1([DataSources] string context)
+		public void InterfaceCastToImplicitImplementationInProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2045,7 +2041,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
-		public void Issue4199Test2([DataSources] string context)
+		public void InterfaceCastToExplicitImplementationInProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2080,38 +2076,36 @@ namespace Tests.Linq
 		{
 			public int ID { get; }
 		}
-		#endregion
 
-		sealed record NullableIssue4200Record(int? Id);
+		sealed record NullableIdRecord(int? Id);
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4200")]
-		public void Issue4200Test([DataSources] string context)
+		public void NullableCtorParameterRecordContainsFilter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			int[] parentIds = { 1, 2, 3 };
 
-			var result = db.Person.Select(a => new NullableIssue4200Record(a.ID))
+			var result = db.Person.Select(a => new NullableIdRecord(a.ID))
 				.Where(i => i.Id != null && parentIds.Contains(i.Id.Value))
 				.ToList();
 		}
 
-		#region issue 4192
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4192")]
-		public void Issue4192Test1([DataSources] string context)
+		public void InterfaceConstraintFilterOnNonNullableColumnThrows([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4192TableNotNullable>();
+			using var tb = db.CreateLocalTable<ParentIdNotNullableTable>();
 
 			var resultQueryable = GetByParentId(tb, 12);
 			Assert.That(() => resultQueryable.ToList(), Throws.Exception);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4192")]
-		public void Issue4192Test2([DataSources] string context)
+		public void InterfaceConstraintFilterOnNullableColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4192TableNullable>();
+			using var tb = db.CreateLocalTable<ParentIdNullableTable>();
 
 			var resultQueryable = GetByParentId(tb, 12);
 			var result = resultQueryable.ToList();
@@ -2125,7 +2119,7 @@ namespace Tests.Linq
 		interface IWithParent { int? ParentId { get; } }
 
 		[Table]
-		sealed class Issue4192TableNotNullable : IWithParent
+		sealed class ParentIdNotNullableTable : IWithParent
 		{
 			[PrimaryKey] public int Id { get; set; }
 
@@ -2136,14 +2130,13 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue4192TableNullable : IWithParent
+		sealed class ParentIdNullableTable : IWithParent
 		{
 			[PrimaryKey] public int Id { get; set; }
 
 			[Column] public string? Name { get; set; }
 			[Column] public int? ParentId { get; set; }
 		}
-		#endregion
 
 		#region Nullable struct from an inner projection
 		readonly record struct ParentPoint(int Id, int? Value);
@@ -2637,7 +2630,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
-		public void Issue3181Test1([DataSources] string context)
+		public void LetWithPartiallyInitializedEntityProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2662,7 +2655,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
-		public void Issue3181Test2([DataSources] string context)
+		public void SubqueryWithPartiallyInitializedEntityProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2749,6 +2742,166 @@ namespace Tests.Linq
 					Assert.That(r.Second.Children, Is.EqualTo(expected[r.First.Id]));
 				}
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/266")]
+		public void TupleFactoryInProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			db.Person
+				.Select(p => Tuple.Create(p.ID, p.Name))
+				.Where(_ => _.Item1 == 1)
+				.Select(_ => _.Item2)
+				.SingleOrDefault();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/266")]
+		public void TupleConstructorInProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			db.Person
+				.Select(p => new Tuple<int, string>(p.ID, p.Name))
+				.Where(_ => _.Item1 == 1)
+				.Select(_ => _.Item2)
+				.SingleOrDefault();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/420")]
+		public void TupleFactoryOverSelectManyChildren([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			db.Parent
+				.SelectMany(p => p.Children.Select(c => Tuple.Create(c)))
+				.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/420")]
+		public void TupleConstructorOverSelectManyChildren([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			db.Parent
+				.SelectMany(p => p.Children.Select(c => new Tuple<Model.Child>(c)))
+				.ToArray();
+		}
+
+		public class PersonWrapper
+		{
+			public int    ID;
+			public string FirstName  = null!;
+			public string SecondName = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/535")]
+		public void FilterOnProjectedClassMembers([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var q = from p in db.Person
+					where p.FirstName.StartsWith("J")
+					select new PersonWrapper
+					{
+						ID         = p.ID,
+						FirstName  = p.FirstName,
+						SecondName = p.LastName
+					};
+
+			q = from p in q
+				where p.ID == 1 || p.SecondName == "fail"
+				select p;
+
+			Assert.That(q.FirstOrDefault(), Is.Not.Null);
+		}
+
+		[Table]
+		sealed class EnumClientRecord
+		{
+			[PrimaryKey, Identity] public int        Id           { get; set; }
+			[Column, NotNull]      public ClientType ClientType   { get; set; }
+			[Column, Nullable]     public string?    Name         { get; set; }
+			[Column, Nullable]     public string?    ContactEmail { get; set; }
+			[Column, Nullable]     public bool?      Enabled      { get; set; }
+		}
+
+		public class PersonProjectionBase
+		{
+			public   int     Id              { get; set; }
+			public   string? Name            { get; set; }
+			internal string? CompositeEmails { get; set; }
+		}
+
+		public class PersonProjectionCustomer : PersonProjectionBase
+		{
+			public List<string>? Emails { get; set; }
+			public bool          IsEnabled { get; set; }
+		}
+
+		enum ClientType
+		{
+			[MapValue("Client")]
+			Client
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/535")]
+		public void FilterOnProjectedDerivedClassMembers([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<EnumClientRecord>();
+			var query = from cb in table
+						where cb.ClientType == ClientType.Client
+						//orderby cb.Name
+						select new PersonProjectionCustomer
+						{
+							Id = cb.Id,
+							Name = cb.Name,
+							CompositeEmails = cb.ContactEmail,
+							IsEnabled = cb.Enabled ?? false
+						};
+
+			var filter = "test";
+
+			query = from q in query where q.Name!.Contains(filter) || q.CompositeEmails!.Contains(filter) select q;
+
+			query.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/535")]
+		public void EnumFilterWithAnonymousProjection([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<EnumClientRecord>();
+			var query = from cb in table
+						where cb.ClientType == ClientType.Client
+						select new
+						{
+							Id              = cb.Id,
+							Name            = cb.Name,
+							CompositeEmails = cb.ContactEmail,
+							IsEnabled       = cb.Enabled ?? false
+						};
+
+			query.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/173")]
+		public void WhereOnAnonymousIdProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result =
+					from r in db.GetTable<Parent>()
+					select new
+					{
+						id = r.ParentID,
+					};
+			result = result.Where(_ => _.id == 1);
+
+			var expected =
+					from r in Parent
+					select new
+					{
+						id = r.ParentID,
+					};
+			expected = expected.Where(_ => _.id == 1);
+
+			AreEqual(expected, result);
 		}
 	}
 }

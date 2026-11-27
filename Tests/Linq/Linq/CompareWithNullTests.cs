@@ -10,6 +10,8 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -283,5 +285,242 @@ namespace Tests.Linq
 		public enum ME { [MapValue("A")] One, [MapValue("B")] Two }
 
 		public enum CE { One, Two }
+
+		enum EnumFilterValue
+		{
+			Value1,
+			Value2
+		}
+
+		sealed class EnumFilterEntity
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			public EnumFilterValue? MyEnum;
+			public EnumFilterValue  MyEnum2;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NullableEnumNotEqualAddsIsNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<EnumFilterEntity>();
+
+			var qry =
+					from p in db.GetTable<EnumFilterEntity>()
+					where p.MyEnum != EnumFilterValue.Value1
+					select p;
+
+			Assert.That(qry.ToSqlQuery().Sql, Does.Contain("NULL"));
+
+			qry.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NullableEnumValueDoubleNegatedContainsAddsNoIsNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<EnumFilterEntity>();
+
+			var filter = new[] {EnumFilterValue.Value2};
+
+			var qry =
+					from p in db.GetTable<EnumFilterEntity>()
+					where !!filter.Contains(p.MyEnum!.Value)
+					select p;
+
+			Assert.That(qry.ToSqlQuery().Sql, Does.Not.Contain("NULL"));
+
+			qry.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NonNullableEnumNotEqualHasNoIsNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<EnumFilterEntity>();
+
+			var qry =
+					from p in db.GetTable<EnumFilterEntity>()
+					where p.MyEnum2 != EnumFilterValue.Value1
+					select p;
+
+			Assert.That(qry.ToSqlQuery().Sql, Does.Not.Contain("NULL"));
+
+			qry.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NonNullableEnumNotContainsHasNoIsNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<EnumFilterEntity>();
+
+			var filter = new[] {EnumFilterValue.Value2};
+
+			var qry =
+					from p in db.GetTable<EnumFilterEntity>()
+					where !filter.Contains(p.MyEnum2)
+					select p;
+
+			Assert.That(qry.ToSqlQuery().Sql, Does.Not.Contain("NULL"));
+
+			qry.ToArray();
+		}
+
+		static LinqDataTypes2 ClearStringValue(LinqDataTypes2 data)
+		{
+			data = data.Clone();
+			data.StringValue = null;
+			return data;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NullableBigIntNotEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => _.BigIntValue != 2),
+				db.Types2.Where(_ => _.BigIntValue != 2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NullableBoolNegatedValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => !_.BoolValue!.Value),
+				db.Types2.Where(_ => !_.BoolValue!.Value));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NullableBoolNotEqualTrue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => (_.BoolValue ?? false) != true),
+				db.Types2.Where(_ => _.BoolValue != true));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NotContainsNullableBigInt([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)),
+				db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NotContainsNullableBigIntWithLikeSqlNulls([DataSources] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+			var bigintFilter = new long?[] {2};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue) && _.BigIntValue != null),
+				db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void NotContainsNullableBool([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var boolFilter = new bool?[] {true};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => !boolFilter.Contains(_.BoolValue)),
+				db.Types2.Where(_ => !boolFilter.Contains(_.BoolValue)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsEqualsFalseNullableBigInt([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == false),
+				db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == false));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsEqualsFalseNullableBool([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var boolFilter = new bool?[] {true};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => boolFilter.Contains(_.BoolValue) == false),
+				db.Types2.Where(_ => boolFilter.Contains(_.BoolValue) == false));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsNotEqualTrueNullableBigInt([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) != true),
+				db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) != true));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsNotEqualTrueNullableBool([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var boolFilter   = new bool? [] {true};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => boolFilter.Contains(_.BoolValue) != true),
+				db.Types2.Where(_ => boolFilter.Contains(_.BoolValue) != true));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsNullableBigInt([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue)),
+				db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsNullableBool([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var boolFilter   = new bool? [] {true};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => boolFilter.Contains(_.BoolValue)),
+				db.Types2.Where(_ => boolFilter.Contains(_.BoolValue)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsEqualsTrueNullableBigInt([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var bigintFilter = new long?[] {2};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == true),
+				db.Types2.Where(_ => bigintFilter.Contains(_.BigIntValue) == true));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/358")]
+		public void ContainsEqualsTrueNullableBool([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var boolFilter   = new bool? [] {true};
+
+			AreEqual(ClearStringValue,
+				   Types2.Where(_ => boolFilter.Contains(_.BoolValue) == true),
+				db.Types2.Where(_ => boolFilter.Contains(_.BoolValue) == true));
+		}
 	}
 }

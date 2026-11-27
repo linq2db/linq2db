@@ -113,7 +113,9 @@ namespace Tests.UserTests
 			{
 				ms.SetConverter<Gender, string>       (obj => obj.ToString() );
 				ms.SetConverter<Gender, DataParameter>(obj => new DataParameter { Value = obj.ToString(), DataType = DataType.NVarChar });
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 				ms.SetConverter<string, Gender>       (txt => (Gender)Enum.Parse(typeof(Gender), txt));
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			});
 		}
 

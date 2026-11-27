@@ -694,8 +694,8 @@ namespace Tests.xUpdate
 			record.SourceId.ShouldBe(6);
 		}
 
-		[Test]
-		public void Issue4213Test([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4213")]
+		public void MergeWithOutputIntoCte([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			db.Person.Where(x => x.FirstName == "unknown").AsCte()

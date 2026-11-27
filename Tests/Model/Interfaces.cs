@@ -2,19 +2,19 @@
 
 namespace Tests.Model
 {
-	public interface IIssue4031
+	public interface IMappedId
 	{
 		public int Id { get; set; }
 	}
 
-	public interface IIssue4031<T>
+	public interface IMappedId<T>
 	{
 		public T Id { get; set; }
 	}
 
-	// must implement IIssue4031 without specifying IIssue4031 in implementation list
+	// must implement IMappedId without specifying IMappedId in implementation list
 	[Table("Person")]
-	public class Issue4031BaseExternal
+	public class PersonBaseExternal
 	{
 		[Column("PersonID")] public int Id { get; set; }
 	}

@@ -498,8 +498,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void Issue695Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/695")]
+		public void SchemaTableWithPrimaryAndForeignKey([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataConnection(context);
 			var sp = db.DataProvider.GetSchemaProvider();
@@ -566,8 +566,8 @@ namespace Tests.DataProvider
 			public byte[]? imageDataType { get; set; }
 		}
 
-		[Test]
-		public void Issue393Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/393")]
+		public void InsertAndReadLargeImageColumn([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -584,94 +584,86 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#region issue 4581
 		[ActiveIssue(4581, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "String truncation: max=4000, len=5000",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The 5000-character value is bound as nvarchar rather than ntext - #4581's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4581")]
-		public void Issue4581Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		public void InsertLongStringIntoNTextColumn([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4581Table>();
+			using var tb = db.CreateLocalTable<NTextLongValueTable>();
 
-			db.Insert(new Issue4581Table() { Value = new string('1', 5000) });
+			db.Insert(new NTextLongValueTable() { Value = new string('1', 5000) });
 		}
 
 		[Table]
-		sealed class Issue4581Table
+		sealed class NTextLongValueTable
 		{
 			[Column(DbType = "ntext")] public string? Value { get; set; }
 		}
-		#endregion
 
-		#region 4574
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4574")]
 		[NoBaselines("Guid.New")]
-		public void Issue4574Test([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] BulkCopyType copyType)
+		public void BulkCopyGuidColumns([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] BulkCopyType copyType)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4574Table>();
+			using var tb = db.CreateLocalTable<GuidBulkCopyTable>();
 
-			var items = Enumerable.Range(1, 1000).Select(_ => new Issue4574Table() { ReserveId = Guid.NewGuid(), TableId = Guid.NewGuid() }).ToArray();
+			var items = Enumerable.Range(1, 1000).Select(_ => new GuidBulkCopyTable() { ReserveId = Guid.NewGuid(), TableId = Guid.NewGuid() }).ToArray();
 
 			tb.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, items);
 		}
 
 		[Table]
-		internal sealed class Issue4574Table
+		internal sealed class GuidBulkCopyTable
 		{
 			[Column] public Guid ReserveId { get; set; }
 			[Column] public Guid TableId { get; set; }
 		}
-		#endregion
 
-		#region 4436
 		[ActiveIssue(4436, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "The conversion is not supported.",
 			Details = "a null ntext field cannot be converted - #4436's subject. The fragment stops before the bracketed type detail the provider appends.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4436")]
-		public void Issue4436Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		public void BulkCopyNullNTextColumn([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4436Table>();
+			using var tb = db.CreateLocalTable<NullNTextBulkCopyTable>();
 
-			var items = new Issue4436Table[]
+			var items = new NullNTextBulkCopyTable[]
 			{
-				new Issue4436Table()
+				new NullNTextBulkCopyTable()
 			};
 
 			tb.BulkCopy(items);
 		}
 
 		[Table]
-		internal sealed class Issue4436Table
+		internal sealed class NullNTextBulkCopyTable
 		{
 			[Column] public string? Value1 { get; set; }
 			[Column(DataType = DataType.NText)] public string? Value2 { get; set; }
 		}
-		#endregion
 
-		#region 4438
 		[ActiveIssue(4438, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "Expression evaluation caused an overflow.",
 			Details = "BulkCopy overflows during expression evaluation - #4438's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4438")]
-		public void Issue4438Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		public void BulkCopyDecimalWithSmallPrecision([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4438Table>();
+			using var tb = db.CreateLocalTable<DecimalOverflowBulkCopyTable>();
 
-			var items = new Issue4438Table[]
+			var items = new DecimalOverflowBulkCopyTable[]
 			{
-				new Issue4438Table() { Value = 1m },
-				new Issue4438Table() { Value = 0.1m },
+				new DecimalOverflowBulkCopyTable() { Value = 1m },
+				new DecimalOverflowBulkCopyTable() { Value = 0.1m },
 			};
 
 			tb.BulkCopy(items);
 		}
 
 		[Table]
-		internal sealed class Issue4438Table
+		internal sealed class DecimalOverflowBulkCopyTable
 		{
 			[Column(Precision = 4, Scale = 2)] public decimal Value { get; set; }
 		}
-		#endregion
 	}
 }

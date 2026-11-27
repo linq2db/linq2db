@@ -136,10 +136,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
-		public void Issue4646_OptionRoundtrip([DataSources] string context)
+		public void Option_RoundtripWithDefaultMapping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue4646.TestOptionRoundtrip(db);
+			FSharp.OptionRoundtrip.TestOptionRoundtrip(db);
 		}
 
 		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
@@ -253,202 +253,202 @@ namespace Tests.Linq
 			FSharp.SelectTest.SelectLeftJoin(db);
 		}
 
-		[Test]
-		public void TestIssue2678_SelectObject([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2678")]
+		public void SelectClassWithMappedProperties([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue2678.InsertAndSelectObject(db);
+			FSharp.MappedPropertiesTest.InsertAndSelectObject(db);
 		}
 
-		[Test]
-		public void TestIssue2678_SelectRecord([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2678")]
+		public void SelectRecordWithMappedProperties([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue2678.InsertAndSelectRecord(db);
+			FSharp.MappedPropertiesTest.InsertAndSelectRecord(db);
 		}
 
-		[Test(Description = "record type support")]
-		public void Issue3357_FSharp1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3357")]
+		public void ConcatTupleProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue3357.Union1(db);
+			FSharp.ConcatTest.ConcatTupleProjection(db);
 		}
 
-		[Test(Description = "record type support")]
-		public void Issue3357_FSharp2([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3357")]
+		public void ConcatRecordProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue3357.Union2(db);
+			FSharp.ConcatTest.ConcatRecordProjection(db);
 		}
 
-		[Test(Description = "record type support")]
-		public void Issue3357_FSharp3([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3357")]
+		public void ConcatAnonymousRecordProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue3357.Union3(db);
+			FSharp.ConcatTest.ConcatAnonymousRecordProjection(db);
 		}
 
-		[Test]
-		public void Issue3699_Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3699")]
+		public void GroupJoinSelectManyOverJoinedAnonymousTypes([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.SelectTest.Issue3699Test(db);
+			FSharp.SelectTest.GroupJoinSelectManyOverJoinedAnonymousTypes(db);
 		}
 
-		[Test]
-		public void Issue3743Test1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3743")]
+		public void LeftJoinAfterJoinTupleResult([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue3743.Issue3743Test1(db, 1);
+			FSharp.JoinTest.LeftJoinAfterJoinTupleResult(db, 1);
 		}
 
-		[Test]
-		public void Issue3743Test2([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3743")]
+		public void LeftJoinAfterJoinAnonymousResult([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue3743.Issue3743Test2(db, 1);
+			FSharp.JoinTest.LeftJoinAfterJoinAnonymousResult(db, 1);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
-		public void Issue4132Test1([DataSources] string context)
+		public void InsertRecordFromSetterLambda([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue4132.Issue4132Test1(db);
+			FSharp.RecordSetterTest.InsertRecordFromSetterLambda(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
-		public void Issue4132Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void UpdateRecordCopyWithPredicate([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue4132.Issue4132Test2(db);
+			FSharp.RecordSetterTest.UpdateRecordCopyWithPredicate(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public void Issue5598_UpdateSetsOnlyChangedColumn([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void UpdateRecordCopySetsOnlyChangedColumn([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, true);
+			FSharp.UpdateTest.UpdateSetsOnlyChangedColumn(db, true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public void Issue5598_UpdateSetsOnlyChangedColumnYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		public void UpdateRecordCopySetsOnlyChangedColumnYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, false);
+			FSharp.UpdateTest.UpdateSetsOnlyChangedColumn(db, false);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public async Task UpdateRecordCopySetsOnlyChangedColumnAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
-			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, true);
+			await FSharp.UpdateTest.UpdateSetsOnlyChangedColumnAsync(db, true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsyncYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		public async Task UpdateRecordCopySetsOnlyChangedColumnAsyncYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataConnection(context);
-			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, false);
+			await FSharp.UpdateTest.UpdateSetsOnlyChangedColumnAsync(db, false);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void UpdateRecordCopySetsOnlyChangedColumnNoPredicate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, true);
+			FSharp.UpdateTest.UpdateSetsOnlyChangedColumnNoPredicate(db, true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicateYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		public void UpdateRecordCopySetsOnlyChangedColumnNoPredicateYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, false);
+			FSharp.UpdateTest.UpdateSetsOnlyChangedColumnNoPredicate(db, false);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public void Issue5598_UpdateNoOpExcludesPrimaryKey([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void UpdateNoOpRecordCopyExcludesPrimaryKey([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, true);
+			FSharp.UpdateTest.UpdateNoOpExcludesPrimaryKey(db, true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
-		public void Issue5598_UpdateNoOpExcludesPrimaryKeyYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		public void UpdateNoOpRecordCopyExcludesPrimaryKeyYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
+			FSharp.UpdateTest.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
 		[Test]
 		public void UpdateWithStaticLet([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateWithStaticLet(db, true);
+			FSharp.UpdateTest.UpdateWithStaticLet(db, true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test1([DataSources] string context)
+		public void SelectManyWhereDefaultIfEmptyLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test1(db);
+			FSharp.LeftJoinTests.SelectManyWhereDefaultIfEmptyLeftJoin(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test2([DataSources] string context)
+		public void LeftOuterJoinIntoGroup([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test2(db);
+			FSharp.LeftJoinTests.LeftOuterJoinIntoGroup(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test3([DataSources] string context)
+		public void LeftOuterJoinIntoGroupFlattened([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test3(db);
+			FSharp.LeftJoinTests.LeftOuterJoinIntoGroupFlattened(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test4([DataSources] string context)
+		public void ChainedGroupJoinDeliveryThenReceipt([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test4(db);
+			FSharp.LeftJoinTests.ChainedGroupJoinDeliveryThenReceipt(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test5([DataSources] string context)
+		public void ChainedGroupJoinReceiptThenDelivery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test5(db);
+			FSharp.LeftJoinTests.ChainedGroupJoinReceiptThenDelivery(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test6([DataSources] string context)
+		public void LeftJoinExtensionThenGroupJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test6(db);
+			FSharp.LeftJoinTests.LeftJoinExtensionThenGroupJoin(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test7([DataSources] string context)
+		public void ChainedLeftJoinExtensions([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test7(db);
+			FSharp.LeftJoinTests.ChainedLeftJoinExtensions(db);
 		}
 
 		// YDB rejects the constant carried into the join ON clause ("each equality predicate argument must depend on exactly one JOIN input").
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test8([DataSources] string context)
+		public void JoinPredicateCapturesInterfaceTypedLocal([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test8(db);
+			FSharp.LeftJoinTests.JoinPredicateCapturesInterfaceTypedLocal(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test9([DataSources] string context)
+		public void JoinPredicateOverNullableProjectedRangeVariable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test9(db);
+			FSharp.LeftJoinTests.JoinPredicateOverNullableProjectedRangeVariable(db);
 		}
 
 		// The nullable-string join key makes linq2db emit the null-aware equality
@@ -457,17 +457,17 @@ namespace Tests.Linq
 		// the predicate references both join inputs, so it has to stay in ON.
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test10([DataSources] string context)
+		public void JoinPredicateOverStringProjectedRangeVariable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test10(db);
+			FSharp.LeftJoinTests.JoinPredicateOverStringProjectedRangeVariable(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test11([DataSources] string context)
+		public void ThreeChainedGroupJoinsKeepUnmatchedRows([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue1813Test11(db);
+			FSharp.LeftJoinTests.ThreeChainedGroupJoinsKeepUnmatchedRows(db);
 		}
 
 		// Declared on the expected row set: NUnit renders this assertion's own text as an empty "Assert.That(, )",
@@ -475,39 +475,39 @@ namespace Tests.Linq
 		[ActiveIssue(5794, ErrorMessage = "Expected: \"1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3\"",
 			Details = "the trailing join after chained groupJoins silently drops the unmatched rows, leaving two of the four.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5794")]
-		public void Issue5794Test([DataSources] string context)
+		public void ChainedGroupJoinsFollowedByInnerJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue5794Test(db);
+			FSharp.LeftJoinTests.ChainedGroupJoinsFollowedByInnerJoin(db);
 		}
 
 		[ActiveIssue(5790, ErrorTypeName = "LinqToDB.FSharp.FlattenInvariantException", ErrorMessage = "F# chained group join could not be flattened",
 			Details = "the chained groupJoin's correlated inner sequence defeats the flattener - #5790's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5790")]
-		public void Issue5790Test([DataSources] string context)
+		public void ChainedGroupJoinWithCorrelatedInnerSequence([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue5790Test(db);
+			FSharp.LeftJoinTests.ChainedGroupJoinWithCorrelatedInnerSequence(db);
 		}
 
 		// The refusal is a client-side translation decision, so one provider covers it.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5790")]
-		public void Issue5790RefusalTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ChainedGroupJoinWithCorrelatedInnerSequenceIsRefused([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			FSharp.Issue1813.Issue5790RefusalTest(db);
+			FSharp.LeftJoinTests.ChainedGroupJoinWithCorrelatedInnerSequenceIsRefused(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
 		public void ExpressionFunctionInCteTranslationTest1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			FSharp.Issue5428.TestSimple(GetConnectionString(context));
+			FSharp.ExpressionFunctionInCteTest.TestSimple(GetConnectionString(context));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
 		public void ExpressionFunctionInCteTranslationTest2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			FSharp.Issue5428.TestWindow(GetConnectionString(context));
+			FSharp.ExpressionFunctionInCteTest.TestWindow(GetConnectionString(context));
 		}
 
 		[Test(Description = "F# option member access over a parameter (not a column) is refused rather than translated against the parameter's own nullness")]

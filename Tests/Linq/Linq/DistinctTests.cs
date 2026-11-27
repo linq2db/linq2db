@@ -878,7 +878,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
-		public void Test2943Test1([DataSources] string context)
+		public void DistinctAfterOrderByThenByProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t = db.CreateLocalTable(DistinctOrderByTable.Data);
@@ -897,7 +897,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
-		public void Test2943Test2([DataSources] string context)
+		public void DistinctAfterOrderByProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t = db.CreateLocalTable(DistinctOrderByTable.Data);
@@ -991,6 +991,30 @@ namespace Tests.Linq
 			using var t3 = db.CreateLocalTable(Level3AllNull.Data);
 
 			t1.Select(c => c.Lvl2.Lvl3AllNull).Where(p => p.Id == 21).Distinct().Select(p => p.Value).Single();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/424")]
+		public void DistinctOrderByTakeOne([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/424")]
+		public void DistinctOrderBySkipOneTakeOne([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/424")]
+		public void DistinctOrderByDescendingSkipOneTakeOne([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1));
 		}
 	}
 }

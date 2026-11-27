@@ -751,12 +751,11 @@ namespace Tests.Linq
 		// Stores values in cents
 		sealed class CentsConverter() : ValueConverter<int, int>(net => 100 * net, sql => sql / 100, false);
 
-		#region Issue 3631
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
-		public void Issue3631Test1([DataSources] string context)
+		public void RowInConstantRows([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3631Table.Data);
+			using var tb = db.CreateLocalTable(CountryStateTable.Data);
 
 			var result = tb
 					.Where(x => Row(x.Country, x.State).In(Row("US", "CA"), Row("US", "NY")))
@@ -792,10 +791,10 @@ namespace Tests.Linq
 			ErrorMessage = "Cannot convert value 'LinqToDB.Sql+SqlRow", SkipForNonLinqService = true,
 			Details = "no-declaration: over a remote context the SqlRow value does not round-trip, so every provider that gets past linq2db's own refusal fails here instead of in its own driver.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
-		public void Issue3631Test2([DataSources] string context)
+		public void RowInMaterializedRowList([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3631Table.Data);
+			using var tb = db.CreateLocalTable(CountryStateTable.Data);
 
 			var items = new List<(string Country, string State)>();
 			items.Add(("US", "CA"));
@@ -808,10 +807,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
-		public void Issue3631Test3([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, TestProvName.AllSybase, ProviderName.SqlCe)] string context)
+		public void RowInInlineProjectionOfLocalCollection([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3631Table.Data);
+			using var tb = db.CreateLocalTable(CountryStateTable.Data);
 
 			var items = new List<(string Country, string State)>();
 			items.Add(("US", "CA"));
@@ -824,10 +823,10 @@ namespace Tests.Linq
 
 		// missing API
 		//[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
-		//public void Issue3631Test4([DataSources] string context)
+		//public void RowInLocalCollection([DataSources] string context)
 		//{
 		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(Issue3631Table.Data);
+		//	using var tb = db.CreateLocalTable(CountryStateTable.Data);
 
 		//	var items = new List<(string Country, string State)>();
 		//	items.Add(("US", "CA"));
@@ -839,25 +838,24 @@ namespace Tests.Linq
 		//}
 
 		[Table]
-		sealed class Issue3631Table
+		sealed class CountryStateTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column(Length = 2), NotNull] public string Country { get; set; } = null!;
 			[Column(Length = 2), NotNull] public string State { get; set; } = null!;
 
-			public static readonly Issue3631Table[] Data = new[]
+			public static readonly CountryStateTable[] Data = new[]
 			{
-				new Issue3631Table() { Id = 1, Country = "US", State = "AL" },
-				new Issue3631Table() { Id = 2, Country = "US", State = "AZ" },
-				new Issue3631Table() { Id = 3, Country = "US", State = "CA" },
-				new Issue3631Table() { Id = 4, Country = "US", State = "FL" },
-				new Issue3631Table() { Id = 5, Country = "US", State = "IN" },
-				new Issue3631Table() { Id = 6, Country = "US", State = "OH" },
-				new Issue3631Table() { Id = 7, Country = "US", State = "NY" },
-				new Issue3631Table() { Id = 8, Country = "CA", State = "AB" },
-				new Issue3631Table() { Id = 9, Country = "CA", State = "ON" },
+				new CountryStateTable() { Id = 1, Country = "US", State = "AL" },
+				new CountryStateTable() { Id = 2, Country = "US", State = "AZ" },
+				new CountryStateTable() { Id = 3, Country = "US", State = "CA" },
+				new CountryStateTable() { Id = 4, Country = "US", State = "FL" },
+				new CountryStateTable() { Id = 5, Country = "US", State = "IN" },
+				new CountryStateTable() { Id = 6, Country = "US", State = "OH" },
+				new CountryStateTable() { Id = 7, Country = "US", State = "NY" },
+				new CountryStateTable() { Id = 8, Country = "CA", State = "AB" },
+				new CountryStateTable() { Id = 9, Country = "CA", State = "ON" },
 			};
 		}
-		#endregion
 	}
 }

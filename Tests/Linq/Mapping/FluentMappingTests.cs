@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
@@ -566,8 +567,8 @@ namespace Tests.Mapping
 			public string? SomeOtherField;
 		}
 
-		[Test]
-		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/291")]
+		public void NotColumnInheritedWithTwoInheritanceMappings([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, new MappingSchema());
 			new FluentMappingBuilder(db.MappingSchema)
@@ -609,8 +610,8 @@ namespace Tests.Mapping
 			}
 		}
 
-		[Test]
-		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/291")]
+		public void NotColumnInheritedWithDefaultInheritanceMapping([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, new MappingSchema());
 			new FluentMappingBuilder(db.MappingSchema)
@@ -804,18 +805,18 @@ namespace Tests.Mapping
 		[ActiveIssue(3119, ErrorMessage = "Assert.That(attrs, Has.Length.EqualTo(1))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Two HasAttribute calls on one property are expected to merge into a single ColumnAttribute; three are returned instead.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3119")]
-		public void Issue3119Test()
+		public void MergeColumnAttributesOnSameProperty()
 		{
 			var mb = new FluentMappingBuilder();
 
-			mb.Entity<Issue3119Entity>()
+			mb.Entity<MergedAttrEntity>()
 				.Property(u => u.UserId)
 				.HasAttribute(new ColumnAttribute() { IsIdentity = true })
 				.HasAttribute(new ColumnAttribute() { IsPrimaryKey = true });
 
 			mb.Build();
 
-			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
+			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(MergedAttrEntity), typeof(MergedAttrEntity).GetProperty("UserId")!);
 
 			Assert.That(attrs, Has.Length.EqualTo(1));
 			using (Assert.EnterMultipleScope())
@@ -825,7 +826,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		sealed class Issue3119Entity
+		sealed class MergedAttrEntity
 		{
 			public int UserId { get; set; }
 		}
@@ -833,20 +834,20 @@ namespace Tests.Mapping
 		[ActiveIssue(3136, ErrorMessage = "Assert.That(attrs, Has.Length.EqualTo(2))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The configuration-scoped Entity overload is expected to add a second ColumnAttribute; only one is returned.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3136")]
-		public void Issue3136Test()
+		public void ConfigurationScopedEntityAddsColumnAttribute()
 		{
 			const string configuration = "MyConfiguration";
 			var mb = new FluentMappingBuilder();
 
 			mb
-				.Entity<Issue3119Entity>()
+				.Entity<MergedAttrEntity>()
 				.Property(u => u.UserId)
-				.Entity<Issue3119Entity>(configuration)
+				.Entity<MergedAttrEntity>(configuration)
 				.HasAttribute(new ColumnAttribute() { IsIdentity = true });
 
 			mb.Build();
 
-			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
+			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(MergedAttrEntity), typeof(MergedAttrEntity).GetProperty("UserId")!);
 
 			Assert.That(attrs, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
@@ -855,6 +856,211 @@ namespace Tests.Mapping
 				Assert.That(attrs[0].Configuration, Is.Null);
 				Assert.That(attrs[1].IsIdentity, Is.True);
 				Assert.That(attrs[1].Configuration, Is.EqualTo(configuration));
+			}
+		}
+
+		class FluentTableBase
+		{
+			public int Id { get; set; }
+		}
+
+		sealed class FluentTableDerived : FluentTableBase
+		{
+			public string? StringValue { get; set; }
+		}
+
+		[Table(nameof(AttributeTableBase), IsColumnAttributeRequired = false)]
+		class AttributeTableBase
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+		}
+
+		sealed class AttributeTableDerived : AttributeTableBase
+		{
+			public string? StringValue { get; set; }
+		}
+
+		MappingSchema CreateBaseTableNameMappingSchema()
+		{
+			var ms            = new MappingSchema();
+			var tableName     = nameof(AttributeTableBase);
+			var fluentBuilder = new FluentMappingBuilder(ms);
+
+			fluentBuilder.Entity<FluentTableBase>()
+				.HasTableName(tableName)
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey()
+				.Build();
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1128")]
+		public void TableNameInheritedByDerivedEntity()
+		{
+			var ms = CreateBaseTableNameMappingSchema();
+
+			var ed1 = ms.GetEntityDescriptor(typeof(FluentTableBase));
+			var ed2 = ms.GetEntityDescriptor(typeof(FluentTableDerived));
+			var ed3 = ms.GetEntityDescriptor(typeof(AttributeTableBase));
+			var ed4 = ms.GetEntityDescriptor(typeof(AttributeTableBase));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(ed2.TableName, Is.EqualTo(ed1.TableName));
+				Assert.That(ed4.TableName, Is.EqualTo(ed3.TableName));
+			}
+
+			Assert.That(ed4.TableName, Is.EqualTo(ed1.TableName));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1128")]
+		public void InsertDerivedThroughFluentBase([DataSources] string context)
+		{
+			var ms = CreateBaseTableNameMappingSchema();
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<FluentTableBase>())
+			{
+				var res = db.Insert<FluentTableBase>(new FluentTableDerived { Id = 1 });
+				if (context.SupportsRowcount())
+					Assert.That(res, Is.EqualTo(1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1128")]
+		public void InsertDerivedThroughAttributeBase([DataSources] string context)
+		{
+			var ms = CreateBaseTableNameMappingSchema();
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<AttributeTableBase>())
+			{
+				var res = db.Insert<AttributeTableBase>(new AttributeTableDerived { Id = 1 });
+				if (context.SupportsRowcount())
+					Assert.That(res, Is.EqualTo(1));
+			}
+		}
+
+		public class FluentIdentityClient
+		{
+			public int Id { get; set; }
+
+			public bool Has { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1438")]
+		public void InsertWithInt32IdentityForFluentMappedIdentity([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<FluentIdentityClient>()
+					.HasTableName("FluentIdentityClient")
+					.Property(x => x.Id)
+						.IsPrimaryKey()
+						.IsIdentity()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<FluentIdentityClient>();
+			var id = db.InsertWithInt32Identity(new FluentIdentityClient()
+			{
+				Has = true
+			});
+
+			var record = tbl.Where(_ => _.Id == id).Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.Id, Is.EqualTo(id));
+				Assert.That(record.Has, Is.True);
+			}
+		}
+
+		sealed class DescriptorStabilityRecord
+		{
+			public int Id { get; set; }
+		}
+
+		MappingSchema CreateDescriptorStabilityMapping()
+		{
+			var ms            = new MappingSchema();
+			var tableName     = nameof(DescriptorStabilityRecord);
+			var fluentBuilder = new FluentMappingBuilder(ms);
+
+			fluentBuilder.Entity<DescriptorStabilityRecord>()
+				.HasTableName(tableName)
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey()
+				.Build();
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1585")]
+		public void EntityDescriptorEqualAcrossContexts([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = CreateDescriptorStabilityMapping();
+
+			EntityDescriptor ed1;
+			EntityDescriptor ed2;
+
+			using (var db = GetDataContext(context, ms))
+			{
+				try
+				{
+					db.DropTable<DescriptorStabilityRecord>(tableOptions: TableOptions.DropIfExists);
+				}
+				catch
+				{ }
+
+				db.CreateTable<DescriptorStabilityRecord>();
+				var data = db.GetTable<DescriptorStabilityRecord>();
+				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(DescriptorStabilityRecord));
+			}
+
+			using (var db = GetDataContext(context, ms))
+			{
+				var data = db.GetTable<DescriptorStabilityRecord>();
+				ed2 = db.MappingSchema.GetEntityDescriptor(typeof(DescriptorStabilityRecord));
+			}
+
+			Assert.That(ed2, Is.EqualTo(ed1));
+		}
+
+		public class ChainedSchemaFirstEntity
+		{
+			public int Id { get; set; }
+		}
+
+		public class ChainedSchemaSecondEntity
+		{
+			public int Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3251")]
+		public void ChainedMappingSchemaKeepsFluentTableNames([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			var ms = new MappingSchema();
+			var mb = new FluentMappingBuilder(ms);
+			mb.Entity<ChainedSchemaFirstEntity>().HasTableName("Class1Table").Build();
+
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(ProviderName.SQLiteMS, ms)))
+			{
+				using var u = db.CreateLocalTable<ChainedSchemaFirstEntity>();
+				var l = db.GetTable<ChainedSchemaFirstEntity>().ToList();
+			}
+
+			var newMs = new MappingSchema(ms);
+			var mb2 = new FluentMappingBuilder(newMs);
+			mb2.Entity<ChainedSchemaSecondEntity>().HasTableName("Class2Table").Build();
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(ProviderName.SQLiteMS, newMs)))
+			{
+				var ed1 = newMs.GetEntityDescriptor(typeof(ChainedSchemaSecondEntity));
+				var ed2 = db.MappingSchema.GetEntityDescriptor(typeof(ChainedSchemaSecondEntity));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(ed1.TableName, Is.EqualTo("Class2Table"));
+					Assert.That(ed2.TableName, Is.EqualTo("Class2Table"));
+				}
 			}
 		}
 	}

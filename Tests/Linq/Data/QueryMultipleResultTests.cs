@@ -323,7 +323,6 @@ namespace Tests.Data
 			}
 		}
 
-		#region Issue 4728
 		class ToDeleteId
 		{
 			public int CaseLogId { get; set; }
@@ -352,7 +351,7 @@ namespace Tests.Data
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4728")]
-		public async Task Issue4728Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task QueryMultipleAsyncOverEmptyResultSets([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -361,6 +360,5 @@ select 1, 1 from INFORMATION_SCHEMA.TABLES where 1 = 0;
 select 1, 1, 1 from INFORMATION_SCHEMA.TABLES where 1 = 0;
 select 1, 1 from INFORMATION_SCHEMA.TABLES where 1 = 0;");
 		}
-		#endregion
 	}
 }

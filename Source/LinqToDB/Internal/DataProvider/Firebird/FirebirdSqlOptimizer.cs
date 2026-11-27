@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	// TODO: implement recursive CTE outer joins optimization for firebird to generate "T1, T2 WHERE condition" to workaround this limitation:
 	// A recursive reference cannot participate in an outer join.
 	// (https://www.firebirdsql.org/refdocs/langrefupd21-select.html#langrefupd21-select-cte-recursive)
-	// e.g. see Issue3360_TypeByOtherQuery_AllProviders test: if it generate CROSS JOIN - query will fail
+	// e.g. see CteTests.RecursiveCteLiteralTypedByAnchorColumnAllProviders test: if it generate CROSS JOIN - query will fail
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
 		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			// When CAST is needed:
 			// - in select column expression at any position (except nested subquery): select, subquery, merge source
 			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
-			// - in binary expression (Issue4963 test)
+			// - in binary expression (ParameterTests.UpdateByteColumnWithNegativeVariableOffset test)
 			//
 			// Most sad part of it is that if you look at firebird repository, you will notice
 			// that they waste a lot of their (and their users') time to introduce more and more

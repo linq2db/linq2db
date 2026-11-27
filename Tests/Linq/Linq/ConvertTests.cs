@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1958,37 +1960,35 @@ namespace Tests.Linq
 			sqlConverted.ShouldBeEquivalentTo(noSqlConverted);
 		}
 
-		#region Issue #4043
-
-		[Table("Issue4043")]
-		class Issue4043TableRaw
+		[Table("ValueObjectJsonConversion")]
+		class ValueObjectRawTable
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
 
-			public static readonly Issue4043TableRaw[] Data = new[]
+			public static readonly ValueObjectRawTable[] Data = new[]
 			{
-				new Issue4043TableRaw() { Id = 1, Value = /*lang=json,strict*/ "{\"Field1\": 1, \"Field2\": -1 }" }
+				new ValueObjectRawTable() { Id = 1, Value = /*lang=json,strict*/ "{\"Field1\": 1, \"Field2\": -1 }" }
 			};
 		}
 
-		[Table("Issue4043")]
-		class Issue4043Table
+		[Table("ValueObjectJsonConversion")]
+		class ValueObjectTable
 		{
 			[Column] public int          Id    { get; set; }
 			[Column] public ValueObject? Value { get; set; }
 		}
 
-		[Table("Issue4043")]
-		class Issue4043ScalarTable
+		[Table("ValueObjectJsonConversion")]
+		class ValueObjectScalarTable
 		{
 			[Column] public ValueObject? Value { get; set; }
 		}
 
-		[Table("Issue4043")]
-		class Issue4043TableWithCtor
+		[Table("ValueObjectJsonConversion")]
+		class ValueObjectTableWithCtor
 		{
-			public Issue4043TableWithCtor(int Id, ValueObject? Value)
+			public ValueObjectTableWithCtor(int Id, ValueObject? Value)
 			{
 				this.Id    = Id;
 				this.Value = Value;
@@ -1998,10 +1998,10 @@ namespace Tests.Linq
 			[Column] public ValueObject? Value { get; set; }
 		}
 
-		[Table("Issue4043")]
-		class Issue4043ScalarTableWithCtor
+		[Table("ValueObjectJsonConversion")]
+		class ValueObjectScalarTableWithCtor
 		{
-			public Issue4043ScalarTableWithCtor(ValueObject? Value)
+			public ValueObjectScalarTableWithCtor(ValueObject? Value)
 			{
 				this.Value = Value;
 			}
@@ -2022,9 +2022,9 @@ namespace Tests.Linq
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
+			var result = db.Execute<ValueObjectTable>("select Id, Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			using (Assert.EnterMultipleScope())
@@ -2043,9 +2043,9 @@ namespace Tests.Linq
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
+			var result = db.Execute<ValueObjectTableWithCtor>("select Id, Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			using (Assert.EnterMultipleScope())
@@ -2064,9 +2064,9 @@ namespace Tests.Linq
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043ScalarTable>("select Value from Issue4043");
+			var result = db.Execute<ValueObjectScalarTable>("select Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
@@ -2084,9 +2084,9 @@ namespace Tests.Linq
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043ScalarTableWithCtor>("select Value from Issue4043");
+			var result = db.Execute<ValueObjectScalarTableWithCtor>("select Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
@@ -2105,9 +2105,9 @@ namespace Tests.Linq
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<ValueObject>("select Value from Issue4043");
+			var result = db.Execute<ValueObject>("select Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			using (Assert.EnterMultipleScope())
@@ -2122,15 +2122,15 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
-				.Entity<Issue4043Table>()
+				.Entity<ValueObjectTable>()
 				.Property(e => e.Value)
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
+			var result = db.Execute<ValueObjectTable>("select Id, Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			using (Assert.EnterMultipleScope())
@@ -2147,15 +2147,15 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
-				.Entity<Issue4043TableWithCtor>()
+				.Entity<ValueObjectTableWithCtor>()
 				.Property(e => e.Value)
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
+			var result = db.Execute<ValueObjectTableWithCtor>("select Id, Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			using (Assert.EnterMultipleScope())
@@ -2172,15 +2172,15 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
-				.Entity<Issue4043ScalarTable>()
+				.Entity<ValueObjectScalarTable>()
 				.Property(e => e.Value)
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043ScalarTable>("select Value from Issue4043");
+			var result = db.Execute<ValueObjectScalarTable>("select Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
@@ -2196,15 +2196,15 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
-				.Entity<Issue4043ScalarTableWithCtor>()
+				.Entity<ValueObjectScalarTableWithCtor>()
 				.Property(e => e.Value)
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
 			using var db = GetDataContext(context, ms);
-			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+			using var _  = db.CreateLocalTable(ValueObjectRawTable.Data);
 
-			var result = db.Execute<Issue4043ScalarTableWithCtor>("select Value from Issue4043");
+			var result = db.Execute<ValueObjectScalarTableWithCtor>("select Value from ValueObjectJsonConversion");
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
@@ -2214,13 +2214,12 @@ namespace Tests.Linq
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
 			}
 		}
-		#endregion
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5390")]
 		public void TestDateDontUseTypeFacets([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5390Table>();
+			using var tb = db.CreateLocalTable<DateTimePrecisionTable>();
 
 			var query = tb.GroupBy(o => new { o.CreatedOnUtc.Date })
 				.Select(g => new
@@ -2232,7 +2231,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		public class Issue5390Table
+		public class DateTimePrecisionTable
 		{
 			[Column(Precision = 6), PrimaryKey]
 			public DateTime CreatedOnUtc { get; set; }
@@ -2270,6 +2269,269 @@ namespace Tests.Linq
 
 			t.Count(r => Convert.ToDecimal(r.Value) > 0.005m).ShouldBe(1);
 			t.Count(r => Convert.ToDecimal(r.Value) < 0.005m).ShouldBe(1);
+		}
+
+		[Table(Name = "TypeConvertTable")]
+		public class TypeConvertTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(Length = 50), NotNull]
+			public string Name   { get; set; } = null!;
+
+			[Column(DataType = DataType.Char)]
+			public bool BoolValue { get; set; }
+
+			[Column(DataType = DataType.VarChar, Length = 50)]
+			public Guid? GuidValue { get; set; }
+
+			public override string ToString()
+			{
+				return string.Format("{0} {1} {2}", Name, BoolValue, GuidValue);
+			}
+
+			public override bool Equals(object? obj)
+			{
+				if (obj is not TypeConvertTable e)
+					return false;
+
+				return
+					Name      == e.Name &&
+					BoolValue == e.BoolValue &&
+					GuidValue == e.GuidValue;
+			}
+
+			public override int GetHashCode()
+			{
+				return 0;
+			}
+
+		}
+
+		[Table(Name = "TypeConvertTable")]
+		public class TypeConvertTableRaw
+		{
+			[Column(Length = 50), NotNull]
+			public string Name   { get; set; } = null!;
+
+			[Column(DataType = DataType.Char), NotNull]
+			public char BoolValue { get; set; }
+
+			[Column(DataType = DataType.VarChar, Length = 50), Nullable]
+			public string? GuidValue { get; set; }
+
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/192")]
+		public void ConvertExpressionsForBoolCharAndGuidVarChar([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<bool,   DataParameter>(_ => DataParameter.Char(null, _ ? 'Y' : 'N'));
+			ms.SetConvertExpression<char,   bool>(_ => _ == 'Y');
+			if (context.IsAnyOf(TestProvName.AllClickHouse))
+				ms.SetConvertExpression<string, bool>(_ => _.Trim('\0') == "Y");
+			else
+				ms.SetConvertExpression<string, bool>(_ => _.Trim() == "Y");
+
+			ms.SetConvertExpression<Guid?,  DataParameter>(_ => DataParameter.VarChar(null, _.ToString()));
+			ms.SetConvertExpression<string, Guid?>(_ => Guid.Parse(_));
+
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<TypeConvertTable>();
+				var notVerified = new TypeConvertTable
+				{
+					Id        = 1,
+					Name      = "NotVerified",
+					BoolValue = false,
+					GuidValue = TestData.Guid1
+				};
+
+				var verified = new TypeConvertTable
+				{
+					Id        = 2,
+					Name      = "Verified",
+					BoolValue = true,
+					GuidValue = TestData.Guid2
+				};
+
+				db.Insert(notVerified, tbl.TableName);
+			db.Insert(verified, tbl.TableName);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'N'), Is.EqualTo(1));
+					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'Y'), Is.EqualTo(1));
+					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.GuidValue == verified.GuidValue.ToString()), Is.EqualTo(1));
+
+					Assert.That(tbl.First(_ => _.BoolValue == false), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue == true), Is.EqualTo(verified));
+
+					Assert.That(tbl.First(_ => _.BoolValue != true), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue != false), Is.EqualTo(verified));
+
+					Assert.That(tbl.First(_ => !_.BoolValue), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue), Is.EqualTo(verified));
+
+					Assert.That(tbl.First(_ => _.BoolValue.Equals(false)), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue.Equals(true)), Is.EqualTo(verified));
+
+					Assert.That(tbl.First(_ => !_.BoolValue.Equals(true)), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => !_.BoolValue.Equals(false)), Is.EqualTo(verified));
+
+					Assert.That(tbl.First(_ => _.GuidValue == notVerified.GuidValue), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.GuidValue == verified.GuidValue), Is.EqualTo(verified));
+				}
+			}
+
+		[Table(Name = "Employees")]
+		public class EmployeeWithList : Northwind.EntityBase<int>
+		{
+			[PrimaryKey, Identity] public int EmployeeID;
+			[Column, NotNull] public string LastName = null!;
+			[Column, NotNull] public string FirstName = null!;
+			[Column] public string? Title;
+			[Column] public string? TitleOfCourtesy;
+			[Column] public DateTime? BirthDate;
+			[Column] public DateTime? HireDate;
+			[Column] public string? Address;
+			[Column] public string? City;
+			[Column] public string? Region;
+			[Column] public string? PostalCode;
+			[Column] public string? Country;
+			[Column] public string? HomePhone;
+			[Column] public List<string>? Extension;
+			[Column] public Binary? Photo;
+			[Column] public string? Notes;
+			[Column] public int? ReportsTo;
+			[Column] public string? PhotoPath;
+
+			[Association(ThisKey = "EmployeeID", OtherKey = "ReportsTo")]  public List<Northwind.Employee>          Employees           = null!;
+			[Association(ThisKey = "EmployeeID", OtherKey = "EmployeeID")] public List<Northwind.EmployeeTerritory> EmployeeTerritories = null!;
+			[Association(ThisKey = "EmployeeID", OtherKey = "EmployeeID")] public List<Northwind.Order>             Orders              = null!;
+			[Association(ThisKey = "ReportsTo", OtherKey = "EmployeeID")]  public Northwind.Employee                ReportsToEmployee   = null!;
+
+			public Northwind.Employee? Employee2 { get; set; }
+			public Northwind.Order? Order { get; set; }
+			public Northwind.EmployeeTerritory? EmployeeTerritory { get; set; }
+
+			protected override int Key
+			{
+				get { return EmployeeID; }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/531")]
+		public void ListPropertyConvertedToDelimitedString([NorthwindDataContext] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<List<string>?, string?>((obj) =>
+			{
+				if (obj == null)
+					return null;
+				return string.Join(";", obj);
+			});
+			ms.SetConverter<List<string>, DataParameter>((obj) =>
+			{
+				if (obj == null)
+					return new DataParameter();
+				return new DataParameter { Value = string.Join(";", obj) };
+			});
+			ms.SetConverter<string?, List<string>?>((txt) =>
+			{
+				if (string.IsNullOrEmpty(txt))
+					return null;
+				return txt!.Split(';').ToList();
+			});
+
+			var names = new List<string>() { "Nancy", "Andrew" };
+
+			var ext = new List<string>() { "5467" };
+
+			using var db = new NorthwindDB(context);
+			db.AddMappingSchema(ms);
+			var jj = from e in db.GetTable<EmployeeWithList>()
+					 where e.Extension == ext
+					 select e;
+
+			var res1 = jj.ToList();
+
+			var zz =
+					from e in db.Employee
+					where names.Contains(e.FirstName)
+					select e;
+
+			var res2 = zz.ToList();
+
+			Assert.That(res2, Has.Count.EqualTo(2));
+		}
+
+		public class WrappedString
+		{
+			public string Value = null!;
+		}
+
+		[Table(Name = "Person")]
+		public class ConvertedStringPerson
+		{
+			[SequenceName(ProviderName.Firebird, "PersonID")]
+			[Column("PersonID", Configuration = ProviderName.ClickHouse)]
+			[Column("PersonID", IsIdentity = true)]
+			[PrimaryKey]
+			public int      ID         { get; set; }
+
+			[Column]public Gender    Gender     { get; set; }
+			[Column]public WrappedString  FirstName  { get; set; } = null!;
+			[Column]public WrappedString  MiddleName { get; set; } = null!;
+			[Column]public WrappedString? LastName   { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/533")]
+		public void CustomConverterWithDataParameterOnInsert([DataSources] string context)
+		{
+			ResetPersonIdentity(context);
+
+			var ms = new MappingSchema();
+			ms.SetConverter<WrappedString, string?>((obj) =>
+			{
+				if (obj == null) return null;
+				                 return obj.Value;
+			});
+			ms.SetConverter<WrappedString, DataParameter>((obj) =>
+			{
+				if (obj == null) return new DataParameter {                    DataType = DataType.NVarChar };
+				                 return new DataParameter { Value = obj.Value, DataType = DataType.NVarChar };
+			});
+			ms.SetConverter<string, WrappedString?>((txt) =>
+			{
+				if (string.IsNullOrEmpty(txt)) return null;
+				                               return new WrappedString { Value = txt };
+			});
+
+			using (var db = GetDataContext(context, ms))
+			using (new RestoreBaseTables(db))
+			{
+				var obj = new ConvertedStringPerson
+				{
+					FirstName = new WrappedString { Value = "FirstName533" },
+					LastName  = new WrappedString { Value = "LastName533" },
+				};
+
+				int id;
+				if (context.IsAnyOf(TestProvName.AllClickHouse))
+				{
+					obj.ID = id = 100;
+					db.Insert(obj);
+				}
+				else
+					id = db.InsertWithInt32Identity(obj);
+
+				var obj2 = db.GetTable<ConvertedStringPerson>().First(_ => _.ID == id);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(obj2.MiddleName, Is.Null);
+					Assert.That(obj2.FirstName.Value, Is.EqualTo(obj.FirstName.Value));
+				}
+			}
 		}
 	}
 }

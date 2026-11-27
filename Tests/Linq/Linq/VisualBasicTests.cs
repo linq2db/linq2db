@@ -102,44 +102,44 @@ namespace Tests.Linq
 				vbResults);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/649")]
 		// PostgreSQL 9.4+ (make_timestamp)
-		public void Issue649Test1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByAnonymousKeyWithGroupMax([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<VBTests.Activity649>())
-			using (db.CreateLocalTable<VBTests.Person649>())
+			using (db.CreateLocalTable<VBTests.GroupByActivity>())
+			using (db.CreateLocalTable<VBTests.GroupByActivityPerson>())
 			{
-				var result = VBTests.Issue649Test1(db);
+				var result = VBTests.GroupByAnonymousKeyWithGroupMax(db);
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/649")]
 		// PostgreSQL 9.4+ (make_timestamp)
-		public void Issue649Test2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByAnonymousKeyWithIntoMax([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<VBTests.Activity649>())
-			using (db.CreateLocalTable<VBTests.Person649>())
+			using (db.CreateLocalTable<VBTests.GroupByActivity>())
+			using (db.CreateLocalTable<VBTests.GroupByActivityPerson>())
 			{
-				var result = VBTests.Issue649Test2(db);
+				var result = VBTests.GroupByAnonymousKeyWithIntoMax(db);
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/649")]
 		// PostgreSQL 9.4+ (make_timestamp)
-		public void Issue649Test3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByAnonymousKeyMethodSyntax([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<VBTests.Activity649>())
-			using (db.CreateLocalTable<VBTests.Person649>())
+			using (db.CreateLocalTable<VBTests.GroupByActivity>())
+			using (db.CreateLocalTable<VBTests.GroupByActivityPerson>())
 			{
-				var result = VBTests.Issue649Test3(db);
+				var result = VBTests.GroupByAnonymousKeyMethodSyntax(db);
 			}
 		}
 
-		[Test]
-		public void Issue649Test4([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/649")]
+		public void GroupByAnonymousKeyInlineParameters([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = true;
@@ -161,15 +161,11 @@ namespace Tests.Linq
 			_ = q1.ToArray();
 		}
 
-		#region issue 2746
-
-		[Test]
-		public void Issue2746([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2746")]
+		public void StringToNullableIntCoercion([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			VBTests.Issue2746Test(db, "1");
+			VBTests.StringToNullableIntCoercion(db, "1");
 		}
-		#endregion
-
 	}
 }

@@ -38,8 +38,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			};
 		}
 
-		[Test]
-		public void Issue73Test([EFDataSources] string provider)
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/73")]
+		public void SelfReferencedParentNameProjectionMatchesEf([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -53,8 +53,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			AreEqual(efItems, linq2dbItems);
 		}
 
-		[Test]
-		public void Issue117Test([EFDataSources] string provider)
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/117")]
+		public void OptionalNavigationIncludeUsesNoInnerJoin([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -74,8 +74,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(db.LastQuery, Does.Not.Contain("INNER"));
 		}
 
-		[Test]
-		public void Issue321Test([EFDataSources] string provider)
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/321")]
+		public void AsSqlServerThenToLinqToDB([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -94,7 +94,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4603, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Unexpected expression type")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4603")]
-		public async ValueTask Issue4603Test([EFDataSources(TestProvName.AllMySql57)] string provider)
+		public async ValueTask RecursiveCteWithThenInclude([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var linq2DbCtx = ctx.CreateLinqToDBContext();
@@ -132,7 +132,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4570")]
-		public void Issue4570Test([EFDataSources] string provider)
+		public void ConstantPredicatesCombinedWithAnySubquery([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -151,7 +151,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[ActiveIssue(3174, Configuration = TestProvName.AllMySqlServer, ErrorMessage = "Can't reopen table: 'ShadowTable'")]
 		[ActiveIssue(3174, Configuration = TestProvName.AllMariaDB, ErrorMessage = "Unknown column 'p.IsDeleted' in 'WHERE'")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3174")]
-		public async ValueTask Issue3174Test([EFDataSources] string provider)
+		public async ValueTask TempTableFromQueryOverShadowProperty([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBContext();
@@ -163,7 +163,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3491")]
-		public void Issue3491Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void UpdateSqlRowFromSubqueryWithServerFunction([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBContext();
@@ -182,7 +182,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4012, ErrorMessage = "Assert.That(p.Children, Is.Not.Null)")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
-		public void Issue4012Test([EFDataSources(TestProvName.AllMySql57)] string provider)
+		public void LoadWithOnUnionOfRecursiveCtes([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBContext();
@@ -240,7 +240,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// every provider. The sweep shows it fails on PostgreSQL only, which is what the annotation always meant.
 		[ActiveIssue(4333, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
-		public void Issue4333Test([EFDataSources] string provider)
+		public void TempTableGeneratesIdentityColumnValues([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBContext();
@@ -266,7 +266,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624")]
-		public void Issue4624Test([EFDataSources] string provider)
+		public void GroupByNavigationWithNestedAggregatesAndCollections([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -312,7 +312,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/66")]
-		public void Issue66TestNoTracking([EFDataSources] string provider, [Values] bool efFirst)
+		public void IncludedEntitiesWithNoTracking([EFDataSources] string provider, [Values] bool efFirst)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -332,7 +332,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/66")]
-		public void Issue66TestWithTracking([EFDataSources] string provider, [Values] bool efFirst)
+		public void IncludedEntitiesWithTracking([EFDataSources] string provider, [Values] bool efFirst)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -345,7 +345,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4625")]
-		public void Issue4625TestDefault([EFDataSources] string provider)
+		public void UpdateDateTimeOffsetColumnsDefault([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -360,7 +360,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4625")]
-		public void Issue4625TestWithConverter([EFDataSources] string provider)
+		public void UpdateDateTimeOffsetColumnsWithConverter([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -375,7 +375,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
-		public void Issue4626Test1([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL15Minus)] string provider)
+		public void AnyValueAggregateInNestedGroupedSubquery([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL15Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -390,7 +390,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					 {
 						 Tag = g.Key,
 						 Sum = g.Sum(p => p.Id),
-						 Des = g.Issue4626AnyValue(p => p.Name)
+						 Des = g.AnyValue(p => p.Name)
 					 }).ToArray()
 				 })
 					  .ToLinqToDB()
@@ -398,7 +398,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
-		public void Issue4626Test2([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer2016Minus)] string provider)
+		public void StringAggregateInNestedGroupedSubquery([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer2016Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -422,7 +422,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4627, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Association key 'Issue4627ContainerId' not found for type")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4627")]
-		public void Issue4627Test([EFDataSources] string provider)
+		public void AssociationKeyThroughParentOfChildCollection([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -439,7 +439,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/129")]
-		public void Issue129Test([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
+		public void ValueGeneratedOnAddComputedColumnIsNotIdentity([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBContext();
@@ -452,7 +452,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/155")]
-		public void Issue155Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void ExpressionMethodColumnWithArrayAggregateOverLinkedIds([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -476,7 +476,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4628, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Inheritance Discriminator is not defined for the")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4628")]
-		public async ValueTask Issue4628Test([EFDataSources] string provider)
+		public async ValueTask IncludeOfCollectionWithInheritedItems([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -503,7 +503,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4629")]
-		public void Issue4629Test([EFDataSources(TestProvName.AllMySql57)] string provider)
+		public void OrderByKeptWithNestedFilterAndWindowCount([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -530,7 +530,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/201")]
-		public void Issue201Test1([EFDataSources(TestProvName.AllMySql57)] string provider)
+		public void FirstOrDefaultOfChildrenInPredicate([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -543,7 +543,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/201")]
-		public void Issue201Test2([EFDataSources(TestProvName.AllMySql57)] string provider)
+		public void NotAnyOfChildrenInPredicate([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -556,7 +556,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4630")]
-		public void Issue4630Test([EFDataSources(TestProvName.AllMySql57)] string provider)
+		public void RowNumberOverSubqueryThenFilter([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -573,7 +573,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4638")]
-		public void Issue4638Test([EFDataSources] string provider)
+		public void GroupByWithOrderedNestedProjection([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -593,7 +593,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/340")]
-		public void Issue340Test([EFDataSources] string provider)
+		public void ProjectionFilteredByNullableBoolColumn([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -608,7 +608,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4640, ErrorMessage = "Assert.That(record.Items[1].Name, Is.EqualTo(\"record 3\"))")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4640")]
-		public void Issue4640Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus)] string provider)
+		public void MergeOfJsonCollectionColumn([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -690,7 +690,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4641, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4641Table\"")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4641")]
-		public void Issue4641Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void BulkCopyOfEntitiesWithIdentityKey([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -709,7 +709,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4642")]
-		public async Task Issue4642Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL16Minus)] string provider)
+		public async Task MergeWithOutputOnTargetKeyOverJoinedSource([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL16Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -733,7 +733,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4643")]
-		public void Issue4643Test([EFIncludeDataSources(TestProvName.AllPostgreSQL14Minus)] string provider)
+		public void InsertAndReadArrayOfEnums([EFIncludeDataSources(TestProvName.AllPostgreSQL14Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -766,7 +766,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[ActiveIssue(4644, Configuration = TestProvName.AllMariaDB, ErrorMessage = "Unknown column 't1.CreateDate' in 'SELECT'")]
 #endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4644")]
-		public void Issue4644Test([EFDataSources] string provider)
+		public void SelectDerivedEntityOmitsUnneededInheritedColumns([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -775,7 +775,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4649, ErrorMessage = "Assert.That(readByLinqToDB[0].Name, Is.EqualTo(\"new name\"))")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4649")]
-		public void Issue4649Test([EFDataSources] string provider)
+		public void SetUpdateOfEntityReadBackThroughEf([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -810,7 +810,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[ActiveIssue(4653, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "The transaction associated with this command is not the connection's active transaction")]
 		[ActiveIssue(4653, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "ExecuteReader requires the command to have a transaction")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4653")]
-		public void Issue4653Test([EFDataSources] string provider)
+		public void QueryCreatedBeforeTransactionStarted([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -822,7 +822,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4662")]
-		public void Issue4662Test([EFDataSources] string provider)
+		public void EnumColumnWithStringConversion([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -840,7 +840,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[ActiveIssue(4663, Configuration = TestProvName.AllMySqlServer, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "right syntax to use near ')")]
 		[ActiveIssue(4663, Configuration = TestProvName.AllMariaDB, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "right syntax to use near ')")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4663")]
-		public void Issue4663Test([EFDataSources] string provider)
+		public void BulkCopyOfEntityWithComplexProperty([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -856,7 +856,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4666, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Member 'System.String Type1EntityProp' not found in type")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
-		public void Issue4666Test([EFDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql)] string provider)
+		public void MergeIntoTphTableFromTempTable([EFDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -865,7 +865,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			[
 				new Issue4666Type1Entity() { Id = 1, Description = "Test1", Type1EntityProp = "Prop1" },
 				new Issue4666Type1Entity() { Id = 2, Description = "Test2", Type1EntityProp = "Prop2" }
-			], tableName: "Issue4666Temp");
+			], tableName: "TphMergeTemp");
 
 			var destinationTable = db.GetTable<Issue4666Type1Entity>();
 
@@ -880,7 +880,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4667")]
-		public void Issue4667Test([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
+		public void MergeOfPostgreSqlJsonColumns([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -899,7 +899,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4668")]
-		public void Issue4668Test([EFDataSources] string provider)
+		public void SelectDerivedClassDetachedFromEfHierarchy([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -907,7 +907,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
-		public async Task Issue4669Test([EFDataSources] string provider)
+		public async Task EfQueryAfterLinqToDbQuery([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -924,7 +924,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4671, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Issue4671Entity1\" violates not-null constraint")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
-		public void Issue4671Test1([EFDataSources] string provider)
+		public void IdentityColumnOfRegisteredEntityInLocalAndTempTable([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -951,7 +951,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[ActiveIssue(4671, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no matching")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
-		public void Issue4671Test2([EFDataSources] string provider)
+		public void IdentityColumnOfEntityNotInModelInLocalAndTempTable([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -977,7 +977,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public async Task IssueEnumTest([EFDataSources] string provider)
+		public async Task EnumColumnsToListAsyncLinqToDB([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1009,7 +1009,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4816")]
-		public void Issue4816Test([EFIncludeDataSources(TestProvName.AllSqlServer2017Plus)] string provider)
+		public void StringAggregateOfVarCharAndNVarChar([EFIncludeDataSources(TestProvName.AllSqlServer2017Plus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1024,10 +1024,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToArray();
 		}
 
-		#region Issue 4783
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
-		public async ValueTask Issue4783Test([EFDataSources] string provider)
+		public async ValueTask EnumStorageVariantsBulkCopyRoundTrip([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1060,10 +1058,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		#endregion
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5177")]
-		public void Issue5177Test([EFDataSources] string provider)
+		public void NullableConvertedStructComparedToNull([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1127,7 +1123,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		// PostgreSQL identity-column temp tables are a separate known limitation (#4333), same as Issue4333Test above.
+		// PostgreSQL identity-column temp tables are a separate known limitation (#4333), same as TempTableGeneratesIdentityColumnValues above.
 		[ActiveIssue(4333, Details = "PostgreSQL identity-column temp tables", Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
 		public void TempTableSurvivesAcrossCommands([EFDataSources] string provider)
@@ -1153,7 +1149,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
-		public void Issue5355_ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
+		public void ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1161,7 +1157,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var result = ctx.Issue5355Customers
 				.ToLinqToDBTable()
-				.FilterIssue5355License(licenseFilter)
+				.FilterByLicense(licenseFilter)
 				.OrderBy(x => x.Id)
 				.ToList();
 
@@ -1171,7 +1167,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
-		public void Issue5355_ContainsViaArrayInGenericMethod([EFDataSources] string provider)
+		public void ContainsViaArrayInGenericMethod([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1179,7 +1175,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var result = ctx.Issue5355Customers
 				.ToLinqToDBTable()
-				.FilterIssue5355License(licenseFilter)
+				.FilterByLicense(licenseFilter)
 				.OrderBy(x => x.Id)
 				.ToList();
 
@@ -1188,7 +1184,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result[1].Id.ShouldBe(2);
 		}
 
-		public enum Issue5547QueryableShape
+		public enum QueryableShape
 		{
 			Direct,
 			SelectProjection,
@@ -1198,9 +1194,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5547")]
-		public void Issue5547_ContainsThroughQueryableShapes(
+		public void ContainsThroughQueryableShapes(
 			[EFDataSources] string provider,
-			[Values] Issue5547QueryableShape shape)
+			[Values] QueryableShape shape)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1208,16 +1204,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			IQueryable<Issue5355Customer> source = shape switch
 			{
-				Issue5547QueryableShape.Direct                    => ctx.Issue5355Customers,
-				Issue5547QueryableShape.SelectProjection          => ctx.Issue5547CustomerShares.Select(s => s.Customer),
-				Issue5547QueryableShape.WhereThenSelectProjection => ctx.Issue5547CustomerShares.Where(s => s.Id > 0).Select(s => s.Customer),
-				Issue5547QueryableShape.SelectProjectionThenWhere => ctx.Issue5547CustomerShares.Select(s => s.Customer).Where(c => c.Id > 0),
-				Issue5547QueryableShape.SelectProjectionDistinct  => ctx.Issue5547CustomerShares.Select(s => s.Customer).Distinct(),
+				QueryableShape.Direct                    => ctx.Issue5355Customers,
+				QueryableShape.SelectProjection          => ctx.Issue5547CustomerShares.Select(s => s.Customer),
+				QueryableShape.WhereThenSelectProjection => ctx.Issue5547CustomerShares.Where(s => s.Id > 0).Select(s => s.Customer),
+				QueryableShape.SelectProjectionThenWhere => ctx.Issue5547CustomerShares.Select(s => s.Customer).Where(c => c.Id > 0),
+				QueryableShape.SelectProjectionDistinct  => ctx.Issue5547CustomerShares.Select(s => s.Customer).Distinct(),
 				_                                                 => throw new InvalidOperationException($"Unknown shape: {shape}"),
 			};
 
 			var result = source
-				.FilterIssue5355License(licenseFilter)
+				.FilterByLicense(licenseFilter)
 				.OrderBy(c => c.Id)
 				.Select(c => c.Id)
 				.ToLinqToDB()
@@ -1228,7 +1224,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 #if !NETFRAMEWORK
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5585")]
-		public void Issue5585_ManyToManyDirectAny([EFDataSources] string provider)
+		public void ManyToManyDirectAny([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1242,7 +1238,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5585")]
-		public void Issue5585_ManyToManyNestedAny([EFDataSources] string provider)
+		public void ManyToManyNestedAny([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -1277,31 +1273,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.Count.ShouldBe(1);
 		}
 
-		#region Issue 5975
+		static readonly DateTime StoredDate = new(2020, 1, 1, 10, 0, 0, DateTimeKind.Utc);
 
-		static readonly DateTime Issue5975Stored = new(2020, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-
-		static void Issue5975Seed(IssueContextBase ctx)
+		static void SeedConvertedDateData(IssueContextBase ctx)
 		{
 			ctx.Issue5975TableTwos.ToLinqToDBTable().Delete();
 			ctx.Issue5975TableOnes.ToLinqToDBTable().Delete();
 
-			var one = new Issue5975TableOne { Id = 1, Name = "ONE", FromDate = Issue5975Stored, ToDate = Issue5975Stored.AddDays(2) };
+			var one = new Issue5975TableOne { Id = 1, Name = "ONE", FromDate = StoredDate, ToDate = StoredDate.AddDays(2) };
 
 			ctx.AddRange(
 				one,
 				new Issue5975TableOne { Id = 2, Name = "EMPTY" },
-				new Issue5975TableTwo { Id = 1, Code = "TWO", ToDate = Issue5975Stored.AddDays(3), TableOne = one });
+				new Issue5975TableTwo { Id = 1, Code = "TWO", ToDate = StoredDate.AddDays(3), TableOne = one });
 
 			ctx.SaveChanges();
 			ResetChangeTracker(ctx);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
-		public void Issue5975_InsertServerSideDate([EFDataSources] string provider)
+		public void InsertServerSideDateIntoConvertedColumn([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
-			Issue5975Seed(ctx);
+			SeedConvertedDateData(ctx);
 
 			ctx.Issue5975TableOnes.ToLinqToDBTable().Insert(() => new Issue5975TableOne
 			{
@@ -1317,10 +1311,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
-		public void Issue5975_UpdateServerSideDate([EFDataSources] string provider)
+		public void UpdateServerSideDateInConvertedColumn([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
-			Issue5975Seed(ctx);
+			SeedConvertedDateData(ctx);
 
 			var test = new DateTime(2026, 6, 6, 1, 1, 1, DateTimeKind.Utc);
 
@@ -1338,11 +1332,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
-		public void Issue5976_ConcatConvertedDates(
+		public void ConcatOfConvertedDates(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue5975Seed(ctx);
+			SeedConvertedDateData(ctx);
 
 			var query1 =
 				from t2 in ctx.Issue5975TableTwos
@@ -1366,49 +1360,45 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var results = query1.Concat(query2).ToLinqToDB().ToList();
 
-			results.Select(r => r.ToDate).OrderBy(d => d).ShouldBe([Issue5975Stored.AddDays(2), Issue5975Stored.AddDays(3)]);
-			results.Select(r => r.FromDate).OrderBy(d => d).ShouldBe([null, Issue5975Stored]);
+			results.Select(r => r.ToDate).OrderBy(d => d).ShouldBe([StoredDate.AddDays(2), StoredDate.AddDays(3)]);
+			results.Select(r => r.FromDate).OrderBy(d => d).ShouldBe([null, StoredDate]);
 		}
 
 		[ActiveIssue(5981)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5981")]
-		public void Issue5981_ReadConvertedDateWithNodaTime([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void ReadConvertedDateWithNodaTime([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			using var ctx = CreateContext(provider);
-			Issue5975Seed(ctx);
+			SeedConvertedDateData(ctx);
 
 			var rows = ctx.Issue5975TableOnes.ToLinqToDB().OrderBy(r => r.Id).ToList();
 
-			rows[0].FromDate.ShouldBe(Issue5975Stored);
+			rows[0].FromDate.ShouldBe(StoredDate);
 			rows[1].FromDate.ShouldBeNull();
 		}
 
-		#endregion
-
-		#region Issue 6181
-
-		static void Issue6181Seed(IssueContextBase ctx)
+		static void SeedConverterComparisonData(IssueContextBase ctx)
 		{
 			ctx.Issue6181TableTwos.ToLinqToDBTable().Delete();
 			ctx.Issue6181TableOnes.ToLinqToDBTable().Delete();
 
-			var one = new Issue6181TableOne { Id = 1, Name = "ONE", CreatedOn = Issue5975Stored, ChainedOn = Issue5975Stored, FromDate = Issue5975Stored, ToDate = Issue5975Stored.AddDays(2) };
+			var one = new Issue6181TableOne { Id = 1, Name = "ONE", CreatedOn = StoredDate, ChainedOn = StoredDate, FromDate = StoredDate, ToDate = StoredDate.AddDays(2) };
 
 			ctx.AddRange(
 				one,
-				new Issue6181TableTwo { Id = 1, Code = "TWO", FromDate = Issue5975Stored.AddDays(1),  ToDate = Issue5975Stored.AddDays(3),  OtherDate = Issue5975Stored, ChainedDate = Issue5975Stored.AddDays(1), TableOne = one },
-				new Issue6181TableTwo { Id = 2, Code = "OLD", FromDate = Issue5975Stored.AddDays(-1), ToDate = Issue5975Stored.AddDays(-2), TableOne = one });
+				new Issue6181TableTwo { Id = 1, Code = "TWO", FromDate = StoredDate.AddDays(1),  ToDate = StoredDate.AddDays(3),  OtherDate = StoredDate, ChainedDate = StoredDate.AddDays(1), TableOne = one },
+				new Issue6181TableTwo { Id = 2, Code = "OLD", FromDate = StoredDate.AddDays(-1), ToDate = StoredDate.AddDays(-2), TableOne = one });
 
 			ctx.SaveChanges();
 			ResetChangeTracker(ctx);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_CompareGroupedDateWithNullableDate(
+		public void CompareGroupedDateWithNullableDate(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
 			var query =
 				from t2 in ctx.Issue6181TableTwos
@@ -1437,18 +1427,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ShouldHaveSingleItem();
 
 			result.Code.ShouldBe("TWO");
-			result.FromDate.ShouldBe(Issue5975Stored);
-			result.ToDate.ShouldBe(Issue5975Stored.AddDays(2));
+			result.FromDate.ShouldBe(StoredDate);
+			result.ToDate.ShouldBe(StoredDate.AddDays(2));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_WindowFunctionOrderedByDateComparison(
+		public void WindowFunctionOrderedByDateComparison(
 			[EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
-			var since = Issue5975Stored.AddDays(-1);
+			var since = StoredDate.AddDays(-1);
 
 			var query =
 				from t2 in ctx.Issue6181TableTwos
@@ -1511,11 +1501,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatingToAnotherConversionIsRefused(
+		public void DelegatingToAnotherConversionIsRefused(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
 			var query =
 				from t2 in ctx.Issue6181TableTwos
@@ -1540,11 +1530,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatingThroughAnUnsetHolderMaps(
+		public void DelegatingThroughAnUnsetHolderMaps(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
 			ctx.Issue6181TableTwos
 				.ToLinqToDB()
@@ -1555,11 +1545,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatingToAnOverridingConverterIsRefused(
+		public void DelegatingToAnOverridingConverterIsRefused(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
 			var query =
 				from t2 in ctx.Issue6181TableTwos
@@ -1585,11 +1575,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 #if !NETFRAMEWORK
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatingToATypedOverridingConverterIsRefused(
+		public void DelegatingToATypedOverridingConverterIsRefused(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
 			var query =
 				from t2 in ctx.Issue6181TableTwos
@@ -1615,11 +1605,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 #endif
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_NestedDelegationCompares(
+		public void NestedDelegationCompares(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
 			var query =
 				from t2 in ctx.Issue6181TableTwos
@@ -1634,16 +1624,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatedArgumentIsEvaluatedOnce(
+		public void DelegatedArgumentIsEvaluatedOnce(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
-			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+			ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
 				.ToLinqToDBTable()
 				.Where(r => r.Id == 1)
-				.Set(r => r.CountedDate, (DateTime?)Issue5975Stored)
+				.Set(r => r.CountedDate, (DateTime?)StoredDate)
 				.Update());
 
 			ctx.Issue6181TableTwos
@@ -1651,34 +1641,34 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Where(r => r.Id == 1)
 				.Select(r => r.CountedDate)
 				.Single()
-				.ShouldBe(Issue5975Stored);
+				.ShouldBe(StoredDate);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatedArgumentIsEvaluatedBeforeAConditionalTarget(
+		public void DelegatedArgumentIsEvaluatedBeforeAConditionalTarget(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
-			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+			ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
 				.ToLinqToDBTable()
 				.Where(r => r.Id == 1)
-				.Set(r => r.GatedDate, (DateTime?)Issue5975Stored)
+				.Set(r => r.GatedDate, (DateTime?)StoredDate)
 				.Update());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatedUserDefinedConversionIsEvaluatedOnce(
+		public void DelegatedUserDefinedConversionIsEvaluatedOnce(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
-			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+			ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
 				.ToLinqToDBTable()
 				.Where(r => r.Id == 1)
-				.Set(r => r.CastDate, new Issue6181Stamp(Issue5975Stored))
+				.Set(r => r.CastDate, new Issue6181Stamp(StoredDate))
 				.Update());
 
 			ctx.Issue6181TableTwos
@@ -1687,24 +1677,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Select(r => r.CastDate)
 				.Single()!
 				.Value
-				.ShouldBe(Issue5975Stored);
+				.ShouldBe(StoredDate);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void Issue6181_DelegatedFieldArgumentIsReadBeforeTheTarget(
+		public void DelegatedFieldArgumentIsReadBeforeTheTarget(
 			[EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
-			Issue6181Seed(ctx);
+			SeedConverterComparisonData(ctx);
 
-			IssueContextBase.Issue6181WithClock(() => Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+			IssueContextBase.Issue6181WithClock(() => ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
 				.ToLinqToDBTable()
 				.Where(r => r.Id == 1)
-				.Set(r => r.ClockDate, (DateTime?)Issue5975Stored)
+				.Set(r => r.ClockDate, (DateTime?)StoredDate)
 				.Update()));
 		}
 
-		static void Issue6181ShouldEvaluateArgumentOncePerConversion(Action write)
+		static void ShouldEvaluateArgumentOncePerConversion(Action write)
 		{
 			var counts = new IssueContextBase.Issue6181Counts();
 
@@ -1722,8 +1712,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			counts.Conversions.ShouldBeGreaterThan(0);
 			counts.Arguments.ShouldBe(counts.Conversions);
 		}
-
-		#endregion
 
 #if !NETFRAMEWORK
 		[Test(Description = "user-reported")]
@@ -1753,12 +1741,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 	public static class TestExtensions
 	{
 		[Sql.Extension("ANY_VALUE({value})", ServerSideOnly = true, IsAggregate = true)]
-		public static TItem Issue4626AnyValue<TSource, TItem>(this IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, TItem>> value)
+		public static TItem AnyValue<TSource, TItem>(this IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, TItem>> value)
 		{
 			throw new InvalidOperationException();
 		}
 
-		public static IQueryable<T> FilterIssue5355License<T>(this IQueryable<T> source, IEnumerable<string>? licenseFilter)
+		public static IQueryable<T> FilterByLicense<T>(this IQueryable<T> source, IEnumerable<string>? licenseFilter)
 			where T : class, IIssue5355Profile
 		{
 			if (licenseFilter != null)

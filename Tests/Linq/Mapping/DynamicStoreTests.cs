@@ -476,37 +476,6 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void DynamicColumnStoreIssue1521([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
-		{
-			var ms = new MappingSchema();
-
-			var builder = new FluentMappingBuilder(ms);
-			builder.Entity<FluentMetadataBasedStore>()
-				.HasColumn(e => e.Id)
-				.DynamicColumnsStore(e => e.Values)
-				.Property(x => Sql.Property<string>(x, "Name"))
-				.Build();
-
-			using (var db = GetDataContext(context, ms))
-			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
-			{
-				var obj = new FluentMetadataBasedStore { Id = 5 };
-				obj.Values.Add("Name", "test_name");
-				db.Insert(obj);
-
-				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.That(data, Has.Count.EqualTo(1));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(data[0].Id, Is.EqualTo(5));
-					Assert.That(data[0].Values, Has.Count.EqualTo(1));
-					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
-					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
-				}
-			}
-		}
-
-		[Test]
 		public void TestDynamicColumnStoreInstanceAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
@@ -913,7 +882,7 @@ namespace Tests.Mapping
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
-		public void Issue3859Test1([DataSources] string context)
+		public void SelectDynamicColumnFromStore([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
@@ -933,7 +902,7 @@ namespace Tests.Mapping
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
-		public void Issue3859Test2([DataSources] string context)
+		public void GroupByDynamicColumnThrows([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
@@ -962,7 +931,7 @@ namespace Tests.Mapping
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
-		public void Issue3859Test3([DataSources] string context)
+		public void GroupByDynamicColumnOnClient([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
@@ -991,11 +960,10 @@ namespace Tests.Mapping
 			query.ToArray();
 		}
 
-		#region Issue 2953
 		[ActiveIssue(2953, ErrorMessage = "Assert.That(result[0].Properties.ContainsKey(\"FirstName\"), Is.True)",
 			Details = "dynamic columns are not populated through this path, so the property bag comes back without them - #2953's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
-		public void Issue2953Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void FromSqlMapsDynamicColumnsStore([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1010,9 +978,9 @@ namespace Tests.Mapping
 		}
 
 		[ActiveIssue(2953, ErrorMessage = "Assert.That(result[0].Properties.ContainsKey(\"FirstName\"), Is.True)",
-			Details = "as Issue2953Test1.")]
+			Details = "as FromSqlMapsDynamicColumnsStore.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
-		public void Issue2953Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void QueryMapsDynamicColumnsStore([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1034,6 +1002,5 @@ namespace Tests.Mapping
 			[DynamicColumnsStore]
 			public Dictionary<string, object> Properties { get; set; } = new();
 		}
-		#endregion
 	}
 }

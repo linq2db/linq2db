@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -1642,8 +1643,8 @@ namespace Tests.DataProvider
 				}
 			}
 
-		[Test]
-		public void TestIssue1144([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1144")]
+		public void SchemaTableWithIndexDescription([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -1653,28 +1654,28 @@ namespace Tests.DataProvider
 				Assert.That(table.Columns, Has.Count.EqualTo(1));
 			}
 
-		[Table("Issue1613")]
-		private sealed class Issue1613Table
+		[Table("DateTimeOffsetRecord")]
+		private sealed class DateTimeOffsetRecord
 		{
 			[Column("dt"), Nullable]
 			public DateTimeOffset? DateTimeOffset { get; set; }
 		}
 
-		private static Issue1613Table[] GenerateData()
+		private static DateTimeOffsetRecord[] GenerateData()
 		{
 			var sampleData = new[]
 			{
-				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset },
-				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(1) },
-				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(2) },
-				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(3) },
-				new Issue1613Table { DateTimeOffset = TestData.DateTimeOffset.AddDays(4) }
+				new DateTimeOffsetRecord { DateTimeOffset = TestData.DateTimeOffset },
+				new DateTimeOffsetRecord { DateTimeOffset = TestData.DateTimeOffset.AddDays(1) },
+				new DateTimeOffsetRecord { DateTimeOffset = TestData.DateTimeOffset.AddDays(2) },
+				new DateTimeOffsetRecord { DateTimeOffset = TestData.DateTimeOffset.AddDays(3) },
+				new DateTimeOffsetRecord { DateTimeOffset = TestData.DateTimeOffset.AddDays(4) }
 			};
 			return sampleData;
 		}
 
-		[Test]
-		public void Issue1613Test1([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1613")]
+		public void GroupByDateTimeOffset([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(GenerateData());
@@ -1690,8 +1691,8 @@ namespace Tests.DataProvider
 				Assert.That(query2, Is.EqualTo(query1));
 			}
 
-		[Test]
-		public void Issue1613Test2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1613")]
+		public void GroupByDateTimeOffsetDate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(GenerateData());
@@ -1707,8 +1708,8 @@ namespace Tests.DataProvider
 				Assert.That(query2, Is.EqualTo(query1));
 			}
 
-		[Test]
-		public void Issue1613Test3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1613")]
+		public void GroupByDateTimeOffsetTimeOfDay([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(GenerateData());
@@ -1718,7 +1719,7 @@ namespace Tests.DataProvider
 				Assert.That(query2, Is.EqualTo(query1));
 			}
 
-		private static int Issue1897(DataConnection dataConnection, out int @return)
+		private static int ExecuteReturnValueProcedure(DataConnection dataConnection, out int @return)
 		{
 			var parameters = new []
 			{
@@ -1735,11 +1736,11 @@ namespace Tests.DataProvider
 			return ret;
 		}
 
-		[Test]
-		public void Issue1897Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1897")]
+		public void ProcedureReturnValue([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-				var rows = Issue1897(db, out var result);
+				var rows = ExecuteReturnValueProcedure(db, out var result);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(-1));
@@ -1752,8 +1753,8 @@ namespace Tests.DataProvider
 			return ((SqlServerDataProvider)DataConnection.GetDataProvider(GetProviderName(context, out var _))).Provider == SqlServerProvider.MicrosoftDataSqlClient;
 		}
 
-		[Test]
-		public void Issue1921Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1921")]
+		public void SchemaTableFunctionResultColumns([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
 				var options = new GetSchemaOptions();
@@ -1778,20 +1779,20 @@ namespace Tests.DataProvider
 				}
 			}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/449")]
 		[ActiveIssue(449, ErrorMessage = "Assert.That(proc.ResultException, Is.Null)",
 			Details = "the schema provider cannot describe the table function's result, so the procedure comes back carrying a ResultException.")]
-		public void Issue449Test([IncludeDataSources(false, TestProvName.AllNorthwind)] string context)
+		public void SchemaTableFunctionWithFullTextPredicate([IncludeDataSources(false, TestProvName.AllNorthwind)] string context)
 		{
 			using var db = GetDataConnection(context);
 				db.Execute(@"
-IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue449')
-	BEGIN DROP FUNCTION Issue449
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'FullTextTableFunction')
+	BEGIN DROP FUNCTION FullTextTableFunction
 END
 ");
 
 				db.Execute(@"
-CREATE FUNCTION dbo.Issue449( @s varchar(20) = '*')
+CREATE FUNCTION dbo.FullTextTableFunction( @s varchar(20) = '*')
 RETURNS TABLE
 AS
 	RETURN ( SELECT * FROM dbo.Categories WHERE CONTAINS( *, @s ) )
@@ -1803,7 +1804,7 @@ AS
 					.GetSchemaProvider()
 					.GetSchema(db, options);
 
-				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "Issue449")!;
+				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "FullTextTableFunction")!;
 				Assert.That(proc, Is.Not.Null);
 				using (Assert.EnterMultipleScope())
 				{
@@ -1813,58 +1814,56 @@ AS
 				}
 			}
 
-		#region Issue 1294
-
-		private void InitIssue1294(DataConnection db)
+		private void CreateSumTableFunction(DataConnection db)
 		{
-			CleanupIssue1294(db);
+			DropSumTableFunction(db);
 
 			using var _ = new DisableBaseline("test setup");
 
 			db.Execute(@"
-CREATE FUNCTION dbo.Issue1294(@p1 int, @p2 int)
+CREATE FUNCTION dbo.SumTableFunction(@p1 int, @p2 int)
 RETURNS TABLE
 AS
 	RETURN SELECT @p1 + @p2 as Id
 ");
 		}
 
-		private void CleanupIssue1294(DataConnection db)
+		private void DropSumTableFunction(DataConnection db)
 		{
 			using var _ = new DisableBaseline("test cleanup");
 
 			db.Execute(@"
-IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'SumTableFunction')
 BEGIN
-	DROP FUNCTION Issue1294
+	DROP FUNCTION SumTableFunction
 END
 ");
 		}
 
-		public class Issue1294Table
+		public class SumTableFunctionResult
 		{
 			public int Id { get; set; }
 		}
 
-		[Sql.TableFunction("Issue1294", argIndices: new[] { 1, 2 })]
-		private static LinqToDB.ITable<Issue1294Table> GetPermissions(IDataContext db, int p1, int p2)
+		[Sql.TableFunction("SumTableFunction", argIndices: new[] { 1, 2 })]
+		private static LinqToDB.ITable<SumTableFunctionResult> GetPermissions(IDataContext db, int p1, int p2)
 		{
 			return db.TableFromExpression(() => GetPermissions(db, p1, p2));
 		}
 
-		[Sql.TableFunction("Issue1294", argIndices: new[] { 1, 2 })]
-		private static LinqToDB.ITable<Issue1294Table> GetPermissionsLiteral(IDataContext db, [ExprParameter(DoNotParameterize = true)] int p1, [ExprParameter(DoNotParameterize = true)] int p2)
+		[Sql.TableFunction("SumTableFunction", argIndices: new[] { 1, 2 })]
+		private static LinqToDB.ITable<SumTableFunctionResult> GetPermissionsLiteral(IDataContext db, [ExprParameter(DoNotParameterize = true)] int p1, [ExprParameter(DoNotParameterize = true)] int p2)
 		{
 			return db.TableFromExpression(() => GetPermissionsLiteral(db, p1, p2));
 		}
 
-		[Test]
-		public void Issue1294Test_Parameter([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1294")]
+		public void TableFunctionParameters([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var tb = db.CreateLocalTable<Issue1294Table>();
+			using var tb = db.CreateLocalTable<SumTableFunctionResult>();
 
-			InitIssue1294(db);
+			CreateSumTableFunction(db);
 
 			try
 			{
@@ -1872,7 +1871,7 @@ END
 				var p2 = 2;
 				var p11 = 3;
 
-				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, p1, p2)
+				var q = db.GetTable<SumTableFunctionResult>().Where(x => GetPermissions(db, p1, p2)
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
 
@@ -1882,22 +1881,22 @@ END
 			}
 			finally
 			{
-				CleanupIssue1294(db);
+				DropSumTableFunction(db);
 			}
 		}
 
-		[Test]
-		public void Issue1294Test_Literal([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1294")]
+		public void TableFunctionInlineConstants([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var tb = db.CreateLocalTable<Issue1294Table>();
+			using var tb = db.CreateLocalTable<SumTableFunctionResult>();
 
-			InitIssue1294(db);
+			CreateSumTableFunction(db);
 
 			try
 
 			{
-				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, 1, 2)
+				var q = db.GetTable<SumTableFunctionResult>().Where(x => GetPermissions(db, 1, 2)
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, 1, 3).Select(x => x.Id)).Contains(x.Id));
 
@@ -1907,17 +1906,17 @@ END
 			}
 			finally
 			{
-				CleanupIssue1294(db);
+				DropSumTableFunction(db);
 			}
 		}
 
-		[Test]
-		public void Issue1294Test_LiteralByAttribute([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1294")]
+		public void TableFunctionLiteralsByAttribute([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var tb = db.CreateLocalTable<Issue1294Table>();
+			using var tb = db.CreateLocalTable<SumTableFunctionResult>();
 
-			InitIssue1294(db);
+			CreateSumTableFunction(db);
 
 			try
 			{
@@ -1925,7 +1924,7 @@ END
 				var p2 = 2;
 				var p11 = 3;
 
-				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissionsLiteral(db, p1, p2)
+				var q = db.GetTable<SumTableFunctionResult>().Where(x => GetPermissionsLiteral(db, p1, p2)
 					.Select(x => x.Id)
 					.Union(GetPermissionsLiteral(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
 
@@ -1935,17 +1934,17 @@ END
 			}
 			finally
 			{
-				CleanupIssue1294(db);
+				DropSumTableFunction(db);
 			}
 		}
 
-		[Test]
-		public void Issue1294Test_LiteralByHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1294")]
+		public void TableFunctionLiteralsByConstantHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var tb = db.CreateLocalTable<Issue1294Table>();
+			using var tb = db.CreateLocalTable<SumTableFunctionResult>();
 
-			InitIssue1294(db);
+			CreateSumTableFunction(db);
 
 			try
 			{
@@ -1953,7 +1952,7 @@ END
 				var p2 = 2;
 				var p11 = 3;
 
-				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
+				var q = db.GetTable<SumTableFunctionResult>().Where(x => GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, Sql.Constant(p11), Sql.Constant(p2)).Select(x => x.Id)).Contains(x.Id));
 
@@ -1963,21 +1962,21 @@ END
 			}
 			finally
 			{
-				CleanupIssue1294(db);
+				DropSumTableFunction(db);
 			}
 		}
 
-		[Test]
-		public void Issue1294Test_ParameterByHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1294")]
+		public void TableFunctionParametersByHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var tb = db.CreateLocalTable<Issue1294Table>();
+			using var tb = db.CreateLocalTable<SumTableFunctionResult>();
 
-			InitIssue1294(db);
+			CreateSumTableFunction(db);
 
 			try
 			{
-				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
+				var q = db.GetTable<SumTableFunctionResult>().Where(x => GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, Sql.Parameter(3), Sql.Parameter(4)).Select(x => x.Id)).Contains(x.Id));
 
@@ -1987,16 +1986,14 @@ END
 			}
 			finally
 			{
-				CleanupIssue1294(db);
+				DropSumTableFunction(db);
 			}
 		}
 
-		#endregion
-
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1468")]
 		[ActiveIssue(1468, ErrorMessage = "Assert.That(proc.ResultException, Is.Null)",
 			Details = "a procedure building a temporary table cannot be described, so it comes back carrying a ResultException. #1468 is closed; this shape is the residue.")]
-		public void Issue1468Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
+		public void SchemaProcedureWithTemporaryTable([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
 		{
 			using var db = GetDataConnection(context);
 				var options = new GetSchemaOptions();
@@ -2675,6 +2672,118 @@ DROP TABLE IF EXISTS TemporalTable3History
 				.ShouldContain("_CS_", Case.Sensitive);
 			db.Execute<string>("SELECT containment_desc FROM sys.databases WHERE database_id = DB_ID()")
 				.ShouldBe("PARTIAL");
+		}
+
+		public class TemporalPrecisionModel
+		{
+			#region Specified default values
+			// Expect: "DateTime2"
+			[Column(DataType = DataType.DateTime2, Precision = 7), NotNull]
+			public DateTime TestDateTime2 { get; set; }
+
+			// Expect: "DateTimeOffset"
+			[Column(DataType = DataType.DateTimeOffset, Precision = 7), NotNull]
+			public DateTimeOffset TestDateTimeOffset { get; set; }
+
+			// Expect: "Time"
+			[Column(DataType = DataType.Time, Precision = 7), NotNull]
+			public TimeSpan TestTime { get; set; }
+			#endregion
+
+			// Expect: "DateTime2"
+			[Column(DataType = DataType.DateTime2), NotNull]
+			public DateTime TestDefaultPrecision { get; set; }
+
+			// Expect: "DateTime2(0)"
+			[Column(DataType = DataType.DateTime2, Precision = 0), NotNull]
+			public DateTime TestNonDefaultPrecision { get; set; }
+
+			// Expect: "DateTime2(1)"
+			[Column(DataType = DataType.DateTime2, Precision = 1), NotNull]
+			public DateTime TestNonZeroPrecision { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1721")]
+		public void CreateTempTableGeneratesDateTimePrecisionTypes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			// Create table and get SQL.
+			string createSQL = "";
+			using (var db = (DataConnection)GetDataContext(context))
+			{
+				createSQL = GetCreateTableSQL<TemporalPrecisionModel>(db);
+			}
+
+			// Parse field name and data type from SQL.
+			var fields = GetFieldDataTypes(createSQL);
+			Assert.That(fields, Has.Count.EqualTo(6));
+			using (Assert.EnterMultipleScope())
+			{
+				// Check that correct data types were generated.
+				Assert.That(fields["TestDateTime2"], Is.EqualTo("DateTime2"));
+				Assert.That(fields["TestDateTimeOffset"], Is.EqualTo("DateTimeOffset"));
+				Assert.That(fields["TestTime"], Is.EqualTo("Time"));
+				Assert.That(fields["TestDefaultPrecision"], Is.EqualTo("DateTime2"));
+				Assert.That(fields["TestNonDefaultPrecision"], Is.EqualTo("DateTime2(0)"));
+				Assert.That(fields["TestNonZeroPrecision"], Is.EqualTo("DateTime2(1)"));
+			}
+		}
+
+		/// <summary>
+		/// Create temporary table and return generated SQL.
+		/// </summary>
+		/// <typeparam name="T">Type of table to create.</typeparam>
+		/// <param name="connection"><see cref="DataConnection"/> to create temporary table in.</param>
+		/// <returns>SQL used to create the table.</returns>
+		private static string GetCreateTableSQL<T>(DataConnection connection)
+			where T : class
+		{
+			using var temp = connection.CreateTempTable<T>();
+			return connection.LastQuery!;
+		}
+
+		static Regex FieldRE = new Regex(@"^\s+\[?([^\] ]+)\]?\s+([^ ]*(?:Time|Date)[^ ]*)\s+(NOT NULL|NULL),?$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+		/// <summary>
+		/// Parse CREATE TABLE SQL statement to extract field name and data type.
+		/// </summary>
+		/// <param name="sql">CREATE TABLE SQL statement.</param>
+		/// <returns><see cref="Dictionary{String, String}"/> of data type keyed by field name.</returns>
+		static Dictionary<string, string> GetFieldDataTypes(string sql)
+		{
+			var fields =
+				sql.Replace("\r\n", "\n").Split('\n')
+				.Select(_ => FieldRE.Match(_))
+				.Where(_ => _.Success && _.Groups.Count >= 3)
+				.Select(_ => new { Field = _.Groups[1].Value, DataType = _.Groups[2].Value });
+
+			return fields.ToDictionary(_ => _.Field, _ => _.DataType);
+		}
+
+		[Table(Name="AllTypes2")]
+		sealed class DateTimeOffsetStorageEntity
+		{
+			[Column(DbType="int"), PrimaryKey, Identity]
+			public int ID { get; set; }
+
+			private DateTimeOffset? _dateTime;
+
+			[Column("datetimeoffsetDataType", DbType="datetimeoffset(7)", Storage = "_dateTime"), Nullable]
+			public DateTime? DateTime
+			{
+				get
+				{
+					return _dateTime == null ? (DateTime?)null : _dateTime.Value.DateTime;
+				}
+			}
+		}
+
+		[Test]
+		public void DateTimeOffsetColumnReadThroughStorageField([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var dt = db.GetTable<DateTimeOffsetStorageEntity>().First(t => t.ID == 2);
+			Assert.That(dt, Is.Not.Null);
+			Assert.That(dt.DateTime, Is.Not.Null);
 		}
 	}
 }

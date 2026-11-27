@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			// Mysql do not allow Update table usage in FROM clause. Moving it to subquery
 			// https://stackoverflow.com/a/14302701/10646316
-			// See UpdateIssue319Regression test
+			// See UpdateWithCountSubqueryAndLazyValue test
 			var changed = false;
 			statement.SelectQuery.VisitParentFirst(e =>
 			{

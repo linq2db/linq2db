@@ -214,13 +214,13 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2494")]
-		public void Issue2494Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SelectQueryConditionalInsertSkippedWhenConditionFalse([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue2494Table>();
+			using var tb = db.CreateLocalTable<ConditionalInsertTable>();
 
 			var query = db.SelectQuery(() => tb.Any()
-				? db.Insert(new Issue2494Table() { Value = 1 }, null, null, null, null, default)
+				? db.Insert(new ConditionalInsertTable() { Value = 1 }, null, null, null, null, default)
 				: 0);
 
 			var res = query.ToArray();
@@ -230,13 +230,13 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2494")]
-		public void Issue2494Test2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SelectQueryConditionalInsertRunsOnceWhenConditionTrue([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue2494Table>();
+			using var tb = db.CreateLocalTable<ConditionalInsertTable>();
 
 			var query = db.SelectQuery(() => !tb.Any()
-				? db.Insert(new Issue2494Table() { Value = 1 }, null, null, null, null, default)
+				? db.Insert(new ConditionalInsertTable() { Value = 1 }, null, null, null, null, default)
 				: 0);
 
 			var res = query.ToArray();
@@ -246,14 +246,13 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue2494Table
+		sealed class ConditionalInsertTable
 		{
 			[Column] public int Value { get; set; }
 		}
 
-		#region Issue 2779
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
-		public void Issue2779Test1([DataSources(false,
+		public void FromSqlScalarSimpleValue([DataSources(false,
 			TestProvName.AllNativeAccess,
 			TestProvName.AllFirebird,
 			TestProvName.AllOracle,
@@ -285,7 +284,7 @@ namespace Tests.Linq
 			TestProvName.AllFirebird, TestProvName.AllMySql57, ProviderName.DB2],
 			Details = "no-declaration: these still fail. Sybase, Informix and the 8.0/MariaDB MySQL servers were dropped once CI exercised them - only 5.7 is left of the MySQL family.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
-		public void Issue2779Test2([DataSources(false)] string context)
+		public void FromSqlSimpleValue([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -296,7 +295,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
-		public void Issue2779Test3([DataSources(false, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllOracle21Minus, TestProvName.AllSapHana)] string context)
+		public void QuerySimpleValue([DataSources(false, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllOracle21Minus, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -307,7 +306,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
-		public void Issue2779Test4([DataSources(false,
+		public void FromSqlScalarInSubquery([DataSources(false,
 			TestProvName.AllNativeAccess,
 			TestProvName.AllFirebird,
 			TestProvName.AllOracle,
@@ -324,7 +323,6 @@ namespace Tests.Linq
 			Assert.That(res, Has.Length.EqualTo(1));
 			Assert.That(res[0].ID, Is.EqualTo(1));
 		}
-		#endregion
 
 	}
 }

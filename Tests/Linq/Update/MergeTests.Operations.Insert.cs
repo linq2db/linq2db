@@ -1663,7 +1663,7 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				// sort on client, see SortedMergeResultsIssue test for details
+				// sort on client, see MergeInsertFromSortedCrossJoinSource test for details
 				var result = db.GetTable<CrossJoinResult>().AsEnumerable().OrderBy(_ => _.Id).ThenBy(_ => _.RightId).ToList();
 
 				AssertRowCount(4, rows, context);
@@ -1703,7 +1703,7 @@ namespace Tests.xUpdate
 			ErrorMessage = "Assert.That(expected, Is.LessThanOrEqualTo(actual))",
 			Details = "no-issue: Sybase never reaches the ordering assertion - it reports 2 affected rows for the 4-row insert, and AssertRowCount's Sybase branch only tolerates over-reporting. Nothing on the tracker covers it.")]
 		[Test]
-		public void SortedMergeResultsIssue([MergeDataContextSource(false)] string context)
+		public void MergeInsertFromSortedCrossJoinSource([MergeDataContextSource(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
