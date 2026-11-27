@@ -1024,6 +1024,14 @@ namespace Tests.Linq
 					.ToList(),
 				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
 
+			Assert.That(
+				() => pivoted
+					.Unpivot(
+						(row, name, value) => new { row.Key, Value = value },
+						x => x.Cells.Get<Uri>("Y2010"))
+					.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2010", typeof(Uri))));
+
 			var absent = Message(ErrorHelper.Pivot.Error_PivotCellNotFound, "Y2099");
 
 			Assert.That(
@@ -1096,6 +1104,66 @@ namespace Tests.Linq
 				.OrderBy(u => u.Key, StringComparer.Ordinal)
 				.Select(u => (u.Key, u.Value))
 				.ShouldBe(new (string, int?)[] { ("A", 10), ("B", 5) });
+		}
+
+		/// <summary>
+		/// An unpivot column reads a cell as a filter does: cast in SQL, as the provider casts, over every column, and NULL for an
+		/// empty cell kept by <see cref="UnpivotNulls.IncludeNulls"/>.
+		/// </summary>
+		[Test]
+		public void UnpivotCastsACellReadAsTheProviderDoes([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.FractionalData);
+
+			// The provider's own cast of the fractional amount - Distinct puts it in SQL.
+			var castOfA = t
+				.Where(x => x.Year == 2010 && x.Category == "A")
+				.Select(x => (int)x.Amount!.Value)
+				.Distinct()
+				.Single();
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010, 2020 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			pivoted
+				.Unpivot(
+					(row, name, value) => new { row.Key, Name = name, Value = value },
+					x => x.Cells.Get<int>("Y2000"),
+					x => x.Cells.Get<int>("Y2010"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.ThenBy(u => u.Name, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Name, u.Value))
+				.ShouldBe(new[] { ("A", "Y2000", 10), ("A", "Y2010", castOfA), ("B", "Y2000", 5), ("B", "Y2010", 15) });
+
+			pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => (int?)x.Cells["Y2020"])
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new (string, int?)[] { ("A", null), ("B", null) });
+
+			pivoted
+				.Unpivot(
+					UnpivotNulls.IncludeNulls,
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2020"))
+				.ToList()
+				.OrderBy(u => u.Key, StringComparer.Ordinal)
+				.Select(u => (u.Key, u.Value))
+				.ShouldBe(new[] { ("A", 0), ("B", 0) });
 		}
 
 		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>

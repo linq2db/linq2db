@@ -2727,23 +2727,47 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (name == null)
 				return false;
 
-			// Critical, so a grouping key or an aggregate reports it rather than the read's own failure.
-			if (cellType != typeof(object) && !MappingSchema.IsScalarType(cellType))
+			var access = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), typeof(object), name));
+
+			cellRead = ReadPivotCellAs(access, ExpressionType.Convert, cellType, call);
+			return true;
+		}
+
+		// A pivot cell read as a type is the cell's column cast in SQL, as the provider casts. The cell is resolved first, so a
+		// name no cell carries - or cells that are not the pivot's own - and a type the cell has no conversion to are named
+		// errors rather than failures inside the conversion. Critical, so a grouping key reports them as they are.
+		Expression ReadPivotCellAs(MemberExpression access, ExpressionType conversion, Type type, Expression read)
+		{
+			var name = access.Member.Name;
+
+			Expression cell;
+			using (UsingBuildPurpose(BuildPurpose.Sql))
+				cell = Visit(access);
+
+			if (cell is not SqlPlaceholderExpression)
+				return new SqlErrorExpression(read, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, name), type, true);
+
+			if (type == typeof(object))
+				return cell;
+
+			if (!HasConversion(cell.Type, type))
+				return new SqlErrorExpression(read, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellType, name, type), type, true);
+
+			using (UsingBuildPurpose(BuildPurpose.Sql))
+				return Visit(Expression.MakeUnary(conversion, cell, type));
+		}
+
+		static bool HasConversion(Type from, Type to)
+		{
+			try
 			{
-				cellRead = new SqlErrorExpression(call, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellType, name, cellType), cellType, true);
+				_ = Expression.Convert(Expression.Default(from), to);
 				return true;
 			}
-
-			// The cell is read as its own column and converted to the type the read names, as a cast over the indexer is.
-			var access     = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), typeof(object), name));
-			var translated = Visit(cellType == typeof(object) ? access : Expression.Convert(access, cellType));
-
-			// A name no cell carries, or cells that are not the pivot's own, have no column to read.
-			cellRead = translated is SqlPlaceholderExpression
-				? translated
-				: new SqlErrorExpression(call, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, name), cellType, true);
-
-			return true;
+			catch (InvalidOperationException)
+			{
+				return false;
+			}
 		}
 
 		protected override Expression VisitUnary(UnaryExpression node)
@@ -2758,22 +2782,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			// A dynamic column read as object resolves to the cell's own type, so the conversion over it is rebuilt rather than
-			// validated against object (an Unpivot column reading a pivot cell as another type).
-			if (_buildPurpose is not BuildPurpose.Sql
-				&& node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null, Operand: MemberExpression { Member: DynamicColumnInfo } dynamicColumn }
-				&& dynamicColumn.Type == typeof(object))
+			// An Unpivot column reads a pivot cell as object converted to its type; it is read as a filter reads it, where the BCL's
+			// rewrite of the conversion would reject the operand changing from object to the cell's own type.
+			if (node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null, Operand: MemberExpression { Member: DynamicColumnInfo { DeclaringType: var declaringType } } cellAccess }
+				&& declaringType == typeof(PivotCells)
+				&& cellAccess.Type == typeof(object)
+				&& cellAccess.Expression != null
+				&& !Builder.CanBeEvaluatedOnClient(cellAccess.Expression))
 			{
-				var operand = Visit(dynamicColumn);
-
-				if (operand.Type != typeof(object))
-				{
-					return node.NodeType == ExpressionType.ConvertChecked
-						? Expression.ConvertChecked(operand, node.Type)
-						: Expression.Convert(operand, node.Type);
-				}
-
-				return node.Update(operand);
+				return ReadPivotCellAs(cellAccess, node.NodeType, node.Type, node);
 			}
 
 			if (PreferClientCalculation(node))
