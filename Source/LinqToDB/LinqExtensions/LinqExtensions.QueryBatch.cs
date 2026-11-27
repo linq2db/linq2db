@@ -34,10 +34,12 @@ namespace LinqToDB
 		/// or the provider cannot send them as one command, they run one after another.
 		/// </para>
 		/// <para>
-		/// When the selector reads a collection, the statements run in a transaction unless the caller already holds one, a
-		/// <c>TransactionScope</c> is active or the provider has no transactions; beginning and committing it are round trips of
-		/// their own. A remote context opens no such transaction and sends each statement with a call of its own, so the
-		/// statements can read different states of the data.
+		/// When the selector reads a collection, the statements run in a transaction at
+		/// <see cref="LinqOptions.EagerLoadingIsolationLevel"/> (by default the provider's level) unless
+		/// <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off, the caller already holds one, a <c>TransactionScope</c> is
+		/// active or the provider has no transactions; beginning and committing it are round trips of their own. Without it the
+		/// statements can read different states of the data, combined or not. A remote context opens no such transaction and
+		/// sends each statement with a call of its own.
 		/// </para>
 		/// <para>
 		/// The collection statements run before the shared statement that reads the scalars, whatever order the selector
