@@ -3870,7 +3870,7 @@ namespace Tests.Linq
 		// The parent row reads the computed value and, for the collection, the correlation key.
 		[Test]
 		public void ParentReadsComputedMember(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -3910,7 +3910,7 @@ namespace Tests.Linq
 		// The correlation key is read only for the collection.
 		[Test]
 		public void ParentReadsKeyItDoesNotProject(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -3950,7 +3950,7 @@ namespace Tests.Linq
 		// A value computed on the client reads its column, which the projection does not hold as a member.
 		[Test]
 		public void ParentReadsColumnsOfAClientValue(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -3990,7 +3990,7 @@ namespace Tests.Linq
 		// A concatenation with no SQL translation for its operand is computed from the column on the client.
 		[Test]
 		public void ParentReadsColumnOfAnUntranslatedConcat(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -4027,10 +4027,10 @@ namespace Tests.Linq
 			}
 		}
 
-		// The parent row reads nothing but the key of its collection, and stays in the one statement.
+		// The parent row reads nothing but the key of its collection, and stays in the one statement where the provider has CTEs.
 		[Test]
 		public void ParentReadsOnlyTheKey(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -4059,7 +4059,7 @@ namespace Tests.Linq
 				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
-			readers.ShouldBe(1);
+			readers.ShouldBe(IsCteSupported(context) ? 1 : 2);
 
 			for (var i = 0; i < result.Count; i++)
 			{
@@ -4076,8 +4076,9 @@ namespace Tests.Linq
 
 		// An aggregate of a non-nullable value checks its slot for NULL as it is read.
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void ParentReadsCheckedAggregate(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -4106,6 +4107,8 @@ namespace Tests.Linq
 				.WithUnionLoadStrategy()
 				.ToList();
 
+			result.Count.ShouldBe(companyIds.Length);
+
 			foreach (var row in result)
 			{
 				var expected = departments
@@ -4121,7 +4124,7 @@ namespace Tests.Linq
 		// The parent's columns come out of a grouping rather than a table.
 		[Test]
 		public void ParentIsAGrouping(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (_, departments, _, _, _, _) = GenerateHierarchy();
 
