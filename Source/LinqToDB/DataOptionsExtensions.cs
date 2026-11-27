@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
@@ -381,6 +382,29 @@ namespace LinqToDB
 			return options with { UseDbBatch = useDbBatch };
 		}
 
+		/// <summary>
+		/// Controls the transaction linq2db opens around an eager load, in which the main query and its child queries read
+		/// the database. When disabled, no transaction is opened — see <see cref="LinqOptions.UseEagerLoadingTransaction"/>.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithEagerLoadingTransaction(this LinqOptions options, bool useEagerLoadingTransaction)
+		{
+			return options with { UseEagerLoadingTransaction = useEagerLoadingTransaction };
+		}
+
+		/// <summary>
+		/// Sets the isolation level of the transaction opened around an eager load (see
+		/// <see cref="LinqOptions.UseEagerLoadingTransaction"/>). When <see langword="null"/>, the data provider's default
+		/// (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>) is used.
+		/// Default value: <see langword="null"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithEagerLoadingIsolationLevel(this LinqOptions options, IsolationLevel? eagerLoadingIsolationLevel)
+		{
+			return options with { EagerLoadingIsolationLevel = eagerLoadingIsolationLevel };
+		}
+
 		#endregion
 
 		#region DataOptions.LinqOptions
@@ -736,6 +760,29 @@ namespace LinqToDB
 		public static DataOptions UseDbBatch(this DataOptions options, bool useDbBatch)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { UseDbBatch = useDbBatch });
+		}
+
+		/// <summary>
+		/// Controls the transaction linq2db opens around an eager load, in which the main query and its child queries read
+		/// the database. When disabled, no transaction is opened — see <see cref="LinqOptions.UseEagerLoadingTransaction"/>.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseEagerLoadingTransaction(this DataOptions options, bool useEagerLoadingTransaction)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { UseEagerLoadingTransaction = useEagerLoadingTransaction });
+		}
+
+		/// <summary>
+		/// Sets the isolation level of the transaction opened around an eager load (see
+		/// <see cref="LinqOptions.UseEagerLoadingTransaction"/>). When <see langword="null"/>, the data provider's default
+		/// (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>) is used.
+		/// Default value: <see langword="null"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseEagerLoadingIsolationLevel(this DataOptions options, IsolationLevel? eagerLoadingIsolationLevel)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { EagerLoadingIsolationLevel = eagerLoadingIsolationLevel });
 		}
 
 		#endregion
