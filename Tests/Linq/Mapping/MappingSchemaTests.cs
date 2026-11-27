@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -395,8 +397,8 @@ namespace Tests.Mapping
 		}
 
 		[Repeat(100)]
-		[Test]
-		public void TestIssue3312()
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3312")]
+		public void ConcurrentGetConvertExpression()
 		{
 			var ms = new MappingSchema();
 
@@ -505,6 +507,198 @@ namespace Tests.Mapping
 				.Name
 				.Name
 				.ShouldBe("scoped");
+		}
+
+		public interface IJsonConvertedValue;
+
+		public class JsonConvertedValue : IJsonConvertedValue
+		{
+			public int A;
+		}
+
+		[Table(Name = "JsonConvertedValueTable")]
+		public class JsonConvertedValueTable
+		{
+			[Column(), NotNull] public int Id { get; set; }
+
+			[Column(DataType = DataType.VarChar), NotNull] public IJsonConvertedValue F { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2000")]
+		public void SetConverterForInterfaceType([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<IJsonConvertedValue, string>(favs => JsonSerializer.Serialize(favs));
+			ms.SetConverter<IJsonConvertedValue, DataParameter>(obj =>
+				new DataParameter { Value = JsonSerializer.Serialize(obj), DataType = DataType.NVarChar });
+			ms.SetConverter<string, IJsonConvertedValue>(favs => { return JsonSerializer.Deserialize<IJsonConvertedValue>(favs)!; });
+
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<JsonConvertedValueTable>();
+			table
+				.Value(x => x.Id, 2)
+				.Value(x => x.F, new JsonConvertedValue() { A = 5 })
+				.Insert();
+		}
+
+		public class ConcurrentMappingEntity
+		{
+			public int Id { get; set; }
+
+			public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/548")]
+		public void ConcurrentAddMetadataReaderAndReadAttributes()
+		{
+			var ms      = new MappingSchema();
+
+			Assert.That(ms.GetAttributes<PrimaryKeyAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Id")!), Is.Empty);
+
+			const int taskCount = 10;
+
+			using var semaphore = new Semaphore(0, taskCount);
+			var tasks = new Task[10];
+
+			for (var i = 0; i < taskCount; i++)
+				if (i % 2 == 0)
+					tasks[i] = new Task(() => ResetMetadataReaders(ms, semaphore));
+				else
+					tasks[i] = new Task(() => ReadAttributesDuringMetadataReset(ms, semaphore));
+
+			for (var i = 0; i < taskCount; i++)
+				tasks[i].Start();
+
+			Thread.Sleep(100);
+			semaphore.Release(taskCount);
+
+			Task.WaitAll(tasks);
+		}
+
+		[Repeat(100)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/548")]
+		public void ConcurrentFluentBuildersKeepAllColumns()
+		{
+			var ms      = new MappingSchema();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Id")!), Is.Empty);
+				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Value")!), Is.Empty);
+			}
+
+			const int taskCount = 2;
+
+			using var semaphore1 = new Semaphore(0, taskCount);
+			using var semaphore2 = new Semaphore(0, taskCount);
+			var tasks = new Task[taskCount];
+			var events = new EventWaitHandle[taskCount];
+
+			for (var i = 0; i < taskCount; i++)
+			{
+				var evt = events[i] = new AutoResetEvent(false);
+				if (i % 2 == 0)
+					tasks[i] = new Task(() => BuildIdColumnConcurrently(ms, semaphore1, semaphore2, evt));
+				else
+					tasks[i] = new Task(() => BuildValueColumnConcurrently(ms, semaphore1, semaphore2, evt));
+			}
+
+			for (var i = 0; i < taskCount; i++)
+				tasks[i].Start();
+
+			WaitHandle.WaitAll(events);
+			semaphore1.Release(taskCount);
+			WaitHandle.WaitAll(events);
+			semaphore2.Release(taskCount);
+
+			Task.WaitAll(tasks);
+		}
+
+		/// <summary>
+		/// This will reset MappingSchema.MetadataReaders
+		/// </summary>
+		/// <param name="ms"></param>
+		/// <param name="semaphore"></param>
+		private void ResetMetadataReaders(MappingSchema ms, Semaphore semaphore)
+		{
+			try
+			{
+				semaphore.WaitOne();
+
+				ms.AddMetadataReader(new FluentMetadataReader(new Dictionary<Type, List<MappingAttribute>>(), new Dictionary<MemberInfo, List<MappingAttribute>>(), new List<MemberInfo>()));
+			}
+			finally
+			{
+				semaphore.Release();
+			}
+
+		}
+
+		/// <summary>
+		/// This will iterate through MappingSchema.MetadataReaders
+		/// and had a chance to fail on MappingSchema._metadataReaders == null
+		/// </summary>
+		/// <param name="ms"></param>
+		/// <param name="semaphore"></param>
+		private void ReadAttributesDuringMetadataReset(MappingSchema ms, Semaphore semaphore)
+		{
+			try
+			{
+				semaphore.WaitOne();
+
+				Assert.That(ms.GetAttributes<PrimaryKeyAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Id")!), Is.Empty);
+			}
+			finally
+			{
+				semaphore.Release();
+			}
+
+		}
+
+		/// <summary>
+		/// <see cref="BuildIdColumnConcurrently(MappingSchema, Semaphore, Semaphore, EventWaitHandle)"/> and <see cref="BuildValueColumnConcurrently(MappingSchema, Semaphore, Semaphore, EventWaitHandle)"/>
+		/// are creating two instances of <see cref="FluentMappingBuilder"/> and have a chance to race in <see cref="MappingSchema.AddMetadataReader(LinqToDB.Metadata.IMetadataReader)"/>
+		/// one <see cref="LinqToDB.Metadata.IMetadataReader"/> could be lost
+		/// </summary>
+		/// <param name="ms"></param>
+		/// <param name="semaphore1"></param>
+		/// <param name="semaphore2"></param>
+		private void BuildIdColumnConcurrently(MappingSchema ms, Semaphore semaphore1, Semaphore semaphore2, EventWaitHandle done)
+		{
+			done.Set();
+			semaphore1.WaitOne();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<ConcurrentMappingEntity>().Property(_ => _.Id).IsColumn().Build();
+			done.Set();
+			semaphore2.WaitOne();
+
+#pragma warning disable NUnit2045 // Use Assert.Multiple
+			Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Id")!), Is.Not.Empty);
+#pragma warning restore NUnit2045 // Use Assert.Multiple
+			Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Value")!), Is.Not.Empty);
+
+		}
+
+		/// <summary>
+		/// <see cref="BuildValueColumnConcurrently(MappingSchema, Semaphore, Semaphore, EventWaitHandle)"/>
+		/// </summary>
+		/// <param name="ms"></param>
+		/// <param name="semaphore1"></param>
+		/// <param name="semaphore2"></param>
+		private void BuildValueColumnConcurrently(MappingSchema ms, Semaphore semaphore1, Semaphore semaphore2, EventWaitHandle done)
+		{
+			done.Set();
+			semaphore1.WaitOne();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<ConcurrentMappingEntity>().Property(_ => _.Value).IsColumn().Build();
+			done.Set();
+			semaphore2.WaitOne();
+
+#pragma warning disable NUnit2045 // Use Assert.Multiple
+			Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Id")!), Is.Not.Empty);
+#pragma warning restore NUnit2045 // Use Assert.Multiple
+			Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(ConcurrentMappingEntity), typeof(ConcurrentMappingEntity).GetProperty("Value")!), Is.Not.Empty);
 		}
 	}
 }

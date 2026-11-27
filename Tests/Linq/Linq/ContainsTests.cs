@@ -10,6 +10,8 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -306,7 +308,7 @@ namespace Tests.Linq
 			Value4,
 		}
 
-		private static readonly string?[][] _issue3986Cases1 = new string?[][]
+		private static readonly string?[][] _arraysWithNullsAndMatch = new string?[][]
 		{
 			new string?[] { null, "Ko" },
 			new string?[] { "Ko", null },
@@ -320,8 +322,8 @@ namespace Tests.Linq
 			Array.Empty<string?>()
 		};
 
-		[Test]
-		public void Issue3986Test1([DataSources] string context, [ValueSource(nameof(_issue3986Cases1))] string?[] values)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3986")]
+		public void ArrayWithNullsContainsNullableColumn([DataSources] string context, [ValueSource(nameof(_arraysWithNullsAndMatch))] string?[] values)
 		{
 			using var db = GetDataContext(context);
 
@@ -336,7 +338,7 @@ namespace Tests.Linq
 			}
 		}
 
-		private static readonly string?[][] _issue3986Cases2 = new string?[][]
+		private static readonly string?[][] _arraysWithNullsAndNoMatch = new string?[][]
 		{
 			new string?[] { null, "222" },
 			new string?[] { "222", null },
@@ -350,8 +352,8 @@ namespace Tests.Linq
 			Array.Empty<string?>()
 		};
 
-		[Test]
-		public void Issue3986Test2([DataSources] string context, [ValueSource(nameof(_issue3986Cases2))] string?[] values)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3986")]
+		public void ArrayWithNullsNotContainsNullableColumn([DataSources] string context, [ValueSource(nameof(_arraysWithNullsAndNoMatch))] string?[] values)
 		{
 			using var db = GetDataContext(context);
 
@@ -365,7 +367,7 @@ namespace Tests.Linq
 			ErrorMessage = "cannot be read as a number",
 			Details = "no-issue: an alpha.2 -> alpha.3 regression, measured against both packages - comparing a text column against a numeric literal (=, IN, NOT IN) now coerces the text to a number and throws on any non-numeric value, where alpha.2 evaluated it and ACE accepts it. LibRed.Ado 11.0.0-alpha.3 to beta.1; re-check when a newer LibRed ships.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2608")]
-		public void Issue2608Test([DataSources(TestProvName.AllSapHana)] string context)
+		public void NotContainsOfCapturedListOverJoinedProjection([DataSources(TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 
@@ -394,7 +396,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
-		public void Issue4317Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
+		public void NullOrEmptyOrContainsOfNullableArray([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 
@@ -412,7 +414,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
-		public void Issue4317Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
+		public void NullOrEmptyOfNullableArray([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 
@@ -430,7 +432,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
-		public void Issue4317Test3([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
+		public void NullOrContainsOfNullableArray([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 
@@ -448,7 +450,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
-		public void Issue4317Test4([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
+		public void NullOrContainsOrEmptyOfNullableArray([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 
@@ -762,6 +764,134 @@ namespace Tests.Linq
 			concatenated
 				.Contains("AT")
 				.ShouldBeTrue();
+		}
+
+		[Table("LinqDataTypes")]
+		sealed class EnumContainsEntity
+		{
+			public enum TestFieldEnum
+			{
+				Value1,
+				Value2
+			}
+
+			[PrimaryKey, Column("ID")]
+			public int Id;
+			[Column("BigIntValue")]
+			public TestFieldEnum TestField;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/273")]
+		public void ContainsAnonymousTypeWithEnumField([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var data = new[] { new { TestField = EnumContainsEntity.TestFieldEnum.Value1 }, new { TestField = EnumContainsEntity.TestFieldEnum.Value2 } };
+			db.GetTable<EnumContainsEntity>().Where(x => data.Contains(new { TestField = x.TestField })).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/273")]
+		public void ContainsAnonymousTypeWithEnumFieldAndId([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var data = new[] { new {  TestField = EnumContainsEntity.TestFieldEnum.Value1, Field = 10 }, new { TestField = EnumContainsEntity.TestFieldEnum.Value2, Field = 10 } };
+			db.GetTable<EnumContainsEntity>().Where(x => data.Contains(new { TestField = x.TestField, Field = x.Id })).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/273")]
+		public void ContainsEnumArray([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var data = new[] { EnumContainsEntity.TestFieldEnum.Value1 };
+			db.GetTable<EnumContainsEntity>().Where(x => data.Contains(x.TestField)).ToList();
+		}
+
+		[Table]
+		sealed class AnonymousKeyEntity
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column] public int? NullValue { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2769")]
+		public void ContainsAnonymousKeyFromProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<AnonymousKeyEntity>();
+			var criteria = Enumerable.Range(0, 3).Select(i => new {RECORDNAME = i, KEYNUMB = i})
+					.ToArray();
+
+			_ = table.Select(a => new
+			{
+				Alert = a,
+				Key = new { RECORDNAME = a.Id, KEYNUMB = a.NullValue.GetValueOrDefault() }
+			})
+				.Where(a => criteria.Contains(a.Key))
+				.Select(a => a.Alert)
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/708")]
+		public void ContainsInSubqueryWithCapturedParameter([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var id = 1;
+
+			var parents1 =    Parent.Where(_ => _.ParentID == id).Select(_ => _.ParentID);
+			var parents2 = db.Parent.Where(_ => _.ParentID == id).Select(_ => _.ParentID);
+
+			var query1 =    Child.Where(_ => parents1.Contains(_.ParentID) && _.ChildID >= 0 && _.ChildID <= 100);
+			var query2 = db.Child.Where(_ => parents2.Contains(_.ParentID) && _.ChildID >= 0 && _.ChildID <= 100);
+
+			AreEqual(query1, query2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/909")]
+		public void NotContainsNullableValuesInWhere([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var values = new int?[] { 1, 2, 3 };
+
+			var query = from p in db.GetTable<Parent>()
+						where !values.Contains(p.Value1)
+						select p;
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/909")]
+		public void NotContainsNullableValuesInJoinFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var values = new int?[] { 1, 2, 3 };
+
+			var query = from c in db.GetTable<Child>()
+						from p in db.GetTable<Parent>()
+						where p.ParentID == c.ParentID && !values.Contains(p.Value1)
+						select c;
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/909")]
+		public void NotContainsNullableValuesInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var values = new int?[] { 1, 2, 3 };
+
+			var expected = from c in Child
+						   where (from p in Parent
+								  where p.ParentID == c.ParentID && (p.Value1 == null || !values.Contains(p.Value1.Value))
+								  select p).Any()
+						   select c;
+
+			var actual = from c in db.GetTable<Child>()
+						 where (from p in db.GetTable<Parent>()
+								where p.ParentID == c.ParentID && !values.Contains(p.Value1!.Value)
+								select p).Any()
+						 select c;
+
+			AreEqual(expected, actual);
 		}
 	}
 }

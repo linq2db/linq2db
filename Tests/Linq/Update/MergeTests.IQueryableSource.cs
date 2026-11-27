@@ -67,8 +67,8 @@ namespace Tests.xUpdate
 			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
-		[Test]
-		public void MergeIntoCteIssue4107([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4107")]
+		public void MergeIntoCteWithInferredColumns([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 

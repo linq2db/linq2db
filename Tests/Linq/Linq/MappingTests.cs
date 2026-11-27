@@ -11,6 +11,7 @@ using System.ServiceModel;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
@@ -377,16 +378,16 @@ namespace Tests.Linq
 		}
 
 		[Table("Person")]
-		sealed class Table171
+		sealed class PersonWithGender
 		{
 			[Column] public Gender Gender;
 		}
 
-		[Test]
-		public void Issue171Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/171")]
+		public void EnumFieldCastToInt([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			db.GetTable<Table171>()
+			db.GetTable<PersonWithGender>()
 				.Where (t => t.Gender == Gender.Male)
 				.Select(t => new { value = (int)t.Gender })
 				.ToList();
@@ -793,9 +794,8 @@ namespace Tests.Linq
 			Assert.That(record!.TestAccess, Is.EqualTo(6));
 		}
 
-		#region Issue 3060
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3060")]
-		public void Issue3060Test([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
+		public void UpdateWithCustomBlobTypeConverter([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<byte[], Blob16AsGuidType>(x => new Blob16AsGuidType(x));
@@ -803,9 +803,9 @@ namespace Tests.Linq
 			ms.SetConvertExpression<Blob16AsGuidType, DataParameter>(x => DataParameter.Blob(null, x.Bytes));
 
 			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable<Issue3060Table>();
+			using var tb = db.CreateLocalTable<Blob16AsGuidTable>();
 
-			var row = new Issue3060Table()
+			var row = new Blob16AsGuidTable()
 			{
 				Uid = new Blob16AsGuidType(TestData.Guid1)
 			};
@@ -814,7 +814,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue3060Table
+		sealed class Blob16AsGuidTable
 		{
 			[Column(DataType = DataType.Int64, Length = 8, Precision = 19, Scale = 0), PrimaryKey, NotNull] public long Id { get; set; }
 			[Column(DataType = DataType.VarBinary, Length = 16, Precision = 0, Scale = 0), Nullable] public Blob16AsGuidType? Uid { get; set; }
@@ -856,9 +856,6 @@ namespace Tests.Linq
 				}
 			}
 		}
-		#endregion
-
-		#region Issue 3117
 
 		// AllSQLite is not one gate: only SQLite.MS refuses the type, bare Classic passes. The MiniProfiler-wrapped
 		// variants are excluded instead of gated - the profiler formats the SQL only when it happens to be
@@ -882,7 +879,7 @@ namespace Tests.Linq
 			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
 			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test1([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
+		public void GenericConvertProviderForGenericId([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(IdConverter<>));
@@ -922,7 +919,7 @@ namespace Tests.Linq
 			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
 			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test2([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
+		public void ValueToSqlConverterForGenericId([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);
@@ -998,7 +995,6 @@ namespace Tests.Linq
 				mappingSchema.SetValueToSqlConverter(typeof(Id<T>), (sb, dt, o) => sb.Append(((Id<T>)o).Value));
 			}
 		}
-		#endregion
 
 		struct RecordId
 		{
@@ -1184,9 +1180,7 @@ namespace Tests.Linq
 			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
 
-		#region Issue 5057
-
-		static class Issue5057
+		static class GuidScalarIdMapping
 		{
 			[Table]
 			public sealed class Tender
@@ -1243,20 +1237,17 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5057")]
-		public void Issue5057Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ScalarStructIdAnyComparison([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataContext(context, Issue5057.TenderId.GetMappings());
-			using var tb = db.CreateLocalTable(Issue5057.Tender.Data);
+			using var db = GetDataContext(context, GuidScalarIdMapping.TenderId.GetMappings());
+			using var tb = db.CreateLocalTable(GuidScalarIdMapping.Tender.Data);
 
-			var ids = new List<Issue5057.TenderId> { Issue5057.Tender.Data[0].Id, Issue5057.Tender.Data[2].Id };
+			var ids = new List<GuidScalarIdMapping.TenderId> { GuidScalarIdMapping.Tender.Data[0].Id, GuidScalarIdMapping.Tender.Data[2].Id };
 
 			var result = tb
 				.Where(i => ids.Any(id => id == i.Id))
 				.FirstOrDefault();
 		}
-		#endregion
-
-		#region issue 4798
 
 #pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
 #pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
@@ -1304,7 +1295,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4798")]
-		public void Issue4798Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ListContainsWithConvertedStructId([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context, TenderId.LinqToDbMapping());
 			using var tb = db.CreateLocalTable<Tender>();
@@ -1316,79 +1307,73 @@ namespace Tests.Linq
 			db.GetTable<Tender>().Where(i => tenderId != null && i.Id == tenderId).Any();
 		}
 
-		#endregion
-
-		#region Issue 4437
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
-		public void Issue4437Test1([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void RecordCtorMaterializationFromLinq([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
+			using var tb = db.CreateLocalTable(new MappedColumnRecord[] { new("value") });
 
-			var result = db.GetTable<Issue4437Record>().ToArray();
+			var result = db.GetTable<MappedColumnRecord>().ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
-		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void RecordCtorMaterializationFromRawSqlColumnName([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
+			using var tb = db.CreateLocalTable(new MappedColumnRecord[] { new("value") });
 
-			var result = db.Query<Issue4437Record>("select some_column from test4437").ToArray();
+			var result = db.Query<MappedColumnRecord>("select some_column from string_column_record").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
-		public void Issue4437Test3([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void RecordCtorRawSqlAliasedToMemberNameNotBound([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
+			using var tb = db.CreateLocalTable(new MappedColumnRecord[] { new("value") });
 
 			// Constructor materialization is unified with the LINQ path: the mapped column name (some_column) is
 			// authoritative, so a result column aliased to the member name does not bind and the parameter stays
-			// at its default. Select the mapped column name (Issue4437Test2) to populate it.
-			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();
+			// at its default. Select the mapped column name (RecordCtorMaterializationFromRawSqlColumnName) to populate it.
+			var result = db.Query<MappedColumnRecord>("select some_column as SomeColumn from string_column_record").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0].SomeColumn, Is.Null);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
-		public void Issue4437Test4([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void RecordCtorValueConverterFromRawSql([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(new Issue4437VcRecord[] { new(true) });
+			using var tb = db.CreateLocalTable(new ValueConvertedColumnRecord[] { new(true) });
 
-			var result = db.Query<Issue4437VcRecord>("select some_column from test4437vc").ToArray();
+			var result = db.Query<ValueConvertedColumnRecord>("select some_column from bool_converter_record").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0].SomeColumn, Is.True);
 		}
 
-		[Table("test4437")]
-		sealed record Issue4437Record([property: Column("some_column")] string SomeColumn);
+		[Table("string_column_record")]
+		sealed record MappedColumnRecord([property: Column("some_column")] string SomeColumn);
 
-		[Table("test4437vc")]
-		sealed record Issue4437VcRecord(
-			[property: Column("some_column", DataType = DataType.VarChar, Length = 1), ValueConverter(ConverterType = typeof(Issue4437BoolConverter))] bool SomeColumn);
+		[Table("bool_converter_record")]
+		sealed record ValueConvertedColumnRecord(
+			[property: Column("some_column", DataType = DataType.VarChar, Length = 1), ValueConverter(ConverterType = typeof(BoolToYnConverter))] bool SomeColumn);
 
-		sealed class Issue4437BoolConverter : ValueConverter<bool, string>
+		sealed class BoolToYnConverter : ValueConverter<bool, string>
 		{
-			public Issue4437BoolConverter() : base(v => v ? "Y" : "N", p => p == "Y", true)
+			public BoolToYnConverter() : base(v => v ? "Y" : "N", p => p == "Y", true)
 			{
 			}
 		}
-		#endregion
 
-		#region Issue 1833
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1833")]
-		public void Issue1833Test1([DataSources] string context)
+		public void FluentExpressionMethodReplacesIgnoredColumn([DataSources] string context)
 		{
 			var fb = new FluentMappingBuilder()
 				.Entity<MyPerson>()
@@ -1404,7 +1389,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1833")]
-		public void Issue1833Test2([DataSources] string context)
+		public void FluentExpressionMethodReplacesNotColumnAttribute([DataSources] string context)
 		{
 			var entityDescriptor = MappingSchema.Default.GetEntityDescriptor(typeof(MyPerson));
 			var columnDescriptor = entityDescriptor.Columns.Single(c => c.MemberName == nameof(MyPerson.MiddleName));
@@ -1429,9 +1414,7 @@ namespace Tests.Linq
 			[Column] public string? MiddleName { get; set; }
 			public static Expression<Func<MyPerson, string>> FullName() => e => $"{e.FirstName}:{e.LastName}";
 		}
-		#endregion
 
-		#region Issue 2362
 		// Split by the [Values] argument, because the two arms are not equally broken: filtering on false fails
 		// everywhere, filtering on true fails only on ClickHouse. One gate over both marked ~50 working cases as
 		// failing.
@@ -1439,9 +1422,9 @@ namespace Tests.Linq
 			ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The empty string the converter writes for false is not matched back - #2362's 'Query skips rows with empty string'. Spelled out rather than left unconditional because Oracle matches the empty string back and passes.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test([DataSources] string context)
+		public void ConversionBoolFalseMatchesEmptyString([DataSources] string context)
 		{
-			Issue2362Core(context, false);
+			BoolStringConversionCore(context, false);
 		}
 
 		[ActiveIssue(2362, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Assert.That(res[0].Value, Is.True)",
@@ -1449,15 +1432,15 @@ namespace Tests.Linq
 		[ActiveIssue(2362, Configuration = TestProvName.AllOracle, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(1))",
 			Details = "Oracle gets the same arm wrong a step earlier: the row is not matched at all, so nothing comes back to read.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362TestMatchingValue([DataSources] string context)
+		public void ConversionBoolTrueMatchesValue([DataSources] string context)
 		{
-			Issue2362Core(context, true);
+			BoolStringConversionCore(context, true);
 		}
 
-		void Issue2362Core(string context, bool value)
+		void BoolStringConversionCore(string context, bool value)
 		{
 			var fb = new FluentMappingBuilder()
-				.Entity<Issue2362Table>()
+				.Entity<BoolStringConversionTable>()
 					.Property(p => p.Value)
 					.IsNullable()
 					.HasDataType(DataType.VarChar)
@@ -1468,9 +1451,9 @@ namespace Tests.Linq
 						true);
 
 			using var db = GetDataContext(context, fb.Build().MappingSchema);
-			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
+			using var tb = db.CreateLocalTable(BoolStringConversionRaw.Data);
 
-			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
+			var res = db.GetTable<BoolStringConversionTable>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
 
 			if (value)
 			{
@@ -1488,27 +1471,26 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table("Issue2362Table")]
-		sealed class Issue2362Table
+		[Table("BoolStringConversionTable")]
+		sealed class BoolStringConversionTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public bool Value { get; set; }
 		}
 
-		[Table("Issue2362Table")]
-		sealed class Issue2362Raw
+		[Table("BoolStringConversionTable")]
+		sealed class BoolStringConversionRaw
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.Char, Length = 4)] public string? Value { get; set; }
 
-			public static readonly Issue2362Raw[] Data =
+			public static readonly BoolStringConversionRaw[] Data =
 			[
-				new Issue2362Raw() { Id = 1, Value = null },
-				new Issue2362Raw() { Id = 2, Value = "+" },
-				new Issue2362Raw() { Id = 3, Value = "" },
+				new BoolStringConversionRaw() { Id = 1, Value = null },
+				new BoolStringConversionRaw() { Id = 2, Value = "+" },
+				new BoolStringConversionRaw() { Id = 3, Value = "" },
 			];
 		}
-		#endregion
 
 		sealed class TimeSpanAsTicks
 		{
@@ -1857,14 +1839,14 @@ namespace Tests.Linq
 
 		[Column("child1_name", $"{nameof(Customer)}.{nameof(Child1.Name)}")]
 		[Column("child2_name", $"{nameof(CustomerOther)}.{nameof(Child2.Name)}")]
-		sealed class Issue5266Table
+		sealed class CompositeNamesAttributeTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public Child1? Customer { get; set; }
 			public Child2? CustomerOther { get; set; }
 		}
 
-		sealed class Issue5266TableFluent
+		sealed class CompositeNamesFluentTable
 		{
 			public int Id { get; set; }
 			public Child1? Customer { get; set; }
@@ -1875,9 +1857,9 @@ namespace Tests.Linq
 		public void TestCompositeNamesConflicts_Attributes([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5266Table>();
+			using var tb = db.CreateLocalTable<CompositeNamesAttributeTable>();
 
-			db.Insert(new Issue5266Table()
+			db.Insert(new CompositeNamesAttributeTable()
 			{
 				Id = 1,
 				Customer = new () { Name = "name1" },
@@ -1904,16 +1886,16 @@ namespace Tests.Linq
 		public void TestCompositeNamesConflicts_Fluent([DataSources] string context)
 		{
 			var builder = new FluentMappingBuilder()
-				.Entity<Issue5266TableFluent>()
+				.Entity<CompositeNamesFluentTable>()
 					.HasPrimaryKey(e => e.Id)
 					.Property(e => e.Customer!.Name).HasColumnName("child1_name")
 					.Property(e => e.CustomerOther!.Name).HasColumnName("child2_name")
 					.Build();
 
 			using var db = GetDataContext(context, builder.MappingSchema);
-			using var tb = db.CreateLocalTable<Issue5266TableFluent>();
+			using var tb = db.CreateLocalTable<CompositeNamesFluentTable>();
 
-			db.Insert(new Issue5266TableFluent()
+			db.Insert(new CompositeNamesFluentTable()
 			{
 				Id = 1,
 				Customer = new() { Name = "name1" },
@@ -1960,59 +1942,57 @@ namespace Tests.Linq
 			Assert.That(res[0].Id, Is.EqualTo(1));
 		}
 
-		#region Issue 5540
-
-		[Table("Issue5540")]
-		sealed class Issue5540Entity
+		[Table("ExpressionMethodItemsEntity")]
+		sealed class ExpressionMethodItemsEntity
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.NVarChar, Length = 200)]
-			public IList<Issue5540SubItem> Items { get; set; } = new List<Issue5540SubItem>();
+			public IList<ItemsSubItem> Items { get; set; } = new List<ItemsSubItem>();
 		}
 
-		sealed class Issue5540SubItem
+		sealed class ItemsSubItem
 		{
 			public string Code { get; set; } = null!;
 		}
 
-		sealed class Issue5540JsonEachRow<T>
+		sealed class JsonEachRow<T>
 		{
 			public T Value { get; set; } = default!;
 		}
 
 		[Sql.TableFunction("json_each", argIndices: [0])]
-		static IQueryable<Issue5540JsonEachRow<T>> Issue5540JsonEach<T>(IEnumerable<T> _)
-			=> throw new ServerSideOnlyException(nameof(Issue5540JsonEach));
+		static IQueryable<JsonEachRow<T>> JsonEachItems<T>(IEnumerable<T> _)
+			=> throw new ServerSideOnlyException(nameof(JsonEachItems));
 
-		static Expression<Func<Issue5540Entity, IQueryable<Issue5540SubItem>>> Issue5540ItemsExpr()
-			=> e => Issue5540JsonEach(Sql.Property<IList<Issue5540SubItem>>(e, nameof(Issue5540Entity.Items))).Select(r => r.Value);
+		static Expression<Func<ExpressionMethodItemsEntity, IQueryable<ItemsSubItem>>> ItemsExpression()
+			=> e => JsonEachItems(Sql.Property<IList<ItemsSubItem>>(e, nameof(ExpressionMethodItemsEntity.Items))).Select(r => r.Value);
 
-		static MappingSchema Issue5540Schema()
+		static MappingSchema ItemsMappingSchema()
 		{
 			var fb = new FluentMappingBuilder()
-				.Entity<Issue5540Entity>()
-					.Property(e => e.Items).HasAttribute(new ExpressionMethodAttribute(Issue5540ItemsExpr()) { IsColumn = false })
+				.Entity<ExpressionMethodItemsEntity>()
+					.Property(e => e.Items).HasAttribute(new ExpressionMethodAttribute(ItemsExpression()) { IsColumn = false })
 				.Build();
 
 			var ms = fb.MappingSchema;
 
-			ms.SetConvertExpression<string, IList<Issue5540SubItem>>(
+			ms.SetConvertExpression<string, IList<ItemsSubItem>>(
 				s => string.IsNullOrEmpty(s)
-					? (IList<Issue5540SubItem>)new List<Issue5540SubItem>()
-					: s.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(c => new Issue5540SubItem { Code = c }).ToList());
-			ms.SetConvertExpression<IList<Issue5540SubItem>, DataParameter>(
+					? (IList<ItemsSubItem>)new List<ItemsSubItem>()
+					: s.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(c => new ItemsSubItem { Code = c }).ToList());
+			ms.SetConvertExpression<IList<ItemsSubItem>, DataParameter>(
 				list => new DataParameter { Value = string.Join(";", list.Select(i => i.Code)), DataType = DataType.NVarChar });
 
 			return ms;
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
-		public void Issue5540Test1([DataSources(false)] string context)
+		public void ExpressionMethodNonColumnItemsRoundtrip([DataSources(false)] string context)
 		{
-			using var db = GetDataContext(context, Issue5540Schema());
-			using var tb = db.CreateLocalTable<Issue5540Entity>();
+			using var db = GetDataContext(context, ItemsMappingSchema());
+			using var tb = db.CreateLocalTable<ExpressionMethodItemsEntity>();
 
-			db.Insert(new Issue5540Entity { Id = 1, Items = new List<Issue5540SubItem> { new() { Code = "A" }, new() { Code = "B" } } });
+			db.Insert(new ExpressionMethodItemsEntity { Id = 1, Items = new List<ItemsSubItem> { new() { Code = "A" }, new() { Code = "B" } } });
 
 			var res = tb.ToList();
 
@@ -2022,16 +2002,251 @@ namespace Tests.Linq
 
 		// SQLite-only: assertion shape relies on linq2db giving up at translation, which is SQLite-specific.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
-		public void Issue5540Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void ExpressionMethodNonColumnItemsThrowsOnTranslation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataContext(context, Issue5540Schema());
-			using var tb = db.CreateLocalTable<Issue5540Entity>();
+			using var db = GetDataContext(context, ItemsMappingSchema());
+			using var tb = db.CreateLocalTable<ExpressionMethodItemsEntity>();
 
 			Assert.That(
 				() => tb.Where(e => e.Items.Any(i => i.Code == "X")).ToList(),
-				Throws.TypeOf<LinqToDB.LinqToDBException>().With.Message.Contains(nameof(Issue5540JsonEach)));
+				Throws.TypeOf<LinqToDB.LinqToDBException>().With.Message.Contains(nameof(JsonEachItems)));
 		}
 
-		#endregion
-	}
+		/// <summary>
+		/// Base class for testing, defines fields that will be replaced in derived class to show original problem.
+		/// </summary>
+		public class ShadowedMembersBase
+		{
+			/// <summary>
+			/// Marker, unaltered in derived class.
+			/// </summary>
+			public bool MarkerProperty { get; set; }
+
+			/// <summary>
+			/// Field to change to property in derived class.
+			/// </summary>
+			public int ChangeToProp;
+
+			/// <summary>
+			/// Field to change type of in derived class.
+			/// </summary>
+			public int ChangeFieldType;
+
+			/// <summary>
+			/// Property to change to field in derived class.
+			/// </summary>
+			public int ChangeToField { get; set; }
+
+			/// <summary>
+			/// Property to change type of in derived class.
+			/// </summary>
+			public int ChangePropType { get; set; }
+		}
+
+		/// <summary>
+		/// Derived class, replaces each data member (field + property) in base class above using the 'new' keyword.
+		/// </summary>
+		public class ShadowedMembersDerived : ShadowedMembersBase
+		{
+			/// <summary>
+			/// Field changed to property.
+			/// </summary>
+			public new int ChangeToProp { get; set; }
+
+			/// <summary>
+			/// Field changed to long from int.
+			/// </summary>
+			public new long ChangeFieldType;
+
+			/// <summary>
+			/// Property changed to field.
+			/// </summary>
+			public new int ChangeToField;
+
+			/// <summary>
+			/// Property changed to long from int.
+			/// </summary>
+			public new long ChangePropType { get; set; }
+		}
+
+		public class ShadowedMemberSource
+		{
+			[PrimaryKey] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1313")]
+		public void PublicInstanceValueMembersPreferShadowingMembers()
+		{
+			var type = typeof(ShadowedMembersDerived);
+
+			var members = type.GetPublicInstanceValueMembers();
+
+			// Test returned array
+			Assert.That(members, Is.Not.Null);
+			Assert.That(members, Has.Length.EqualTo(5), $"Expected 5 returned members, found {members.Length}.");
+
+			// Check for duplicate names
+			string[] dupNames =
+				(
+					from m in members
+					group 1 by m.Name into grp
+					where grp.Count() > 1
+					select grp.Key
+				).ToArray();
+			Assert.That(dupNames.Any(), Is.False, $"Found duplicate entries for: {string.Join(", ", dupNames)}.");
+
+			// Check that returned members are all from the derived class except the marker property
+			var baseMembers =
+				(
+					from m in members
+					where m.Name != nameof(ShadowedMembersBase.MarkerProperty) && m.DeclaringType != typeof(ShadowedMembersDerived)
+					select m.Name
+				).ToArray();
+			Assert.That(baseMembers.Any(), Is.False, $"Found incorrect base class member(s): {string.Join(", ", baseMembers)}.");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1313")]
+		public void SelectIntoClassWithShadowedMembers([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<ShadowedMemberSource>();
+			table.Insert(() => new ShadowedMemberSource { Value = 123 });
+
+			IQueryable<ShadowedMembersDerived>? query = null;
+			query =
+					from row in table
+					select new ShadowedMembersDerived
+					{
+						MarkerProperty = false,
+						ChangeToProp = row.Value,
+						ChangeFieldType = 2,
+						ChangeToField = 3,
+						ChangePropType = 4,
+					};
+
+			// Ensure the expected records are returned
+			var records = query!.ToArray();
+			Assert.That(records, Is.Not.Null);
+			Assert.That(records, Has.Length.EqualTo(1));
+
+			// Check the returned values are as expected
+			var record = records.First();
+			Assert.That(record.ChangeToProp == 123 && record.ChangeFieldType == 2 && record.ChangeToField == 3 && record.ChangePropType == 4, Is.True, "Unexpected values in record.");
+
+			// Check the replaced base class fields have not been set
+			ShadowedMembersBase base_record = record;
+			Assert.That(base_record, Is.SameAs(record));
+			Assert.That(base_record.ChangeToProp == 0 && base_record.ChangeFieldType == 0 && base_record.ChangeToField == 0 && base_record.ChangePropType == 0, Is.True, "Data leakage to base class members.");
+		}
+
+		public abstract class NamedColumnsModelBase;
+
+		[Table("OrderedColumnsDerivedRecord")]
+		public class OrderedColumnsDerivedRecord : NamedColumnsModelBase
+		{
+			[Column("event_id", Order = 1), PrimaryKey, NotNull]
+			public int EventId { get; set; }
+
+			[Column("event_description", Order = 2), NotNull]
+			public string EventDescription { get; set; } = null!;
+		}
+
+		[Table("OrderedColumnsRecord")]
+		public class OrderedColumnsRecord
+		{
+			[Column("event_id", Order = 1), PrimaryKey, NotNull]
+			public int EventId { get; set; }
+
+			[Column("event_description", Order = 2), NotNull]
+			public string EventDescription { get; set; } = null!;
+		}
+
+		[Table("UnorderedColumnsDerivedRecord")]
+		public class UnorderedColumnsDerivedRecord : NamedColumnsModelBase
+		{
+			[Column("event_id"), PrimaryKey, NotNull]
+			public int EventId { get; set; }
+
+			[Column("event_description"), NotNull]
+			public string EventDescription { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1403")]
+		public void InsertAndReadOrderedColumnsWithBaseClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<OrderedColumnsDerivedRecord>();
+			table.Insert(() => new OrderedColumnsDerivedRecord()
+			{
+				EventId = 1,
+				EventDescription = "New event"
+			});
+
+			var events = table.First();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(events.EventId, Is.EqualTo(1));
+				Assert.That(events.EventDescription, Is.EqualTo("New event"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1403")]
+		public void InsertAndReadOrderedColumns([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<OrderedColumnsRecord>();
+			table.Insert(() => new OrderedColumnsRecord()
+			{
+				EventId = 1,
+				EventDescription = "New event"
+			});
+
+			var events = table.First();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(events.EventId, Is.EqualTo(1));
+				Assert.That(events.EventDescription, Is.EqualTo("New event"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1403")]
+		public void InsertAndReadUnorderedColumnsWithBaseClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<UnorderedColumnsDerivedRecord>();
+			table.Insert(() => new UnorderedColumnsDerivedRecord()
+			{
+				EventId = 1,
+				EventDescription = "New event"
+			});
+
+			var events = table.First();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(events.EventId, Is.EqualTo(1));
+				Assert.That(events.EventDescription, Is.EqualTo("New event"));
+			}
+		}
+
+		[Table("RefPropertyEntity", IsColumnAttributeRequired = true)]
+		public class RefPropertyEntity
+		{
+			private RefPropertyData _Data;
+
+			public ref RefPropertyData Data => ref _Data;
+
+			[Column]
+			public string? Str;
+		}
+
+		public struct RefPropertyData;
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2052")]
+		public void RefReturnPropertyDoesNotBreakEntityMapping([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<RefPropertyEntity>();
+			var result = table.ToArray();
+		}
+}
 }

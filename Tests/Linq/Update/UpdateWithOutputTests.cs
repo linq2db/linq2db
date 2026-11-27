@@ -2823,8 +2823,8 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region Issues
-		[Test]
-		public void Issue3044UpdateOutputWithTake([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3044")]
+		public void UpdateOutputWithTakeAndKeyChange([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using var db = GetDataContext(context);
@@ -2848,8 +2848,8 @@ namespace Tests.xUpdate
 				new UpdateOutputComparer<TableWithData>());
 		}
 
-		[Test]
-		public void Issue3044UpdateOutputWithTake2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3044")]
+		public void UpdateOutputWithTakeAndValueChange([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
 		{
 			var sourceData = GetSourceData();
 
@@ -2875,33 +2875,8 @@ namespace Tests.xUpdate
 				new UpdateOutputComparer<TableWithData>());
 		}
 
-		[Test]
-		public void Issue3044UpdateOutputWithTakeSubquery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
-		{
-			var sourceData    = GetSourceData();
-			using var db = GetDataContext(context);
-			using var source = db.CreateLocalTable(sourceData);
-			var output = source
-					.Where(i => i.Id >= 7)
-					.OrderBy(i => i.Id)
-					.Take(1)
-					.UpdateWithOutput(x => new TableWithData { Id = 20, Value = x.Value, ValueStr = x.ValueStr });
-
-			AreEqual(
-				new[]
-				{
-						new UpdateOutput<TableWithData>
-						{
-							Deleted = sourceData[6],
-							Inserted = sourceData[6] with { Id = 20 },
-						}
-				},
-				output,
-				new UpdateOutputComparer<TableWithData>());
-		}
-
-		[Test]
-		public void Issue3044UpdateOutputWithTakeCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3044")]
+		public void UpdateOutputWithTakeOverCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using var db = GetDataContext(context);
@@ -2926,8 +2901,8 @@ namespace Tests.xUpdate
 				new UpdateOutputComparer<TableWithData>());
 		}
 
-		[Test]
-		public void Issue5450_UpdateOverCte_WithMultiTableQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5450")]
+		public void UpdateOverCteWithMultiTableQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			// Regression: BasicCorrectUpdate previously bailed unless Update.Table was a
 			// concrete SqlTable, and MakeUniversalUpdate cast cloned tables back to SqlTable
@@ -2953,16 +2928,16 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		public class Test3697
+		public class UpdateOutputOwner
 		{
 			[Identity, PrimaryKey] public int Id { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Test3697Item.TestId))]
-			public List<Test3697Item> Items { get; set; } = null!;
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(UpdateOutputItem.TestId))]
+			public List<UpdateOutputItem> Items { get; set; } = null!;
 		}
 
 		[Table]
-		public class Test3697Item
+		public class UpdateOutputItem
 		{
 			[Identity, PrimaryKey] public int Id     { get; set; }
 			[Column              ] public int Value  { get; set; }
@@ -2971,54 +2946,54 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "into_values_source: alternative is not implemented yet",
 			Details = "no-issue: YDB cannot insert a row consisting only of an auto-generated key")]
-		[Test]
-		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3697")]
+		public void UpdateOutputFromAssociationAndJoin([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db      = GetDataContext(context);
-			using var records = db.CreateLocalTable<Test3697>();
-			db.Insert(new Test3697() { Id = 1 });
-			using var items   = db.CreateLocalTable(new[] { new Test3697Item() { Id = 2, Value = 3, TestId = 1 } });
+			using var records = db.CreateLocalTable<UpdateOutputOwner>();
+			db.Insert(new UpdateOutputOwner() { Id = 1 });
+			using var items   = db.CreateLocalTable(new[] { new UpdateOutputItem() { Id = 2, Value = 3, TestId = 1 } });
 
 			var result = records.SelectMany(a => a.Items)
-				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
+				.UpdateWithOutput(a => new UpdateOutputItem() { Value = 1 }, (d, i) => i.Id)
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0], Is.EqualTo(1));
 
 			result = records.InnerJoin(items, (a, b) => a.Id == b.TestId, (a, b) => b)
-				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
+				.UpdateWithOutput(a => new UpdateOutputItem() { Value = 1 }, (d, i) => i.Id)
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0], Is.EqualTo(1));
 		}
 
-		sealed class Issue4135Table
+		sealed class UpdateOutputFlaggedRow
 		{
 			[PrimaryKey] public int     Id          { get; set; }
 			[Column    ] public string? Name        { get; set; }
 			[Column    ] public bool    NeedsUpdate { get; set; }
 		}
 
-		[Test]
-		public void Issue4135Test([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4135")]
+		public void UpdateOutputOldValuesWithTake([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(
 			[
-				new Issue4135Table() { Id = 1, Name = "name1", NeedsUpdate = true },
-				new Issue4135Table() { Id = 2, Name = "name2", NeedsUpdate = false },
+				new UpdateOutputFlaggedRow() { Id = 1, Name = "name1", NeedsUpdate = true },
+				new UpdateOutputFlaggedRow() { Id = 2, Name = "name2", NeedsUpdate = false },
 			]);
 
 			var people = tb
 				.Where(e => e.NeedsUpdate)
 				.OrderBy(e => e.Id)
 				.Take(4)
-				.UpdateWithOutput(e => new Issue4135Table()
+				.UpdateWithOutput(e => new UpdateOutputFlaggedRow()
 				{
 					NeedsUpdate = false
-				}, (d, _) => new Issue4135Table()
+				}, (d, _) => new UpdateOutputFlaggedRow()
 				{
 					Id           = d.Id,
 					Name         = d.Name,
@@ -3036,70 +3011,70 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		sealed class Issue4193Person
+		sealed class UpdateOutputPerson
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column(CanBeNull = false)] public string Name { get; set; } = null!;
 			[Column] public int? EmployeeId { get; set; }
 
-			[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(Issue4193Employee.Id))]
-			public Issue4193Employee? Employee { get; set; }
+			[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(UpdateOutputEmployee.Id))]
+			public UpdateOutputEmployee? Employee { get; set; }
 		}
 
 		[Table]
-		sealed class Issue4193Employee
+		sealed class UpdateOutputEmployee
 		{
 			[Column] public int SalaryId { get; set; }
 			[PrimaryKey] public int Id { get; set; }
 
-			[Association(CanBeNull = false, ThisKey = nameof(SalaryId), OtherKey = nameof(Issue4193Salary.Id))]
-			public Issue4193Salary Salary { get; set; } = null!;
+			[Association(CanBeNull = false, ThisKey = nameof(SalaryId), OtherKey = nameof(UpdateOutputSalary.Id))]
+			public UpdateOutputSalary Salary { get; set; } = null!;
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4193Person.EmployeeId))]
-			public IEnumerable<Issue4193Person> People { get; set; } = null!;
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(UpdateOutputPerson.EmployeeId))]
+			public IEnumerable<UpdateOutputPerson> People { get; set; } = null!;
 		}
 
 		[Table]
-		sealed class Issue4193Salary
+		sealed class UpdateOutputSalary
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public int? Amount { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4193Employee.SalaryId))]
-			public IEnumerable<Issue4193Employee> Employees { get; set; } = null!;
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(UpdateOutputEmployee.SalaryId))]
+			public IEnumerable<UpdateOutputEmployee> Employees { get; set; } = null!;
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[Test]
-		public void Issue4193Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4193")]
+		public void UpdateOutputThroughAssociationChain([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable([new Issue4193Person() { Id = 1, EmployeeId = 1, Name = "foo" }]);
-			using var t2 = db.CreateLocalTable([new Issue4193Employee() { Id = 1, SalaryId = 1 }]);
-			using var t3 = db.CreateLocalTable([new Issue4193Salary { Id = 1, Amount = 10 }]);
+			using var t1 = db.CreateLocalTable([new UpdateOutputPerson() { Id = 1, EmployeeId = 1, Name = "foo" }]);
+			using var t2 = db.CreateLocalTable([new UpdateOutputEmployee() { Id = 1, SalaryId = 1 }]);
+			using var t3 = db.CreateLocalTable([new UpdateOutputSalary { Id = 1, Amount = 10 }]);
 
 			var salary = t1.Where(e => e.Name == "foo").Select(e => e.Employee!.Salary);
 			var newAmount = salary.UpdateWithOutput(
-				s => new Issue4193Salary { Amount = s.Amount + 15 },
+				s => new UpdateOutputSalary { Amount = s.Amount + 15 },
 				(_, inserted) => inserted.Amount)
 				.Single();
 
 			Assert.That(newAmount, Is.EqualTo(25));
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4414")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4414Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		public void UpdateOutputWithWhereOrderByTake([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable([new Issue4193Person() { EmployeeId = 1, Name = "foo" }]);
+			using var t1 = db.CreateLocalTable([new UpdateOutputPerson() { EmployeeId = 1, Name = "foo" }]);
 
 			var result = t1
 				.Where(x => x.EmployeeId == 1)
 				.OrderBy(x => x.EmployeeId)
 				.Take(3)
 				.UpdateWithOutput(
-					_ => new Issue4193Person() { Name = "new_name" },
+					_ => new UpdateOutputPerson() { Name = "new_name" },
 					(d, i) => new { i.EmployeeId, i.Name })
 				.ToArray();
 
@@ -3113,12 +3088,12 @@ namespace Tests.xUpdate
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4253")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4253Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		public void UpdateOutputFromJoinWithTuple([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable([new Issue4193Person() { EmployeeId = 1, Name = "foo" }]);
-			using var t2 = db.CreateLocalTable([new Issue4193Employee() { Id = 1, SalaryId = 1 }]);
-			using var t3 = db.CreateLocalTable([new Issue4193Salary { Id = 1, Amount = 10 }]);
+			using var t1 = db.CreateLocalTable([new UpdateOutputPerson() { EmployeeId = 1, Name = "foo" }]);
+			using var t2 = db.CreateLocalTable([new UpdateOutputEmployee() { Id = 1, SalaryId = 1 }]);
+			using var t3 = db.CreateLocalTable([new UpdateOutputSalary { Id = 1, Amount = 10 }]);
 
 			var result = t1
 					.Join(t2, SqlJoinType.Inner,
@@ -3132,5 +3107,35 @@ namespace Tests.xUpdate
 			Assert.That(result[0], Is.EqualTo(1));
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4414")]
+		public async Task UpdateWithOutputAsyncWithOrderByTake([IncludeDataSources(TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var table = db.CreateLocalTable<OutputOrderedMessage>();
+
+			var items = await AsyncEnumerableToListAsync(
+				table
+					.Where(x => !x.Consumed.HasValue)
+					.OrderBy(x => x.Id)
+					.Take(1)
+					.UpdateWithOutputAsync(
+						_ => new OutputOrderedMessage() { Consumed = Sql.CurrentTimestamp },
+						(d, i) => new { i.Id, i.Key, i.Payload }));
+		}
+
+		[Table("OutputOrderedMessage")]
+		class OutputOrderedMessage
+		{
+			[PrimaryKey]
+			public int       Id       { get; set; }
+			[Column]
+			public int       Key      { get; set; }
+			[Column]
+			public DateTime? Consumed { get; set; }
+			[Column]
+			public string?   Payload  { get; set; }
+		}
 	}
 }

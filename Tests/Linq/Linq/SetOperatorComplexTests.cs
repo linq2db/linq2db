@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.Serialization;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -623,6 +624,197 @@ namespace Tests.Linq
 			var query = Combine(query1, query2, SetOperation.UnionAll);
 
 			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1736")]
+		public void UnionOfTwoJoinChainsWithSubqueryAggregates([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			var orderDTO = new OutfeedOrder();
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<OutfeedStorageShelf>())
+			using (db.CreateLocalTable<OutfeedChannel>())
+			using (db.CreateLocalTable<OutfeedResourceShelfRef>())
+			using (db.CreateLocalTable<OutfeedOrderResourceRef>())
+			using (db.CreateLocalTable<OutfeedAisle>())
+			using (db.CreateLocalTable<OutfeedResourcePointAisleRef>())
+			using (db.CreateLocalTable<OutfeedResourcePoint>())
+			using (db.CreateLocalTable<OutfeedLoadCarrier>())
+			using (db.CreateLocalTable<OutfeedInventoryResource>())
+			{
+				var subqryRefOtoR = db.GetTable<OutfeedOrderResourceRef>();
+
+				var baseQry1 =
+					from ss in db.GetTable<OutfeedStorageShelf>()
+					join c in db.GetTable<OutfeedChannel>() on ss.ChannelID equals c.Id
+					join refS in db.GetTable<OutfeedResourceShelfRef>() on ss.Id equals refS.StorageShelfID
+					join aisle in db.GetTable<OutfeedAisle>() on ss.AisleID equals aisle.Id
+					join aislerp in db.GetTable<OutfeedResourcePointAisleRef>() on ss.AisleID equals aislerp.AisleId
+					join rp in db.GetTable<OutfeedResourcePoint>() on aislerp.ResourcePointId equals rp.Id
+					join r in db.GetTable<OutfeedLoadCarrier>() on refS.ResourceID equals r.Id
+					join ir in db.GetTable<OutfeedInventoryResource>() on r.Id equals ir.ResourceID
+					where ir.MaterialID == orderDTO.MaterialID!.Value &&
+					      ir.ProductStatus == 0 &&
+					      ir.Quantity > 0
+					select new OutfeedRouteResult
+					{
+						IR = ir,
+						R = r,
+						SS = ss,
+						C = c,
+						AisleStatus = aisle.Status,
+						RP = rp,
+						RefQty = ((decimal?)subqryRefOtoR.Where(x => x.InventoryResourceID == ir.Id)
+							          .Sum(x => x.Quantity) ?? 0m) +
+						         subqryRefOtoR.Count(x => x.ResourceID == r.Id && !x.InventoryResourceID.HasValue) *
+						         ir.Quantity,
+						MixedStock = db.GetTable<OutfeedInventoryResource>()
+							.Any(irMix => irMix.ResourceID == r.Id &&
+							              irMix.Status >= OutfeedInventoryResourceStatus.ReservedForInfeed &&
+							              irMix.Status <= OutfeedInventoryResourceStatus.ReservedForOutfeed &&
+							              (irMix.MaterialID != orderDTO.MaterialID!.Value ||
+							               irMix.ProductStatus != 0))
+					};
+
+				var baseQry2 =
+					from rp in db.GetTable<OutfeedResourcePoint>()
+					join r in db.GetTable<OutfeedLoadCarrier>() on rp.Id equals r.ResourcePointID
+					join ir in db.GetTable<OutfeedInventoryResource>() on r.Id equals ir.ResourceID
+					where rp.IsStoragePlace &&
+					      ir.MaterialID == orderDTO.MaterialID!.Value &&
+					      ir.ProductStatus == 0 &&
+					      ir.Quantity > 0
+					select new OutfeedRouteResult
+					{
+						IR = ir,
+						R = r,
+						SS = null,
+						C = null,
+						AisleStatus = OutfeedAisleStatus.Available,
+						RP = rp,
+						RefQty = 0,
+						MixedStock = false
+					};
+
+				var baseQry = baseQry1.Union(baseQry2);
+				baseQry = baseQry.Where(cr => cr.IR.Quantity > cr.RefQty);
+
+				baseQry.ToList();
+			}
+		}
+
+		public interface IModifiedTimeStamp;
+
+		public class OutfeedBaseWithId : OutfeedBaseWithoutId, IDTOWithId
+		{
+			public Guid Id { get; set; }
+		}
+
+		public class OutfeedBaseWithExtension : OutfeedBaseWithId, IExtensionData;
+
+		public class OutfeedBaseWithoutId : IMccEntityState;
+
+		public interface ICreatedTimeStamp;
+
+		public interface IDTOWithId;
+
+		public interface IHasArchiveTable;
+
+		public interface IMccEntityState;
+
+		public interface IExtensionData;
+
+		public class OutfeedAisle : OutfeedBaseWithExtension
+		{
+			public OutfeedAisleStatus Status { get; set; }
+		}
+
+		public class OutfeedChannel : OutfeedBaseWithExtension, IModifiedTimeStamp;
+
+		public class OutfeedInventoryResource : OutfeedWmsBase<OutfeedInventoryResource>, IHasArchiveTable
+		{
+			public OutfeedInventoryResourceStatus Status { get; set; }
+
+			public Guid MaterialID { get; set; }
+
+			public Guid ResourceID { get; set; }
+
+			public decimal Quantity { get; set; }
+
+			public int ProductStatus { get; set; }
+		}
+
+		public class OutfeedOrder : OutfeedWmsBase<OutfeedOrder>, IHasArchiveTable
+		{
+			public Guid? MaterialID { get; set; }
+		}
+
+		public class OutfeedOrderResourceRef : OutfeedBaseWithId
+		{
+			public Guid ResourceID { get; set; }
+
+			public Guid? InventoryResourceID { get; set; }
+
+			public decimal Quantity { get; set; }
+		}
+
+		public class OutfeedResourceShelfRef : OutfeedBaseWithoutId
+		{
+			public Guid ResourceID { get; set; }
+
+			public Guid StorageShelfID { get; set; }
+		}
+
+		public class OutfeedResourcePointAisleRef : OutfeedBaseWithoutId
+		{
+			public Guid ResourcePointId { get; set; }
+
+			public Guid AisleId { get; set; }
+		}
+
+		public class OutfeedStorageShelf : OutfeedBaseWithExtension, IModifiedTimeStamp
+		{
+			public Guid AisleID { get; set; }
+
+			public Guid ChannelID { get; set; }
+		}
+
+		public abstract class OutfeedWmsBase<T> : OutfeedWmsBaseNoCustomFields<T>;
+
+		public abstract class OutfeedWmsBaseNoCustomFields<T> : OutfeedBaseWithExtension, IModifiedTimeStamp, ICreatedTimeStamp;
+
+		public class OutfeedLoadCarrier : OutfeedWmsBase<OutfeedLoadCarrier>, IHasArchiveTable
+		{
+			public Guid? ResourcePointID { get; set; }
+		}
+
+		public class OutfeedResourcePoint : OutfeedWmsBase<OutfeedResourcePoint>
+		{
+			[DataMember]
+			public bool IsStoragePlace { get; set; }
+		}
+
+		public enum OutfeedAisleStatus
+		{
+			Available
+		}
+
+		public enum OutfeedInventoryResourceStatus
+		{
+			ReservedForInfeed,
+			ReservedForOutfeed
+		}
+
+		public class OutfeedRouteResult
+		{
+			public OutfeedLoadCarrier    R           { get; set; } = null!;
+			public OutfeedInventoryResource IR          { get; set; } = null!;
+			public OutfeedChannel?          C           { get; set; }
+			public OutfeedStorageShelf?     SS          { get; set; }
+			public OutfeedAisleStatus          AisleStatus { get; set; }
+			public OutfeedResourcePoint  RP          { get; set; } = null!;
+			public decimal              RefQty      { get; set; }
+			public bool                 MixedStock  { get; set; }
 		}
 
 	}

@@ -489,7 +489,7 @@ namespace Tests.Analyzers
 			return Verify.VerifyAsync(source, WrongException("M", "NotImplementedException"));
 		}
 
-		// Marker form 2 by ctor default with a wrong exception - the Issue773Tests.cs:34 / FunctionTests.cs:767
+		// Marker form 2 by ctor default with a wrong exception - the SQLiteTests.cs:1355 / FunctionTests.cs:767
 		// shape the corpus fix rewrote. This form's ServerSideOnlyException negative is already pinned by
 		// DoesNotReportBareSqlExtensionStub, so this slot covers the positive instead.
 		[Test]

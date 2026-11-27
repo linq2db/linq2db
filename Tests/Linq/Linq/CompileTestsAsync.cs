@@ -902,7 +902,7 @@ namespace Tests.Linq
 		[ActiveIssue(3266, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
 			Details = "a compiled query with an async update does not translate, as #3266 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3266")]
-		public async Task Issue3266Test([DataSources(false)] string context)
+		public async Task CompiledQueryAsyncUpdate([DataSources(false)] string context)
 		{
 			var query = CompiledQuery.Compile(
 				(ITestDataContext db, int id) =>  db.Person

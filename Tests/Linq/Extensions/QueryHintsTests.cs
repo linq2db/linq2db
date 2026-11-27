@@ -56,9 +56,9 @@ namespace Tests.Extensions
 		}
 
 		[Repeat(100)]
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3137")]
 		[NoBaselines("multi-threading")]
-		public void Issue3137([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void QueryHintsDoNotLeakBetweenContexts([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var rnd = new Random();
 

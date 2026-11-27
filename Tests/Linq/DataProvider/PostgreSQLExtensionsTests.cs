@@ -289,19 +289,17 @@ namespace Tests.DataProvider
 			var result = query.ToArray();
 		}
 
-		#region 4562
-
 		[ActiveIssue(4562, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
 			Details = "Sql.Ext.PostgreSQL().Overlaps is not translated, as #4562 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4562")]
-		public void Issue4562Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		public void OverlapsWithEnumArrayConverter([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4562Table>();
+			using var tb = db.CreateLocalTable<EnumArrayTable>();
 
 			// arrays support missing now
-			db.Execute("INSERT INTO \"Issue4562Table\"(\"Id\", \"Statuses\") VALUES(1, '{1, 2, 1, 3, 4}')");
-			db.Execute("INSERT INTO \"Issue4562Table\"(\"Id\", \"Statuses\") VALUES(2, '{1, 4}')");
+			db.Execute("INSERT INTO \"EnumArrayTable\"(\"Id\", \"Statuses\") VALUES(1, '{1, 2, 1, 3, 4}')");
+			db.Execute("INSERT INTO \"EnumArrayTable\"(\"Id\", \"Statuses\") VALUES(2, '{1, 4}')");
 
 			var notAcceptedStatuses = new StatusType[] { StatusType.Value2, StatusType.Value3 };
 
@@ -323,12 +321,12 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class Issue4562Table
+		sealed class EnumArrayTable
 		{
 			[PrimaryKey] public int Id { get; set; }
-			[Column(DbType = "integer[]"), ValueConverter(ConverterType = typeof(Issue4562Converter))] public StatusType[]? Statuses { get; set; }
+			[Column(DbType = "integer[]"), ValueConverter(ConverterType = typeof(EnumArrayConverter))] public StatusType[]? Statuses { get; set; }
 
-			sealed class Issue4562Converter : IValueConverter
+			sealed class EnumArrayConverter : IValueConverter
 			{
 				bool IValueConverter.HandlesNulls => true;
 
@@ -345,7 +343,6 @@ namespace Tests.DataProvider
 			Value3,
 			Value4,
 		}
-		#endregion
 
 		[Test]
 		public void GenerateSeries([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
@@ -401,7 +398,7 @@ namespace Tests.DataProvider
 			Assert.That(allResult, Is.EqualTo(separateResult));
 		}
 
-		public class Issue5285Table
+		public class UnnestLateralTable
 		{
 			[PrimaryKey, Identity]
 			public int Id { get; set; }
@@ -416,7 +413,7 @@ namespace Tests.DataProvider
 		public void TestUnnestWithLateral1([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5285Table>();
+			using var tb = db.CreateLocalTable<UnnestLateralTable>();
 
 			var query =
 				from i in db.Unnest([1, 2, 3])
@@ -433,7 +430,7 @@ namespace Tests.DataProvider
 		public void TestUnnestWithLateral2([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5285Table>();
+			using var tb = db.CreateLocalTable<UnnestLateralTable>();
 
 			var query = 
 				from i in UnnestOld(db, [1, 2, 3])

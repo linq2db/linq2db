@@ -2550,5 +2550,301 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		static readonly EagerOrderItem[] ItemData =
+		[
+			new EagerOrderItem { Id = 1, Value = "one" },
+			new EagerOrderItem { Id = 2, Value = "two" },
+		];
+
+		// Declared out of Id order on purpose: insertion order must not be able to stand in for the
+		// ordering under test, so a run that applies no ordering at all can come back wrong.
+		static readonly EagerOrderItemLog[] LogData =
+		[
+			new EagerOrderItemLog { Id = 3, ItemId = 1, Log = "line3" },
+			new EagerOrderItemLog { Id = 1, ItemId = 1, Log = "line1" },
+			new EagerOrderItemLog { Id = 2, ItemId = 1, Log = "line2" },
+			new EagerOrderItemLog { Id = 6, ItemId = 2, Log = "line6" },
+			new EagerOrderItemLog { Id = 4, ItemId = 2, Log = "line4" },
+			new EagerOrderItemLog { Id = 5, ItemId = 2, Log = "line5" },
+		];
+
+		static readonly EagerOrderItemTag[] TagData =
+		[
+			new EagerOrderItemTag { Id = 1, LogId = 1, Name = "t1" },
+			new EagerOrderItemTag { Id = 2, LogId = 2, Name = "t2" },
+			new EagerOrderItemTag { Id = 3, LogId = 3, Name = "t3" },
+			new EagerOrderItemTag { Id = 4, LogId = 4, Name = "t4" },
+			new EagerOrderItemTag { Id = 5, LogId = 5, Name = "t5" },
+			new EagerOrderItemTag { Id = 6, LogId = 6, Name = "t6" },
+		];
+
+		// https://github.com/linq2db/linq2db/issues/5935 - an eager-loaded OrderBy whose key is not in the projection must not throw
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		public void OrderByKeyNotProjected(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderBy(l => l.Id).Select(l => new { l.Log }).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Select(l => l.Log).ShouldBe(["line1", "line2", "line3"]);
+			result[1].Logs.Select(l => l.Log).ShouldBe(["line4", "line5", "line6"]);
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5935 - descending order survives the same shape
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		public void OrderByDescendingKeyNotProjected(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderByDescending(l => l.Id).Select(l => new { l.Log }).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Select(l => l.Log).ShouldBe(["line3", "line2", "line1"]);
+			result[1].Logs.Select(l => l.Log).ShouldBe(["line6", "line5", "line4"]);
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5935 - ThenBy with neither key in the projection
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		public void ThenByKeyNotProjected(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderBy(l => l.ItemId).ThenByDescending(l => l.Id).Select(l => new { l.Log }).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Select(l => l.Log).ShouldBe(["line3", "line2", "line1"]);
+			result[1].Logs.Select(l => l.Log).ShouldBe(["line6", "line5", "line4"]);
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5935 - the key-present shape keeps remapping and keeps its order
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		public void OrderByKeyProjected(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderByDescending(l => l.Id).Select(l => new { l.Id, l.Log }).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Select(l => l.Log).ShouldBe(["line3", "line2", "line1"]);
+			result[1].Logs.Select(l => l.Log).ShouldBe(["line6", "line5", "line4"]);
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5935 - the key-present ThenBy shape is what still reaches the ThenBy branch after the fix
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		public void ThenByKeyProjected(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderBy(l => l.ItemId).ThenByDescending(l => l.Id).Select(l => new { l.ItemId, l.Id, l.Log }).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Select(l => l.Log).ShouldBe(["line3", "line2", "line1"]);
+			result[1].Logs.Select(l => l.Log).ShouldBe(["line6", "line5", "line4"]);
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5935 - SelectMany below an OrderBy changes the element type without a remap
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		public void OrderByThenSelectMany(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+			using var tags  = db.CreateLocalTable(TagData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Tags = i.Logs.OrderByDescending(l => l.Id).SelectMany(l => l.Tags).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Tags.Select(t => t.Name).ShouldBe(["t3", "t2", "t1"]);
+			result[1].Tags.Select(t => t.Name).ShouldBe(["t6", "t5", "t4"]);
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5935 - Cast below an OrderBy changes the element type without a remap
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		public void OrderByThenCast(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderByDescending(l => l.Id).Cast<object>().ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Cast<EagerOrderItemLog>().Select(l => l.Id).ShouldBe([3, 2, 1]);
+			result[1].Logs.Cast<EagerOrderItemLog>().Select(l => l.Id).ShouldBe([6, 5, 4]);
+		}
+
+		// Order is deliberately unasserted - for a limited detail the ORDER BY stays inside the APPLY
+		// subquery and never reaches the outer preamble query (#5937).
+		// https://github.com/linq2db/linq2db/issues/5935 - a limited detail hits the same defect
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
+		public void OrderByTakeKeyNotProjected(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderBy(l => l.Id).Take(2).Select(l => new { l.Log }).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Length.ShouldBe(2);
+			result[1].Logs.Length.ShouldBe(2);
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5935 - a wrapper that keeps the element type must not drop the client-side ordering
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
+		public void OrderByAsQueryableTake(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderByDescending(l => l.Id).AsQueryable().Take(2).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Select(l => l.Id).ShouldBe([3, 2]);
+			result[1].Logs.Select(l => l.Id).ShouldBe([6, 5]);
+		}
+
+		[Table]
+		sealed class EagerOrderItem
+		{
+			[Column, PrimaryKey] public int     Id    { get; set; }
+			[Column]             public string? Value { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(EagerOrderItemLog.ItemId))]
+			public IEnumerable<EagerOrderItemLog> Logs { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class EagerOrderItemLog
+		{
+			[Column, PrimaryKey] public int     Id     { get; set; }
+			[Column]             public int     ItemId { get; set; }
+			[Column]             public string? Log    { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(EagerOrderItemTag.LogId))]
+			public IEnumerable<EagerOrderItemTag> Tags { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class EagerOrderItemTag
+		{
+			[Column, PrimaryKey] public int     Id    { get; set; }
+			[Column]             public int     LogId { get; set; }
+			[Column]             public string? Name  { get; set; }
+		}
 	}
 }

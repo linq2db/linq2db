@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -793,7 +794,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4586")]
-		public void Issue4586Test([DataSources(false)] string context)
+		public void OrderByDescendingWithSkipTakeKeepsOrderInFinalSelect([DataSources(false)] string context)
 		{
 			using var db  = GetDataConnection(context);
 
@@ -823,7 +824,7 @@ namespace Tests.Linq
 			Assert.That(expectedOrders, Is.EqualTo(db.LastQuery.Split(["ORDER BY"], StringSplitOptions.None).Length - 1));
 		}
 
-		#region issue 2068 - OrderBy with NULLS FIRST/LAST
+		#region OrderBy with NULLS FIRST/LAST
 
 		sealed class NullsTable
 		{
@@ -1112,6 +1113,257 @@ namespace Tests.Linq
 				.Select(t => t.ID)
 				.ToArray()
 				.ShouldBe(expected);
+		}
+
+		[Table("OrderBySubqueryTable")]
+		sealed class OrderBySubqueryTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public string? LanguageId { get; set; }
+			[Column]
+			public string? Text { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2647")]
+		public void OrderByCorrelatedCountSubquery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<OrderBySubqueryTable>();
+
+			var query = db.GetTable<OrderBySubqueryTable>()
+				.OrderBy(x => x.LanguageId)
+				.ThenByDescending(ss => 
+					db.GetTable<OrderBySubqueryTable>().Count(ss2 => ss2.Id == ss.Id) * 10000 / db.GetTable<OrderBySubqueryTable>().Count(ss3 => ss3.Id == ss.Id)
+				);
+
+			query.ToList();
+
+			var selectQuery = query.GetSelectQuery();
+			Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));
+			Assert.That(selectQuery.OrderBy.Items[0].Expression.ElementType, Is.EqualTo(QueryElementType.Column));
+		}
+
+		[Table]
+		public class OrderBySubqTranslation
+		{
+			[Column] public int LanguageId { get; set; }
+			[Column] public int TextId { get; set; }
+			[Column] public string? Text { get; set; }
+			[Column] public string? TooltipText { get; set; }
+		}
+
+		[Table]
+		public class OrderBySubqLanguage
+		{
+			[Column] public int LanguageID { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public int AlternativeLanguageID { get; set; }
+		}
+
+		[Table]
+		public class OrderBySubqText
+		{
+			[Column] public int Id { get; set; }
+			[Column] public int Nr { get; set; }
+			[Column] public bool ServerOnlyText { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5100")]
+		public void OrderByCorrelatedSubqueryRequiresSingle([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<OrderBySubqTranslation>())
+			using (db.CreateLocalTable<OrderBySubqLanguage>())
+			using (db.CreateLocalTable<OrderBySubqText>())
+			{
+				db.Insert(new OrderBySubqTranslation() { LanguageId = 1, TextId = 1, Text = "bbb", TooltipText = "ccc" });
+				db.Insert(new OrderBySubqLanguage() { LanguageID = 1, Name = "aaaa", AlternativeLanguageID = 1 });
+				db.Insert(new OrderBySubqText() { Id = 1, Nr = 77 });
+
+				Assert.That(()=>
+					db.GetTable<OrderBySubqTranslation>()
+						.OrderBy(tt =>
+							db.GetTable<OrderBySubqLanguage>()
+								.Where(l => l.AlternativeLanguageID == tt.LanguageId)
+								.Select(l => l.LanguageID)
+								.Count())
+						.ThenBy(tt =>
+							db.GetTable<OrderBySubqText>()
+								.Where(t => t.Id == tt.TextId)
+								.Select(t =>
+									t.ServerOnlyText)).FirstOrDefault(),
+					Throws.TypeOf<LinqToDBException>());
+
+				var qrySorted = db.GetTable<OrderBySubqTranslation>()
+						.OrderBy(tt =>
+							db.GetTable<OrderBySubqLanguage>()
+								.Where(l => l.AlternativeLanguageID == tt.LanguageId)
+								.Select(l => l.LanguageID)
+								.Count())
+						.ThenBy(tt =>
+							db.GetTable<OrderBySubqText>()
+								.Where(t => t.Id == tt.TextId)
+								.Select(t =>
+									t.ServerOnlyText).Single());
+				var translation1 = qrySorted.FirstOrDefault();
+				var qryString = ((DataConnection) db).LastQuery;
+			}
+		}
+
+		[Table]
+		public class CleanUpTextTranslation
+		{
+			[Column] public int LanguageId { get; set; }
+			[Column] public int TextId { get; set; }
+			[Column] public string? Text { get; set; }
+			[Column] public string? TooltipText { get; set; }
+		}
+
+		[Table]
+		public class CleanUpText
+		{
+			[Column] public int Id { get; set; }
+			[Column] public int Nr { get; set; }
+			[Column] public bool ServerOnlyText { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5108")]
+		public void RemoveOrderByClearsJoinedOrdering([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var textTranslationsData = new[]
+			{
+				new CleanUpTextTranslation() { LanguageId = 1, TextId = 1, Text = "bbb", TooltipText = "ccc" },
+			};
+
+			var textData = new[]
+			{
+				new CleanUpText() { Id = 1, Nr = 77, ServerOnlyText = true },
+			};
+
+			using var db = GetDataContext(context);
+
+			using var translations = db.CreateLocalTable(textTranslationsData);
+			using var texts = db.CreateLocalTable(textData);
+			
+			var qryUnsorted =
+				from tt in db.GetTable<CleanUpTextTranslation>()
+				select tt;
+
+			var qrySortedJoin1 = from tt in qryUnsorted
+				join t in db.GetTable<CleanUpText>() on tt.TextId equals t.Id
+				orderby t.ServerOnlyText
+				select tt;
+
+			var qry = qrySortedJoin1.OrderBy(x => x.LanguageId);
+
+			var sqlWithOrder = qry.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sqlWithOrder);
+
+			var sqlWithOrderAst = qry.GetSelectQuery();
+
+			sqlWithOrderAst.OrderBy.Items.Count.ShouldBe(2);
+			sqlWithOrderAst.OrderBy.Items[0].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("LanguageId");
+			sqlWithOrderAst.OrderBy.Items[1].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("ServerOnlyText");
+
+			var noOrderBy = qry.RemoveOrderBy();
+
+			var sqlNoOrder = noOrderBy.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sqlNoOrder);
+
+			var sqlNoOrderAst = noOrderBy.GetSelectQuery();
+			sqlNoOrderAst.OrderBy.Items.Count.ShouldBe(0);
+		}
+
+		[Table]
+		public class ConcatOrderTextTranslation
+		{
+			[Column] public int LanguageId { get; set; }
+			[Column] public int TextId { get; set; }
+			[Column] public string? Text { get; set; }
+			[Column] public string? TooltipText { get; set; }
+		}
+
+		[Table]
+		public class ConcatOrderLanguage
+		{
+			[Column] public int LanguageID { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public int AlternativeLanguageID { get; set; }
+		}
+
+		[Table]
+		public class ConcatOrderText
+		{
+			[Column] public int Id { get; set; }
+			[Column] public int Nr { get; set; }
+			[Column] public bool ServerOnlyText { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5111")]
+		public void ConcatenateOrderByKeepsSubqueryOrdering([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var textTranslationsData = new[]
+			{
+				new ConcatOrderTextTranslation { LanguageId = 1, TextId = 1, Text = "1aaa", TooltipText = "4bbb" },
+				new ConcatOrderTextTranslation { LanguageId = 1, TextId = 2, Text = "2aaa", TooltipText = "3bbb" },
+				new ConcatOrderTextTranslation { LanguageId = 2, TextId = 3, Text = "3aaa", TooltipText = "2bbb" },
+				new ConcatOrderTextTranslation { LanguageId = 2, TextId = 4, Text = "4aaa", TooltipText = "1bbb" }
+			};
+
+			var languagesData = new[]
+			{
+				new ConcatOrderLanguage { LanguageID = 1, Name = "aaaa", AlternativeLanguageID = 2 },
+				new ConcatOrderLanguage { LanguageID = 2, Name = "bbbb", AlternativeLanguageID = 1 }
+			};
+
+			var textsData = new[]
+			{
+				new ConcatOrderText { Id = 1, Nr = 77, ServerOnlyText = true },
+				new ConcatOrderText { Id = 2, Nr = 78, ServerOnlyText = true },
+				new ConcatOrderText { Id = 3, Nr = 79, ServerOnlyText = true },
+				new ConcatOrderText { Id = 4, Nr = 80, ServerOnlyText = true }
+			};
+
+			using var db = GetDataContext(context);
+
+			using var textTranslations = db.CreateLocalTable<ConcatOrderTextTranslation>(textTranslationsData);
+			using var languages = db.CreateLocalTable<ConcatOrderLanguage>(languagesData);
+			using var texts = db.CreateLocalTable<ConcatOrderText>(textsData);
+
+			using var disp = db.UseLinqOptions(o => o.WithConcatenateOrderBy(true));
+
+			var qrySorted1 =
+				textTranslations
+					.OrderBy(tt =>
+						languages
+							.Where(l => l.AlternativeLanguageID == tt.LanguageId)
+							.Select(l => l.LanguageID)
+							.Count())
+					.ThenBy(tt =>
+						texts
+							.Where(t => t.Id == tt.TextId)
+							.Select(t =>
+								t.ServerOnlyText).Single());
+
+			var qrySorted2A =
+				qrySorted1
+					.ThenBy(tt => tt.TooltipText);
+
+			var sqA = qrySorted2A.GetSelectQuery();
+
+			sqA.OrderBy.Items.Count.ShouldBe(3);
+			sqA.OrderBy.Items[2].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("TooltipText");
+
+			var qrySorted2B =
+				qrySorted1
+					.OrderBy(tt => tt.TooltipText);
+
+			var sqB = qrySorted2B.GetSelectQuery();
+
+			sqB.OrderBy.Items.Count.ShouldBe(3);
+			sqB.OrderBy.Items[2].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("TooltipText");
 		}
 	}
 }

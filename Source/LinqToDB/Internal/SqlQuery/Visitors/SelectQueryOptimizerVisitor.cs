@@ -2637,7 +2637,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (subQuery.HasSetOperators)
 				return false;
 
-			// Rare case when LEFT join is empty. We move search condition up. See TestDefaultExpression_22 test.
+			// Rare case when LEFT join is empty. We move search condition up. See CachingTests.CachedDefaultInJoinKeySelectors test.
 			if (joinTable.JoinType == JoinType.Left && subQuery.Where.SearchCondition.IsFalse)
 			{
 				subQuery.Where.SearchCondition.Predicates.Clear();
@@ -2688,7 +2688,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							// See `PostgreSQLExtensionsTests.GenerateSeries`
 							if (subQuery.From.Tables[0].Joins.Count > 0)
 							{
-								// See 'Issue2199Tests.LeftJoinTests2'
+								// See 'LeftJoinTests.LeftJoinMethodSubqueriesCrossJoinedOnConstant'
 								return false;
 							}
 						}
@@ -4283,7 +4283,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 			{
-				// OuterApplyOptimization test
+				// JoinOptimizeTests.OuterApplyOptimizationWithOrPredicateAndAnySubquery test
 				return predicate;
 			}
 		}

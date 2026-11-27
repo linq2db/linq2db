@@ -9,6 +9,7 @@ using System.Text.Json;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -456,8 +457,8 @@ namespace Tests.Linq
 			[Column, PrimaryKey] public int IndexId { get; set; }
 		}
 
-		[Test]
-		public void Issue413Test([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/413")]
+		public void ChainedJoinsAcrossThreeTables([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<T1>())
@@ -816,17 +817,16 @@ namespace Tests.Linq
 			depth.Z2.ShouldBe(44);
 		}
 
-		#region Issue 4139
 		// The message opens with a TableContext id that changes every run, so the fragment starts after it. One
 		// cause across all 112 cases, direct and remote.
 		[ActiveIssue(4139, ErrorTypeName = "LinqToDB.LinqToDBException",
-			ErrorMessage = "Issue4139Table).Parent.Parent' is not an association.",
+			ErrorMessage = "ComplexColumnTable).Parent.Parent' is not an association.",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. A nested association reached through a complex column is not recognised as one.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4139")]
-		public void Issue4139Test([DataSources] string context)
+		public void LoadWithNestedAssociationThroughComplexColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4139Table.Data);
+			using var tb = db.CreateLocalTable(ComplexColumnTable.Data);
 
 			var records = tb.LoadWith(t => t.Parent!.Parent).OrderBy(r => r.Id).ToArray();
 
@@ -843,28 +843,27 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue4139Table
+		sealed class ComplexColumnTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 
 			[Column("ParentId", ".ParentId")]
 			// TODO: missing ctor
 			//[Association(".Parent", ThisKey = ".ParentId", OtherKey = "Id")]
-			public Issue4139Parent? Parent { get; set; }
+			public ComplexColumnParent? Parent { get; set; }
 
-			public static readonly Issue4139Table[] Data = new[]
+			public static readonly ComplexColumnTable[] Data = new[]
 			{
-				new Issue4139Table() { Id = 1 },
-				new Issue4139Table() { Id = 2, Parent = new() { ParentId = 1 } }
+				new ComplexColumnTable() { Id = 1 },
+				new ComplexColumnTable() { Id = 2, Parent = new() { ParentId = 1 } }
 			};
 		}
 
-		sealed class Issue4139Parent
+		sealed class ComplexColumnParent
 		{
 			public int? ParentId { get; set; }
-			public Issue4139Table? Parent { get; set; }
+			public ComplexColumnTable? Parent { get; set; }
 		}
-		#endregion
 
 		#region Record Constructors
 		static class RecordTests
@@ -1062,8 +1061,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		#region Issue 5056
-		static class Issue5056
+		static class RequiredMembersScalarModel
 		{
 			public sealed class Table
 			{
@@ -1088,15 +1086,15 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
-		public void Issue5056Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertScalarTypeWithRequiredMembers([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5056.Table>();
+			using var tb = db.CreateLocalTable<RequiredMembersScalarModel.Table>();
 
-			tb.Insert(() => new Issue5056.Table()
+			tb.Insert(() => new RequiredMembersScalarModel.Table()
 			{
 				Id = 1,
-				ComplexType = new Issue5056.ComplexType()
+				ComplexType = new RequiredMembersScalarModel.ComplexType()
 				{
 					Id = 2,
 				}
@@ -1107,6 +1105,141 @@ namespace Tests.Linq
 			Assert.That(inserted.ComplexType.Id, Is.EqualTo(2));
 		}
 
-		#endregion
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorMessage = "Column 'vpcc.Id' was not found",
+			Details = "no-issue: LibRed's hash join cannot resolve this query's join key. LibRed.Ado 11.0.0-alpha.4 and beta.1; re-check when a newer LibRed ships.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4336")]
+		public void ComposedViewsWithGroupedOuterJoins([DataSources(TestProvName.AllNativeAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(new[] {new CapacityProduct {Id = 1, Name = "p", CategoryId = 1}});
+			using var t2 = db.CreateLocalTable(new[] {new CapacityProductCategory {Id = 1, Name = "c", PeriodOrderLimit = 5}});
+			using var t3 = db.CreateLocalTable<CapacityOrderHeader>();
+			using var t4 = db.CreateLocalTable<CapacityOrderItem>();
+			using var t5 = db.CreateLocalTable(new[] {new CapacityOrderPeriod {Id = 1}});
+			using var t6 = db.CreateLocalTable(new[] {new CapacityPeriodProduct {Id = 1, OrderPeriodId = 1, ProductId = 1}});
+
+			var q = (from r in ViewCapacityAndOrderedByPeriod(db) select r).Take(10);
+			var l = q.ToList();
+
+			l.ShouldBe(new[] {new ViewCapacityAndOrderedByPeriodRow(1, 1, 1, 5, 0, 5, 5, 0, 5)});
+		}
+
+		[Table]
+		public class CapacityProduct
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(CanBeNull = false)] public string Name { get; set; } = null!;
+			[Column(CanBeNull = false)] public int? CategoryId { get; set; }
+		}
+
+		[Table]
+		public class CapacityProductCategory
+		{
+			[PrimaryKey] public int Id { get; set; } // integer
+			[Column(CanBeNull = false)] public string Name { get; set; } = null!;
+			[Column] public short ProductOrderLimit { get; set; }
+			[Column] public short CustomerOrderLimit { get; set; }
+			[Column] public short PeriodOrderLimit { get; set; }
+		}
+
+		[Table]
+		public class CapacityOrderHeader
+		{
+			[PrimaryKey] public int Id { get; set; } // integer
+			[Column] public int PeriodId { get; set; } // integer
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CapacityOrderItem.OrderHeaderId))]
+			public IEnumerable<CapacityOrderItem> OrderItems { get; set; } = null!;
+		}
+
+		[Table]
+		public partial class CapacityOrderItem
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public int OrderHeaderId { get; set; }
+			[Column] public int ProductId { get; set; }
+			[Column] public short Quantity { get; set; }
+
+		}
+
+		[Table]
+		public class CapacityOrderPeriod
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CapacityOrderHeader.PeriodId))]
+			public IEnumerable<CapacityOrderHeader> OrderHeaders { get; set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CapacityPeriodProduct.OrderPeriodId))]
+			public IEnumerable<CapacityPeriodProduct> ProductsPerOrderPeriods { get; set; } = null!;
+		}
+
+		[Table]
+		public class CapacityPeriodProduct
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public int OrderPeriodId { get; set; }
+			[Column] public int ProductId { get; set; }
+		}
+
+		public record ViewProductCategoryCapacityRow(int Id, string Name, short ProductOrderLimit, short CustomerOrderLimit, short PeriodOrderLimit);
+		public record ViewProductCapacityRow(int ProductId, int? CategoryId, string Name, short ProductOrderLimit, short CustomerOrderLimit, short PeriodOrderLimit);
+		public record ViewSumOfOrderedProductsByPeriodRow(int OrderPeriodId, int ProductId, int Quantity);
+		public record ViewCapacityAndOrderedByPeriodAndProductRow(int OrderPeriodId, int ProductId, int? CategoryId, int MaxCapacity, int Quantity, int FreeCapacity);
+		public record ViewSumOfOrderedCategoriesByPeriodRow(int OrderPeriodId, int? CategoryId, int Quantity);
+		public record ViewCapacityAndOrderedByPeriodAndProductCategoryRow(int OrderPeriodId, int? ProductCategoryId, string ProductCategoryName, int MaxCapacity, int Quantity, int FreeCapacity);
+		public record ViewCapacityAndOrderedByPeriodRow(int OrderPeriodId, int ProductId, int? ProductCategoryId, int ProductMaxCapacity, int ProductQuantity, int ProductFreeCapacity, int CategoryMaxCapacity, int CategoryQuantity, int CategoryFreeCapacity);
+
+		IQueryable<ViewProductCategoryCapacityRow> ViewProductCategoryCapacity(IDataContext db) =>
+		   from pc in db.GetTable<CapacityProductCategory>()
+		   select new ViewProductCategoryCapacityRow(pc.Id, pc.Name, pc.ProductOrderLimit, pc.CustomerOrderLimit, pc.PeriodOrderLimit);
+
+		IQueryable<ViewProductCapacityRow> ViewProductCapacity(IDataContext db) =>
+		   from p in db.GetTable<CapacityProduct>()
+		   from pcc in ViewProductCategoryCapacity(db).Where(o => o.Id == p.CategoryId).DefaultIfEmpty()
+		   select new ViewProductCapacityRow(p.Id, p.CategoryId, p.Name, pcc.ProductOrderLimit, pcc.CustomerOrderLimit, pcc.PeriodOrderLimit);
+
+		IQueryable<ViewSumOfOrderedProductsByPeriodRow> ViewSumOfOrderedProductsByPeriod(IDataContext db) =>
+					from op in db.GetTable<CapacityOrderPeriod>()
+					from oh in op.OrderHeaders.DefaultIfEmpty()
+					from oi in oh.OrderItems.DefaultIfEmpty()
+					group new { oi.Quantity } by new { op.Id, oi.ProductId } into agroup
+					select new ViewSumOfOrderedProductsByPeriodRow(agroup.Key.Id, agroup.Key.ProductId, Coalesce(agroup.Sum(a => Coalesce(a.Quantity, (short)0)), 0));
+
+		IQueryable<ViewCapacityAndOrderedByPeriodAndProductRow> ViewCapacityAndOrderedByPeriodAndProduct(IDataContext db) =>
+						  from op in db.GetTable<CapacityOrderPeriod>()
+						  from pop in op.ProductsPerOrderPeriods
+						  from vpc in ViewProductCapacity(db).Where(o => o.ProductId == pop.ProductId).DefaultIfEmpty()
+						  from vsp in ViewSumOfOrderedProductsByPeriod(db).Where(o => o.OrderPeriodId == op.Id && o.ProductId == pop.ProductId).DefaultIfEmpty()
+						  let PeriodOrderLimit = Coalesce(vpc.PeriodOrderLimit, 0)
+						  let Quantity = Coalesce(vsp.Quantity, 0)
+						  select new ViewCapacityAndOrderedByPeriodAndProductRow(op.Id, pop.ProductId, vpc.CategoryId, PeriodOrderLimit, Quantity, PeriodOrderLimit - Quantity);
+
+		IQueryable<ViewSumOfOrderedCategoriesByPeriodRow> ViewSumOfOrderedCategoriesByPeriod(IDataContext db) =>
+		   from op in db.GetTable<CapacityOrderPeriod>()
+		   from oh in op.OrderHeaders.DefaultIfEmpty()
+		   from oi in oh.OrderItems.DefaultIfEmpty()
+		   from p in db.GetTable<CapacityProduct>().Where(o => o.Id == oi.ProductId).DefaultIfEmpty()
+		   group new { oi.Quantity } by new { op.Id, p.CategoryId } into agroup
+		   select new ViewSumOfOrderedCategoriesByPeriodRow(agroup.Key.Id, agroup.Key.CategoryId, agroup.Sum(a => a.Quantity));
+
+		 IQueryable<ViewCapacityAndOrderedByPeriodAndProductCategoryRow> ViewCapacityAndOrderedByPeriodAndProductCategory(IDataContext db) =>
+		   from op in db.GetTable<CapacityOrderPeriod>()
+		   from vpcc in ViewProductCategoryCapacity(db)
+		   from vsopc in ViewSumOfOrderedCategoriesByPeriod(db).Where(o => o.OrderPeriodId == op.Id && o.CategoryId == vpcc.Id).DefaultIfEmpty()
+		   let PeriodOrderLimit = Coalesce(vpcc.PeriodOrderLimit, 0)
+		   let Quantity = vsopc.Quantity
+		   select new ViewCapacityAndOrderedByPeriodAndProductCategoryRow(op.Id, vpcc.Id, vpcc.Name, PeriodOrderLimit, Quantity, PeriodOrderLimit - Quantity);
+
+		IQueryable<ViewCapacityAndOrderedByPeriodRow> ViewCapacityAndOrderedByPeriod(IDataContext db) =>
+		   from v1 in ViewCapacityAndOrderedByPeriodAndProduct(db)
+		   from v2 in ViewCapacityAndOrderedByPeriodAndProductCategory(db).Where(o => o.OrderPeriodId == v1.OrderPeriodId && o.ProductCategoryId == v1.CategoryId).DefaultIfEmpty()
+		   select new ViewCapacityAndOrderedByPeriodRow(v1.OrderPeriodId, v1.ProductId, v1.CategoryId, v1.MaxCapacity, v1.Quantity, v1.FreeCapacity, v2.MaxCapacity, v2.Quantity, v2.FreeCapacity);
+
+		[Sql.Extension("COALESCE({expr},{nullValue})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
+		static T Coalesce<T>([ExprParameter] T expr, [ExprParameter] T nullValue)
+		{
+			throw new ServerSideOnlyException(nameof(Coalesce));
+		}
 	}
 }
