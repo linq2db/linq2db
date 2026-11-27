@@ -1985,14 +1985,17 @@ namespace Tests.Linq
 				.ShouldBe(new[] { "A", "A" });
 		}
 
-		/// <summary>A cell read survives a sub-query wrap: over an interface-typed member, in an unpivot column, and after one.</summary>
+		/// <summary>
+		/// A cell read survives a sub-query wrap: through <c>Sql.Property</c> and <see cref="PivotCells.Get{T}"/> in a filter, in
+		/// an unpivot column, and after an unpivot.
+		/// </summary>
 		[Test]
 		public void ReadsCellsUnderASubQuery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Sales.Data);
 
-			t
+			var throughInterface = t
 				.Select(x => new { x.Category, x.Year, x.Amount })
 				.GroupBy(x => x.Category)
 				.Select(g => new InterfaceCellsRow
@@ -2003,8 +2006,32 @@ namespace Tests.Linq
 						.Cell(rows => rows.Sum(x => x.Amount), Year)
 						.AsDictionary(),
 				})
-				.AsSubQuery()
+				.AsSubQuery();
+
+			throughInterface
 				.Where(r => Sql.Property<decimal?>(r.Cells, "Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			throughInterface
+				.Where(r => ((PivotCells)r.Cells).Get<decimal?>("Y2010") > 16)
+				.Select(r => r.Category)
+				.ToList()
+				.ShouldBe(new[] { "A" });
+
+			t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					Category = g.Key,
+					Cells    = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.AsSubQuery()
+				.Where(r => r.Cells.Get<decimal?>("Y2010") > 16)
 				.Select(r => r.Category)
 				.ToList()
 				.ShouldBe(new[] { "A" });
