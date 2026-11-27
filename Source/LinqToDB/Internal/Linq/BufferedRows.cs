@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Internal.Linq
 {
-	// The main rows of an eager load, read to the end before its read-consistency transaction commits. Where the target has
+	// The main rows of an eager load, read to the end before the first one is returned. Where the target has
 	// ArrayPool the array is rented and goes back on the first Dispose only: returning it twice would hand one array to two
 	// later renters.
 	internal sealed class BufferedRows<T> : IEnumerator<T>, IAsyncEnumerator<T>
