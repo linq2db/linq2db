@@ -703,7 +703,7 @@ namespace LinqToDB.Internal.Expressions
 
 			bool CompareBlock(BlockExpression a, BlockExpression b)
 			{
-				return CompareExpressionList(a.Variables, b.Variables) && CompareExpressionList(b.Expressions, a.Expressions);
+				return CompareExpressionList(a.Variables, b.Variables) && CompareExpressionList(a.Expressions, b.Expressions);
 			}
 
 			bool CompareInvocation(InvocationExpression a, InvocationExpression b)
