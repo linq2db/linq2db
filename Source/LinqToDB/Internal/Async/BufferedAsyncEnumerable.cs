@@ -6,7 +6,7 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.Async
 {
-	// Rows read to the end before the read-consistency transaction committed. The first enumeration replays them; a
+	// Rows read to the end before the first one is returned. The first enumeration replays them; a
 	// later one runs the source again, as re-enumerating a query does.
 	internal sealed class BufferedAsyncEnumerable<T> : IAsyncEnumerable<T>
 	{
