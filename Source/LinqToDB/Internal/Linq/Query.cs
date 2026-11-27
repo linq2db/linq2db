@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
@@ -240,10 +241,15 @@ namespace LinqToDB.Internal.Linq
 			if (dc == null)
 				return null;
 
-			if (dataContext is DataContext ctx)
-				return new LoadTransaction(ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
+			if (!dataContext.Options.LinqOptions.UseEagerLoadingTransaction)
+				return LoadTransaction.WithoutTransaction;
 
-			return new LoadTransaction(dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
+			var isolationLevel = GetLoadIsolationLevel(dataContext, dc);
+
+			if (dataContext is DataContext ctx)
+				return new LoadTransaction(ctx.BeginTransaction(isolationLevel));
+
+			return new LoadTransaction(dc.BeginTransaction(isolationLevel));
 		}
 
 		internal async Task<LoadTransaction?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
@@ -253,28 +259,47 @@ namespace LinqToDB.Internal.Linq
 			if (dc == null)
 				return null;
 
+			if (!dataContext.Options.LinqOptions.UseEagerLoadingTransaction)
+				return LoadTransaction.WithoutTransaction;
+
+			var isolationLevel = GetLoadIsolationLevel(dataContext, dc);
+
 			if (dataContext is DataContext ctx)
 				return new LoadTransaction(
-					await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+					await ctx.BeginTransactionAsync(isolationLevel, cancellationToken)
 						.ConfigureAwait(false));
 
 			return new LoadTransaction(
-				await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+				await dc.BeginTransactionAsync(isolationLevel, cancellationToken)
 					.ConfigureAwait(false));
+		}
+
+		static IsolationLevel GetLoadIsolationLevel(IDataContext dataContext, DataConnection dc)
+		{
+			return dataContext.Options.LinqOptions.EagerLoadingIsolationLevel
+				?? dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel;
 		}
 
 		/// <summary>
 		/// The implicit transaction that keeps the reads of an eager-loading query consistent. It covers the reads only: an
 		/// enumeration buffers the main rows and commits it with <see cref="Complete"/> before returning the first one, so the
 		/// caller's code never runs inside a transaction it did not open. Disposing it uncommitted rolls it back.
+		/// With <see cref="LinqOptions.UseEagerLoadingTransaction"/> off, <see cref="WithoutTransaction"/> stands for it: the
+		/// main rows are buffered the same way, with no transaction around the reads.
 		/// </summary>
 		internal sealed class LoadTransaction : IDisposable, IAsyncDisposable
 		{
-			readonly object _transaction;
+			public static readonly LoadTransaction WithoutTransaction = new();
+
+			readonly object? _transaction;
 
 			// Once committed or disposed, the connection's current transaction may be another one, and disposing ours
 			// again would dispose it.
 			bool _released;
+
+			LoadTransaction()
+			{
+			}
 
 			public LoadTransaction(DataContextTransaction transaction)
 			{
@@ -288,7 +313,7 @@ namespace LinqToDB.Internal.Linq
 
 			public void Complete()
 			{
-				if (_released)
+				if (_released || _transaction == null)
 					return;
 
 				if (_transaction is DataContextTransaction contextTransaction)
@@ -301,7 +326,7 @@ namespace LinqToDB.Internal.Linq
 
 			public async Task CompleteAsync(CancellationToken cancellationToken)
 			{
-				if (_released)
+				if (_released || _transaction == null)
 					return;
 
 				if (_transaction is DataContextTransaction contextTransaction)
@@ -314,7 +339,7 @@ namespace LinqToDB.Internal.Linq
 
 			public void Dispose()
 			{
-				if (_released)
+				if (_released || _transaction == null)
 					return;
 
 				_released = true;
@@ -323,7 +348,7 @@ namespace LinqToDB.Internal.Linq
 
 			public ValueTask DisposeAsync()
 			{
-				if (_released)
+				if (_released || _transaction == null)
 					return default;
 
 				_released = true;

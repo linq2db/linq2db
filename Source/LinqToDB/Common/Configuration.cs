@@ -524,6 +524,47 @@ namespace LinqToDB.Common
 						Options = Options with { UseDbBatch = value };
 				}
 			}
+
+			/// <summary>
+			/// Controls the transaction linq2db opens around an eager load, in which the main query and its child queries
+			/// read the database. When disabled, no transaction is opened.
+			/// Default value: <see langword="true"/>.
+			/// </summary>
+			/// <remarks>
+			/// This is a process-global default for the <see cref="LinqOptions.UseEagerLoadingTransaction"/> context option;
+			/// prefer setting it per-context via <see cref="DataOptionsExtensions.UseEagerLoadingTransaction"/> when different
+			/// contexts need different values.
+			/// </remarks>
+			public static bool UseEagerLoadingTransaction
+			{
+				get => Options.UseEagerLoadingTransaction;
+				set
+				{
+					if (Options.UseEagerLoadingTransaction != value)
+						Options = Options with { UseEagerLoadingTransaction = value };
+				}
+			}
+
+			/// <summary>
+			/// Isolation level of the transaction opened around an eager load (see <see cref="UseEagerLoadingTransaction"/>).
+			/// When <see langword="null"/>, the data provider's default
+			/// (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>) is used.
+			/// Default value: <see langword="null"/>.
+			/// </summary>
+			/// <remarks>
+			/// This is a process-global default for the <see cref="LinqOptions.EagerLoadingIsolationLevel"/> context option;
+			/// prefer setting it per-context via <see cref="DataOptionsExtensions.UseEagerLoadingIsolationLevel"/> when
+			/// different contexts need different values.
+			/// </remarks>
+			public static IsolationLevel? EagerLoadingIsolationLevel
+			{
+				get => Options.EagerLoadingIsolationLevel;
+				set
+				{
+					if (Options.EagerLoadingIsolationLevel != value)
+						Options = Options with { EagerLoadingIsolationLevel = value };
+				}
+			}
 		}
 
 		/// <summary>
