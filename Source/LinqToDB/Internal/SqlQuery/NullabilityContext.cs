@@ -26,7 +26,8 @@ namespace LinqToDB.Internal.SqlQuery
 		public static NullabilityContext GetContext(SelectQuery? selectQuery) =>
 			selectQuery == null ? NonQuery : new NullabilityContext([selectQuery], null, null, null);
 
-		HashSet<SqlColumn>? _visitedColumns;
+		// columns on the current walk path; a set-operator column maps to the branch column being walked, otherwise null
+		Dictionary<SqlColumn, SqlColumn?>? _visitedColumns;
 
 		/// <summary>
 		/// Creates nullability context for provided query.
@@ -151,15 +152,32 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (expression is SqlColumn column)
 			{
+				// if column comes from nullable subquery - column is always nullable, unless it is a count its row always carries
+				if (column.Parent != null && CanBeNullSource(column.Parent) == true)
+					return !IsNeverNullAggregate(column);
+
 				_visitedColumns ??= new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 
-				// if column comes from nullable subquery - column is always nullable, unless it is a count its row always carries
-				if (column.Parent != null)
+				if (_visitedColumns.TryGetValue(column, out var walkedBranch))
 				{
-					if (CanBeNullSource(column.Parent) == true)
-						return !IsNeverNullAggregate(column);
+					// to avoid circular reference in case of column referencing itself directly or through other columns.
+					// A set-operator column re-entered from one of its branches - a recursive CTE - answers by that branch
+					// column's type, the answer the walk gave when it cut the cycle at the branch column.
+					var cut = walkedBranch ?? column;
 
-					if (column.Parent.HasSetOperators)
+					if (cut.SystemType?.IsNullableOrReferenceType == false)
+						return false;
+
+					return true;
+				}
+
+				// registered before the set-operator branches are walked: a recursive CTE re-enters this column from every
+				// recursive branch, and re-walking all branches on each re-entry visits every ordering of them
+				_visitedColumns.Add(column, null);
+
+				try
+				{
+					if (column.Parent?.HasSetOperators == true)
 					{
 						var index = column.Parent.Select.Columns.IndexOf(column);
 						if (index < 0) return true;
@@ -184,26 +202,24 @@ namespace LinqToDB.Internal.SqlQuery
 							if (!ReferenceEquals(setNullability, this))
 								setNullability._visitedColumns = _visitedColumns;
 
-							if (set.SelectQuery.Select.Columns[index].CanBeNullable(setNullability))
+							var branchColumn = set.SelectQuery.Select.Columns[index];
+
+							_visitedColumns[column] = branchColumn;
+
+							if (branchColumn.CanBeNullable(setNullability))
 								return true;
 						}
+
+						_visitedColumns[column] = null;
 					}
-				}
 
-				if (!_visitedColumns.Add(column))
+					// otherwise check column expression nullability
+					return CanBeNull(column.Expression);
+				}
+				finally
 				{
-					// to avoid circular reference in case of column referencing itself directly or through other columns
-
-					if (column.SystemType?.IsNullableOrReferenceType == false)
-						return false;
-
-					return true;
+					_visitedColumns.Remove(column);
 				}
-
-				// otherwise check column expression nullability
-				var columnResult = CanBeNull(column.Expression);
-				_visitedColumns.Remove(column);
-				return columnResult;
 			}
 
 			if (expression is SqlField field)
