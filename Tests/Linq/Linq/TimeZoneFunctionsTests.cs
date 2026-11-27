@@ -724,6 +724,29 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// <see cref="DateTimeOffset.Offset"/> of a value stored without an offset: SQL has none to read, so the answer
+		/// is the round-tripped value's, as on master, where the member was not translated. Oracle now extracts
+		/// <c>TIMEZONE_HOUR</c> from the <c>TIMESTAMP</c> column and raises ORA-30076.
+		/// </summary>
+		[ActiveIssue(5913, Configurations = [TestProvName.AllOracle], ErrorMessage = "ORA-30076")]
+		[Test]
+		public void OffsetOfAValueStoredWithoutAnOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
+
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
+
+			var offset = table
+				.Select(r => r.Dto.Offset)
+				.Single();
+
+			offset.ShouldBe(stored.Offset);
+		}
+
+		/// <summary>
 		/// A shift through the frame keeps every digit the column holds. The expectation is the round-tripped value,
 		/// so a provider that stores fewer digits is held only to what it stores.
 		/// </summary>
