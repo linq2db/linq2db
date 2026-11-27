@@ -37,8 +37,8 @@ namespace LinqToDB
 		/// When the selector reads a collection, the statements run in a transaction at
 		/// <see cref="LinqOptions.EagerLoadingIsolationLevel"/> (by default the provider's level) unless
 		/// <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off, the caller already holds one, a <c>TransactionScope</c> is
-		/// active or the provider has no transactions; beginning and committing it are round trips of their own. Without it the
-		/// statements can read different states of the data, combined or not. A remote context opens no such transaction and
+		/// active or the provider has no transactions; beginning and committing it are round trips of their own. With no
+		/// transaction the statements can read different states of the data, combined or not. A remote context opens no such transaction and
 		/// sends each statement with a call of its own.
 		/// </para>
 		/// <para>

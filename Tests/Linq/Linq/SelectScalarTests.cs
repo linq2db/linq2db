@@ -345,7 +345,7 @@ namespace Tests.Linq
 		}
 
 		// Beside an eager-loaded collection, inside one, and inside one that reads the enclosing row only through the nested
-		// select.
+		// select. SQLite only: the nested select binds its scope when the query is built, before any provider code.
 		[Test]
 		public void NestedSelectWithEagerLoadedCollections(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -354,6 +354,7 @@ namespace Tests.Linq
 			AssertNestedSelectWithEagerLoadedCollections(context, strategy);
 		}
 
+		// SQLite only, as above.
 		[Test]
 		[ActiveIssue(6294, ErrorType = typeof(InvalidOperationException), ErrorMessage = "Invalid SQL.")]
 		public void NestedSelectWithEagerLoadedCollectionsUnderCteUnion([IncludeDataSources(TestProvName.AllSQLite)] string context)
