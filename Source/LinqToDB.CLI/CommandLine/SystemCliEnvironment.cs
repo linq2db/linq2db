@@ -2,6 +2,7 @@ using System;
 using System.IO;
 
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine
 {
@@ -112,6 +113,11 @@ namespace LinqToDB.CommandLine
 		public string? ReadLine()
 		{
 			return Console.ReadLine();
+		}
+
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
+		{
+			return WindowsImpersonation.Logon(user, password, mode);
 		}
 	}
 }
