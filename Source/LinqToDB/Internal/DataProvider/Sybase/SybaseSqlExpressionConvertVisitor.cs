@@ -198,14 +198,23 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				{ Name: PseudoFunctions.REPLACE } => func.WithName("Str_Replace"),
 				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
 
+				// ASE answers 0, not NULL, for a NULL argument; renamed so the rewrite does not match its own output
+				{
+					Name: "CharIndex",
+					Parameters: [var p0, var p1],
+					Type: var type,
+				} when p0.CanBeNullable(NullabilityContext) || p1.CanBeNullable(NullabilityContext)
+					=> NullWhenArgumentIsNull(type, new SqlFunction(type, "CHARINDEX", p0, p1), p0, p1),
+
 				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				} => Add<int>(
+				} => NullWhenArgumentIsNull(type, PositionFromStart(
+						type,
 						new SqlFunction(
 							type,
-							"CharIndex",
+							"CHARINDEX",
 							p0,
 							new SqlFunction(
 								MappingSchema.GetDbDataType(typeof(string)),
@@ -217,8 +226,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 								p1)
 							)
 						),
-						Sub(p2, 1)
-					),
+						p2),
+					p0, p1, p2),
 
 				{
 					Name: "Stuff",

@@ -184,6 +184,10 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
 		}
+
+				// CHARINDEX ignores a NULL start; renamed so the rewrite does not match its own output
+				case "CharIndex" when func.Parameters is [var substring, var str, var start] && start.CanBeNullable(NullabilityContext):
+					return NullWhenArgumentIsNull(func.Type, new SqlFunction(func.Type, "CHARINDEX", substring, str, start), start);
 			}
 
 			return base.ConvertSqlFunction(func);

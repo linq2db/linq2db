@@ -132,6 +132,19 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			};
 		}
 
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			// SQLite has no CharIndex with a start position: INSTR searches the tail that begins there
+			if (func is { Name: "CharIndex", Parameters: [var substring, var str, var start] })
+			{
+				var tail = new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substr", str, start);
+
+				return PositionFromStart(func.Type, new SqlFunction(func.Type, "INSTR", tail, substring), start);
+			}
+
+			return base.ConvertSqlFunction(func);
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate);

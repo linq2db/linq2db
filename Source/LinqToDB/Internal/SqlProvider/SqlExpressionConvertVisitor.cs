@@ -3415,6 +3415,41 @@ namespace LinqToDB.Internal.SqlProvider
 			return Sub(expr1, 1);
 		}
 
+		/// <summary>
+		/// The 1-based <c>CharIndex</c> result of a search run over the tail of the string that begins at <paramref name="start"/>:
+		/// a position in that tail is moved by <c>start - 1</c>, while 0 (no match) stays 0 and NULL stays NULL.
+		/// </summary>
+		/// <param name="type">The result type.</param>
+		/// <param name="positionInTail">The 1-based position of the match in the tail, 0 when there is none.</param>
+		/// <param name="start">The 1-based start of the tail in the whole string.</param>
+		protected ISqlExpression PositionFromStart(DbDataType type, ISqlExpression positionInTail, ISqlExpression start)
+		{
+			return Factory.Condition(
+				Factory.Equal(positionInTail, Factory.Value(type, 0), unknownValue: null),
+				Factory.Value(type, 0),
+				Add<int>(positionInTail, Sub(start, 1)));
+		}
+
+		/// <summary>
+		/// <paramref name="search"/>, or NULL when one of <paramref name="arguments"/> that can be NULL is: for a native search
+		/// whose NULL argument does not propagate (the server ignores it, answers 0, or rejects it).
+		/// </summary>
+		/// <param name="type">The result type.</param>
+		/// <param name="search">The search expression.</param>
+		/// <param name="arguments">The arguments of the search a NULL of which must be a NULL result.</param>
+		protected ISqlExpression NullWhenArgumentIsNull(DbDataType type, ISqlExpression search, params ISqlExpression[] arguments)
+		{
+			var condition = Factory.SearchCondition(isOr: true);
+
+			foreach (var argument in arguments)
+				if (argument.CanBeNullable(NullabilityContext))
+					condition.Add(Factory.IsNull(argument));
+
+			return condition.Predicates.Count == 0
+				? search
+				: Factory.Condition(condition, Factory.Null(type), search);
+		}
+
 		public ISqlExpression Mul(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
 			return new SqlBinaryExpression(type, expr1, "*", expr2, Precedence.Multiplicative);
