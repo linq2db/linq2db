@@ -126,7 +126,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 
-			var result = await new SchemaInspectionExecutor(settings).Execute(resultWriter, cancellationToken);
+			var result = await new SchemaInspectionExecutor(environment, settings).Execute(resultWriter, cancellationToken);
 
 			if (result.Error != null)
 				return CreateErrorResult(result.Error);
@@ -188,7 +188,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 
-			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken);
+			var result = await new QueryExecutionExecutor(environment, settings).Execute(resultWriter, cancellationToken);
 
 			if (result.Error != null)
 				return CreateErrorResult(result.Error);

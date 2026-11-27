@@ -250,6 +250,14 @@ namespace Tests.Linq
 			FSharp.OptionMappingPrecedence.VerifyUnattributedOptionIsColumn(db);
 		}
 
+		// SQLite: the test reads the entity descriptor only, so one provider suffices
+		[Test(Description = "user [<NotNull>] / [<Nullable(false)>] / [<Column>] attributes on an option member override the option reader's defaults")]
+		public void OptionMapping_NullabilityAttributesHonoured([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionMappingPrecedence.VerifyNullabilityAttributesOnOptions(db);
+		}
+
 		[Test(Description = "Nullable<_> element option must not produce Nullable<Nullable<_>> (#195)")]
 		public void Option_NullableElementRoundtrip([DataSources] string context)
 		{
