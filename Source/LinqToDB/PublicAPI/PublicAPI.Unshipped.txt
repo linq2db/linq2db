@@ -14,6 +14,7 @@ LinqToDB.Internal.Common.ErrorHelper.DynamicColumns
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotAggregateNotInline = "A pivot cell's aggregate must be written as an inline lambda; pass one built elsewhere through Cells and PivotCell.Create." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotArgumentNull = "The pivot's {0} is null." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotCellNotFound = "No pivot cell is named '{0}'." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotCellType = "Pivot cell '{0}' cannot be read as '{1}' where SQL is required." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotChainNotFromGroup = "'{0}' must be called on a chain started by Pivot on a group." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotDuplicateName = "Duplicate pivot column name '{0}'." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotLambdaNotInline = "The pivot's {0} must be written as an inline lambda." -> string!
