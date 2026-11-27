@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -5,6 +7,8 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -426,6 +430,49 @@ namespace Tests.Linq
 			Assert.That(all, Has.Length.EqualTo(3));
 		}
 
+		[Test]
+		public void TPH_SiblingColumn_BulkCopy_TwoValueSiblings([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// One base-typed (mixed) copy: the Value column of the first type carries both other types' members
+			// as value siblings, so each row must be written from the member of its own runtime type.
+			using var tb = db.CreateLocalTable(new TphTriSharedBase[]
+			{
+				new TphTriSharedA { Id = 1, Kind = 1, Value = 10 },
+				new TphTriSharedB { Id = 2, Kind = 2, Value = 20 },
+				new TphTriSharedC { Id = 3, Kind = 3, Value = 30 },
+			});
+
+			var values = db.GetTable<TphTriSharedRaw>()
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray();
+
+			values.ShouldBe([10, 20, 30]);
+		}
+
+		[Table("TphTriShared")]
+		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(TphTriSharedA))]
+		[InheritanceMapping(Code = 2, Type = typeof(TphTriSharedB))]
+		[InheritanceMapping(Code = 3, Type = typeof(TphTriSharedC))]
+		abstract class TphTriSharedBase
+		{
+			[Column(IsDiscriminator = true)] public int Kind { get; set; }
+			[PrimaryKey]                     public int Id   { get; set; }
+		}
+
+		sealed class TphTriSharedA : TphTriSharedBase { [Column("Value")] public int Value { get; set; } }
+		sealed class TphTriSharedB : TphTriSharedBase { [Column("Value")] public int Value { get; set; } }
+		sealed class TphTriSharedC : TphTriSharedBase { [Column("Value")] public int Value { get; set; } }
+
+		[Table("TphTriShared")]
+		sealed class TphTriSharedRaw
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
 		[Table("TphDupCol")]
 		[InheritanceMapping(Code = "D1", IsDefault = true, Type = typeof(TphDupColFirst))]
 		[InheritanceMapping(Code = "D2", Type = typeof(TphDupColSecond))]
@@ -598,6 +645,42 @@ namespace Tests.Linq
 			{
 				Code = "Child2";
 			}
+		}
+
+		[Table(Name = "Base")]
+		sealed class TphCodeFilterRaw
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column]     public string? Code { get; set; }
+			[Column]     public string? Name { get; set; }
+			[Column]     public int?    Age  { get; set; }
+		}
+
+		[Test]
+		public void TPH_RootInstance_WritesOwnColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TphCodeFilterBase>();
+
+			db.Insert(new TphCodeFilterBase { Id = 1, Code = "Base" });
+			db.InsertWithIdentity(new TphCodeFilterBase { Id = 2, Code = "Base" });
+			db.InsertOrReplace(new TphCodeFilterBase { Id = 3, Code = "Base" });
+
+			db.Insert(new TphCodeFilterNamed { Id = 4, Name = "Jane" });
+			db.Update(new TphCodeFilterBase { Id = 4, Code = "Base" });
+
+			var rows = db.GetTable<TphCodeFilterRaw>()
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, r.Code, r.Name, r.Age })
+				.ToArray();
+
+			rows.ShouldBe(
+			[
+				new { Id = 1, Code = (string?)"Base", Name = (string?)null,   Age = (int?)null },
+				new { Id = 2, Code = (string?)"Base", Name = (string?)null,   Age = (int?)null },
+				new { Id = 3, Code = (string?)"Base", Name = (string?)null,   Age = (int?)null },
+				new { Id = 4, Code = (string?)"Base", Name = (string?)"Jane", Age = (int?)null },
+			]);
 		}
 
 		[Test]
@@ -1641,6 +1724,332 @@ namespace Tests.Linq
 				new TphThingInteraction() { Id = 4, PersonId = 1, ThingId = 2 },
 			};
 		}
+		#endregion
+
+		#region Descriptor graph
+
+		// A mapping configuration of its own, so the test builds the hierarchy's descriptors in the order it chooses
+		// instead of taking them from the descriptor cache.
+		static MappingSchema ColdMappingSchema() => new($"{nameof(TphInheritanceTests)}-{Guid.NewGuid():N}");
+
+		[Test]
+		public void TPH_Descriptor_DerivedTypeFirst_BelongsToRootGraph()
+		{
+			var ms   = ColdMappingSchema();
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta));
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase));
+
+			var betaConcreteField = beta.Columns.Single(c => c.MemberName == nameof(TphThingBeta.ConcreteField));
+
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			root.Columns.ShouldContain(betaConcreteField);
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootRebuild_KeepsPublishedGraph()
+		{
+			var ms   = ColdMappingSchema();
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase));
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta));
+
+			// another root descriptor of the same configuration, as a concurrent cache miss or an expired entry builds
+			var rebuilt = new EntityDescriptor(ms, typeof(TphThingBase), null);
+
+			var rootConcreteField    = root.Columns.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
+			var rebuiltConcreteField = rebuilt.Columns.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
+			var value                = rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 });
+
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			rebuiltConcreteField.ShouldNotBeSameAs(rootConcreteField);
+			value.ShouldBe(5);
+		}
+
+		[Test]
+		public void TPH_SiblingColumn_ProviderValue_DerivedTypeFirst()
+		{
+			var ms = ColdMappingSchema();
+
+			// the shared column's getter is built through the derived type before the root descriptor is requested
+			var betaConcreteField = ms.GetEntityDescriptor(typeof(TphThingBeta))
+				.Columns
+				.Single(c => c.MemberName == nameof(TphThingBeta.ConcreteField));
+
+			var betaValue = betaConcreteField.GetProviderValue(new TphThingBeta { ConcreteField = 4 });
+
+			var rootConcreteField = ms.GetEntityDescriptor(typeof(TphThingBase))
+				.Columns
+				.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
+
+			var rootValue = rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 });
+
+			betaValue.ShouldBe(4);
+			rootValue.ShouldBe(5);
+		}
+
+		[Test]
+		public void TPH_SiblingColumn_BulkCopy_DerivedTypeFirst([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, ColdMappingSchema());
+
+			// copying the derived type first builds the shared column's getter before anything requests the root
+			using var tbBeta = db.CreateLocalTable(new[] { new TphThingBeta { Id = 2, Type = 2, BaseField = 3, ConcreteField = 4 } });
+			using var tb     = db.CreateLocalTable(TphThingBase.TestData);
+
+			var concreteFields = db.GetTable<TphThingIntermediateOne>()
+				.Select(r => r.ConcreteField)
+				.ToArray();
+
+			concreteFields.ShouldBe([5]);
+		}
+
+		[Test]
+		public void TPH_Insert_DerivedTypeFirst_SuggestsDiscriminator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, ColdMappingSchema());
+			using var tb = db.CreateLocalTable<TphThingBeta>();
+
+			// Type is left unset: the value comes from the hierarchy's discriminator mapping
+			db.Insert(new TphThingBeta { Id = 2, BaseField = 3, ConcreteField = 4 });
+
+			var types = db.GetTable<TphThingBetaRaw>()
+				.Select(r => r.Type)
+				.ToArray();
+
+			types.ShouldBe([2]);
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootCallback_ReadsDerivedDescriptor()
+		{
+			var ms    = ColdMappingSchema();
+			var depth = 0;
+
+			EntityDescriptor? read = null;
+
+			// a descriptor-created callback that, for the root, reads a mapped type's descriptor
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type != typeof(TphThingBase))
+					return;
+
+				// bounded for the test; unguarded, the recursion ends in a StackOverflowException
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read = schema.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			read.ShouldBeSameAs(beta);
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootCallback_ReadsUnmappedIntermediateDescriptor()
+		{
+			var ms    = ColdMappingSchema();
+			var depth = 0;
+
+			EntityDescriptor? read = null;
+
+			// TphThingIntermediate is a type of the hierarchy that the root does not map
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type != typeof(TphThingBase))
+					return;
+
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read = schema.GetEntityDescriptor(typeof(TphThingIntermediate), Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root         = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta         = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+			var intermediate = ms.GetEntityDescriptor(typeof(TphThingIntermediate), Callback);
+
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			intermediate.ShouldBeSameAs(read);
+			read!.ObjectType.ShouldBe(typeof(TphThingIntermediate));
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootCallback_ThrowsAfterReadingDerivedDescriptor()
+		{
+			var ms     = ColdMappingSchema();
+			var throws = true;
+			var built  = new List<IEntityChangeDescriptor>();
+
+			// the root's callback reads a mapped type's descriptor and then fails, once
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type != typeof(TphThingBase))
+					return;
+
+				built.Add(ed);
+
+				schema.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+				if (throws)
+				{
+					throws = false;
+					throw new InvalidOperationException("Callback failed.");
+				}
+			}
+
+			Assert.That(() => ms.GetEntityDescriptor(typeof(TphThingBase), Callback), Throws.InvalidOperationException);
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			// the failed build must not stay registered: the second request builds and caches a new root
+			built.Count.ShouldBe(2);
+			root.ShouldBeSameAs(built[1]);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+		}
+
+		[Test]
+		public void TPH_Descriptor_DerivedCallback_ThrowsWhileRootIsBuilt()
+		{
+			var ms     = ColdMappingSchema();
+			var throws = true;
+			var built  = new List<IEntityChangeDescriptor>();
+
+			// a mapped type's callback fails once, while the root constructs the descriptors of the types it maps
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				if (ed.TypeAccessor.Type == typeof(TphThingBase))
+					built.Add(ed);
+
+				if (ed.TypeAccessor.Type == typeof(TphThingBeta) && throws)
+				{
+					throws = false;
+					throw new InvalidOperationException("Callback failed.");
+				}
+			}
+
+			Assert.That(() => ms.GetEntityDescriptor(typeof(TphThingBase), Callback), Throws.InvalidOperationException);
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			// the failed build must not stay registered: the second request builds and caches a new root
+			built.Count.ShouldBe(1);
+			root.ShouldBeSameAs(built[0]);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+		}
+
+		[Test]
+		public void TPH_Descriptor_Callbacks_ReadRootDescriptor()
+		{
+			var ms    = ColdMappingSchema();
+			var depth = 0;
+			var read  = new Dictionary<Type, EntityDescriptor>();
+
+			// the callbacks of a mapped type and of the root itself read the root's descriptor
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				var type = ed.TypeAccessor.Type;
+
+				if (type != typeof(TphThingBeta) && type != typeof(TphThingBase))
+					return;
+
+				// bounded for the test; unguarded, the recursion ends in a StackOverflowException
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read[type] = schema.GetEntityDescriptor(typeof(TphThingBase), Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			read[typeof(TphThingBeta)].ShouldBeSameAs(root);
+			read[typeof(TphThingBase)].ShouldBeSameAs(root);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+		}
+
+		[Test]
+		public void TPH_Descriptor_DerivedCallback_ReadsSiblingDescriptor()
+		{
+			var ms      = ColdMappingSchema();
+			var depth   = 0;
+			var created = new List<Type>();
+			var read    = new Dictionary<Type, EntityDescriptor>();
+
+			// Alpha is built before Beta: Alpha's callback reads a sibling not built yet, Beta's one already built
+			void Callback(MappingSchema schema, IEntityChangeDescriptor ed)
+			{
+				var type = ed.TypeAccessor.Type;
+
+				created.Add(type);
+
+				var sibling = type == typeof(TphThingAlpha) ? typeof(TphThingBeta)
+					: type == typeof(TphThingBeta) ? typeof(TphThingAlpha)
+					: null;
+
+				if (sibling == null)
+					return;
+
+				// bounded for the test; unguarded, the recursion ends in a StackOverflowException
+				if (++depth > 5)
+					throw new InvalidOperationException("The root descriptor is built recursively.");
+
+				try
+				{
+					read[sibling] = schema.GetEntityDescriptor(sibling, Callback);
+				}
+				finally
+				{
+					depth--;
+				}
+			}
+
+			var root  = ms.GetEntityDescriptor(typeof(TphThingBase), Callback);
+			var alpha = ms.GetEntityDescriptor(typeof(TphThingAlpha), Callback);
+			var beta  = ms.GetEntityDescriptor(typeof(TphThingBeta), Callback);
+
+			var alphaCreated = created.Count(t => t == typeof(TphThingAlpha));
+			var betaCreated  = created.Count(t => t == typeof(TphThingBeta));
+
+			alpha.InheritanceRoot.ShouldBeSameAs(root);
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			read[typeof(TphThingAlpha)].ShouldBeSameAs(alpha);
+			read[typeof(TphThingBeta)].ShouldBeSameAs(beta);
+			alphaCreated.ShouldBe(1);
+			betaCreated.ShouldBe(1);
+		}
+
+		[Table("TphThingBeta")]
+		sealed class TphThingBetaRaw
+		{
+			[PrimaryKey] public int Id   { get; set; }
+			[Column]     public int Type { get; set; }
+		}
+
 		#endregion
 
 		#region TPH intermediate type (insert / DDL)

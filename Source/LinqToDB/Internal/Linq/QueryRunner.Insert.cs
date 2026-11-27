@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.Linq
 
 				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
 
-				foreach (var field in sqlTable.Fields.Where(x => columnFilter == null || columnFilter(obj, x.ColumnDescriptor)))
+				foreach (var field in GetObjectFields(sqlTable, type).Where(x => columnFilter == null || columnFilter(obj, x.ColumnDescriptor)))
 				{
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{

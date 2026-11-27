@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Reflection;
@@ -25,9 +27,19 @@ namespace LinqToDB.Mapping
 		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
 		/// <param name="type">Mapping class type.</param>
 		public EntityDescriptor(MappingSchema mappingSchema, Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
+			: this(mappingSchema, type, onEntityDescriptorCreated, inheritanceRoot: null)
 		{
-			MappingSchema = mappingSchema;
-			TypeAccessor  = TypeAccessor.GetAccessor(type);
+		}
+
+		/// <summary>
+		/// Creates the descriptor of a type mapped by <paramref name="inheritanceRoot"/>, as a part of the root's
+		/// descriptor graph (see <see cref="InitInheritanceMapping"/>).
+		/// </summary>
+		EntityDescriptor(MappingSchema mappingSchema, Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated, EntityDescriptor? inheritanceRoot)
+		{
+			MappingSchema   = mappingSchema;
+			TypeAccessor    = TypeAccessor.GetAccessor(type);
+			InheritanceRoot = inheritanceRoot;
 
 			Init(onEntityDescriptorCreated);
 		}
@@ -186,6 +198,151 @@ namespace LinqToDB.Mapping
 		bool HasInheritanceMapping()
 		{
 			return TypeAccessor.Type.BaseType != null && MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType);
+		}
+
+		/// <summary>
+		/// Returns the root type of the inheritance hierarchy <paramref name="type"/> derives from - the topmost base
+		/// type of the unbroken chain of bases carrying <see cref="InheritanceMappingAttribute"/> - or <see langword="null"/>
+		/// when the direct base of <paramref name="type"/> carries none (the same test as <see cref="HasInheritanceMapping"/>).
+		/// </summary>
+		internal static Type? FindInheritanceRootType(MappingSchema mappingSchema, Type type)
+		{
+			Type? root = null;
+
+			for (var baseType = type.BaseType; baseType != null && mappingSchema.HasAttribute<InheritanceMappingAttribute>(baseType); baseType = baseType.BaseType)
+			{
+				root = baseType;
+			}
+
+			return root;
+		}
+
+		Dictionary<Type, EntityDescriptor>? _inheritanceMembers;
+
+		/// <summary>
+		/// Returns the descriptor this inheritance root built for <paramref name="type"/>, one of the types it maps.
+		/// </summary>
+		internal bool TryGetInheritanceMember(Type type, [NotNullWhen(true)] out EntityDescriptor? descriptor)
+		{
+			if (_inheritanceMembers != null && _inheritanceMembers.TryGetValue(type, out var found))
+			{
+				descriptor = found;
+				return true;
+			}
+
+			descriptor = null;
+			return false;
+		}
+
+		// Inheritance roots being built on this thread: constructing the descriptors of the types they map, or running their
+		// own descriptor-created callback. A root is cached only once MappingSchema.GetEntityDescriptor's factory returns,
+		// so a callback that reads a type of the root's hierarchy is served from here instead of building the root again.
+#pragma warning disable RS0030 // re-entrancy guard for synchronous descriptor-created callbacks
+		[ThreadStatic]
+		static RootBuild? _rootBuilds;
+#pragma warning restore RS0030
+
+		internal sealed class RootBuild(EntityDescriptor root, int schemaId, RootBuild? outer)
+		{
+			public EntityDescriptor Root     { get; } = root;
+			public int              SchemaId { get; } = schemaId;
+			public RootBuild?       Outer    { get; } = outer;
+		}
+
+		internal static RootBuild EnterRootBuild(EntityDescriptor root, int schemaId)
+		{
+			var build = new RootBuild(root, schemaId, _rootBuilds);
+
+			_rootBuilds = build;
+
+			return build;
+		}
+
+		internal static void ExitRootBuild(RootBuild build)
+		{
+			_rootBuilds = build.Outer;
+		}
+
+		internal static EntityDescriptor? FindRootBuild(Type rootType, int schemaId)
+		{
+			for (var build = _rootBuilds; build != null; build = build.Outer)
+				if (build.Root.ObjectType == rootType && build.SchemaId == schemaId)
+					return build.Root;
+
+			return null;
+		}
+
+		/// <summary>
+		/// Returns the descriptor of <paramref name="type"/> when it is a root being built on this thread, or a type that such
+		/// a root maps - that is, a descriptor-created callback the root invokes reads it. The root is not cached yet, and
+		/// while it constructs the descriptors of the types it maps its graph is not complete either, so the descriptor must
+		/// not be cached.
+		/// </summary>
+		internal static bool TryGetFromRootBeingBuilt(MappingSchema mappingSchema, Type type, int schemaId, [NotNullWhen(true)] out EntityDescriptor? descriptor)
+		{
+			if (_rootBuilds == null)
+			{
+				descriptor = null;
+				return false;
+			}
+
+			if (FindRootBuild(type, schemaId) is { } self)
+			{
+				descriptor = self;
+				return true;
+			}
+
+			if (FindInheritanceRootType(mappingSchema, type) is { } rootType
+				&& FindRootBuild(rootType, schemaId) is { } root)
+			{
+				if (root._memberBuild is { } build)
+				{
+					if (root._inheritanceMappings.Any(m => m.Type == type))
+					{
+						descriptor = root.BuildMember(build, type);
+						return true;
+					}
+				}
+				else if (root.TryGetInheritanceMember(type, out descriptor))
+				{
+					return true;
+				}
+			}
+
+			descriptor = null;
+			return false;
+		}
+
+		// The state of InitInheritanceMapping while this root constructs the descriptors of the types it maps.
+		sealed class MemberBuild(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
+		{
+			public Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated { get; } = onEntityDescriptorCreated;
+			public Dictionary<Type, EntityDescriptor>              Members                   { get; } = new();
+		}
+
+		MemberBuild? _memberBuild;
+
+		// Ends the root's member construction, when InitInheritanceMapping returns or throws.
+		readonly struct RootBuildScope(EntityDescriptor root, RootBuild build) : IDisposable
+		{
+			public void Dispose()
+			{
+				root._memberBuild = null;
+				ExitRootBuild(build);
+			}
+		}
+
+		EntityDescriptor BuildMember(MemberBuild build, Type type)
+		{
+			if (!build.Members.TryGetValue(type, out var ed))
+			{
+				ed = new EntityDescriptor(MappingSchema, type, build.OnEntityDescriptorCreated, inheritanceRoot: this);
+				build.Members.Add(type, ed);
+
+				(build.OnEntityDescriptorCreated ?? MappingSchema.EntityDescriptorCreatedCallback)?.Invoke(MappingSchema, ed);
+			}
+
+			return ed;
 		}
 
 		void InitQueryFilters()
@@ -508,13 +665,26 @@ namespace LinqToDB.Mapping
 				return false;
 			}
 
+			// The root builds the descriptors of the types it maps itself rather than taking them from the descriptor
+			// cache: it completes them with hierarchy-level state (InheritanceRoot, value siblings of the merged columns),
+			// and a cached descriptor is already reachable by other threads, which may have built lambdas from its state
+			// and may be building them right now. Graphs built here are private until this constructor returns; the cache
+			// hands out the mapped types' descriptors from the root's graph (see MappingSchema.GetEntityDescriptor).
+			var build  = _memberBuild = new MemberBuild(onEntityDescriptorCreated);
+			var merged = new HashSet<Type>();
+
+			using var scope = new RootBuildScope(this, EnterRootBuild(this, ((IConfigurationID)MappingSchema).ConfigurationID));
+
+			Dictionary<ColumnDescriptor, List<ColumnDescriptor>>? valueSiblings = null;
+
 			foreach (var m in _inheritanceMappings)
 			{
-				if (m.Type == ObjectType)
+				// a type mapped under several discriminator codes is merged once
+				if (m.Type == ObjectType || !merged.Add(m.Type))
 					continue;
 
-				var ed = MappingSchema.GetEntityDescriptor(m.Type, onEntityDescriptorCreated);
-				ed.InheritanceRoot = this;
+				// already built when a descriptor-created callback read it - see TryGetFromRootBeingBuilt
+				var ed = BuildMember(build, m.Type);
 
 				foreach (var cd in ed.Columns)
 				{
@@ -539,7 +709,12 @@ namespace LinqToDB.Mapping
 						{
 							if (string.Equals(existing.ColumnName, cd.ColumnName, StringComparison.Ordinal))
 							{
-								existing.AddValueSibling(cd);
+								valueSiblings ??= new();
+
+								if (!valueSiblings.TryGetValue(existing, out var list))
+									valueSiblings.Add(existing, list = new());
+
+								list.Add(cd);
 								break;
 							}
 						}
@@ -547,6 +722,15 @@ namespace LinqToDB.Mapping
 				}
 			}
 
+			if (valueSiblings != null)
+			{
+				foreach (var pair in valueSiblings)
+				{
+					pair.Key.SetValueSiblings([.. pair.Value]);
+				}
+			}
+
+			_inheritanceMembers        = build.Members;
 			_inheritanceSiblingColumns = siblingColumns == null ? [] : [.. siblingColumns];
 
 			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)

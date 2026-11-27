@@ -858,14 +858,16 @@ namespace LinqToDB.Mapping
 			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum, CanBeNull);
 		}
 
-		List<ColumnDescriptor>? _valueSiblings;
+		ColumnDescriptor[]? _valueSiblings;
 
 		/// <summary>
-		/// Registers another inheritance-mapped column that maps a distinct member to the same physical
+		/// Sets the other inheritance-mapped columns that map a distinct member to the same physical
 		/// column as this one. Lets <see cref="GetProviderValue"/> read the value from the member matching
 		/// the row's runtime type, so inserts of a base-typed (mixed) source write shared columns correctly.
+		/// Set once, by the inheritance root while it builds its descriptor graph - before this column is
+		/// reachable by anything that could build <see cref="GetProviderValue"/>'s getter.
 		/// </summary>
-		internal void AddValueSibling(ColumnDescriptor sibling) => (_valueSiblings ??= new()).Add(sibling);
+		internal void SetValueSiblings(ColumnDescriptor[] siblings) => _valueSiblings = siblings;
 
 		/// <summary>
 		/// Extracts column value, converted to database type, from entity object.

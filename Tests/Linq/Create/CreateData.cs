@@ -221,20 +221,20 @@ public class a_CreateData : TestBase
 
 		db.BulkCopy(
 			options,
-			new[]
+			new InheritanceParentBase[]
 			{
-					new InheritanceParent2 {InheritanceParentId = 1, TypeDiscriminator = null, Name = null },
-					new InheritanceParent2 {InheritanceParentId = 2, TypeDiscriminator = 1,    Name = null },
-					new InheritanceParent2 {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
+					new InheritanceParentBase {InheritanceParentId = 1, TypeDiscriminator = null                             },
+					new InheritanceParent1    {InheritanceParentId = 2, TypeDiscriminator = 1                                },
+					new InheritanceParent2    {InheritanceParentId = 3, TypeDiscriminator = 2,    Name = "InheritanceParent2" }
 			});
 
 		db.BulkCopy(
 			options,
-			new[]
+			new InheritanceChildBase[]
 			{
-					new InheritanceChild2() {InheritanceChildId = 1, TypeDiscriminator = null, InheritanceParentId = 1, Name = null },
-					new InheritanceChild2() {InheritanceChildId = 2, TypeDiscriminator = 1,    InheritanceParentId = 2, Name = null },
-					new InheritanceChild2() {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
+					new InheritanceChildBase() {InheritanceChildId = 1, TypeDiscriminator = null, InheritanceParentId = 1                             },
+					new InheritanceChild1()    {InheritanceChildId = 2, TypeDiscriminator = 1,    InheritanceParentId = 2                             },
+					new InheritanceChild2()    {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
 			});
 
 		action?.Invoke(db.OpenDbConnection());

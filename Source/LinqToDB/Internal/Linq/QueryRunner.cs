@@ -421,6 +421,10 @@ namespace LinqToDB.Internal.Linq
 			//=> obj.GetType();
 			=> db.MappingSchema.GetEntityDescriptor(typeof(T), db.Options.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping?.Count > 0 ? obj!.GetType() : typeof(T);
 
+		// The inheritance root's descriptor also maps its derived types' columns, which an instance of the root has no member for.
+		static IEnumerable<SqlField> GetObjectFields(SqlTable table, Type type)
+			=> table.Fields.Where(f => f.ColumnDescriptor.MemberAccessor.TypeAccessor.Type.IsAssignableFrom(type));
+
 		#endregion
 
 		#region SetRunQuery
