@@ -32,32 +32,29 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression? Expression => Body;
 
-		public SelectContext(TranslationModifier translationModifier, IBuildContext? parent, ExpressionBuilder builder, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
+		public SelectContext(TranslationModifier translationModifier, IBuildContext? parent, ExpressionBuilder builder, MappingSchema mappingSchema, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
 			: base(translationModifier, builder, body.Type, selectQuery)
 		{
 			Parent         = parent;
 			InnerContext   = innerContext;
 			IsSubQuery     = isSubQuery;
 			Body           = body;
-			_mappingSchema = builder.MappingSchema;
+			_mappingSchema = mappingSchema;
 		}
 
 		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
 			: this(parent, SequenceHelper.PrepareBody(lambda, sequences), sequences[0], sequences[0].SelectQuery, isSubQuery)
 		{
-			_mappingSchema = sequences[0].MappingSchema;
 		}
 
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, bool isSubQuery)
 			: this(parent, body, innerContext, innerContext.SelectQuery, isSubQuery)
 		{
-			_mappingSchema = innerContext.MappingSchema;
 		}
 
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, SelectQuery selectQuery, bool isSubQuery)
-			: this(innerContext.TranslationModifier, parent, innerContext.Builder, innerContext, body, selectQuery, isSubQuery)
+			: this(innerContext.TranslationModifier, parent, innerContext.Builder, innerContext.MappingSchema, innerContext, body, selectQuery, isSubQuery)
 		{
-			_mappingSchema = innerContext.MappingSchema;
 		}
 
 		#endregion
@@ -206,7 +203,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var sc = context.CloneElement(SelectQuery);
-			return new SelectContext(TranslationModifier, null, Builder, context.CloneContext(InnerContext), context.CloneExpression(Body), sc, IsSubQuery);
+			return new SelectContext(TranslationModifier, null, Builder, _mappingSchema, context.CloneContext(InnerContext), context.CloneExpression(Body), sc, IsSubQuery);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)
