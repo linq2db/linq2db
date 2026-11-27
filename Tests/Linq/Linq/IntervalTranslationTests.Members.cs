@@ -310,6 +310,14 @@ namespace Tests.Linq
 			row.Hours.ShouldBe(value.Hours);
 			row.Minutes.ShouldBe(value.Minutes);
 			row.Seconds.ShouldBe(value.Seconds);
+
+			// SAP HANA and Informix truncate a division by casting it to an integer; the component is cast to its result
+			// type once, not twice
+			if (context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllInformix))
+			{
+				LastQuery!.ShouldNotContain("CAST(CAST(", Case.Insensitive, LastQuery);
+				LastQuery!.ShouldNotContain("::BigInt::", Case.Insensitive, LastQuery);
+			}
 		}
 
 		/// <summary>

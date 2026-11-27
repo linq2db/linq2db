@@ -617,5 +617,19 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		// YDB's AsList needs one item type, so the non-string items are converted to text first
+		[Test]
+		public void StringJoinOverMixedItemTypes([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(JoinProbeData);
+
+			var result = table
+				.Select(e => Sql.AsSql(string.Join(",", new object[] { e.Value1, e.Name!, e.Id })))
+				.ToArray();
+
+			result.ShouldBe(["10,a,1"]);
+		}
 	}
 }

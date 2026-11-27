@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Common;
@@ -1456,6 +1457,11 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
+			// before the dispatch: providers rewrite & | ^ into functions or other operators in their overrides
+			newElement = TypeUnsignedBitwiseLiterals(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(NotifyReplaced(newElement, element)));
+
 			newElement = ConvertSqlBinaryExpression(element);
 			if (!ReferenceEquals(newElement, element))
 			{
@@ -1471,6 +1477,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
+
+			// before the dispatch: providers lower ~ in their overrides
+			if (ConvertUnsignedNegation(element) is { } unsignedNegation)
+				return Visit(Optimize(NotifyReplaced(unsignedNegation, element)));
 
 			newElement = ConvertSqlUnaryExpression(element);
 			if (!ReferenceEquals(newElement, element))
@@ -2062,19 +2072,195 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Integer division truncating toward zero.
+		/// Integer division truncating toward zero, as CLR integer division is, or <see langword="null"/> when the
+		/// dialect's <c>/</c> already is that between two integers.
 		/// </summary>
 		/// <remarks>
-		/// The default is the division itself, which is what dividing two integers means in SQL and matches CLR
-		/// integer division on negatives. A provider whose division is not integral overrides it - MySQL and
-		/// DuckDB return a fraction, Access has no integer division at all - and so does one whose truncation is
-		/// spelled its own way.
+		/// Called for every <c>/</c> whose result and operands are all integer types, and by
+		/// <see cref="TruncateDivide"/>. A provider whose <c>/</c> returns a fraction between two integers overrides
+		/// it. The result is re-visited, so it must not itself be an integer-typed <c>/</c>: a function, a
+		/// template, another operator, or a <c>/</c> typed fractional under a truncating function or cast.
+		/// </remarks>
+		protected virtual ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
+		{
+			// a ulong is stored as a decimal where the dialect has no 64-bit unsigned integer, so its / keeps the fraction;
+			// both operands are non-negative, so FLOOR truncates
+			if (!DividesUnsignedNatively && type.SystemType.ToUnderlying() == typeof(ulong))
+			{
+				var division = Factory.Div(Factory.GetDbDataType(typeof(decimal)), dividend, divisor);
+
+				return Factory.Function(type, "Floor", ParametersNullabilityType.IfAnyParameterNullable, division);
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Whether the dialect has unsigned integer types, so an unsigned C# value keeps its type and its operators on the
+		/// server.
+		/// </summary>
+		protected virtual bool HasNativeUnsignedIntegers => false;
+
+		/// <summary>
+		/// Whether the dialect's <c>/</c> already truncates a <see cref="ulong"/> division (an integer storage, or a decimal
+		/// division of scale 0); otherwise <see cref="IntegerDivide"/> truncates it with <c>FLOOR</c>.
+		/// </summary>
+		protected virtual bool DividesUnsignedNatively => HasNativeUnsignedIntegers;
+
+		/// <summary>
+		/// Whether <c>~</c> and a large literal of the given unsigned type (<see cref="uint"/> or <see cref="ulong"/>) need no
+		/// help: the dialect computes them in that type, or cannot hold the rewritten form either.
+		/// </summary>
+		protected virtual bool IsNativeUnsigned(Type unsignedType) => HasNativeUnsignedIntegers;
+
+		/// <summary>
+		/// <c>~x</c> of an unsigned C# type as <c>Max - x</c>: a dialect without unsigned types computes <c>~</c> in a wider
+		/// signed type, whose negative result overflows the unsigned value on read. Bracketed by its own template, because
+		/// T-SQL groups <c>&amp; | ^</c> with <c>-</c>; a <see cref="uint"/> result is cast back to its type, because T-SQL types
+		/// a literal above 2^31 - 1 as numeric, which a bitwise operator rejects.
+		/// </summary>
+		ISqlExpression? ConvertUnsignedNegation(SqlUnaryExpression element)
+		{
+			if (element.Operation != SqlUnaryOperation.BitwiseNegation || element.SystemType?.ToUnderlying() is not { } type)
+				return null;
+
+			object maxValue;
+
+			if (type == typeof(uint))
+				maxValue = uint.MaxValue;
+			else if (type == typeof(ulong))
+				maxValue = ulong.MaxValue;
+			else
+				return null;
+
+			if (IsNativeUnsigned(type))
+				return null;
+
+			var typeDbType = MappingSchema.GetDbDataType(type);
+			var negation   = new SqlExpression(element.Type, "({0} - {1})", Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, new SqlValue(typeDbType, maxValue), element.Expr);
+
+			return type == typeof(uint)
+				? Factory.Cast(negation, typeDbType.WithSystemType(element.SystemType!), true)
+				: negation;
+		}
+
+		/// <summary>
+		/// The literal operands of an unsigned <c>&amp; | ^</c> typed as the operator: a literal can carry the type of the
+		/// column the other operand converts (<c>(uint)p.ID &amp; 4294967289u</c> gets the column's <c>Int32</c>), and T-SQL types
+		/// a literal past the signed range of its width as numeric, which a bitwise operator rejects.
+		/// </summary>
+		SqlBinaryExpression TypeUnsignedBitwiseLiterals(SqlBinaryExpression element)
+		{
+			if (element.Operation is not ("&" or "|" or "^")
+				|| element.SystemType?.ToUnderlying() is not { } type
+				|| (type != typeof(uint) && type != typeof(ulong)))
+			{
+				return element;
+			}
+
+			var typeDbType = MappingSchema.GetDbDataType(type);
+
+			var expr1 = TypeUnsignedLiteral(element.Expr1, type, typeDbType);
+			var expr2 = TypeUnsignedLiteral(element.Expr2, type, typeDbType);
+
+			if (ReferenceEquals(expr1, element.Expr1) && ReferenceEquals(expr2, element.Expr2))
+				return element;
+
+			return new SqlBinaryExpression(element.Type, expr1, element.Operation, expr2, element.Precedence);
+		}
+
+		ISqlExpression TypeUnsignedLiteral(ISqlExpression operand, Type type, DbDataType typeDbType)
+		{
+			// only a C# operand converted to the operator's type; a provider's own operator over other operands is left
+			if (operand is not SqlValue { Value: not null } value || value.ValueType.SystemType.ToUnderlying() != type)
+				return operand;
+
+			ISqlExpression result = value;
+
+			if (value.ValueType.DataType != typeDbType.DataType)
+				result = new SqlValue(typeDbType.WithSystemType(value.ValueType.SystemType), value.Value);
+
+			var exceedsSigned = type == typeof(uint)
+				? System.Convert.ToUInt64(value.Value, CultureInfo.InvariantCulture) > int.MaxValue
+				: System.Convert.ToUInt64(value.Value, CultureInfo.InvariantCulture) > long.MaxValue;
+
+			if (exceedsSigned && !IsNativeUnsigned(type))
+				result = Factory.Cast(result, typeDbType.WithSystemType(value.ValueType.SystemType), true);
+
+			return result;
+		}
+
+		/// <summary>
+		/// An operand of an integer division that reads an integer member stored as a non-integer type (<c>DECIMAL</c>,
+		/// <c>FLOAT</c>, ...), cast to its integer type: the server would otherwise divide the stored type and keep, round or
+		/// floor the fraction. Not looked through: an integer cast, a condition, an aggregate other than SUM / MIN / MAX.
+		/// </summary>
+		ISqlExpression CastNonIntegerStorage(ISqlExpression operand)
+		{
+			var operandType = operand.SystemType?.ToUnderlying();
+
+			if (operandType == null || operandType == typeof(ulong) || !operandType.IsIntegerType)
+				return operand;
+
+			var integerType = MappingSchema.GetDbDataType(operandType).WithSystemType(operand.SystemType!);
+
+			// a literal lent the storage type of the column beside it is retyped rather than cast
+			if (operand is SqlValue { Value: { } literal } value && literal.GetType().IsIntegerType && IsNonIntegerStorage(value.ValueType))
+				return new SqlValue(integerType, literal);
+
+			if (!ReadsNonIntegerStorage(operand))
+				return operand;
+
+			return Factory.Cast(operand, integerType, true);
+
+			static bool IsNonIntegerStorage(DbDataType type)
+			{
+				return type.SystemType.IsIntegerType
+					&& type.DataType is DataType.Decimal or DataType.Money or DataType.SmallMoney or DataType.VarNumeric
+						or DataType.DecFloat or DataType.Double or DataType.Single;
+			}
+
+			static bool ReadsNonIntegerStorage(ISqlExpression expr)
+			{
+				return expr switch
+				{
+					SqlField                 field       => IsNonIntegerStorage(field.Type),
+					SqlParameter             parameter   => IsNonIntegerStorage(parameter.Type),
+					SqlColumn                column      => ReadsNonIntegerStorage(column.Expression),
+					SqlNullabilityExpression nullability => ReadsNonIntegerStorage(nullability.SqlExpression),
+					SqlBinaryExpression      binary      => ReadsNonIntegerStorage(binary.Expr1) || ReadsNonIntegerStorage(binary.Expr2),
+					SqlUnaryExpression       unary       => ReadsNonIntegerStorage(unary.Expr),
+
+					SqlFunction { IsAggregate: false } function => function.Parameters.Any(ReadsNonIntegerStorage),
+					SqlFunction { Name: "Sum" or "Min" or "Max" } function => function.Parameters.Any(ReadsNonIntegerStorage),
+
+					SqlExtendedFunction { IsAggregate: true, FunctionName: "SUM" or "MIN" or "MAX" or "Sum" or "Min" or "Max" } function
+						=> function.Arguments.Exists(a => ReadsNonIntegerStorage(a.Expression)),
+
+					_ => false,
+				};
+			}
+		}
+
+		/// <summary>
+		/// Integer division of an interval component by a constant, truncating toward zero.
+		/// </summary>
+		/// <remarks>
+		/// Goes through <see cref="IntegerDivide"/>; overridden only where an interval needs more than that.
 		/// </remarks>
 		protected virtual ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var divisorValue = Factory.Value(longType, divisor);
 
-			return Factory.Div(longType, value, Factory.Value(longType, divisor));
+			return IntegerDivide(longType, value, divisorValue) ?? Factory.Div(longType, value, divisorValue);
+		}
+
+		static bool IsIntegerDivision(SqlBinaryExpression element)
+		{
+			return element.SystemType?.IsIntegerType == true
+				&& element.Expr1.SystemType?.IsIntegerType == true
+				&& element.Expr2.SystemType?.IsIntegerType == true;
 		}
 
 		/// <summary>
@@ -2724,6 +2910,20 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Expr1,
 							SqlUnaryOperation.Negation,
 							Precedence.Unary);
+					}
+
+					if (IsIntegerDivision(element))
+					{
+						var dividend = CastNonIntegerStorage(element.Expr1);
+						var divisor  = CastNonIntegerStorage(element.Expr2);
+
+						if (IntegerDivide(element.Type, dividend, divisor) is { } divided)
+							return divided;
+
+						// the dialect's / truncates integers; the cast operands make it an integer division (a provider
+						// that strips integer casts overrides IntegerDivide, so it never gets here with a cast to strip)
+						if (!ReferenceEquals(dividend, element.Expr1) || !ReferenceEquals(divisor, element.Expr2))
+							return new SqlBinaryExpression(element.Type, dividend, "/", divisor, element.Precedence);
 					}
 
 					break;

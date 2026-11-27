@@ -4462,7 +4462,10 @@ namespace LinqToDB.Internal.SqlProvider
 			};
 
 			StringBuilder.Append(opText);
-			BuildExpression(GetPrecedence(expr), expr.Expr);
+
+			// the operand of ~ is grouped as a unary operand: its node keeps the low Bitwise precedence, which parenthesises
+			// ~x as an operand (PostgreSQL parses a prefix ~ below + and -)
+			BuildExpression(op == SqlUnaryOperation.BitwiseNegation ? Precedence.Unary : GetPrecedence(expr), expr.Expr);
 		}
 
 		#endregion

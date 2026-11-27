@@ -335,6 +335,273 @@ namespace Tests.Linq
 			AssertQuery(notRightOfOr);
 		}
 
+		// a signed C# bitwise result is signed: MySQL and YDB compute the operators unsigned, so a negative operand or
+		// result must not come back as a large positive number (or as NULL, for a negative YDB operand)
+		[Test]
+		public void SignedBitwiseResults([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var not = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~p.ID));
+
+			AssertQuery(not);
+
+			var notWide = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(long)p.ID));
+
+			AssertQuery(notWide);
+
+			var notShort = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~p.SmallIntValue));
+
+			AssertQuery(notShort);
+
+			var orNegative = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.ID | -5));
+
+			AssertQuery(orNegative);
+
+			var xorNegativeWide = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((long)p.ID ^ -6L));
+
+			AssertQuery(xorNegativeWide);
+
+			var andNegativeNullable = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((int?)p.ID & -3));
+
+			AssertQuery(andNegativeNullable);
+
+			var andThenSubtract = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID & 6) - 10));
+
+			AssertQuery(andThenSubtract);
+
+			var negatedAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(-(p.ID & 6)));
+
+			AssertQuery(negatedAnd);
+
+			var notNegative = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID - 10)));
+
+			AssertQuery(notNegative);
+
+			var notNegativeWide = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~((long)p.ID - 10)));
+
+			AssertQuery(notNegativeWide);
+
+			var notThenSubtract = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~p.ID - 10));
+
+			AssertQuery(notThenSubtract);
+		}
+
+		// T-SQL puts & | ^ at the additive level, so the subtraction operand needs its own parentheses there
+		[ActiveIssue(5527, Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase], ErrorMessage = "! 1 <> -9",
+			Details = "T-SQL puts & | ^ at the additive level; the per-node precedence writes x & y - 10")]
+		[Test]
+		public void BitwiseOverSubtractionKeepsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((long)p.ID & (p.ID - 10)));
+
+			AssertQuery(query);
+		}
+
+		enum UIntFlags : uint
+		{
+			None = 0,
+			High = 0x80000000,
+		}
+
+		// ~ on a 32-bit unsigned value: providers without unsigned types compute it in a wider signed type, so the result
+		// came back negative and overflowed the uint on read
+		[ActiveIssue(6469, Configurations = [TestProvName.AllAccessOleDb], ErrorMessage = "Arithmetic operation resulted in an overflow",
+			Details = "Access has no 64-bit integer: ~ is -1 - x in a 32-bit signed integer")]
+		[Test]
+		public void UnsignedNegationResults([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var not = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(uint)p.ID));
+
+			AssertQuery(not);
+
+			var notEnum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(UIntFlags)p.ID));
+
+			AssertQuery(notEnum);
+		}
+
+		// the rewritten ~ is an operand of & and |, which T-SQL groups at the additive level
+		[Test]
+		public void UnsignedNegationUnderAnd([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var andNot = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((uint)p.ID & ~(uint)(p.ID + 4)));
+
+			AssertQuery(andNot);
+		}
+
+		[ActiveIssue(6469, Configurations = [TestProvName.AllAccessOleDb], ErrorMessage = "Arithmetic operation resulted in an overflow",
+			Details = "Access has no 64-bit integer: ~ is -1 - x in a 32-bit signed integer, which | keeps negative")]
+		[Test]
+		public void UnsignedNegationUnderOr([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var orNot = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((uint)p.ID | ~(uint)(p.ID + 4)));
+
+			AssertQuery(orNot);
+		}
+
+		sealed class UnsignedColumnTable
+		{
+			[PrimaryKey] public int  Id { get; set; }
+			[Column]     public uint U  { get; set; }
+		}
+
+		static readonly UnsignedColumnTable[] UnsignedColumnData =
+		[
+			new() { Id = 1, U = 5 },
+			new() { Id = 2, U = 2147483655 },
+		];
+
+		// a uint literal above int.MaxValue under & | ^: the literal took the Int32 type of the column the other operand
+		// converts, and T-SQL types a bare literal of that size as numeric
+		[ActiveIssue(6469, Configurations = [TestProvName.AllNativeAccess], ErrorMessage = "Data type mismatch in criteria expression",
+			Details = "Access has no 64-bit integer to hold a uint above int.MaxValue")]
+		[Test]
+		public void UnsignedLiteralBitwiseResults([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var and = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((uint)p.ID & 4294967289u));
+
+			AssertQuery(and);
+
+			var or = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((uint)p.ID | 2147483649u));
+
+			AssertQuery(or);
+
+			var xor = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((uint)p.ID ^ 4294967295u));
+
+			AssertQuery(xor);
+
+			var andEnum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((UIntFlags)p.ID & UIntFlags.High));
+
+			AssertQuery(andEnum);
+
+			using var tb = db.CreateLocalTable(UnsignedColumnData);
+
+			var andColumn = tb
+				.OrderBy(t => t.Id)
+				.Select(t => Sql.AsSql(t.U & 4294967289u));
+
+			AssertQuery(andColumn);
+		}
+
+		[ActiveIssue(5973, Configurations = [TestProvName.AllSQLite, TestProvName.AllInformix], ErrorMessage = "Arithmetic operation resulted in an overflow",
+			Details = "ulong.MaxValue - x is computed in a type that cannot hold 2^64 - 1 exactly (SQLite REAL, Informix floating DECIMAL)")]
+		[ActiveIssue(6469, Configurations = [TestProvName.AllAccessOleDb], ErrorMessage = "Arithmetic operation resulted in an overflow",
+			Details = "Access has no 64-bit integer: ~ is -1 - x in a 32-bit signed integer")]
+		[ActiveIssue(6469, Configurations = [TestProvName.AllAccessOdbc], ErrorMessage = "! 18446744073709551614 <> 4294967294",
+			Details = "Access has no 64-bit integer; through ODBC the 32-bit result reads back as a wrong value")]
+		[Test]
+		public void UnsignedLongNegationResults([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(ulong)p.ID));
+
+			AssertQuery(query);
+		}
+
+		// ulong & | ^ over a ulong-converted column: the literal must reach YDB typed Uint64
+		[ActiveIssue(6468, Configurations = [TestProvName.AllPostgreSQL], ErrorMessage = "operator does not exist: numeric & integer", Details = "ulong is stored as NUMERIC")]
+		[ActiveIssue(6468, Configurations = [TestProvName.AllSqlServer],  ErrorMessage = "The data types decimal and int are incompatible", Details = "ulong is stored as DECIMAL")]
+		[ActiveIssue(6468, Configurations = [TestProvName.AllSybase],     ErrorMessage = "Invalid operator for datatype", Details = "ulong is stored as DECIMAL")]
+		[ActiveIssue(6468, Configurations = [ProviderName.SqlCe],         ErrorMessage = "Bit operators (&,|,^,~) are not supported", Details = "ulong is stored as NUMERIC")]
+		[Test]
+		public void UnsignedLongBitwiseWithLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var and = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((ulong)p.ID & 6UL));
+
+			AssertQuery(and);
+
+			var or = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((ulong)p.ID | 6UL));
+
+			AssertQuery(or);
+
+			var xor = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((ulong)p.ID ^ 6UL));
+
+			AssertQuery(xor);
+		}
+
+		// one CAST(... AS SIGNED) per operator: a cast that matched its own output again would nest without end
+		[Test]
+		public void SignedBitwiseIsCastOncePerOperator([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID | -5) & 7));
+
+			AssertQuery(query);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			sql
+				.Split(["CAST("], StringSplitOptions.None)
+				.Length
+				.ShouldBe(4, sql);
+		}
+
 		[Test]
 		public void BinaryAnd([DataSources] string context)
 		{

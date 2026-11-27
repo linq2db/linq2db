@@ -123,16 +123,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region Arrays
 
-		[Sql.Extension("{arrays, ' || '}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
+		[Sql.Extension("{arrays, ' || '}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Concatenate)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] params T[][] arrays)
 			=> throw new ServerSideOnlyException(nameof(ConcatArrays));
 
-		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
+		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Concatenate)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[][] array2)
 			=> throw new ServerSideOnlyException(nameof(ConcatArrays));
 
 		[CLSCompliant(false)]
-		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
+		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Concatenate)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[][] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(ConcatArrays));
 

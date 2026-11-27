@@ -538,7 +538,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var type1 = element.Expr1.SystemType!.ToUnderlying();
 
-					if (type1 == typeof(double) || type1 == typeof(float))
+					if (type1.IsFloatingPointType)
 					{
 						// Precedence stated so this reads like every other remainder. Left unstated it takes the
 						// constructor default and the renderer brackets it, which is how a float % on this provider

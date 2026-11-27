@@ -12,15 +12,14 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 	{
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
+		protected override bool HasNativeUnsignedIntegers        => true;
 
 		/// <summary>
 		/// <c>//</c>, DuckDB's integer division - its <c>/</c> produces a double even between two integers.
 		/// </summary>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
-
-			return Factory.Expression(longType, Precedence.Multiplicative, "{0} // {1}", value, Factory.Value(longType, divisor));
+			return new SqlBinaryExpression(type, dividend, "//", divisor, Precedence.Multiplicative);
 		}
 
 		/// <inheritdoc />
@@ -72,7 +71,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			var longType = Factory.GetDbDataType(typeof(long));
 
-			// Through the truncating divide, for the reason TruncateDivide states above: DuckDB's / produces a
+			// Through the truncating divide, for the reason IntegerDivide states above: DuckDB's / produces a
 			// double even between two integers, and To_Microseconds takes a BIGINT - so a tick count that is not a
 			// whole number of microseconds would hand a fraction to an integer parameter.
 			var microseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond / 1000);
@@ -106,10 +105,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return element.Operation switch
 			{
 				"^" => new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
-
-				// DuckDB performs float division by default (5/2 = 2.5), use integer division operator // for integer types
-				"/" when element.SystemType.IsIntegerType =>
-					new SqlBinaryExpression(element.SystemType, element.Expr1, "//", element.Expr2, element.Precedence),
 
 				_ => base.ConvertSqlBinaryExpression(element),
 			};

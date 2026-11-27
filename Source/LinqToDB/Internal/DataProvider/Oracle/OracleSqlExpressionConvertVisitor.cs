@@ -30,15 +30,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Oracle's <c>TRUNC</c> already is truncation toward zero, the semantic the base composes <c>FLOOR</c>
-		/// and <c>CEILING</c> to reach - and Oracle spells the second one <c>CEIL</c>, so that composition does
-		/// not even parse here.
+		/// <c>TRUNC</c> of the division: Oracle's <c>/</c> returns a <c>NUMBER</c> fraction even between two
+		/// integers, and <c>TRUNC</c> is truncation toward zero - an integer cast would floor (see
+		/// <c>FloorBeforeConvert</c>).
 		/// </summary>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		/// <remarks>The inner division is typed <see cref="decimal"/>, which is what it is, so it is not taken for an integer division again.</remarks>
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
-
-			return Factory.Function(longType, "Trunc", Factory.Div(longType, value, Factory.Value(longType, divisor)));
+			return Factory.Function(type, "Trunc", Factory.Div(Factory.GetDbDataType(typeof(decimal)), dividend, divisor));
 		}
 
 		/// <inheritdoc />
@@ -273,7 +272,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
 			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
-				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr, Precedence.Subtraction);
 
 			return base.ConvertSqlUnaryExpression(element);
 		}

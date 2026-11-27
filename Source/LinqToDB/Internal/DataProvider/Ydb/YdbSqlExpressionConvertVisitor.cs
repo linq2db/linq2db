@@ -16,6 +16,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// <inheritdoc/>
 		protected override bool SupportsNullInColumn => false;
 
+		/// <inheritdoc/>
+		protected override bool HasNativeUnsignedIntegers => true;
+
 		/// <inheritdoc />
 		public override bool CanLowerIntervalDifference => true;
 
@@ -176,16 +179,40 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return base.VisitInSubQueryPredicate(predicate);
 		}
 
+		// YQL bitwise operators take unsigned operands only. A signed operand is reinterpreted with BitCast rather
+		// than converted with CAST, which yields NULL for a negative value, and a signed result is reinterpreted
+		// back. The operator inside is then unsigned on both sides, so it is not rewritten again.
+		ISqlExpression BitCast(ISqlExpression expression, Type type)
+		{
+			var dbType = Factory.GetDbDataType(type);
+
+			// nullable when its operand is, or a NULL operand makes "x IS NULL" fold to false
+			return new SqlExpression(dbType, "BitCast({0} AS {1})", Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, expression, new SqlDataType(dbType));
+		}
+
+		// a signed operand of a signed operator of the given width: widened by value first, then reinterpreted
+		ISqlExpression? UnsignedOperand(ISqlExpression operand, Type resultType, Type unsignedType)
+		{
+			var operandType = operand.SystemType?.ToUnderlying();
+
+			if (operandType?.UnsignedIntegerType == null)
+				return null;
+
+			var widened = operandType == resultType ? operand : Factory.Cast(operand, Factory.GetDbDataType(resultType), true);
+
+			return BitCast(widened, unsignedType);
+		}
+
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation
+				&& element.SystemType?.ToUnderlying() is { } resultType
+				&& resultType.UnsignedIntegerType is { } unsignedType
+				&& UnsignedOperand(element.Expr, resultType, unsignedType) is { } operand)
 			{
-				var argType = QueryHelper.GetDbDataType(element.Expr, MappingSchema);
-				if (!argType.IsUnsignedType())
-				{
-					var expr = new SqlCastExpression(element.Expr, argType.ToUnsigned(), null, false);
-					return new SqlUnaryExpression(element.Type, expr, element.Operation, element.Precedence);
-				}
+				var negation = new SqlUnaryExpression(Factory.GetDbDataType(unsignedType), operand, element.Operation, element.Precedence);
+
+				return BitCast(negation, resultType);
 			}
 
 			return base.ConvertSqlUnaryExpression(element);
@@ -213,21 +240,48 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 				}
 
-				case "&" or "|" or "^":
+				case "&" or "|" or "^"
+					when element.SystemType?.ToUnderlying() is { } resultType && resultType.UnsignedIntegerType is { } unsignedType:
 				{
-					var expr1Type = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
-					var expr2Type = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
-					var expr1     = expr1Type.IsUnsignedType() ? element.Expr1 : new SqlCastExpression(element.Expr1, expr1Type.ToUnsigned(), null, false);
-					var expr2     = expr2Type.IsUnsignedType() ? element.Expr2 : new SqlCastExpression(element.Expr2, expr2Type.ToUnsigned(), null, false);
+					var expr1 = UnsignedOperand(element.Expr1, resultType, unsignedType);
+					var expr2 = UnsignedOperand(element.Expr2, resultType, unsignedType);
 
-					if (expr1 != element.Expr1 || expr2 != element.Expr2)
-						return new SqlBinaryExpression(element.SystemType, expr1, element.Operation, expr2, element.Precedence);
+					if (expr1 == null && expr2 == null)
+						break;
 
-					break;
+					var operation = new SqlBinaryExpression(unsignedType, expr1 ?? element.Expr1, element.Operation, expr2 ?? element.Expr2, element.Precedence);
+
+					return BitCast(operation, resultType);
+				}
+
+				// an unsigned operator needs unsigned operands on both sides; a literal is typed by the base before this
+				// runs, a non-literal operand typed otherwise (a parameter lent a signed type) is cast
+				case "&" or "|" or "^"
+					when element.SystemType?.ToUnderlying() is { } resultType && resultType.IsIntegerType && !resultType.IsSignedIntegerType:
+				{
+					var resultDbType = Factory.GetDbDataType(resultType).WithSystemType(element.SystemType!);
+
+					var expr1 = UnsignedTypedOperand(element.Expr1, resultDbType);
+					var expr2 = UnsignedTypedOperand(element.Expr2, resultDbType);
+
+					if (ReferenceEquals(expr1, element.Expr1) && ReferenceEquals(expr2, element.Expr2))
+						break;
+
+					return new SqlBinaryExpression(element.Type, expr1, element.Operation, expr2, element.Precedence);
 				}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		ISqlExpression UnsignedTypedOperand(ISqlExpression operand, DbDataType resultDbType)
+		{
+			if (operand is SqlValue)
+				return operand;
+
+			return QueryHelper.GetDbDataType(operand, MappingSchema).DataType is DataType.Byte or DataType.UInt16 or DataType.UInt32 or DataType.UInt64
+				? operand
+				: Factory.Cast(operand, resultDbType, true);
 		}
 
 		// Cast a Decimal operand to Double when the other operand is floating-point, so YQL accepts the
@@ -252,7 +306,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			// a double stored as Decimal beside another Decimal operand (a column, or a literal typed by one): the C# expression
 			// computes in Double, while YQL Decimal arithmetic keeps the operands' scale and refuses differing Decimal types
-			if (IsDecimal(t1) && IsDecimal(t2) && element.SystemType.UnwrappedNullableType is var type && (type == typeof(double) || type == typeof(float)))
+			if (IsDecimal(t1) && IsDecimal(t2) && element.SystemType.IsFloatingPointType)
 				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, new SqlCastExpression(element.Expr2, doubleType, null), element.Precedence);
 
 			return element;
@@ -376,7 +430,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var fromSys  = fromType.SystemType.UnwrappedNullableType;
 
 				if ((fromType.DataType is DataType.Double or DataType.Single
-					|| fromSys == typeof(double) || fromSys == typeof(float))
+					|| fromSys.IsFloatingPointType)
 					&& !YdbMappingSchema.IsDecimalStorage(fromType))
 				{
 					var stringType = MappingSchema.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
