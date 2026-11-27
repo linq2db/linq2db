@@ -1161,9 +1161,9 @@ namespace LinqToDB
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
-		/// Without eager loading, and outside a transaction, the insert is committed when the statement runs, so a failure while the
-		/// returned rows are read does not undo it; run the query in a transaction when it must be undone. With eager loading on a
-		/// direct connection the query runs in an implicit transaction, which such a failure rolls back together with the insert.
+		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
+		/// does not undo it; run the query in a transaction when it must be undone. Eager loading on a direct connection opens one
+		/// implicitly unless <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off, and such a failure then rolls the insert back.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">
@@ -1209,9 +1209,9 @@ namespace LinqToDB
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
-		/// Without eager loading, and outside a transaction, the insert is committed when the statement runs, so a failure while the
-		/// returned rows are read does not undo it; run the query in a transaction when it must be undone. With eager loading on a
-		/// direct connection the query runs in an implicit transaction, which such a failure rolls back together with the insert.
+		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
+		/// does not undo it; run the query in a transaction when it must be undone. Eager loading on a direct connection opens one
+		/// implicitly unless <see cref="LinqOptions.UseEagerLoadingTransaction"/> is off, and such a failure then rolls the insert back.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">

@@ -1353,6 +1353,64 @@ namespace Tests.xUpdate
 				.Count()
 				.ShouldBe(0);
 		}
+
+		[Test]
+		public void EagerLoadOverOutputWithoutLoadTransaction([IncludeDataSources(FeatureOutputQuery)] string context, [Values] bool fail)
+		{
+			var begun = 0;
+
+			using var db = GetDataConnection(context, o => o
+				.UseEagerLoadingTransaction(false)
+				.UseTracing(e =>
+				{
+					if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.BeginTransaction)
+						begun++;
+				}));
+
+			using var input  = db.CreateLocalTable(new[]
+			{
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 1, Tag = "auth" },
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 2, Tag = "profile" },
+				new EventInput { PersistenceId = "actor-xyz", SequenceNumber = 1, Tag = "ping" },
+			});
+			using var events = db.CreateLocalTable<EventRecord>();
+			using var lookup = db.CreateLocalTable(GetSourceData());
+
+			begun = 0;
+
+			var query = input
+				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
+				.Select(e => new
+				{
+					Id       = fail ? FailOnSecond(e.Id) : e.Id,
+					Children = lookup
+						.Where(s => s.Id == e.Id)
+						.Select(s => s.Id)
+						.ToList(),
+				});
+
+			if (fail)
+			{
+				Action act = () => query.ToList();
+
+				var ex = act.ShouldThrow<InvalidOperationException>();
+				ex.Message.ShouldBe("Materialization failed.");
+			}
+			else
+			{
+				var list = query.ToList();
+
+				list.Count.ShouldBe(3);
+			}
+
+			// no implicit transaction: the insert is committed with the statement and survives the failure
+			begun.ShouldBe(0);
+			db.Transaction.ShouldBeNull();
+			events
+				.Count()
+				.ShouldBe(3);
+		}
+
 		[Test]
 		public async Task EagerLoadOverOutputWithDetachedChildCommitsAfterReader([IncludeDataSources(FeatureOutputQuery)] string context, [Values] bool combined, [Values(EnumerationEnd.Completed, EnumerationEnd.Break, EnumerationEnd.AsyncBreak)] EnumerationEnd end)
 		{
