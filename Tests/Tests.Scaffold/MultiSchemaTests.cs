@@ -111,8 +111,24 @@ namespace Tests.Scaffold
 					options.DataModel.IncludeDatabaseName  = true;
 				});
 
+			var types = string.Join(", ", model.Types.Select(static t => t.FullName));
+
 			// F# module is compiled to abstract sealed class
-			model.Types.ShouldContain(static t => t.IsAbstract && t.IsSealed && t.Name.StartsWith("S2", StringComparison.Ordinal), string.Join(", ", model.Types.Select(static t => t.Name)));
+			var modules = model.Types
+				.Where(static t => t.IsAbstract && t.IsSealed && t.Name.StartsWith("S2", StringComparison.Ordinal))
+				.ToList();
+
+			modules.Count.ShouldBe(1, types);
+
+			// both tables are named T: only the s2 entity is declared in the schema module
+			var entities = model.Types
+				.Where(static t => t.Name == "T")
+				.ToList();
+
+			entities.Count.ShouldBe(2, types);
+			entities
+				.Count(t => t.DeclaringType == modules[0])
+				.ShouldBe(1, types);
 		}
 
 		// generation-only assertion: SQL Server and PostgreSQL are not available to this project
