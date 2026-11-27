@@ -30,9 +30,9 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryBatchTests : TestBase
 	{
-		// Access refuses a FROM-less SELECT holding a subquery ("Query input must contain at least one table or query"),
+		// Jet and ACE refuse a FROM-less SELECT holding a subquery ("Query input must contain at least one table or query"),
 		// which a batch with a scalar read over a table builds; SelectScalarTests.SubQueryAggregate excludes it likewise.
-		const string NoFromlessSubquery = TestProvName.AllAccess;
+		const string NoFromlessSubquery = TestProvName.AllNativeAccess;
 
 		// A local seed gives the tests known page ids and a fixed NULL pattern.
 		[Table]
@@ -72,6 +72,7 @@ namespace Tests.Linq
 			public int                  Begins;
 			public bool                 AnyAsync;
 			public List<string>         Texts      = new();
+			public List<string?>        BeginTexts = new();
 			public List<TraceOperation> Operations = new();
 
 			public void Reset()
@@ -80,6 +81,7 @@ namespace Tests.Linq
 				Begins   = 0;
 				AnyAsync = false;
 				Texts.Clear();
+				BeginTexts.Clear();
 				Operations.Clear();
 			}
 		}
@@ -108,6 +110,7 @@ namespace Tests.Linq
 				else if (ti.Operation == TraceOperation.BeginTransaction)
 				{
 					trace.Begins++;
+					trace.BeginTexts.Add(ti.CommandText);
 				}
 			});
 
@@ -1244,11 +1247,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReadsInOneTransaction([DataSources(false, NoFromlessSubquery)] string context)
+		public void ReadsInOneTransaction([DataSources(false, NoFromlessSubquery)] string context, [Values] bool useTransaction)
 		{
 			var trace = new CommandTrace();
 
-			using var db    = GetDataContext(context, Traced(trace));
+			using var db    = GetDataContext(context, o => Traced(trace)(o)
+				.UseEagerLoadingTransaction(useTransaction));
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
 			trace.Reset();
@@ -1261,14 +1265,45 @@ namespace Tests.Linq
 					.ToList());
 
 			// The load transaction's begin and commit are operations of their own around the batch's command; a provider
-			// without transactions skips them.
+			// without transactions skips them, and so does LinqOptions.UseEagerLoadingTransaction off.
 			TraceOperation[] readers = db.UsesCombinedQueryBatch()
 				? [TraceOperation.ExecuteReader]
 				: [TraceOperation.ExecuteReader, TraceOperation.ExecuteReader];
 
-			trace.Operations.ShouldBe(((DataConnection)db).DataProvider.TransactionsSupported
+			trace.Operations.ShouldBe(useTransaction && ((DataConnection)db).DataProvider.TransactionsSupported
 				? [TraceOperation.BeginTransaction, .. readers, TraceOperation.CommitTransaction]
 				: readers);
+		}
+
+		// The load transaction opens at LinqOptions.EagerLoadingIsolationLevel, by default at the provider's level.
+		// SQLite and SQL Server: their default levels (Serializable, RepeatableRead) differ from each other and from the
+		// override, so the fallback is told apart from a fixed level.
+		[Test]
+		public void ReadsAtTheConfiguredIsolationLevel(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context,
+			[Values] bool configured)
+		{
+			var trace = new CommandTrace();
+
+			System.Data.IsolationLevel? level = configured ? System.Data.IsolationLevel.ReadCommitted : null;
+
+			using var db    = GetDataContext(context, o => Traced(trace)(o)
+				.UseEagerLoadingIsolationLevel(level));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			db.SqlProviderFlags.DefaultMultiQueryIsolationLevel
+				.ShouldNotBe(System.Data.IsolationLevel.ReadCommitted);
+
+			trace.Reset();
+
+			db.QueryBatch(
+				() => items.Count(),
+				() => items
+					.OrderBy(i => i.Id)
+					.Take(3)
+					.ToList());
+
+			trace.BeginTexts.ShouldBe([$"BeginTransaction({level ?? db.SqlProviderFlags.DefaultMultiQueryIsolationLevel})"]);
 		}
 
 		// Whether a TransactionScope suppresses the load transaction is decided before any provider is involved.
@@ -2558,11 +2593,34 @@ namespace Tests.Linq
 			trace.Readers.ShouldBe(0);
 		}
 
-		// Where the batch does not combine, the configured strategy reads a nested entity First with its marker too.
+		public enum ConfiguredNestedRead
+		{
+			NullableValue,
+			NullableMember,
+			Entity,
+		}
+
+		// Where the batch does not combine, the configured strategy reads a nested First too, and an empty one throws what
+		// First throws. SQLite only: the strategy and the check are chosen when the batch is built, before any provider code.
 		[Test]
-		public void NestedEntityReadThrowsUnderTheConfiguredStrategy(
+		public void NestedEmptyReadThrowsUnderKeyedQuery(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
-			[Values(EagerLoadingStrategy.KeyedQuery, EagerLoadingStrategy.CteUnion)] EagerLoadingStrategy strategy)
+			[Values] ConfiguredNestedRead read)
+		{
+			NestedEmptyReadUnderTheConfiguredStrategy(context, EagerLoadingStrategy.KeyedQuery, read);
+		}
+
+		// CteUnion builds a collection's rows as a set-operation branch, which leaves the check out.
+		[ActiveIssue(6497)]
+		[Test]
+		public void NestedEmptyReadThrowsUnderCteUnion(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values] ConfiguredNestedRead read)
+		{
+			NestedEmptyReadUnderTheConfiguredStrategy(context, EagerLoadingStrategy.CteUnion, read);
+		}
+
+		void NestedEmptyReadUnderTheConfiguredStrategy(string context, EagerLoadingStrategy strategy, ConfiguredNestedRead read)
 		{
 			using var db     = GetDataContext(context);
 			using var items  = db.CreateLocalTable(BatchItem.Seed);
@@ -2577,18 +2635,46 @@ namespace Tests.Linq
 			var itemTable  = target.GetTable<BatchItem>();
 			var groupTable = target.GetTable<BatchGroup>();
 
-			Shouldly.Should.Throw<InvalidOperationException>(() => target.QueryBatch(
-				() => itemTable.Count(),
-				() => groupTable
-					.OrderBy(g => g.Id)
-					.Select(g => new
-					{
-						g.Id,
-						Item = itemTable
+			var empty = Shouldly.Should.Throw<InvalidOperationException>(() => Array
+				.Empty<int>()
+				.First());
+
+			var batch = read switch
+			{
+				ConfiguredNestedRead.NullableValue  => ThrowOfTheBatch(() => target.QueryBatch(
+					() => itemTable.Count(),
+					() => groupTable
+						.OrderBy(g => g.Id)
+						.Select(g => itemTable
 							.Where(i => i.GroupId == g.Id && i.Id > 8)
-							.First(),
-					})
-					.ToList()));
+							.Select(i => i.Value)
+							.First())
+						.ToList())),
+				ConfiguredNestedRead.NullableMember => ThrowOfTheBatch(() => target.QueryBatch(
+					() => itemTable.Count(),
+					() => groupTable
+						.OrderBy(g => g.Id)
+						.Select(g => itemTable
+							.Where(i => i.GroupId == g.Id && i.Id > 8)
+							.First()
+							.Value)
+						.ToList())),
+				ConfiguredNestedRead.Entity         => ThrowOfTheBatch(() => target.QueryBatch(
+					() => itemTable.Count(),
+					() => groupTable
+						.OrderBy(g => g.Id)
+						.Select(g => new
+						{
+							g.Id,
+							Item = itemTable
+								.Where(i => i.GroupId == g.Id && i.Id > 8)
+								.First(),
+						})
+						.ToList())),
+				_                                   => throw new InvalidOperationException($"Unexpected read {read}."),
+			};
+
+			batch.Message.ShouldBe(empty.Message);
 		}
 
 		// A compiled batch combines as the batch does, so a configured strategy costs it no extra command.
@@ -2836,6 +2922,7 @@ namespace Tests.Linq
 
 		// A statement tag inside a collection part goes to the statement that reads the scalars, as in db.Select; the
 		// collection's own statement carries none. Run one statement after another, so each is a reader of its own.
+		// SQLite only: the statement a tag goes to is chosen when the batch is built, the same for every provider.
 		[Test]
 		public void TagInsideACollectionPartGoesToTheScalarStatement([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -2930,6 +3017,8 @@ namespace Tests.Linq
 		}
 
 		// A batch larger than the provider's group of statements per command takes one more command.
+		// SQLite only: CombinedReaderBatch splits the groups before the DbBatch / concatenation choice, by the one limit
+		// every provider shares (MaxStatementsPerCombinedGroup, set by DataProviderBase).
 		[Test]
 		public void BatchOverTheStatementLimitTakesAnotherCommand([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
