@@ -328,9 +328,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override string EscapeLikePattern(string str)
 		{
-			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (string.Equals(newStr, str, StringComparison.Ordinal))
-				newStr = newStr.Replace("[", "[[]", StringComparison.Ordinal);
+			var newStr = str.Replace("[", "[[]", StringComparison.Ordinal);
 
 			foreach (var s in LikeCharactersToEscape)
 				newStr = newStr.Replace(s, "[" + s + "]", StringComparison.Ordinal);

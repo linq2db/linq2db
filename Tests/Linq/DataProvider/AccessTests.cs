@@ -1093,5 +1093,50 @@ namespace Tests.DataProvider
 
 			Assert.That(schema, Is.Not.Null);
 		}
+
+		[Table]
+		sealed class LikeBracketTable
+		{
+			[PrimaryKey         ] public int     Id    { get; set; }
+			[Column(Length = 50)] public string? Value { get; set; }
+		}
+
+		// Access only: its LIKE has no ESCAPE clause, so the provider escapes '[' as '[[]' in the pattern itself. A pattern
+		// with both a closed bracket pair and an unclosed '[' must escape the pair too, or '[b]' stays a character class:
+		// row 1 then matches and rows 2 and 3 do not
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6334")]
+		public void LikeEscapesClosedBracketPairNextToUnclosedBracket([IncludeDataSources(TestProvName.AllAccess)] string context, [Values] bool inline)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new LikeBracketTable { Id = 1, Value = "abc[d"     },
+				new LikeBracketTable { Id = 2, Value = "a[b]c[d"   },
+				new LikeBracketTable { Id = 3, Value = "xa[b]c[dx" },
+			});
+
+			db.InlineParameters = inline;
+
+			var pattern = "a[b]c[d";
+
+			table
+				.Where(r => r.Value!.Contains(pattern))
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([2, 3]);
+
+			table
+				.Where(r => r.Value!.StartsWith(pattern))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([2]);
+
+			table
+				.Where(r => r.Value!.EndsWith(pattern))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([2]);
+		}
 	}
 }
