@@ -821,6 +821,21 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 86)]
 		public bool IsFromRequiredForSubQueryColumn { get; set; }
 
+		/// <summary>
+		/// Provider can use the rows returned by an <c>INSERT</c> statement (<c>INSERT ... RETURNING</c> / <c>OUTPUT</c>)
+		/// as a query source inside the same SQL statement, e.g. PostgreSQL data-modifying CTE
+		/// (<c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>).
+		/// <para>
+		/// Used by <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, System.Linq.Expressions.Expression{System.Func{TTarget}})"/>
+		/// and its overloads. When <see langword="false"/>, such queries fail at build time.
+		/// Covers <c>INSERT</c> only: other data-modifying statements need their own flags, as engines differ in which ones they accept.
+		/// Not implied by <see cref="IsCommonTableExpressionsSupported"/>: many providers accept only <c>SELECT</c> in a CTE.
+		/// </para>
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 87), DefaultValue(false)]
+		public bool IsInsertOutputQuerySupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -929,6 +944,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ MaxCombinedCommandParameters                         .GetHashCode()
 				^ IsMultiStatementBatchConnectionDependent             .GetHashCode()
 				^ IsFromRequiredForSubQueryColumn                      .GetHashCode()
+				^ IsInsertOutputQuerySupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -1019,6 +1035,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& MaxCombinedCommandParameters                          == other.MaxCombinedCommandParameters
 				&& IsMultiStatementBatchConnectionDependent              == other.IsMultiStatementBatchConnectionDependent
 				&& IsFromRequiredForSubQueryColumn                       == other.IsFromRequiredForSubQueryColumn
+				&& IsInsertOutputQuerySupported                          == other.IsInsertOutputQuerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

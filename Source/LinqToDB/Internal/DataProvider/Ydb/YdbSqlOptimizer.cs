@@ -44,15 +44,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (statement.SelectQuery != null
 				&& statement.SelectQuery.Select.Columns.Count == statement.Insert.Items.Count)
 			{
-				for (var i = 0; i < statement.Insert.Items.Count; i++)
-				{
-					statement.SelectQuery.Select.Columns[i].Alias = ((SqlField)statement.Insert.Items[i].Column).Name;
-				}
+				SetInsertAliases(statement.SelectQuery, statement.Insert);
 
-				statement.SelectQuery.DoNotSetAliases = true;
+				// YQL combines UNION branches by column name, so every branch takes the target column names
+				if (statement.SelectQuery.HasSetOperators)
+				{
+					foreach (var setOperator in statement.SelectQuery.SetOperators)
+						SetInsertAliases(setOperator.SelectQuery, statement.Insert);
+				}
 			}
 
 			return statement;
+		}
+
+		static void SetInsertAliases(SelectQuery selectQuery, SqlInsertClause insert)
+		{
+			for (var i = 0; i < insert.Items.Count; i++)
+			{
+				selectQuery.Select.Columns[i].Alias = ((SqlField)insert.Items[i].Column).Name;
+			}
+
+			selectQuery.DoNotSetAliases = true;
 		}
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)

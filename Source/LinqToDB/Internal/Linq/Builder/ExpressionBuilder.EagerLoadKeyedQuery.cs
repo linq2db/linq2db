@@ -951,6 +951,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
 			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return [_query.QueryInfo.Statement];
+			}
 		}
 
 		sealed class KeyedQueryChildHarvester<TKey, T> : Harvester
@@ -1006,6 +1011,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
 				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
+			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return [_query.QueryInfo.Statement];
 			}
 		}
 
@@ -1380,6 +1390,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context) => null!;
 			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
+
+			public override IEnumerable<SqlStatement> GetStatements() => [];
 		}
 
 		// Placeholder occupying a keyed load's dedicated keys slot. Its result preserves whatever the keys step
@@ -1397,6 +1409,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context) => context?.GetResult(_index)!;
 			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult(context?.GetResult(_index)!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
+
+			public override IEnumerable<SqlStatement> GetStatements() => [];
 		}
 
 		sealed class BufferMaterializeHarvester<TBuffer> : Harvester
@@ -1447,6 +1461,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
 				QueryHelper.CollectParametersAndValues(_bufferQuery.QueryInfo.Statement, parameters, values);
+			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return [_bufferQuery.QueryInfo.Statement];
 			}
 		}
 

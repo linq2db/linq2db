@@ -10,6 +10,8 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.xUpdate
@@ -114,6 +116,35 @@ namespace Tests.xUpdate
 				ValueStr = s.ValueStr + param,
 			}),
 				output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
+		public void InsertWithOutputFromConcatTest([IncludeDataSources(true, FeatureInsertOutputMultiple)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<DestinationTable>();
+
+			var output = source
+				.Where(s => s.Id <= 2)
+				.Concat(source.Where(s => s.Id >= 9))
+				.InsertWithOutput(
+					target,
+					s => new DestinationTable
+					{
+						Id       = s.Id,
+						Value    = s.Value,
+						ValueStr = s.ValueStr,
+					})
+				.ToArray();
+
+			output
+				.Select(o => o.Id)
+				.OrderBy(id => id)
+				.ShouldBe(new[] { 1, 2, 9, 10 });
+			target
+				.Count()
+				.ShouldBe(4);
 		}
 
 		[Test]

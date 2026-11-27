@@ -141,6 +141,15 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 			}
 
+			// Each InsertWithOutputQuery call gets its identity here, before the query is built: a call that is not
+			// evaluated (a compiled query, a non-evaluable source) would otherwise reach the builder without one.
+			if (node.Method.DeclaringType == typeof(LinqExtensions)
+				&& string.Equals(node.Method.Name, nameof(LinqExtensions.InsertWithOutputQuery), StringComparison.Ordinal)
+				&& LinqExtensions.GetDataModificationIdentity(node) == null)
+			{
+				return Visit(LinqExtensions.IdentifyDataModificationCall(node, new DataModificationIdentity()));
+			}
+
 			if (TryConvertIQueryable(node, out var convertedQuery))
 			{
 				var save = _compactBinary;
