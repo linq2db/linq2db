@@ -2897,8 +2897,8 @@ namespace Tests.Linq
 				});
 		}
 
-		[Test]
-		public void Issue1615Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1615")]
+		public void DateAddDayWithCapturedDatePart([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2909,27 +2909,27 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue2950Table
+		sealed class TimeSpanHoursTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.Date)] public DateTime? Date { get; set; }
 			[Column(DataType = DataType.Time)] public TimeSpan? Time { get; set; }
 
-			public static readonly Issue2950Table[] Data =
+			public static readonly TimeSpanHoursTable[] Data =
 			[
-				new Issue2950Table() { Id = 1 },
-				new Issue2950Table() { Id = 2, Date = TestData.Date },
-				new Issue2950Table() { Id = 3, Date = TestData.Date, Time = TestData.TimeOfDay },
+				new TimeSpanHoursTable() { Id = 1 },
+				new TimeSpanHoursTable() { Id = 2, Date = TestData.Date },
+				new TimeSpanHoursTable() { Id = 3, Date = TestData.Date, Time = TestData.TimeOfDay },
 			];
 		}
 
 		[ActiveIssue(2950, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'x.Time.Value.Hours' could not be converted to SQL.",
 			Details = "the Hours component of a TimeSpan is not translated on PostgreSQL - #2950's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2950")]
-		public void Issue2950Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void TimeSpanHoursComponent([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue2950Table.Data);
+			using var tb = db.CreateLocalTable(TimeSpanHoursTable.Data);
 
 			var query = from x in tb
 						where x.Time!.Value.Hours >= 0
@@ -3145,6 +3145,153 @@ namespace Tests.Linq
 			result[0].Time.ShouldNotBeNull();
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1982")]
+		public void TimeOfDayComparedToTimeSpanColumn([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<TimeOfDayTable>())
+			{
+				db.GetTable<TimeOfDayTable>()
+					.Where(_ => _.Time < _.DateTime.TimeOfDay)
+					.Any();
+			}
+		}
+
+		public class TimeOfDayTable
+		{
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Int64)]
+			public TimeSpan Time { get; set; }
+
+			public DateTime DateTime { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3840")]
+		public void DateAddMillisecondsFromTimeSpanProperties([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string configuration)
+		{
+			using var db = GetDataContext(
+				configuration,
+				new FluentMappingBuilder()
+					.Entity<NotificationSchedule>()
+						.HasTableName("Common_Topology_Locations")
+						.Property(e => e.StartDateTime)
+						.Property(e => e.PreNotification)
+							.HasDataType(DataType.Int64)
+						.Property(e => e.PreNotification2)
+						.Property(e => e.PreNotification3)
+						.Property(e => e.StrField)
+					.Build()
+					.MappingSchema);
+			using var tbl = db.CreateLocalTable(new[]
+			{
+				new NotificationSchedule
+				{
+					StartDateTime    = TestData.DateTimeUtc,
+					PreNotification  = TimeSpan.FromSeconds(2000),
+					PreNotification2 = TimeSpan.FromSeconds(2000),
+					PreNotification3 = TimeSpan.FromSeconds(2000),
+					StrField         = TestData.Date,
+				}
+			});
+
+			var qry =
+				from t in db.GetTable<NotificationSchedule>()
+				select new
+				{
+					StartDateTime         = t.StartDateTime,
+					PreNotification       = t.PreNotification,
+					NotificationDateTime  = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification!.Value.Milliseconds, t.StartDateTime),
+					NotificationDateTime2 = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification2!.Value.Milliseconds, t.StartDateTime),
+					NotificationDateTime3 = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification3.Milliseconds, t.StartDateTime),
+					t.StrField!.Value.Day
+				};
+
+			_ = qry.ToList();
+		}
+
+		public class NotificationSchedule
+		{
+			public virtual DateTime? StartDateTime    { get; set; }
+			public virtual TimeSpan? PreNotification  { get; set; }
+			public virtual TimeSpan? PreNotification2 { get; set; }
+			public virtual TimeSpan  PreNotification3 { get; set; }
+			public virtual DateTime? StrField         { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void YearModuloInAsSql([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.Year % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.Year % 7));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void MonthModuloInAsSql([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.Month % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.Month % 7));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void DayOfYearModuloInAsSql([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.DayOfYear % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.DayOfYear % 7));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void DayModuloInAsSql([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.Day % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.Day % 7));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void HourModuloInAsSql([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.Hour % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.Hour % 7));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void MinuteModuloInAsSql([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.Minute % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.Minute % 7));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void SecondModuloInAsSql([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.Second % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.Second % 7));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/882")]
+		public void MillisecondModuloInAsSql([DataSources(
+				TestProvName.AllInformix, TestProvName.AllNativeAccess,
+				TestProvName.AllSapHana, TestProvName.AllMySql)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select t.DateTimeValue.Millisecond % 7,
+				from t in db.Types select Sql.AsSql(t.DateTimeValue.Millisecond % 7));
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,13 +7,7 @@ using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
-using NUnit.Framework;
-
-using Shouldly;
-
-using Tests.Model;
-
-namespace Tests.UserTests
+namespace Tests.Linq.Helpers.InExpression
 {
 	/// <summary>
 	/// Builder for parameterized sql IN expression
@@ -72,73 +66,5 @@ namespace Tests.UserTests
 		{
 			return values.Contains(field);
 		}
-	}
-
-	public class Issue973Tests : TestBase
-	{
-		private IQueryable<Parent> GetParents(IDataContext db, ICollection<int?> values)
-		{
-			var param = 4;
-			var resultQuery =
-					from o in db.GetTable<Parent>()
-					where Sql.Ext.In(o.ParentID, values) || o.ParentID == param
-					select o;
-			return resultQuery;
-		}
-
-		private IQueryable<Parent> GetParentsNative(IDataContext db, ICollection<int?> values)
-		{
-			var param = 4;
-			var resultQuery =
-					from o in db.GetTable<Parent>()
-					where values.Contains(o.ParentID) || o.ParentID == param
-					select o;
-			return resultQuery;
-		}
-
-		[Test]
-		public void Test([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var values1 = new int?[] { 1, 2, 3, null };
-			var values2 = new int?[] { 4, 5, 6, null };
-
-			AreEqual(
-				GetParentsNative(db, values1),
-				GetParents(db, values1));
-
-			AreEqual(
-				GetParentsNative(db, values2),
-				GetParents(db, values2));
-		}
-
-		[Test, QueryCacheTest]
-		public void TestCache([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var values1 = new int?[] { 1, 2, 3, null };
-			var values2 = new int?[] { 4, 5, 6, null };
-
-			var query11 = GetParents(db, values1);
-			var result11 = query11.ToArray();
-
-			var cm1 = query11.GetCacheMissCount();
-
-			var query12 = GetParents(db, values1);
-			var result12 = query12.ToArray();
-
-			query12.GetCacheMissCount().ShouldBe(cm1);
-
-			var query21  = GetParents(db, values2);
-			var result21 = query21.ToArray();
-
-			var cm2 = query21.GetCacheMissCount();
-
-			var query22  = GetParents(db, values2);
-			var result22 = query22.ToArray();
-
-			query22.GetCacheMissCount().ShouldBe(cm2);
-		}
-
 	}
 }

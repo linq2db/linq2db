@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
@@ -9,10 +9,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.Linq
 {
 	[TestFixture]
-	public class Issue3475Tests : TestBase
+	public class DynamicLinqCustomTypeProviderTests : TestBase
 	{
 		internal sealed class LinqToDBDynamicLinqCustomTypeProvider() : DefaultDynamicLinqCustomTypeProvider(ParsingConfig.Default)
 		{
@@ -35,14 +35,14 @@ namespace Tests.UserTests
 			public NumberLikeTestTable? Obj { get; set; }
 		}
 
-		// The defect is in System.Linq.Dynamic.Core, not in linq2db: this fixture's own #3475 is closed and was about
+		// The defect is in System.Linq.Dynamic.Core, not in linq2db: linq2db issue #3475 is closed and was about
 		// nullable numeric conversion, while the parse error below arrived with that library's 1.6.0.
 		[ActiveIssue("https://github.com/zzzprojects/System.Linq.Dynamic.Core/issues/934",
 			ErrorTypeName = "System.Linq.Dynamic.Core.Exceptions.ParseException",
 			ErrorMessage = "Method 'ToString' on type 'Object' is not accessible.",
 			Details = "Broken in 1.6.0")]
-		[Test]
-		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3475")]
+		public void DynamicLinqSqlLikeOnNullableNumber([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			ParsingConfig.Default.CustomTypeProvider = new LinqToDBDynamicLinqCustomTypeProvider();
 

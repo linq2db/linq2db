@@ -10,17 +10,17 @@ using NUnit.Framework;
 
 using Tests.Model;
 
-namespace Tests.UserTests
+namespace Tests.Linq
 {
 	/// <summary>
-	/// SimpleTest tests that parameter object released after use.
-	/// RetryTest tests that parameter release do not break query re-execution.
+	/// ParameterReleasedAfterExecution tests that parameter object released after use.
+	/// ParameterReleasedAfterReexecution tests that parameter release do not break query re-execution.
 	/// Oracle tests fail due to LOB types limitation in Oracle, like missing support for direct comparison and linq2db
 	/// doesn't generate proper comparison for such cases.
 	/// Tests executed against all providers, because they could also uncover memory leaks in providers.
 	/// </summary>
 	[TestFixture]
-	public class Issue256Tests : TestBase
+	public class ParameterReleaseTests : TestBase
 	{
 		static readonly DateTime _date = TestData.DateTime;
 
@@ -59,23 +59,23 @@ namespace Tests.UserTests
 
 		static string[] TestActions => _testActions.Keys.ToArray();
 
-		[Test(Description = "Demonstrates memory leak when fails")]
-		public void SimpleTest(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/256")]
+		public void ParameterReleasedAfterExecution(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
 			[ValueSource(nameof(TestActions))]           string action)
 		{
-			Test(context, _testActions[action], 1);
+			RunScenario(context, _testActions[action], 1);
 		}
 
-		[Test(Description = "Demonstrates memory leak when fails")]
-		public void RetryTest(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/256")]
+		public void ParameterReleasedAfterReexecution(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
 			[ValueSource(nameof(TestActions))]           string action)
 		{
-			Test(context, _testActions[action], 3);
+			RunScenario(context, _testActions[action], 3);
 		}
 
-		private void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
+		private void RunScenario(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{
 			using var db = GetDataContext(context);
 			db.Insert(new LinqDataTypes
@@ -91,7 +91,7 @@ namespace Tests.UserTests
 
 			try
 			{
-				TestWrapper(db, testAction, calls);
+				RunAndAssertCollected(db, testAction, calls);
 			}
 			finally
 			{
@@ -99,9 +99,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		private void TestWrapper(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
+		private void RunAndAssertCollected(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
 		{
-			var value = RunTest(db, test, calls);
+			var value = RunInIsolatedFrame(db, test, calls);
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
@@ -110,7 +110,7 @@ namespace Tests.UserTests
 			Assert.That(value.IsAlive, Is.False);
 		}
 
-		private static WeakReference RunTest(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
+		private static WeakReference RunInIsolatedFrame(ITestDataContext db, Action<ITestDataContext, byte[], int> test, int calls)
 		{
 			var value = new byte[] { 1, 2, 3 };
 			test(db, value, calls);

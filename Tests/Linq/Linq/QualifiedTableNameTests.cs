@@ -15,13 +15,13 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests
+namespace Tests.Linq
 {
 	[TestFixture]
-	public class Issue681Tests : TestBase
+	public class QualifiedTableNameTests : TestBase
 	{
-		[Table("Issue681Table")]
-		sealed class TestTable
+		[Table("QualifiedNameTable")]
+		sealed class QualifiedNameTable
 		{
 			[PrimaryKey]
 			public int ID    { get; set; }
@@ -30,8 +30,8 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
-		[Table("Issue681Table4")]
-		sealed class TestTableWithIdentity
+		[Table("QualifiedIdTable")]
+		sealed class QualifiedIdTable
 		{
 			[PrimaryKey, Identity]
 			public int ID { get; set; }
@@ -40,68 +40,68 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
-		[Test]
-		public async Task TestITable(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task QueryQualifiedTable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) => { t.ToList(); return Task.CompletedTask; });
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) => { t.ToList(); return Task.CompletedTask; });
 		}
 
-		[Test]
-		public async Task TestInsert(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task InsertIntoQualifiedTable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
 			{
-				db.Insert(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				db.Insert(new QualifiedNameTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
 				return Task.CompletedTask;
 			});
 		}
 
-		[Test]
-		public async Task TestUpdate(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task UpdateQualifiedTable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
 			{
-				db.Update(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				db.Update(new QualifiedNameTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
 				return Task.CompletedTask;
 			});
 		}
 
-		[Test]
-		public async Task TestDelete(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task DeleteFromQualifiedTable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
 			{
-				db.Delete(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				db.Delete(new QualifiedNameTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
 				return Task.CompletedTask;
 			});
 		}
 
-		[Test]
-		public async Task TestInsertOrReplace(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task InsertOrReplaceQualifiedTable(
 			[InsertOrUpdateDataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
 			{
-				var record = new TestTable() { ID = 5, Value = 10 };
+				var record = new QualifiedNameTable() { ID = 5, Value = 10 };
 				// insert
 				db.InsertOrReplace(record, databaseName: d, serverName: s, schemaName: u);
 				// replace
@@ -110,44 +110,44 @@ namespace Tests.UserTests
 			});
 		}
 
-		[Test]
-		public async Task TestInsertWithIdentity(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task InsertWithIdentityIntoQualifiedTable(
 			[DataSources(TestProvName.AllClickHouse)] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTableWithIdentity>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedIdTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
 			{
-				db.InsertWithIdentity(new TestTableWithIdentity() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				db.InsertWithIdentity(new QualifiedIdTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
 				return Task.CompletedTask;
 			});
 		}
 
-		[Test]
-		public async Task TestCreate(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task CreateQualifiedTable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
 			{
 				try
 				{
 					if (context.IsAnyOf(TestProvName.AllYdb))
-						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
-						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", throwExceptionIfNotExists: false);
 
-					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+					db.CreateTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
 					if (context.IsAnyOf(TestProvName.AllYdb))
-						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
-						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", throwExceptionIfNotExists: false);
 				}
 
 				return Task.CompletedTask;
@@ -155,67 +155,67 @@ namespace Tests.UserTests
 			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
 		}
 
-		[Test]
-		public async Task TestCreateAsync(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task CreateQualifiedTableAsync(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, async (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, async (db, t, u, d, s) =>
 			{
 				try
 				{
 					if (context.IsAnyOf(TestProvName.AllYdb))
-						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
-						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", throwExceptionIfNotExists: false);
 
-					await db.CreateTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+					await db.CreateTableAsync<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
 					if (context.IsAnyOf(TestProvName.AllYdb))
-						await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+						await db.DropTableAsync<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
-						await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+						await db.DropTableAsync<QualifiedNameTable>(tableName: "QualifiedNameTable2", throwExceptionIfNotExists: false);
 				}
 				// not allowed for remote server
 			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
 		}
 
-		[Test]
-		public async Task TestDrop(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/681")]
+		public async Task DropQualifiedTable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			await RunQualifiedTableOperation<QualifiedNameTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
 			{
 				try
 				{
 					if (context.IsAnyOf(TestProvName.AllYdb))
 					{
-						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
-						db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+						db.CreateTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u);
 					}
 					else
 					{
-						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
-						db.CreateTable<TestTable>(tableName: "Issue681Table2");
+						db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", throwExceptionIfNotExists: false);
+						db.CreateTable<QualifiedNameTable>(tableName: "QualifiedNameTable2");
 					}
 				}
 				finally
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+					db.DropTable<QualifiedNameTable>(tableName: "QualifiedNameTable2", databaseName: d, serverName: s, schemaName: u);
 				}
 
 				return Task.CompletedTask;
 			}, TestProvName.AllSqlServer, ddl: true);
 		}
 
-		private async Task TestTableFQN<TTable>(
+		private async Task RunQualifiedTableOperation<TTable>(
 			string context,
 			bool withServer, bool withDatabase, bool withSchema,
 			Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation,

@@ -20,6 +20,7 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Linq.Helpers.InExpression;
 using Tests.Model;
 using Tests.UserTests;
 
@@ -550,7 +551,7 @@ namespace Tests.Linq
 			public List<MaskingChild> Children { get; set; } = null!;
 		}
 
-		[Table("NoSuchTable5891")]
+		[Table("NoSuchTable")]
 		sealed class MaskingChild
 		{
 			[PrimaryKey] public int ParentID { get; set; }

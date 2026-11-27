@@ -416,7 +416,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4501")]
-		public void Issue4501Test([StringTestSources] string context)
+		public void StringAggregateInGroupBySelect([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
@@ -475,8 +475,8 @@ namespace Tests.Linq
 			return data;
 		}
 
-		[Test]
-		public void Issue1765TestLiteral1([StringTestSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1765")]
+		public void StringAggregateLiteralSeparatorOverSelect([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
@@ -490,8 +490,8 @@ namespace Tests.Linq
 			Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 		}
 
-		[Test]
-		public void Issue1765TestLiteral2([StringTestSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1765")]
+		public void StringAggregateLiteralSeparatorWithSelector([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
@@ -505,8 +505,8 @@ namespace Tests.Linq
 			Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 		}
 
-		[Test]
-		public void Issue1765TestLiteral3([StringTestOrderSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1765")]
+		public void StringAggregateLiteralSeparatorOrdered([StringTestOrderSources] string context)
 		{
 			var data = GenerateData();
 
@@ -533,8 +533,8 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[Test]
-		public void Issue1765TestLiteral4([StringTestSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1765")]
+		public void StringAggregateLiteralSeparatorGroupedValues([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
@@ -569,8 +569,8 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[Test]
-		public void Issue1765TestParameter3([StringTestOrderSources] string context, [Values(" -> ", " => ")] string separator)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1765")]
+		public void StringAggregateParameterSeparatorOrdered([StringTestOrderSources] string context, [Values(" -> ", " => ")] string separator)
 		{
 			var data = GenerateData();
 
@@ -597,8 +597,8 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[Test]
-		public void Issue1765TestParameter4([StringTestSources] string context, [Values(" -> ", " => ")] string separator)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1765")]
+		public void StringAggregateParameterSeparatorGroupedValues([StringTestSources] string context, [Values(" -> ", " => ")] string separator)
 		{
 			var data = GenerateData();
 
@@ -648,7 +648,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4597")]
-		public void Issue4597Test([DataSources(
+		public void StringAggregateOverAssociationInSelect([DataSources(
 			ProviderName.SqlCe,
 			TestProvName.AllYdb,
 			TestProvName.AllNativeAccess,
@@ -665,7 +665,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5173")]
-		public void Issue5173_ParameterLocation([StringTestSources] string provider)
+		public void StringAggregateSeparatorParameterLocation([StringTestSources] string provider)
 		{
 			using var db = GetDataContext(provider);
 
@@ -685,6 +685,154 @@ namespace Tests.Linq
 				};
 
 			_ = query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1977")]
+		public void ConcatStringsWithGuidConversionMatchesOperatorConcat([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(GuidConcatRow.TestData);
+			var itemsQuery = table
+				.Select
+				(
+					f => new
+					{
+						oldStr = nameof(GuidConcatRow)
+						 + "/" + f.firstField
+						 + "/" + f.secondField,
+						newStr = Sql.AsSql(Sql.ConcatStrings("/",
+							nameof(GuidConcatRow),
+							Sql.Convert<string, Guid>(f.firstField),
+							Sql.Convert<string, Guid>(f.secondField)))
+					}
+				)
+				.Select
+				(
+					f => new
+					{
+						equals = Sql.AsSql(f.oldStr == f.newStr)
+					}
+				);
+
+			Assert.That(itemsQuery.ToArray().All(r => r.equals), Is.True);
+		}
+
+		public class GuidConcatRow
+		{
+			public Guid firstField;
+			public Guid secondField;
+
+			public static GuidConcatRow[] TestData { get; }
+				= new[]
+				{
+					new GuidConcatRow()
+					{
+						firstField  = global::Tests.TestData.Guid1,
+						secondField = global::Tests.TestData.Guid2
+					}
+				};
+		}
+
+		[Sql.Expression(ProviderName.SqlServer, "ISNULL({0}, {1})", ServerSideOnly = true)]
+		private static T ServerSideIsNull<T>(T value, T defaultValue)
+		{
+			throw new ServerSideOnlyException(nameof(ServerSideIsNull));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3257")]
+		public void StringAggregateInConditionalProjection([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Checklist>())
+			using (db.CreateLocalTable<ChecklistTrigger>())
+			{
+				var query = db.GetTable<Checklist>()
+					.Select(x => new
+					{
+						x.Id,
+						Triggers = x.ChecklistTriggers.Any()
+							? x.ChecklistTriggers.AsQueryable()
+								.Select(checklist => checklist.TriggerType == TriggerType.Hired ? "Hired" :
+									checklist.TriggerType == TriggerType.PreHired ? "PreHired" :
+									checklist.TriggerType == TriggerType.Terminated ? "Terminated" : "")
+								.StringAggregate(",").ToValue()
+						: "None"
+					});
+
+				var good = query.ToList();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3257")]
+		public void StringAggregateInConditionalProjectionFilteredByContains([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Checklist>())
+			using (db.CreateLocalTable<ChecklistTrigger>())
+			{
+				var query = db.GetTable<Checklist>()
+					.Select(x => new
+					{
+						x.Id,
+						Triggers = x.ChecklistTriggers.Any()
+							? x.ChecklistTriggers.AsQueryable()
+								.Select(checklist => checklist.TriggerType == TriggerType.Hired ? "Hired" :
+									checklist.TriggerType == TriggerType.PreHired ? "PreHired" :
+									checklist.TriggerType == TriggerType.Terminated ? "Terminated" : "")
+								.StringAggregate(",").ToValue()
+						: "None"
+					});
+
+				var bad = query.Where(x => x.Triggers.Contains("H")).ToList();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3257")]
+		public void StringAggregateWrappedInServerSideIsNull([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<Checklist>())
+			using (db.CreateLocalTable<ChecklistTrigger>())
+			{
+				var query = db.GetTable<Checklist>()
+					.Select(x => new
+					{
+						x.Id,
+						Triggers = ServerSideIsNull(
+							x.ChecklistTriggers.AsQueryable()
+								.Select(checklist => checklist.TriggerType == TriggerType.Hired ? "Hired" :
+									checklist.TriggerType == TriggerType.PreHired ? "PreHired" :
+									checklist.TriggerType == TriggerType.Terminated ? "Terminated" : "")
+								.StringAggregate(",").ToValue()
+						, "None")
+					});
+
+				query.ToArray();
+			}
+		}
+
+		[Table]
+		public class Checklist
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChecklistTrigger.ChecklistId))]
+			public ICollection<ChecklistTrigger> ChecklistTriggers { get; set; } = null!;
+		}
+
+		[Table]
+		public class ChecklistTrigger
+		{
+			[Column] public int         Id          { get; set; }
+			[Column] public int         ChecklistId { get; set; }
+			[Column] public TriggerType TriggerType { get; set; }
+		}
+
+		public enum TriggerType
+		{
+			Hired      = 1,
+			PreHired   = 2,
+			Terminated = 3
 		}
 	}
 }

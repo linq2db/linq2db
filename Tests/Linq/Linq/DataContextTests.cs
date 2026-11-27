@@ -11,6 +11,7 @@ using LinqToDB.Async;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Mapping;
 
 using MySqlData::MySql.Data.MySqlClient;
 
@@ -153,8 +154,8 @@ namespace Tests.Linq
 			q.ToArray();
 		}
 
-		[Test]
-		public void Issue210([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/210")]
+		public void KeepConnectionAliveToggledOffAfterOn([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var ctx = new DataContext(context);
 			ctx.SetKeepConnectionAlive(true);
@@ -406,7 +407,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4729")]
-		public void Issue4729Test([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public void CloseAfterUseControlsOnClosedInterceptorCalls([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
 		{
 			var interceptor = new CountingContextInterceptor();
 			using var db = GetDataContext(context, o => o.UseInterceptor(interceptor));
@@ -420,5 +421,35 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3049")]
+		public void DataContextPropertyAccessInPredicate([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values("key1", "key2")] string currentKey)
+		{
+			using var db = new DictionaryPropertyContext(context);
+			using var table = db.CreateLocalTable(new ContextPropertyRow[]
+			{
+				new (){Value = "key1"},
+				new (){Value = "key2"},
+			});
+			db.Nesto.Add(currentKey, "fake");
+
+			AssertQuery(table.Where(t => db.Nesto.ContainsKey(t.Value!)).Select(t => t.Value));
+		}
+
+		sealed class DictionaryPropertyContext : DataContext
+		{
+			public DictionaryPropertyContext(string configuration) : base(configuration)
+			{
+
+			}
+
+			public  Dictionary<string, object> Nesto { get; } = new();
+		}
+
+		[Table]
+		sealed class ContextPropertyRow
+		{
+			[Column]              public int     Id    { get; set; }
+			[Column(Length = 50)] public string? Value { get; set; }
+		}
 	}
 }

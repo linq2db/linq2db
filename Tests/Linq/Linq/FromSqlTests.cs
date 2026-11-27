@@ -1077,8 +1077,8 @@ namespace Tests.Linq
 
 		const string MyTableNameStringConstant = "Person";
 
-		[Test]
-		public void Issue3782Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
+		public void FromSqlScalarConstantParameterPostgreSQL([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1099,8 +1099,8 @@ namespace Tests.Linq
 			Assert.That(exists, Is.True);
 		}
 
-		[Test]
-		public void Issue3782Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
+		public void FromSqlScalarConstantParameterInSubqueryPostgreSQL([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1123,8 +1123,8 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[Test]
-		public void Issue3782Test3([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
+		public void FromSqlScalarConstantParameterSqlServer([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1136,8 +1136,8 @@ namespace Tests.Linq
 			Assert.That(tableExists, Is.True);
 		}
 
-		[Test]
-		public void Issue3782Test4([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
+		public void FromSqlScalarConstantParameterInSubquerySqlServer([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
