@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Translation
 		{
 		}
 
-		/// <summary>Initializes a new <see cref="TranslationProviderFlags"/>.</summary>
+		/// <summary>Initializes a new <see cref="TranslationProviderFlags"/> that lowers no time zone conversion.</summary>
 		/// <param name="defaultNullsOrdering">The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</param>
 		/// <param name="isNullsOrderingSupported">Whether the provider supports the <c>NULLS FIRST</c>/<c>NULLS LAST</c> keyword in <c>ORDER BY</c>.</param>
 		/// <param name="canLowerIntervalDifference">Whether an elapsed date difference can be lowered to a value.</param>
@@ -31,9 +31,38 @@ namespace LinqToDB.Linq.Translation
 			bool                 canLowerIntervalDifference,
 			bool                 canLowerIntervalPart,
 			bool                 canLowerIntervalShift,
-			SqlIntervalUnit      intervalResolution          = SqlIntervalUnit.Tick,
-			bool                 canMeasureDifferenceInTicks = true)
+			SqlIntervalUnit      intervalResolution,
+			bool                 canMeasureDifferenceInTicks)
+			: this(defaultNullsOrdering, isNullsOrderingSupported, canLowerIntervalDifference, canLowerIntervalPart, canLowerIntervalShift, intervalResolution, canMeasureDifferenceInTicks, false, false, false, false)
 		{
+		}
+
+		/// <summary>Initializes a new <see cref="TranslationProviderFlags"/>.</summary>
+		/// <param name="defaultNullsOrdering">The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</param>
+		/// <param name="isNullsOrderingSupported">Whether the provider supports the <c>NULLS FIRST</c>/<c>NULLS LAST</c> keyword in <c>ORDER BY</c>.</param>
+		/// <param name="canLowerIntervalDifference">Whether an elapsed date difference can be lowered to a value.</param>
+		/// <param name="canLowerIntervalPart">Whether a member of an elapsed date difference can be lowered.</param>
+		/// <param name="canLowerIntervalShift">Whether a date shifted by an interval can be lowered.</param>
+		/// <param name="intervalResolution">The finest unit the provider can resolve when measuring elapsed time.</param>
+		/// <param name="canMeasureDifferenceInTicks">Whether an elapsed date difference can become a tick count.</param>
+		/// <param name="canAttachZone">Whether a wall-clock reading can be given a zone's offset.</param>
+		/// <param name="canConvertZone">Whether an instant can be re-expressed with another zone's offset.</param>
+		/// <param name="canReadWallTime">Whether the wall-clock reading an instant shows in a zone can be produced.</param>
+		/// <param name="requiresConstantTimeZone">Whether the time zone must be a constant rather than a bind.</param>
+		public TranslationProviderFlags(
+			NullsDefaultOrdering defaultNullsOrdering,
+			bool                 isNullsOrderingSupported,
+			bool                 canLowerIntervalDifference,
+			bool                 canLowerIntervalPart,
+			bool                 canLowerIntervalShift,
+			SqlIntervalUnit      intervalResolution          = SqlIntervalUnit.Tick,
+			bool                 canMeasureDifferenceInTicks = true,
+			bool                 canAttachZone               = false,
+			bool                 canConvertZone              = false,
+			bool                 canReadWallTime             = false,
+			bool                 requiresConstantTimeZone    = false)
+		{
+			RequiresConstantTimeZone    = requiresConstantTimeZone;
 			DefaultNullsOrdering        = defaultNullsOrdering;
 			IsNullsOrderingSupported    = isNullsOrderingSupported;
 			CanLowerIntervalDifference  = canLowerIntervalDifference;
@@ -41,7 +70,39 @@ namespace LinqToDB.Linq.Translation
 			CanLowerIntervalShift       = canLowerIntervalShift;
 			IntervalResolution          = intervalResolution;
 			CanMeasureDifferenceInTicks = canMeasureDifferenceInTicks;
+			_canAttachZone              = canAttachZone;
+			_canConvertZone             = canConvertZone;
+			_canReadWallTime            = canReadWallTime;
 		}
+
+		/// <summary>
+		/// Whether the provider's grammar demands a constant in the time zone position rather than a bind. Where it
+		/// does, the translator demotes the zone to a constant, which also puts its value in the query cache key.
+		/// </summary>
+		public bool RequiresConstantTimeZone { get; }
+
+		readonly bool _canAttachZone;
+		readonly bool _canConvertZone;
+		readonly bool _canReadWallTime;
+
+		/// <summary>
+		/// Whether the provider can render the given time zone conversion. Asked while the expression is still being
+		/// built, so a translator that cannot have one can decline and leave the member to .NET rather than letting
+		/// the SQL builder fail the whole query.
+		/// </summary>
+		/// <remarks>
+		/// The three kinds are separate capabilities rather than one flag: a provider whose offset-carrying type keeps
+		/// the instant and nothing else can still read the wall clock in a named zone and attach a zone to a wall
+		/// clock, so it supports <see cref="SqlTimeZoneConversionKind.ToWallTime"/> and
+		/// <see cref="SqlTimeZoneConversionKind.AttachZone"/> but not <see cref="SqlTimeZoneConversionKind.ConvertZone"/>,
+		/// and what it attaches reads back at <c>+00:00</c>.
+		/// </remarks>
+		public bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => kind switch
+		{
+			SqlTimeZoneConversionKind.AttachZone  => _canAttachZone,
+			SqlTimeZoneConversionKind.ConvertZone => _canConvertZone,
+			_                                     => _canReadWallTime,
+		};
 
 		/// <summary>The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</summary>
 		public NullsDefaultOrdering DefaultNullsOrdering { get; }

@@ -14,6 +14,36 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		/// <summary>
+		/// <c>TIMESTAMPTZ</c> keeps the instant and nothing else, so DuckDB cannot produce a value bearing a target
+		/// zone's offset - the same shape as PostgreSQL. The other two directions are the ones a component or a
+		/// wall-clock reading in a named zone needs.
+		/// </summary>
+		public override bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind)
+			=> kind != SqlTimeZoneConversionKind.ConvertZone;
+
+		protected override ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
+		{
+			// One operator, told apart by the operand's type: over a TIMESTAMP it yields TIMESTAMPTZ, over a
+			// TIMESTAMPTZ it yields TIMESTAMP. The node's Type is the result type, never the operand's.
+			var value = TypeParameter(element.Value);
+
+			return element.Kind switch
+			{
+				// A fixed offset is taken off the wall clock and the result read as UTC: DuckDB has no AT TIME ZONE
+				// over an interval.
+				SqlTimeZoneConversionKind.AttachZone when element.Zone.SystemType == typeof(TimeSpan) || element.Zone.SystemType == typeof(TimeSpan?)
+					=> Factory.Expression(Factory.GetDbDataType(typeof(DateTimeOffset)), Precedence.Primary, "(({0} - {1}) AT TIME ZONE 'UTC')", value, element.Zone),
+
+				SqlTimeZoneConversionKind.AttachZone => AtTimeZone(Factory.GetDbDataType(typeof(DateTimeOffset))),
+				SqlTimeZoneConversionKind.ToWallTime => AtTimeZone(Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2)),
+				_                                    => null,
+			};
+
+			ISqlExpression AtTimeZone(DbDataType resultType)
+				=> Factory.Expression(resultType, Precedence.Primary, "({0} AT TIME ZONE {1})", value, element.Zone);
+		}
+
+		/// <summary>
 		/// <c>//</c>, DuckDB's integer division - its <c>/</c> produces a double even between two integers.
 		/// </summary>
 		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)

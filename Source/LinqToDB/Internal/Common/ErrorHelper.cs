@@ -79,6 +79,26 @@
 		/// <summary><c>{0}</c> - the requested component unit, <c>{1}</c> - the finest unit the provider resolves.</summary>
 		public const string Error_Interval_ComponentBelowResolution               = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated.";
 
+		public const string Error_TimeZone_Conversion                             = "Time zone conversion is not supported by current provider.";
+		/// <summary>
+		/// Separate from <see cref="Error_TimeZone_Conversion"/> because the gap is the result type rather than the
+		/// conversion: a provider with no column type that carries an offset can still answer a component or the
+		/// wall-clock reading in a named zone, so the message points at that instead of refusing the whole idea.
+		/// </summary>
+		public const string Error_TimeZone_ZonedResult                            = "Producing an offset-carrying value from a time zone conversion is not supported by current provider. Read a component or .DateTime from it instead.";
+		/// <summary>
+		/// Separate again because the operand is what cannot be spelled, not the conversion or the result: a fixed
+		/// offset has to go where a zone name goes, and no dialect accepts one there for the wall-clock direction.
+		/// </summary>
+		public const string Error_TimeZone_OffsetFrame                            = "Reading a value through a fixed time zone offset is not supported by current provider. Use a named time zone instead.";
+		/// <summary>
+		/// A <see cref="System.DateTimeOffset"/> mapped onto a column without an offset holds a wall clock in SQL, not an
+		/// instant, so there is nothing to convert.
+		/// </summary>
+		public const string Error_TimeZone_OffsetlessValue                        = "Time zone conversion of a DateTimeOffset stored without an offset is not supported: its column holds a wall clock, not an instant. Map it to a type that carries an offset.";
+		/// <summary><c>{0}</c> - the offset asked for.</summary>
+		public const string Error_TimeZone_InvalidOffset                          = "Offset {0} cannot be carried by a DateTimeOffset: it must be whole minutes, at most 14 hours from UTC.";
+
 		/// <summary>
 		/// <c>{0}</c> and <c>{1}</c> - the two columns. Named rather than described, because two conversions are
 		/// indistinguishable in the query text and the mistake is in the model rather than in what was written.

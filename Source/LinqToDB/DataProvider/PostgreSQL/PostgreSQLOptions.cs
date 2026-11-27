@@ -23,6 +23,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	/// <item>Use <see cref="DateTimeKind.Utc"/> for <see cref="DateTime"/> timestamptz values</item>
 	/// <item>Use <see cref="DateTimeKind.Unspecified"/> for <see cref="DateTime"/> timestamp values with <see cref="DateTimeKind.Utc"/> kind</item>
 	/// </list>
+	/// The conversion preserves the instant but discards the offset the value carried: <c>timestamptz</c> stores no
+	/// offset, so a value written as <c>12:00 +05:45</c> reads back as <c>06:15 +00:00</c> and its
+	/// <see cref="DateTimeOffset"/> components answer in UTC. Setting this to <see langword="false"/> hands the value
+	/// to Npgsql unchanged, which rejects a non-zero <see cref="DateTimeOffset.Offset"/> rather than converting it.
 	/// Default value: <see langword="true"/>.
 	/// </param>
 	/// <param name="IdentifierQuoteMode">

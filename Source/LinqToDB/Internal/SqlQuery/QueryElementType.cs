@@ -145,5 +145,8 @@
 		// at the end. Ordered AFTER master's additions so master's already-published ordinals do not shift.
 		SqlObjectNameExpression,
 		SqlRawStatement,
+
+		// In v7 group this with the temporal members above.
+		SqlTimeZoneConversion,
 	}
 }

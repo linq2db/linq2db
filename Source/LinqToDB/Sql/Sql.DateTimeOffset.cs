@@ -23,7 +23,9 @@ namespace LinqToDB
 				DateParts.Month         => date.Value.Month,
 				DateParts.DayOfYear     => date.Value.DayOfYear,
 				DateParts.Day           => date.Value.Day,
-				DateParts.Week          => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value.LocalDateTime, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
+				// DateTime, not LocalDateTime: every other arm reads the value's own wall clock, and shifting to the
+				// client machine's zone first can answer a different week for the same value on a different machine.
+				DateParts.Week          => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value.DateTime, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
 				DateParts.WeekDay       => ((int)date.Value.DayOfWeek + 1 + DateFirst + 6) % 7 + 1,
 				DateParts.Hour          => date.Value.Hour,
 				DateParts.Minute        => date.Value.Minute,
@@ -91,6 +93,54 @@ namespace LinqToDB
 				_                     => throw new InvalidOperationException(),
 			};
 		}
+
+		#endregion
+
+		#region AtTimeZone
+
+		/// <summary>
+		/// Re-expresses an instant with the offset in effect in <paramref name="timeZone"/>, as SQL's
+		/// <c>AT TIME ZONE</c> does. The instant is unchanged; only the offset it carries differs.
+		/// </summary>
+		/// <param name="value">Instant to re-express. <see langword="null"/> propagates.</param>
+		/// <param name="timeZone">
+		/// A time zone identifier, interpreted by the <b>database</b>, so the accepted set is the server's: SQL Server
+		/// takes Windows identifiers (<c>"Central European Standard Time"</c>), while PostgreSQL, Oracle and DuckDB
+		/// take IANA identifiers (<c>"Europe/Prague"</c>). There is no spelling that every provider accepts - SQL
+		/// Server rejects a bare UTC offset such as <c>"+02:00"</c>.
+		/// </param>
+		/// <returns>The same instant, carrying <paramref name="timeZone"/>'s offset.</returns>
+		/// <remarks>
+		/// Server-side only: the database's zone data defines the answer, so there is no .NET evaluation to fall back
+		/// to, and a provider that cannot express the conversion refuses it. Materialising the result needs a column
+		/// type that carries an offset, so it translates on SQL Server 2016+ and Oracle. Reading a component or
+		/// <see cref="DateTimeOffset.DateTime"/> from it also works on PostgreSQL and DuckDB, because no offset has to
+		/// survive into the result.
+		/// </remarks>
+		/// <exception cref="ServerSideOnlyException">Called outside a query.</exception>
+		[ServerSideOnly]
+		public static DateTimeOffset? AtTimeZone(DateTimeOffset? value, string timeZone)
+			=> throw new ServerSideOnlyException(nameof(AtTimeZone));
+
+		/// <summary>
+		/// Reads a wall-clock value as being in <paramref name="timeZone"/> and returns the instant it denotes,
+		/// carrying that zone's offset.
+		/// </summary>
+		/// <param name="value">Wall-clock reading to interpret. <see langword="null"/> propagates.</param>
+		/// <param name="timeZone">See <see cref="AtTimeZone(DateTimeOffset?, string)"/> for how the identifier is interpreted.</param>
+		/// <returns>The instant <paramref name="value"/> denotes in <paramref name="timeZone"/>.</returns>
+		/// <remarks>
+		/// Server-side only, as <see cref="AtTimeZone(DateTimeOffset?, string)"/>. The value is read as a wall clock
+		/// whatever its <see cref="DateTime.Kind"/> says, and a wall clock inside a daylight-saving transition is
+		/// resolved by the server's rule. Where no type carries an offset - PostgreSQL, DuckDB - the instant comes back
+		/// at <c>+00:00</c>, as every <see cref="DateTimeOffset"/> those providers return does. Reading a component,
+		/// <see cref="DateTimeOffset.Date"/> or <see cref="DateTimeOffset.TimeOfDay"/> straight back from the result
+		/// is the identity, so it needs no zone support and answers even on a provider without any, such as SQLite.
+		/// </remarks>
+		/// <exception cref="ServerSideOnlyException">Called outside a query.</exception>
+		[ServerSideOnly]
+		public static DateTimeOffset? AtTimeZone(DateTime? value, string timeZone)
+			=> throw new ServerSideOnlyException(nameof(AtTimeZone));
 
 		#endregion
 	}

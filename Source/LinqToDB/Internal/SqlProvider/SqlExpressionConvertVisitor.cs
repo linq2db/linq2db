@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
@@ -1854,6 +1856,90 @@ namespace LinqToDB.Internal.SqlProvider
 				return Visit(Optimize(lowered));
 
 			return base.VisitSqlIntervalDifferenceExpression(element);
+		}
+
+		protected internal override IQueryElement VisitSqlTimeZoneConversionExpression(SqlTimeZoneConversionExpression element)
+		{
+			var lowered = LowerTimeZoneConversion(element);
+			if (lowered != null)
+				return Visit(lowered);
+
+			return base.VisitSqlTimeZoneConversionExpression(element);
+		}
+
+		/// <summary>
+		/// Whether this provider can render the given time zone conversion. Answered before the node is built, so a
+		/// provider that cannot express one is refused by name at translation time rather than reaching the builder
+		/// and throwing.
+		/// </summary>
+		/// <remarks>
+		/// The three kinds are separate capabilities. A provider whose offset-carrying type keeps the instant and
+		/// nothing else can often still read the wall clock in a named zone and attach a zone to a wall clock, so it
+		/// answers <see langword="true"/> for <see cref="SqlTimeZoneConversionKind.ToWallTime"/> and
+		/// <see cref="SqlTimeZoneConversionKind.AttachZone"/> and <see langword="false"/> for
+		/// <see cref="SqlTimeZoneConversionKind.ConvertZone"/>.
+		/// </remarks>
+		public virtual bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => false;
+
+		/// <summary>
+		/// Whether the provider's grammar demands a constant in the time zone position rather than accepting a bind.
+		/// </summary>
+		/// <remarks>
+		/// Oracle rejects a bind there outright - <c>AT TIME ZONE :p</c> raises ORA-02000 while the same statement
+		/// with a literal answers - so the zone is demoted to a constant before rendering, the way
+		/// <c>Sql.Constant</c> does it. That puts the value in the query cache key, which is what keeps two different
+		/// zones from sharing one cached statement.
+		/// </remarks>
+		public virtual bool RequiresConstantTimeZone => false;
+
+		/// <summary>
+		/// The <c>±HH:mm</c> spelling of a zone operand that names a fixed offset rather than a zone, for the
+		/// dialects that take the two in different syntax.
+		/// </summary>
+		/// <remarks>
+		/// Only a value or a parameter already demoted to a constant is read. A bound one is refused rather than
+		/// spelled out, because its offset would be baked into SQL the query cache then serves for a different one.
+		/// An offset <see cref="DateTimeOffset"/> itself rejects throws, as the CLR does, rather than being rounded
+		/// into one the server accepts.
+		/// </remarks>
+		/// <exception cref="LinqToDBException">The offset is not whole minutes, or lies beyond 14 hours.</exception>
+		protected bool TryGetZoneOffset(ISqlExpression zone, [NotNullWhen(true)] out string? text)
+		{
+			text = null;
+
+			var unwrapped = QueryHelper.UnwrapNullablity(zone);
+
+			if (unwrapped is not (SqlValue or SqlParameter { IsQueryParameter: false }))
+				return false;
+
+			if (!unwrapped.TryEvaluateExpression(EvaluationContext, out var evaluated) || evaluated is not TimeSpan offset)
+				return false;
+
+			if (offset.Ticks % TimeSpan.TicksPerMinute != 0 || offset.Duration() > TimeSpan.FromHours(14))
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_TimeZone_InvalidOffset, offset));
+
+			text = string.Create(
+				CultureInfo.InvariantCulture,
+				$"{(offset < TimeSpan.Zero ? '-' : '+')}{Math.Abs(offset.Hours):00}:{Math.Abs(offset.Minutes):00}");
+
+			return true;
+		}
+
+		/// <summary>
+		/// Lowers a time zone conversion into this provider's spelling of it - an infix <c>AT TIME ZONE</c>, a
+		/// function such as <c>CONVERT_TZ</c> or <c>toTimeZone</c>, or a cast around either.
+		/// </summary>
+		/// <remarks>
+		/// An infix form writes its own parentheses rather than asking for them through <c>Precedence</c>, because
+		/// that one number plays both roles: it decides whether the parent wraps this fragment <em>and</em> serves as
+		/// the parent precedence its own operands are rendered against. <c>Unknown</c> buys the outer parentheses -
+		/// which PostgreSQL's postfix <c>::</c> needs, since it binds tighter than <c>AT TIME ZONE</c> - at the cost
+		/// of the inner ones, so <c>ToWallTime(a - b, z)</c> comes out as <c>a - b AT TIME ZONE z</c>.
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider has no form for this kind.</returns>
+		protected virtual ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
+		{
+			return null;
 		}
 
 		/// <summary>

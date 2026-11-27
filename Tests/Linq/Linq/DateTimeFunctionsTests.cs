@@ -224,13 +224,16 @@ namespace Tests.Linq
 
 			// ClickHouse, PGSQL: session timezone used when set explicitly for connection
 			// MySql/MariaDB, YDB: returns UTC
-			// Oracle: Extract for TSTZ use UTC value
+			// Oracle used to belong here, because EXTRACT over a TIMESTAMP WITH TIME ZONE answers in UTC. Its
+			// components are now read through a cast to TIMESTAMP, which keeps the offset the value carries - so
+			// SYSTIMESTAMP's components are the server's local ones, the same shape every offset-preserving
+			// provider has.
 			var returnsUtc = context.IsAnyOf(
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllClickHouse,
 				TestProvName.AllMySql,
-				TestProvName.AllOracle,
-				TestProvName.AllYdb);
+				TestProvName.AllYdb,
+				TestProvName.AllDuckDB);
 			var kind       = returnsUtc
 				? DateTimeKind.Utc
 				: DateTimeKind.Local;
@@ -240,7 +243,7 @@ namespace Tests.Linq
 
 			// Component check — what the server actually generated, no ADO.NET TZ coercion.
 			// Most providers return local time + local offset → components match local wall-clock.
-			// Postgres / ClickHouse / Ydb normalize to UTC internally → components are UTC.
+			// Postgres / ClickHouse / Ydb / DuckDB normalize to UTC internally → components are UTC.
 			var expectedParts = returnsUtc ? DateTime.UtcNow : DateTime.Now;
 
 			Assert.That(
@@ -254,8 +257,7 @@ namespace Tests.Linq
 				$"{now}, {row.Full}");
 
 			// Offset preserved on TZ-aware-non-normalized providers
-			// Oracle: see above
-			if ((returnsUtc && !context.IsAnyOf(TestProvName.AllOracle)) || context.IsAnyOf(TestProvName.AllDuckDB))
+			if (returnsUtc)
 				Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
 			else
 				Assert.That(row.Full.Offset, Is.EqualTo(now.Offset));
@@ -822,6 +824,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2005)]
 		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -837,6 +840,24 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
 					from t in db.Types select RoundMilliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+		}
+
+		/// <summary>
+		/// The time of day is the reading's time alone, with no days. SQL Server 2005 has no <c>time</c> type and
+		/// answers it in .NET, which a projection allows.
+		/// </summary>
+		[Test]
+		[ActiveIssue(6493, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}10:00:00{1}but was")]
+		public void TimeOfDayOfAColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var timeOfDay = t
+				.Select(r => r.Value.TimeOfDay)
+				.Single();
+
+			timeOfDay.ShouldBe(CoarseValue.TimeOfDay);
 		}
 
 		#endregion
@@ -1168,6 +1189,34 @@ namespace Tests.Linq
 				.Count();
 
 			inList.ShouldBe(0);
+		}
+
+		/// <summary>
+		/// An Oracle <c>DATE</c> column declared through its <c>DbType</c> alone, so its mapping carries no
+		/// <c>DataType</c> that says it is a <c>DATE</c>.
+		/// </summary>
+		[Table]
+		sealed class DbTypeDateRow
+		{
+			[PrimaryKey]              public int      Id    { get; set; }
+			[Column(DbType = "date")] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// Month arithmetic over such a column: the sub-second remainder ADD_MONTHS drops is read off the operand,
+		/// and the cast that reads it must not take the operand's <c>DbType</c> with it.
+		/// </summary>
+		[Test]
+		public void AddMonthsOverADbTypeDateColumn([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DbTypeDateRow { Id = 1, Value = new DateTime(2020, 1, 31, 12, 0, 0) } });
+
+			var shifted = t
+				.Select(r => Sql.AsSql(r.Value.AddMonths(1)))
+				.Single();
+
+			shifted.ShouldBe(new DateTime(2020, 2, 29, 12, 0, 0));
 		}
 
 		[Test]

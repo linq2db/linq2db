@@ -1,13 +1,17 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 #if !NETFRAMEWORK
 using ClickHouse.Driver.Numerics;
@@ -893,5 +897,42 @@ namespace Tests.DataProvider
 		//		},
 		//		null, skipNullable: true);
 		//}
+
+		[Table]
+		sealed class ZonedLiteralRow
+		{
+			[PrimaryKey] public int            Id  { get; set; }
+			[Column]     public DateTimeOffset Dto { get; set; }
+		}
+
+		/// <summary>
+		/// A <see cref="DateTimeOffset"/> written as a literal names UTC, so the instant survives a session whose zone
+		/// is not UTC - a bare literal is read in the session's zone.
+		/// </summary>
+		[Test]
+		public void DateTimeOffsetLiteralKeepsTheInstantInAnotherSessionZone([IncludeDataSources(ProviderName.ClickHouseOctonica)] string context)
+		{
+			var value = new DateTimeOffset(2020, 6, 15, 12, 0, 0, TimeSpan.FromMinutes(40));
+
+			using var db = GetDataConnection(context);
+
+			db.Execute("SET session_timezone = 'Asia/Tokyo'");
+
+			try
+			{
+				using var table = db.CreateLocalTable(new[] { new ZonedLiteralRow { Id = 1, Dto = value } });
+
+				var stored = table
+					.Select(r => r.Dto)
+					.Single();
+
+				stored.UtcDateTime.ShouldBe(value.UtcDateTime);
+			}
+			finally
+			{
+				// A pooled connection keeps its session.
+				db.Execute("SET session_timezone = ''");
+			}
+		}
 	}
 }

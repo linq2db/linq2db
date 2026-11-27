@@ -122,11 +122,6 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts                                                       datepart)
 			{
@@ -218,6 +213,17 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				var factory = translationContext.ExpressionFactory;
 
 				return factory.Function(factory.GetDbDataType(dateExpression), "Date", dateExpression);
+			}
+
+			/// <summary>
+			/// The same function typed as the <see cref="DateTime"/> it answers. The frame is the identity here, so the
+			/// operand is still a <see cref="DateTimeOffset"/>, and a result typed that way is read back through local time.
+			/// </summary>
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "Date", dateExpression);
 			}
 
 			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)

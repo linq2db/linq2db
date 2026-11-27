@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -87,10 +89,19 @@ namespace Tests.Linq
 				.Select(t => new Transaction { TransactionId = t.TransactionId, TransactionDate = t.TransactionDate.ToUniversalTime(), })
 				.ToArray();
 
+			/// <summary>
+			/// The expectation has to be the value the provider hands back, not the one it was given.
+			/// </summary>
+			/// <remarks>
+			/// PostgreSQL and ClickHouse normalise to UTC on write and read back at <c>+00:00</c>, so a component of
+			/// the stored value is a UTC one - comparing against the original offset asserts something no SQL can
+			/// satisfy, because the offset was discarded before the server ever saw it. (EF Core avoids the question
+			/// by refusing a non-zero offset outright; linq2db converts silently instead.)
+			/// </remarks>
 			public static Transaction[] GetTestDataForContext(string context) =>
 				context.IsAnyOf(TestProvName.AllSqlServer)
 					? AllData
-					: context.IsAnyOf(TestProvName.AllClickHouse)
+					: context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL)
 						? TzDataInUtc
 						: LocalTzDataInUtc;
 		}
@@ -1105,5 +1116,19 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		/// <summary>
+		/// The week of a value is read off its own wall clock, like every other part, and not off the evaluating
+		/// machine's.
+		/// </summary>
+		[Test, SetCulture("en-US")]
+		public void DatePartWeekReadsTheValuesOwnWallClock()
+		{
+			// Saturday 13 June 23:30 at -02:00 is already Sunday 14 June - the first day of week 25 - in UTC and to
+			// every machine east of it.
+			var week = Sql.DatePart(Sql.DateParts.Week, new DateTimeOffset(2020, 6, 13, 23, 30, 0, TimeSpan.FromHours(-2)));
+
+			week.ShouldBe(24);
+		}
 	}
 }
