@@ -3866,9 +3866,10 @@ namespace Tests.Linq
 		#region Collection nested in a detached collection
 
 		// CteUnion belongs to the detached collection's query; the root, built by another strategy, still has to be optimized.
-		// SQLite shows it: it cannot run the root's APPLY as built.
+		// Unoptimized, the root reaches the database as an APPLY or a FROM-less SELECT the database rejects.
+		// Jet / ACE refuse the root's FROM-less SELECT holding a subquery either way.
 		[Test]
-		public void NestedInDetachedCollection_RootIsOptimized([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NestedInDetachedCollection_RootIsOptimized([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
