@@ -1243,6 +1243,55 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The same holds when the value stored without an offset comes first, so that it gives the expression its
+		/// type. Oracle reads the component of the <c>TIMESTAMP WITH TIME ZONE</c> the <c>CASE</c> answers in UTC
+		/// (11 for <c>12:00 +00:40</c>); DuckDB and PostgreSQL read it in the session's zone, which only a session
+		/// off UTC tells apart.
+		/// </summary>
+		[ActiveIssue(5913, Configurations = [TestProvName.AllOracle])]
+		[Test]
+		public void MixedOffsetComponentsAreReadInDotNetWhicheverValueComesFirst([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new MixedStampRow { Id = 1, Flag = true,  Dto = Value, Dto2 = Value, Stamp = Value },
+				new MixedStampRow { Id = 2, Flag = false, Dto = Value, Dto2 = Value, Stamp = Value },
+			});
+
+			var withoutOffset = table
+				.Where(r => !r.Flag)
+				.Select(r => new { V = r.Stamp });
+
+			var withOffset = table
+				.Where(r => r.Flag)
+				.Select(r => new { V = r.Dto });
+
+			var chosen = table
+				.OrderBy(r => r.Id)
+				.Select(r => r.Flag ? r.Stamp : r.Dto)
+				.ToArray();
+
+			var concatenated = withoutOffset
+				.Concat(withOffset)
+				.Select(x => x.V)
+				.ToArray();
+
+			var conditionHours = table
+				.OrderBy(r => r.Id)
+				.Select(r => (r.Flag ? r.Stamp : r.Dto).Hour)
+				.ToArray();
+
+			var concatHours = withoutOffset
+				.Concat(withOffset)
+				.Select(x => x.V.Hour)
+				.ToArray();
+
+			conditionHours.ShouldBe(chosen.Select(v => v.Hour).ToArray());
+			concatHours.ShouldBe(concatenated.Select(v => v.Hour).ToArray(), ignoreOrder: true);
+		}
+
+		/// <summary>
 		/// Only the values a <c>CASE</c> can answer decide its offset: one stored without an offset in its condition
 		/// does not stop it.
 		/// </summary>
