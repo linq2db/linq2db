@@ -355,6 +355,18 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return resultExpression;
 			}
 
+			// FF keeps the fraction 'HH24:MI:SS' drops, but a date rejects it (ORA-01821), and a date column mapped
+			// as a DateTimeOffset or read through Sql.AtTimeZone gets here unframed - hence the timestamp(7) cast.
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var timestamp = dateExpression is SqlCastExpression { ToType: var toType } && toType.Equals(TimestampType)
+					? dateExpression
+					: factory.Cast(dateExpression, TimestampType, true);
+
+				return factory.Function(TimestampType.WithDataType(DataType.Time), "TO_CHAR", ParametersNullabilityType.SameAsFirstParameter, timestamp, factory.Value("HH24:MI:SS.FF7"));
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				// Date(your_datetime_column)
@@ -385,7 +397,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "SYSTIMESTAMP AT TIME ZONE 'UTC'");
+				// Below Primary, so a zone conversion over it parenthesises it: Oracle rejects two AT TIME ZONE in a row (ORA-00907).
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, Precedence.Unary, "SYSTIMESTAMP AT TIME ZONE 'UTC'");
 			}
 		}
 

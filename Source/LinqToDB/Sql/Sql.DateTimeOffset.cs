@@ -133,7 +133,9 @@ namespace LinqToDB
 		/// Server-side only, as <see cref="AtTimeZone(DateTimeOffset?, string)"/>. The value is read as a wall clock
 		/// whatever its <see cref="DateTime.Kind"/> says, and a wall clock inside a daylight-saving transition is
 		/// resolved by the server's rule. Where no type carries an offset - PostgreSQL, DuckDB - the instant comes back
-		/// at <c>+00:00</c>, as every <see cref="DateTimeOffset"/> those providers return does.
+		/// at <c>+00:00</c>, as every <see cref="DateTimeOffset"/> those providers return does. Reading a component,
+		/// <see cref="DateTimeOffset.Date"/> or <see cref="DateTimeOffset.TimeOfDay"/> straight back from the result
+		/// is the identity, so it needs no zone support and answers even on a provider without any, such as SQLite.
 		/// </remarks>
 		/// <exception cref="ServerSideOnlyException">Called outside a query.</exception>
 		[ServerSideOnly]

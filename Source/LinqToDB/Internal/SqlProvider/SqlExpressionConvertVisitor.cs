@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
@@ -1898,7 +1899,10 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <remarks>
 		/// Only a value or a parameter already demoted to a constant is read. A bound one is refused rather than
 		/// spelled out, because its offset would be baked into SQL the query cache then serves for a different one.
+		/// An offset <see cref="DateTimeOffset"/> itself rejects throws, as the CLR does, rather than being rounded
+		/// into one the server accepts.
 		/// </remarks>
+		/// <exception cref="LinqToDBException">The offset is not whole minutes, or lies beyond 14 hours.</exception>
 		protected bool TryGetZoneOffset(ISqlExpression zone, [NotNullWhen(true)] out string? text)
 		{
 			text = null;
@@ -1910,6 +1914,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!unwrapped.TryEvaluateExpression(EvaluationContext, out var evaluated) || evaluated is not TimeSpan offset)
 				return false;
+
+			if (offset.Ticks % TimeSpan.TicksPerMinute != 0 || offset.Duration() > TimeSpan.FromHours(14))
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_TimeZone_InvalidOffset, offset));
 
 			text = string.Create(
 				CultureInfo.InvariantCulture,

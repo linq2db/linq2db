@@ -91,6 +91,13 @@
 		/// offset has to go where a zone name goes, and no dialect accepts one there for the wall-clock direction.
 		/// </summary>
 		public const string Error_TimeZone_OffsetFrame                            = "Reading a value through a fixed time zone offset is not supported by current provider. Use a named time zone instead.";
+		/// <summary>
+		/// A <see cref="System.DateTimeOffset"/> mapped onto a column without an offset holds a wall clock in SQL, not an
+		/// instant, so there is nothing to convert.
+		/// </summary>
+		public const string Error_TimeZone_OffsetlessValue                        = "Time zone conversion of a DateTimeOffset stored without an offset is not supported: its column holds a wall clock, not an instant. Map it to a type that carries an offset.";
+		/// <summary><c>{0}</c> - the offset asked for.</summary>
+		public const string Error_TimeZone_InvalidOffset                          = "Offset {0} cannot be carried by a DateTimeOffset: it must be whole minutes, at most 14 hours from UTC.";
 
 		/// <summary>
 		/// <c>{0}</c> and <c>{1}</c> - the two columns. Named rather than described, because two conversions are

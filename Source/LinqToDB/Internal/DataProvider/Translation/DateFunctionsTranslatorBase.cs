@@ -10,6 +10,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Translation
 {
@@ -148,28 +149,30 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			// Asked before the node is built. Sql.AtTimeZone has no .NET answer, so it is refused by name wherever it
 			// appears; the BCL spelling declines quietly outside SQL so a projection still answers in .NET.
-			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(kind))
-			{
-				if (methodCall.Method.DeclaringType != typeof(Sql) && !translationFlags.HasFlag(TranslationFlags.Sql))
-					return null;
+			var canLower = translationContext.ProviderFlags.CanLowerTimeZoneConversion(kind);
+			var quiet    = methodCall.Method.DeclaringType != typeof(Sql) && !translationFlags.HasFlag(TranslationFlags.Sql);
 
-				// "Read a component instead" is advice only where a wall clock can be read.
-				var message = translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime)
-					? ErrorHelper.Error_TimeZone_ZonedResult
-					: ErrorHelper.Error_TimeZone_Conversion;
-
-				return translationContext.CreateErrorExpression(methodCall, message);
-			}
+			if (!canLower && !translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
+				return quiet ? null : translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_TimeZone_Conversion);
 
 			// The comparison's column must not type the arguments: it would convert a captured DateTime through a
 			// DateTimeOffset column's mapping.
 			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var value, out var valueError))
-				return valueError;
+				return quiet ? null : valueError;
+
+			// Applied to a value without an offset, AT TIME ZONE attaches the zone instead of converting to it, and no
+			// component can be read from it either - so this is named before the advice to read one.
+			if (kind == SqlTimeZoneConversionKind.ConvertZone && !CarriesOffset(translationContext, value))
+				return quiet ? null : translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_TimeZone_OffsetlessValue);
+
+			// "Read a component instead" is advice only where a wall clock can be read.
+			if (!canLower)
+				return quiet ? null : translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_TimeZone_ZonedResult);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var zone, out var zoneError))
-				return zoneError;
+				return quiet ? null : zoneError;
 
 			var factory    = translationContext.ExpressionFactory;
 			var conversion = new SqlTimeZoneConversionExpression(value, ZoneOperand(translationContext, zone), kind, factory.GetDbDataType(typeof(DateTimeOffset)));
@@ -1746,6 +1749,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
 				return null;
 
+			if (!CarriesOffset(translationContext, value))
+				return null;
+
 			if (!translationContext.TranslateToSqlExpression(call.Arguments[1], out var zoneExpression, out _))
 				return null;
 
@@ -1823,16 +1829,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		ISqlExpression? InstantFromOperand(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
 		{
 			var instant = InstantFromZonedOperand(translationContext, operand);
-			if (instant != null)
-				return instant;
 
-			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
-			if (placeholder == null)
-				return null;
+			if (instant == null)
+			{
+				var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
+				if (placeholder == null)
+					return null;
 
-			return QueryHelper.UnwrapNullablity(placeholder.Sql) is SqlTimeZoneConversionExpression { Kind: SqlTimeZoneConversionKind.ConvertZone } conversion
-				? conversion.Value
-				: placeholder.Sql;
+				instant = QueryHelper.UnwrapNullablity(placeholder.Sql) is SqlTimeZoneConversionExpression { Kind: SqlTimeZoneConversionKind.ConvertZone } conversion
+					? conversion.Value
+					: placeholder.Sql;
+			}
+
+			return CarriesOffset(translationContext, instant) ? instant : null;
 		}
 
 		/// <summary>
@@ -1848,10 +1857,98 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			var factory = translationContext.ExpressionFactory;
 
-			if (QueryHelper.GetDbDataType(framed, translationContext.MappingSchema).DataType != DataType.DateTimeOffset)
+			if (!CarriesOffset(translationContext, framed))
 				return framed;
 
 			return factory.Cast(framed, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2), isMandatory: true);
+		}
+
+		/// <summary>
+		/// Whether a translated value carries an offset in SQL. A <see cref="DateTimeOffset"/> mapped onto a column
+		/// without one has neither an offset nor an instant there: only the round trip gives it one, and each
+		/// provider gives a different one. A member reading either is left to .NET, which reads the round trip.
+		/// </summary>
+		static bool CarriesOffset(ITranslationContext translationContext, ISqlExpression value)
+		{
+			var mappingSchema = translationContext.MappingSchema;
+
+			if (QueryHelper.GetDbDataType(value, mappingSchema).DataType != DataType.DateTimeOffset)
+				return false;
+
+			return !AnswersAnOffsetlessValue(value, mappingSchema, 0);
+		}
+
+		/// <summary>
+		/// Whether any value <paramref name="expression"/> can answer is a <see cref="DateTimeOffset"/> without an
+		/// offset in SQL. A COALESCE, a CASE and a column of a subquery, CTE or set operation are typed from one of
+		/// their values, so such a value can hide behind one that carries an offset; a condition is not followed,
+		/// since it never becomes the result.
+		/// </summary>
+		static bool AnswersAnOffsetlessValue(ISqlExpression expression, MappingSchema mappingSchema, int depth)
+		{
+			// A recursive CTE refers back to itself; past this depth the value is taken at its declared type.
+			if (depth > 32)
+				return false;
+
+			depth++;
+
+			switch (expression)
+			{
+				case SqlNullabilityExpression nullability:
+					return AnswersAnOffsetlessValue(nullability.SqlExpression, mappingSchema, depth);
+
+				case SqlCoalesceExpression coalesce:
+					foreach (var operand in coalesce.Expressions)
+					{
+						if (AnswersAnOffsetlessValue(operand, mappingSchema, depth))
+							return true;
+					}
+
+					return false;
+
+				case SqlConditionExpression condition:
+					return AnswersAnOffsetlessValue(condition.TrueValue,  mappingSchema, depth)
+						|| AnswersAnOffsetlessValue(condition.FalseValue, mappingSchema, depth);
+
+				case SqlCaseExpression caseExpression:
+					foreach (var item in caseExpression.Cases)
+					{
+						if (AnswersAnOffsetlessValue(item.ResultExpression, mappingSchema, depth))
+							return true;
+					}
+
+					return caseExpression.ElseExpression != null && AnswersAnOffsetlessValue(caseExpression.ElseExpression, mappingSchema, depth);
+
+				case SqlCteTableField { CteField.Column: { } cteColumn }:
+					return AnswersAnOffsetlessValue(cteColumn, mappingSchema, depth);
+
+				case SqlColumn column:
+				{
+					if (AnswersAnOffsetlessValue(column.Expression, mappingSchema, depth))
+						return true;
+
+					// A set operation's columns are the first query's; the other branches answer through theirs.
+					if (column.Parent is { HasSetOperators: true } query)
+					{
+						var index = query.Select.Columns.IndexOf(column);
+
+						foreach (var setOperator in query.SetOperators)
+						{
+							var columns = setOperator.SelectQuery.Select.Columns;
+
+							if (index >= 0 && index < columns.Count && AnswersAnOffsetlessValue(columns[index], mappingSchema, depth))
+								return true;
+						}
+					}
+
+					return false;
+				}
+
+				default:
+					return expression.SystemType is { } type
+						&& type.UnwrapNullableType() == typeof(DateTimeOffset)
+						&& QueryHelper.GetDbDataType(expression, mappingSchema).DataType != DataType.DateTimeOffset;
+			}
 		}
 
 		/// <summary>
@@ -1874,7 +1971,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (zone == null)
 			{
 				// The frame left a value stored without an offset where it was, so there is nothing to come back from.
-				if (QueryHelper.GetDbDataType(original, translationContext.MappingSchema).DataType != DataType.DateTimeOffset)
+				if (!CarriesOffset(translationContext, original))
 					return framed;
 
 				return FromDateTimeOffsetFrame(translationContext, original, framed, zonedType);
@@ -1971,8 +2068,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// Only a value that actually carries an offset has a frame to be brought out of: a DateTimeOffset mapped
 			// onto a column without one, or a reading that is already zone-less, would otherwise be converted a
 			// second time and shifted by the zone. UnframeDateTimeOffset makes the same test on the way back.
-			if (QueryHelper.GetDbDataType(value, translationContext.MappingSchema).DataType != DataType.DateTimeOffset)
-				return value;
+			if (!CarriesOffset(translationContext, value))
+			{
+				// One that can answer either kind has no frame reading both right, so it is left to .NET.
+				return QueryHelper.GetDbDataType(value, translationContext.MappingSchema).DataType == DataType.DateTimeOffset ? null : value;
+			}
 
 			return ToDateTimeOffsetFrame(translationContext, value);
 		}
@@ -2038,6 +2138,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (framed == null)
 				return frameError;
 
+			// A DateTimeOffset stored without an offset frames as itself, and the reader would then turn it into a
+			// DateTime through the round trip's own conversion rather than through .DateTime.
+			var type = QueryHelper.GetDbDataType(framed, translationContext.MappingSchema);
+			if (type.SystemType.UnwrapNullableType() == typeof(DateTimeOffset) && !CarriesOffset(translationContext, framed))
+				return null;
+
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, AsWallClock(translationContext, framed), memberExpression);
 		}
 
@@ -2052,7 +2158,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		ISqlExpression? OffsetInMinutes(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
 		{
 			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
-			if (placeholder == null)
+			if (placeholder == null || !CarriesOffset(translationContext, placeholder.Sql))
 				return null;
 
 			return TranslateDateTimeOffsetOffsetMinutes(translationContext, placeholder.Sql);

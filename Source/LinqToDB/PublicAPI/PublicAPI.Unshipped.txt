@@ -2,6 +2,8 @@
 const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_Conversion = "Time zone conversion is not supported by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_ZonedResult = "Producing an offset-carrying value from a time zone conversion is not supported by current provider. Read a component or .DateTime from it instead." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_OffsetFrame = "Reading a value through a fixed time zone offset is not supported by current provider. Use a named time zone instead." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_OffsetlessValue = "Time zone conversion of a DateTimeOffset stored without an offset is not supported: its column holds a wall clock, not an instant. Map it to a type that carries an offset." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_InvalidOffset = "Offset {0} cannot be carried by a DateTimeOffset: it must be whole minutes, at most 14 hours from UTC." -> string!
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlTimeZoneConversion = 92 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.SqlTimeZoneConversionExpression
 LinqToDB.Internal.SqlQuery.SqlTimeZoneConversionExpression.Kind.get -> LinqToDB.Internal.SqlQuery.SqlTimeZoneConversionKind
@@ -87,6 +89,7 @@ override LinqToDB.Internal.DataProvider.DuckDB.Translation.DuckDBMemberTranslato
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.DateFunctionsTranslator.RoundTripsInUtc.get -> bool
 virtual LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.RoundTripsInUtc.get -> bool
 override LinqToDB.Internal.DataProvider.Oracle.Translation.OracleMemberTranslator.DateFunctionsTranslator.TranslateDateTimeOffsetOffsetMinutes(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! value) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Oracle.Translation.OracleMemberTranslator.DateFunctionsTranslator.TranslateDateTimeOffsetTruncationToTime(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! dateExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2008MemberTranslator.SqlServer2008DateFunctionsTranslator.TranslateDateTimeOffsetOffsetMinutes(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! value) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 virtual LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateDateTimeOffsetOffsetMinutes(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! value) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 *REMOVED*LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -16,8 +17,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TimeZoneFunctionsTests : TestBase
 	{
-		#region Fixture
-
 		[Table]
 		sealed class ZonedRow
 		{
@@ -47,6 +46,26 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		sealed class DatedRow
+		{
+			[PrimaryKey]                           public int            Id  { get; set; }
+			// A DATE on Oracle: no offset and no fraction of a second.
+			[Column(DataType = DataType.DateTime)] public DateTimeOffset Dto { get; set; }
+		}
+
+		// One value stored with an offset and one without, side by side, for the expressions that can answer either.
+		[Table]
+		sealed class MixedStampRow
+		{
+			[PrimaryKey]                            public int             Id     { get; set; }
+			[Column]                                public bool            Flag   { get; set; }
+			[Column]                                public DateTimeOffset  Dto    { get; set; }
+			[Column]                                public DateTimeOffset  Dto2   { get; set; }
+			[Column(DataType = DataType.DateTime2)] public DateTimeOffset  Stamp  { get; set; }
+			[Column(DataType = DataType.DateTime2)] public DateTimeOffset? StampN { get; set; }
+		}
+
+		[Table]
 		sealed class PreciseRow
 		{
 			[PrimaryKey]                                                public int            Id  { get; set; }
@@ -54,7 +73,9 @@ namespace Tests.Linq
 		}
 
 		static ZonedRow[] Rows(params DateTimeOffset[] values)
-			=> values.Select((v, i) => new ZonedRow { Id = i + 1, Dto = v }).ToArray();
+			=> values
+				.Select((v, i) => new ZonedRow { Id = i + 1, Dto = v })
+				.ToArray();
 
 		// SQL Server resolves zone names against its own registry-backed list; every other provider takes IANA.
 		// There is no spelling that works everywhere - SQL Server rejects a bare UTC offset - so the identifier is
@@ -72,10 +93,6 @@ namespace Tests.Linq
 		// that can hand the converted value back, so anything materialising one is refused.
 		const string OffsetlessProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllDuckDB;
 
-		#endregion
-
-		#region Sql.AtTimeZone
-
 		/// <summary>
 		/// The conversion as a value in its own right: same instant, the target zone's offset. It needs a result type
 		/// able to carry an offset, which is why it is scoped to the providers that have one.
@@ -86,7 +103,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var result = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, PragueZone(context)))).Single();
+			var result = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, PragueZone(context))))
+				.Single();
 
 			// Both halves are asserted separately on purpose: DateTimeOffset equality compares instants, so a wrong
 			// offset passes silently unless the test names it.
@@ -107,9 +126,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			var result = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto.DateTime, zone))).Single();
+			var result = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto.DateTime, zone)))
+				.Single();
 
 			// Same reason as above - and the wall clock is taken from the round-trip because it is the provider's own.
 			result!.Value.Offset.ShouldBe(TimeSpan.FromHours(2));
@@ -149,11 +172,8 @@ namespace Tests.Linq
 		[Test]
 		public void AtTimeZoneIsServerSideOnly()
 		{
-			Action fromInstant   = () => Sql.AtTimeZone(Value,          "Europe/Prague");
-			Action fromWallClock = () => Sql.AtTimeZone(Value.DateTime, "Europe/Prague");
-
-			fromInstant.ShouldThrow<ServerSideOnlyException>();
-			fromWallClock.ShouldThrow<ServerSideOnlyException>();
+			Assert.That(() => Sql.AtTimeZone(Value,          "Europe/Prague"), Throws.InstanceOf<ServerSideOnlyException>());
+			Assert.That(() => Sql.AtTimeZone(Value.DateTime, "Europe/Prague"), Throws.InstanceOf<ServerSideOnlyException>());
 		}
 
 		/// <summary>
@@ -161,26 +181,28 @@ namespace Tests.Linq
 		/// projection - top-level or read through a member - refuses rather than answering on the client.
 		/// </summary>
 		[Test]
-		public void AtTimeZoneRefusesInAProjectionWhereThereIsNoZoneSupport([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		public void AtTimeZoneRefusesInAProjectionWhereThereIsNoZoneSupport([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllSqlServer2014Minus)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			Action instant = () => table
-				.Select(r => Sql.AtTimeZone(r.Dto, "Europe/Prague"))
-				.ToList();
+			Assert.That(
+				() => table
+					.Select(r => Sql.AtTimeZone(r.Dto, "Europe/Prague"))
+					.ToList(),
+				Throws.InstanceOf<LinqToDBException>());
 
-			Action wallClock = () => table
-				.Select(r => Sql.AtTimeZone(r.Dto.DateTime, "Europe/Prague"))
-				.ToList();
+			Assert.That(
+				() => table
+					.Select(r => Sql.AtTimeZone(r.Dto.DateTime, "Europe/Prague"))
+					.ToList(),
+				Throws.InstanceOf<LinqToDBException>());
 
-			Action member = () => table
-				.Select(r => new { H = Sql.AtTimeZone(r.Dto, "Europe/Prague")!.Value.Hour })
-				.ToList();
-
-			instant.ShouldThrow<LinqToDBException>();
-			wallClock.ShouldThrow<LinqToDBException>();
-			member.ShouldThrow<LinqToDBException>();
+			Assert.That(
+				() => table
+					.Select(r => new { H = Sql.AtTimeZone(r.Dto, "Europe/Prague")!.Value.Hour })
+					.ToList(),
+				Throws.InstanceOf<LinqToDBException>());
 		}
 
 		/// <summary>
@@ -199,11 +221,11 @@ namespace Tests.Linq
 				.Select(r => r.Dto)
 				.Single();
 
-			Action instant = () => table
-				.Select(r => Sql.AtTimeZone(r.Dto, zone))
-				.ToList();
-
-			instant.ShouldThrow<LinqToDBException>();
+			Assert.That(
+				() => table
+					.Select(r => Sql.AtTimeZone(r.Dto, zone))
+					.ToList(),
+				Throws.InstanceOf<LinqToDBException>());
 
 			var attached = table
 				.Select(r => Sql.AtTimeZone(r.Dto.DateTime, zone))
@@ -217,8 +239,8 @@ namespace Tests.Linq
 		/// not told to read a component instead.
 		/// </summary>
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_TimeZone_Conversion)]
-		public void AtTimeZoneRefusalNamesTheMissingConversion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllSqlServer2014Minus, ErrorMessage = ErrorHelper.Error_TimeZone_Conversion)]
+		public void AtTimeZoneRefusalNamesTheMissingConversion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllSqlServer2014Minus)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
@@ -240,7 +262,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.Hour)).Single();
+			var hour = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.Hour))
+				.Single();
 
 			// 11:20 UTC is 13:20 in Prague in June.
 			hour.ShouldBe(13);
@@ -258,16 +282,16 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var viaBcl = table.Select(r => Sql.AsSql(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, zone).Hour)).Single();
-			var viaSql = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.Hour)).Single();
+			var viaBcl = table
+				.Select(r => Sql.AsSql(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, zone).Hour))
+				.Single();
+			var viaSql = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.Hour))
+				.Single();
 
 			viaBcl.ShouldBe(viaSql);
 			viaBcl.ShouldBe(13);
 		}
-
-		#endregion
-
-		#region The reading frame
 
 		/// <summary>
 		/// The frame rule with no <c>AtTimeZone</c> in sight: a component of a stored value has to agree with what
@@ -285,8 +309,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var expected = table.Select(r => r.Dto).Single().Hour;
-			var actual   = table.Select(r => Sql.AsSql(r.Dto.Hour)).Single();
+			var expected = table
+				.Select(r => r.Dto)
+				.Single()
+				.Hour;
+			var actual   = table
+				.Select(r => Sql.AsSql(r.Dto.Hour))
+				.Single();
 
 			actual.ShouldBe(expected);
 		}
@@ -306,7 +335,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
 			var actual = table
 				.Select(r => new
@@ -336,7 +367,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.DateTime.Hour)).Single();
+			var hour = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.DateTime.Hour))
+				.Single();
 
 			// 11:20 UTC is 13:20 in Prague in June - the same answer ComponentInNamedZone asserts, reached through
 			// an extra member that must contribute no second conversion.
@@ -384,17 +417,19 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			table.Select(r => Sql.AsSql(r.Dto.TimeOfDay)).Single().ShouldBe(stored.TimeOfDay);
+			table
+				.Select(r => Sql.AsSql(r.Dto.TimeOfDay))
+				.Single()
+				.ShouldBe(stored.TimeOfDay);
 		}
 
 		/// <summary>
-		/// The time half keeps the fraction of a second the column holds. Oracle reads it through
-		/// <c>TO_CHAR(…, 'HH24:MI:SS')</c>, which drops the fraction, and answers 12:00:00 for 12:00:00.5; master raised
-		/// ORA-50031 for the same query instead of answering.
+		/// The time half keeps the fraction of a second the column holds: 12:00:00.5, not 12:00:00.
 		/// </summary>
-		[ActiveIssue(5913, Configurations = [TestProvName.AllOracle], ErrorType = typeof(ShouldAssertException))]
 		[Test]
 		public void TimeOfDayKeepsTheFractionOfASecond([IncludeDataSources(false, ZoneReadingProviders)] string context)
 		{
@@ -412,9 +447,35 @@ namespace Tests.Linq
 			timeOfDay.ShouldBe(stored.TimeOfDay);
 		}
 
-		#endregion
+		/// <summary>
+		/// The time half of an operand stored as a date and time without a fraction - a <see cref="DateTimeOffset"/>
+		/// mapped onto one, or a wall clock read through <c>Sql.AtTimeZone</c> - which is an Oracle <c>DATE</c>.
+		/// </summary>
+		[Test]
+		public void TimeOfDayOfADateOperand([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone  = PragueZone(context);
+			var local = new DateTime(2020, 6, 15, 12, 0, 0);
 
-		#region Arithmetic inside the frame
+			using var db    = GetDataContext(context);
+			using var dated = db.CreateLocalTable(new[] { new DatedRow { Id = 1, Dto = Value } });
+			using var dates = db.CreateLocalTable(new[] { new DateRow  { Id = 1, Dt  = local } });
+
+			var stored = dated
+				.Select(r => r.Dto)
+				.Single();
+
+			var timeOfDay = dated
+				.Select(r => Sql.AsSql(r.Dto.TimeOfDay))
+				.Single();
+
+			var wallClockTimeOfDay = dates
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dt, zone)!.Value.TimeOfDay))
+				.Single();
+
+			timeOfDay.ShouldBe(stored.TimeOfDay);
+			wallClockTimeOfDay.ShouldBe(local.TimeOfDay);
+		}
 
 		/// <summary>
 		/// The zone has to survive an intervening shift, or a component read after it silently falls back to the
@@ -428,7 +489,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddHours(1).Hour)).Single();
+			var hour = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddHours(1).Hour))
+				.Single();
 
 			hour.ShouldBe(14);
 		}
@@ -446,14 +509,21 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			var shifted = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto.DateTime, zone)!.Value.AddDays(1))).Single();
+			var shifted = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto.DateTime, zone)!.Value.AddDays(1)))
+				.Single();
 
 			// The wall clock is taken from the round-trip because it is the provider's own - 12:00 where the offset
 			// survives, 11:20 where the value came back as UTC. Prague is +02:00 on both 15 and 16 June, so the
 			// shift cannot move the offset.
-			shifted.ShouldBe(new DateTimeOffset(stored.DateTime, TimeSpan.FromHours(2)).AddDays(1));
+			var expected = new DateTimeOffset(stored.DateTime, TimeSpan.FromHours(2))
+				.AddDays(1);
+
+			shifted.ShouldBe(expected);
 		}
 
 		/// <summary>
@@ -502,9 +572,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddMonths(1))).Single();
+			var shifted = table
+				.Select(r => Sql.AsSql(r.Dto.AddMonths(1)))
+				.Single();
 
 			shifted.UtcDateTime.ShouldBe(stored.AddMonths(1).UtcDateTime);
 		}
@@ -525,7 +599,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(value));
 
-			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddMonths(1))).Single();
+			var shifted = table
+				.Select(r => Sql.AsSql(r.Dto.AddMonths(1)))
+				.Single();
 
 			// Both halves, for the reason the first test in this file gives: equality compares instants, so the
 			// offset this test exists to check is the one half it would otherwise never look at.
@@ -543,7 +619,9 @@ namespace Tests.Linq
 			var end   = new DateTimeOffset(2026, 1, 1, 14, 0, 0, TimeSpan.FromHours(2));
 
 			// The premise, so a failure below cannot be blamed on the fixture data.
-			(end - start).ShouldBe(TimeSpan.Zero);
+			var premise = end - start;
+
+			premise.ShouldBe(TimeSpan.Zero);
 
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(start, end));
@@ -569,7 +647,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var shifted = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddMonths(6))).Single();
+			var shifted = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddMonths(6)))
+				.Single();
 
 			// 11:20 UTC is 13:20 +02:00 in Prague; six months on .NET answers 2020-12-15 13:20 +02:00, i.e. 11:20 UTC.
 			shifted.UtcDateTime.ShouldBe(new DateTime(2020, 12, 15, 11, 20, 0, DateTimeKind.Utc));
@@ -740,18 +820,20 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
 
-			var stored  = table.Select(r => r.Dto).Single();
-			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddDays(1))).Single();
+			var stored  = table
+				.Select(r => r.Dto)
+				.Single();
+			var shifted = table
+				.Select(r => Sql.AsSql(r.Dto.AddDays(1)))
+				.Single();
 
 			shifted.ShouldBe(stored.AddDays(1));
 		}
 
 		/// <summary>
 		/// <see cref="DateTimeOffset.Offset"/> of a value stored without an offset: SQL has none to read, so the answer
-		/// is the round-tripped value's, as on master, where the member was not translated. Oracle now extracts
-		/// <c>TIMEZONE_HOUR</c> from the <c>TIMESTAMP</c> column and raises ORA-30076.
+		/// is the round-tripped value's, as on master, where the member was not translated.
 		/// </summary>
-		[ActiveIssue(5913, Configurations = [TestProvName.AllOracle], ErrorMessage = "ORA-30076")]
 		[Test]
 		public void OffsetOfAValueStoredWithoutAnOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
 		{
@@ -770,6 +852,417 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The instant members of a value stored without an offset: SQL has no instant to read either, so they answer
+		/// what .NET does on the round-tripped value.
+		/// </summary>
+		[Test]
+		public void InstantOfAValueStoredWithoutAnOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
+
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
+
+			var utcDateTime = table
+				.Select(r => r.Dto.UtcDateTime)
+				.Single();
+
+			var utc = table
+				.Select(r => r.Dto.ToUniversalTime())
+				.Single();
+
+			var shifted = table
+				.Select(r => r.Dto.ToOffset(TimeSpan.FromMinutes(-90)))
+				.Single();
+
+			utcDateTime.ShouldBe(stored.UtcDateTime);
+			utc.ShouldBe(stored.ToUniversalTime());
+			utc.Offset.ShouldBe(TimeSpan.Zero);
+			shifted.ShouldBe(stored.ToOffset(TimeSpan.FromMinutes(-90)));
+			shifted.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
+
+#if NET8_0_OR_GREATER
+			var totalOffsetMinutes = table
+				.Select(r => r.Dto.TotalOffsetMinutes)
+				.Single();
+
+			totalOffsetMinutes.ShouldBe(stored.TotalOffsetMinutes);
+#endif
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.DateTime"/> of a value stored without an offset. The column alone would be read
+		/// back through local time, which moves the kind - and on DuckDB the value.
+		/// </summary>
+		[Test]
+		public void DateTimeOfAValueStoredWithoutAnOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
+
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
+
+			var dateTime = table
+				.Select(r => r.Dto.DateTime)
+				.Single();
+
+			dateTime.ShouldBe(stored.DateTime);
+			dateTime.Kind.ShouldBe(stored.DateTime.Kind);
+		}
+
+#if !NETFRAMEWORK
+		/// <summary>
+		/// A zone conversion of a value stored without an offset. Applied to such a value <c>AT TIME ZONE</c> attaches
+		/// the zone instead of converting to it, so the conversion is left to .NET.
+		/// </summary>
+		/// <remarks>
+		/// Not on .NET Framework, where <see cref="TimeZoneInfo"/> takes Windows identifiers only and the .NET
+		/// evaluation cannot resolve the IANA one the other providers need.
+		/// </remarks>
+		[Test]
+		public void ZoneConversionOfAValueStoredWithoutAnOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
+
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
+
+			var hour = table
+				.Select(r => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, zone).Hour)
+				.Single();
+
+			var converted = table
+				.Select(r => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, zone))
+				.Single();
+
+			// Prague is +02:00 in June.
+			var expected = stored.ToOffset(TimeSpan.FromHours(2));
+
+			hour.ShouldBe(expected.Hour);
+			converted.ShouldBe(expected);
+			converted.Offset.ShouldBe(expected.Offset);
+		}
+
+		/// <summary>
+		/// A zone conversion whose value or zone only .NET can compute is left to .NET in a projection, as on a
+		/// provider without zone support, rather than refused.
+		/// </summary>
+		/// <remarks>
+		/// Not on .NET Framework, for the reason given at <see cref="ZoneConversionOfAValueStoredWithoutAnOffset"/>.
+		/// </remarks>
+		[Test]
+		public void ZoneConversionOfAClientValueIsReadInDotNet([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
+
+			var converted = table
+				.Select(r => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(ClientOnly(r.Dto), zone))
+				.Single();
+
+			var hour = table
+				.Select(r => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(ClientOnly(r.Dto), zone).Hour)
+				.Single();
+
+			var byRow = table
+				.Select(r => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, ZoneOf(r.Id, zone)))
+				.Single();
+
+			var expected = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(stored, zone);
+
+			converted.ShouldBe(expected);
+			converted.Offset.ShouldBe(expected.Offset);
+			hour.ShouldBe(expected.Hour);
+			byRow.ShouldBe(expected);
+			byRow.Offset.ShouldBe(expected.Offset);
+		}
+
+		static DateTimeOffset ClientOnly(DateTimeOffset value) => value;
+
+		static string ZoneOf(int id, string zone) => id > 0 ? zone : "UTC";
+#endif
+
+		/// <summary>
+		/// <c>Sql.AtTimeZone</c> of a value stored without an offset has nothing to convert and no .NET answer, so it
+		/// is refused by name. In a filter the refusal keeps only the generic message.
+		/// </summary>
+		[Test]
+		public void AtTimeZoneRefusesAValueStoredWithoutAnOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
+
+			Assert.That(
+				() => table
+					.Select(r => Sql.AtTimeZone(r.Dto, zone))
+					.ToList(),
+				Throws.InstanceOf<LinqToDBException>().With.Message.Contains(ErrorHelper.Error_TimeZone_OffsetlessValue));
+
+			Assert.That(
+				() => table
+					.Select(r => new { H = Sql.AtTimeZone(r.Dto, zone)!.Value.Hour })
+					.ToList(),
+				Throws.InstanceOf<LinqToDBException>().With.Message.Contains(ErrorHelper.Error_TimeZone_OffsetlessValue));
+
+			Assert.That(
+				() => table
+					.Count(r => Sql.AtTimeZone(r.Dto, zone)!.Value.Hour == 1),
+				Throws.InstanceOf<LinqToDBException>());
+		}
+
+		public enum OffsetlessMember
+		{
+			Offset,
+			UtcDateTime,
+			ToUniversalTime,
+			ToOffset,
+			DateTime,
+			ConvertedHour,
+		}
+
+		/// <summary>
+		/// Every member of a value stored without an offset that reads its offset or its instant refuses where SQL is
+		/// required, rather than reading the stored wall clock as one.
+		/// </summary>
+		[Test]
+		[ThrowsCannotBeConverted(ZoneReadingProviders)]
+		public void OffsetlessValueRefusesWhereSqlIsRequired([IncludeDataSources(false, ZoneReadingProviders)] string context, [Values] OffsetlessMember member)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
+
+			switch (member)
+			{
+				case OffsetlessMember.Offset:
+					table
+						.Select(r => Sql.AsSql(r.Dto.Offset))
+						.Single();
+					break;
+
+				case OffsetlessMember.UtcDateTime:
+					table
+						.Select(r => Sql.AsSql(r.Dto.UtcDateTime))
+						.Single();
+					break;
+
+				case OffsetlessMember.ToUniversalTime:
+					table
+						.Select(r => Sql.AsSql(r.Dto.ToUniversalTime()))
+						.Single();
+					break;
+
+				case OffsetlessMember.ToOffset:
+					table
+						.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromMinutes(-90))))
+						.Single();
+					break;
+
+				case OffsetlessMember.DateTime:
+					table
+						.Select(r => Sql.AsSql(r.Dto.DateTime))
+						.Single();
+					break;
+
+				case OffsetlessMember.ConvertedHour:
+					table
+						.Select(r => Sql.AsSql(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, zone).Hour))
+						.Single();
+					break;
+			}
+		}
+
+		public enum MixedStorage
+		{
+			Coalesce,
+			Condition,
+			CoalesceOffset,
+			SubQuery,
+			Cte,
+			Concat,
+			CoalesceHour,
+			ConditionHour,
+			CoalesceDate,
+			CoalesceShift,
+		}
+
+		/// <summary>
+		/// A value that can answer either a column stored with an offset or one stored without takes its type from
+		/// one of them - also through a subquery, a CTE or a set operation - so it is treated as having none.
+		/// </summary>
+		[Test]
+		[ThrowsCannotBeConverted(ZoneReadingProviders)]
+		public void MixedOffsetStorageRefusesWhereSqlIsRequired([IncludeDataSources(false, ZoneReadingProviders)] string context, [Values] MixedStorage storage)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new MixedStampRow { Id = 1, Dto = Value, Dto2 = Value, Stamp = Value, StampN = Value } });
+
+			switch (storage)
+			{
+				case MixedStorage.Coalesce:
+					table
+						.Select(r => Sql.AsSql((r.StampN ?? r.Dto).UtcDateTime))
+						.Single();
+					break;
+
+				case MixedStorage.Condition:
+					table
+						.Select(r => Sql.AsSql((r.Flag ? r.Dto : r.Stamp).UtcDateTime))
+						.Single();
+					break;
+
+				case MixedStorage.CoalesceOffset:
+					table
+						.Select(r => Sql.AsSql((r.StampN ?? r.Dto).Offset))
+						.Single();
+					break;
+
+				case MixedStorage.SubQuery:
+					table
+						.Select(r => new { V = r.Flag ? r.Dto : r.Stamp })
+						.AsSubQuery()
+						.Select(x => Sql.AsSql(x.V.UtcDateTime))
+						.Single();
+					break;
+
+				case MixedStorage.Cte:
+					table
+						.Select(r => new { V = r.Flag ? r.Dto : r.Stamp })
+						.AsCte()
+						.Select(x => Sql.AsSql(x.V.UtcDateTime))
+						.Single();
+					break;
+
+				case MixedStorage.Concat:
+					var withOffset = table
+						.Where(r => r.Flag)
+						.Select(r => new { V = r.Dto });
+
+					var withoutOffset = table
+						.Where(r => !r.Flag)
+						.Select(r => new { V = r.Stamp });
+
+					withOffset
+						.Concat(withoutOffset)
+						.Select(x => Sql.AsSql(x.V.UtcDateTime))
+						.Single();
+					break;
+
+				// A component or a shift has no single frame that reads both kinds right.
+				case MixedStorage.CoalesceHour:
+					table
+						.Select(r => Sql.AsSql((r.StampN ?? r.Dto).Hour))
+						.Single();
+					break;
+
+				case MixedStorage.ConditionHour:
+					table
+						.Select(r => Sql.AsSql((r.Flag ? r.Dto : r.Stamp).Hour))
+						.Single();
+					break;
+
+				case MixedStorage.CoalesceDate:
+					table
+						.Select(r => Sql.AsSql((r.StampN ?? r.Dto).Date))
+						.Single();
+					break;
+
+				case MixedStorage.CoalesceShift:
+					table
+						.Select(r => Sql.AsSql((r.StampN ?? r.Dto).AddHours(1)))
+						.Single();
+					break;
+			}
+		}
+
+		/// <summary>
+		/// In a projection the components and shifts of such a value are read in .NET, on the round-tripped value,
+		/// whichever column answers it.
+		/// </summary>
+		[Test]
+		public void MixedOffsetComponentsAreReadInDotNet([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new MixedStampRow { Id = 1, Flag = true,  Dto = Value, Dto2 = Value, Stamp = Value, StampN = null  },
+				new MixedStampRow { Id = 2, Flag = false, Dto = Value, Dto2 = Value, Stamp = Value, StampN = Value },
+			});
+
+			// The round trip of the expression, not of its columns: the server converts the operands to one type.
+			var stored = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Coalesced = r.StampN ?? r.Dto,
+					Chosen    = r.Flag ? r.Dto : r.Stamp,
+				})
+				.ToArray();
+
+			var actual = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Hour      = (r.StampN ?? r.Dto).Hour,
+					Condition = (r.Flag ? r.Dto : r.Stamp).Hour,
+					Date      = (r.StampN ?? r.Dto).Date,
+					Shifted   = (r.StampN ?? r.Dto).AddHours(1),
+				})
+				.ToArray();
+
+			actual.Length.ShouldBe(stored.Length);
+
+			for (var i = 0; i < stored.Length; i++)
+			{
+				var value = stored[i].Coalesced;
+
+				actual[i].Hour.ShouldBe(value.Hour);
+				actual[i].Condition.ShouldBe(stored[i].Chosen.Hour);
+				actual[i].Date.ShouldBe(value.Date);
+				actual[i].Date.Kind.ShouldBe(value.Date.Kind);
+				actual[i].Shifted.ShouldBe(value.AddHours(1));
+				actual[i].Shifted.Offset.ShouldBe(value.Offset);
+			}
+		}
+
+		/// <summary>
+		/// Only the values a <c>CASE</c> can answer decide its offset: one stored without an offset in its condition
+		/// does not stop it.
+		/// </summary>
+		[Test]
+		public void MixedOffsetConditionStillTranslates([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new MixedStampRow { Id = 1, Dto = Value, Dto2 = Value, Stamp = Value, StampN = Value } });
+
+			var stored = table
+				.Single();
+
+			var utc = table
+				.Select(r => Sql.AsSql((r.Stamp < r.Dto ? r.Dto : r.Dto2).UtcDateTime))
+				.Single();
+
+			utc.ShouldBe((stored.Stamp < stored.Dto ? stored.Dto : stored.Dto2).UtcDateTime);
+		}
+
+		/// <summary>
 		/// A shift through the frame keeps every digit the column holds. The expectation is the round-tripped value,
 		/// so a provider that stores fewer digits is held only to what it stores.
 		/// </summary>
@@ -779,16 +1272,16 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new PreciseRow { Id = 1, Dto = Value.AddTicks(1234567) } });
 
-			var stored  = table.Select(r => r.Dto).Single();
-			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddDays(1))).Single();
+			var stored  = table
+				.Select(r => r.Dto)
+				.Single();
+			var shifted = table
+				.Select(r => Sql.AsSql(r.Dto.AddDays(1)))
+				.Single();
 
 			// Ticks rather than the value, which prints to the second and would show two equal-looking values.
 			shifted.UtcTicks.ShouldBe(stored.AddDays(1).UtcTicks);
 		}
-
-		#endregion
-
-		#region Members whose zone is their own
 
 		/// <summary>
 		/// <c>UtcDateTime</c> names its own zone, so unlike a component it must answer the same thing on every
@@ -800,7 +1293,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var utc = table.Select(r => Sql.AsSql(r.Dto.UtcDateTime)).Single();
+			var utc = table
+				.Select(r => Sql.AsSql(r.Dto.UtcDateTime))
+				.Single();
 
 			utc.ShouldBe(Value.UtcDateTime);
 		}
@@ -817,7 +1312,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var utc = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.UtcDateTime)).Single();
+			var utc = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.UtcDateTime))
+				.Single();
 
 			utc.ShouldBe(Value.UtcDateTime);
 		}
@@ -854,8 +1351,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var expected = table.Select(r => r.Dto).Single().DateTime;
-			var actual   = table.Select(r => Sql.AsSql(r.Dto.DateTime)).Single();
+			var expected = table
+				.Select(r => r.Dto)
+				.Single()
+				.DateTime;
+			var actual   = table
+				.Select(r => Sql.AsSql(r.Dto.DateTime))
+				.Single();
 
 			actual.ShouldBe(expected);
 		}
@@ -870,7 +1372,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var utc = table.Select(r => Sql.AsSql(r.Dto.ToUniversalTime())).Single();
+			var utc = table
+				.Select(r => Sql.AsSql(r.Dto.ToUniversalTime()))
+				.Single();
 
 			utc.UtcDateTime.ShouldBe(Value.UtcDateTime);
 			utc.Offset.ShouldBe(TimeSpan.Zero);
@@ -888,7 +1392,9 @@ namespace Tests.Linq
 
 			// Negative and not a whole hour: the sign and the minutes are both part of the spelling the provider is
 			// handed, and a whole positive hour would let either get lost.
-			var shifted = table.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromMinutes(-90)))).Single();
+			var shifted = table
+				.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromMinutes(-90))))
+				.Single();
 
 			shifted.UtcDateTime.ShouldBe(Value.UtcDateTime);
 			shifted.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
@@ -904,9 +1410,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			var hour = table.Select(r => r.Dto.ToOffset(TimeSpan.FromMinutes(-90)).Hour).Single();
+			var hour = table
+				.Select(r => r.Dto.ToOffset(TimeSpan.FromMinutes(-90)).Hour)
+				.Single();
 
 			hour.ShouldBe(stored.ToOffset(TimeSpan.FromMinutes(-90)).Hour);
 		}
@@ -925,11 +1435,19 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			table.Select(r => Sql.AsSql(r.Dto.Offset)).Single().ShouldBe(stored.Offset);
+			table
+				.Select(r => Sql.AsSql(r.Dto.Offset))
+				.Single()
+				.ShouldBe(stored.Offset);
 #if NET8_0_OR_GREATER
-			table.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes)).Single().ShouldBe(stored.TotalOffsetMinutes);
+			table
+				.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes))
+				.Single()
+				.ShouldBe(stored.TotalOffsetMinutes);
 #endif
 		}
 
@@ -945,12 +1463,20 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
 #if NET8_0_OR_GREATER
-			table.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes)).Single().ShouldBe(stored.TotalOffsetMinutes);
+			table
+				.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes))
+				.Single()
+				.ShouldBe(stored.TotalOffsetMinutes);
 #endif
-			table.Select(r => Sql.AsSql(r.Dto.Offset)).Single().ShouldBe(stored.Offset);
+			table
+				.Select(r => Sql.AsSql(r.Dto.Offset))
+				.Single()
+				.ShouldBe(stored.Offset);
 		}
 
 		/// <summary>
@@ -1050,7 +1576,9 @@ namespace Tests.Linq
 
 			// Built from the stored value's own wall clock, so the answer does not depend on the round-trip: the same
 			// reading declared at the same offset is the same instant on any provider.
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
 			var built = table
 				.Select(r => Sql.AsSql(new DateTimeOffset(r.Dto.DateTime, TimeSpan.FromMinutes(-90))))
@@ -1070,8 +1598,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new DateRow { Id = 1, Dt = new DateTime(2020, 6, 15, 12, 0, 0) } });
 
-			var stored = table.Select(r => r.Dt).Single();
-			var built  = table.Select(r => new DateTimeOffset(r.Dt, TimeSpan.FromMinutes(-90))).Single();
+			var stored = table
+				.Select(r => r.Dt)
+				.Single();
+			var built  = table
+				.Select(r => new DateTimeOffset(r.Dt, TimeSpan.FromMinutes(-90)))
+				.Single();
 
 			built.ShouldBe(new DateTimeOffset(stored, TimeSpan.FromMinutes(-90)));
 			built.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
@@ -1173,16 +1705,112 @@ namespace Tests.Linq
 			// having exercised it.
 			var offset = TimeSpan.FromHours(2);
 
-			table.Select(r => Sql.AsSql(r.Dto.ToOffset(offset))).Single().Offset.ShouldBe(offset);
+			table
+				.Select(r => Sql.AsSql(r.Dto.ToOffset(offset)))
+				.Single()
+				.Offset
+				.ShouldBe(offset);
 
 			offset = TimeSpan.FromMinutes(-90);
 
-			table.Select(r => Sql.AsSql(r.Dto.ToOffset(offset))).Single().Offset.ShouldBe(offset);
+			table
+				.Select(r => Sql.AsSql(r.Dto.ToOffset(offset)))
+				.Single()
+				.Offset
+				.ShouldBe(offset);
 		}
 
-		#endregion
+		/// <summary>
+		/// An offset a <see cref="DateTimeOffset"/> cannot carry - not whole minutes, or more than 14 hours - is
+		/// refused by name, as .NET refuses it, instead of being rounded into one the server accepts. A captured offset
+		/// is checked on every execution, since its SQL is rebuilt for each value.
+		/// </summary>
+		[Test]
+		public void OffsetADateTimeOffsetCannotCarryIsRefused([IncludeDataSources(true, ZonedProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
 
-		#region The acceptance rule, on every provider that stores an offset
+			Assert.That(
+				() => table
+					.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromSeconds(90))))
+					.Single(),
+				Throws.InstanceOf<LinqToDBException>().With.Message.Contains(InvalidOffsetMessage(TimeSpan.FromSeconds(90))));
+
+			Assert.That(
+				() => table
+					.Select(r => Sql.AsSql(new DateTimeOffset(r.Dto.DateTime, TimeSpan.FromSeconds(90))))
+					.Single(),
+				Throws.InstanceOf<LinqToDBException>().With.Message.Contains(InvalidOffsetMessage(TimeSpan.FromSeconds(90))));
+
+			Assert.That(
+				() => table
+					.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromHours(15))))
+					.Single(),
+				Throws.InstanceOf<LinqToDBException>().With.Message.Contains(InvalidOffsetMessage(TimeSpan.FromHours(15))));
+
+			// One local, re-assigned, so the three executions share one cached query.
+			var offset = TimeSpan.FromMinutes(-90);
+
+			DateTimeOffset Shift() => table
+				.Select(r => Sql.AsSql(r.Dto.ToOffset(offset)))
+				.Single();
+
+			var first = Shift();
+
+			first.Offset.ShouldBe(offset);
+
+			offset = TimeSpan.FromSeconds(90);
+
+			Assert.That(Shift, Throws.InstanceOf<LinqToDBException>().With.Message.Contains(InvalidOffsetMessage(offset)));
+
+			offset = TimeSpan.FromMinutes(-90);
+
+			var again = Shift();
+
+			again.Offset.ShouldBe(offset);
+		}
+
+		static string InvalidOffsetMessage(TimeSpan offset)
+			=> string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_TimeZone_InvalidOffset, offset);
+
+		/// <summary>
+		/// A zone conversion over <see cref="DateTimeOffset.UtcNow"/>, whose own SQL already names a zone on some
+		/// providers: the two must nest into valid SQL.
+		/// </summary>
+		[Test]
+		public void UtcNowReadsThroughAZoneConversion([IncludeDataSources(true, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var forced = table
+				.Select(r => Sql.AsSql(DateTimeOffset.UtcNow.UtcDateTime))
+				.Single();
+
+			var projected = table
+				.Select(r => new { Now = DateTimeOffset.UtcNow.UtcDateTime })
+				.Single();
+
+			var forcedDrift    = forced        - DateTime.UtcNow;
+			var projectedDrift = projected.Now - DateTime.UtcNow;
+
+			forcedDrift.ShouldBeInRange(TimeSpan.FromMinutes(-5), TimeSpan.FromMinutes(5));
+			projectedDrift.ShouldBeInRange(TimeSpan.FromMinutes(-5), TimeSpan.FromMinutes(5));
+
+			// Only a provider whose type carries an offset hands one back; the others answer every value at +00:00.
+			if (context.IsAnyOf(ZonedProviders))
+			{
+				var shifted = table
+					.Select(r => Sql.AsSql(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(2))))
+					.Single();
+
+				var shiftedDrift = shifted.UtcDateTime - DateTime.UtcNow;
+
+				shifted.Offset.ShouldBe(TimeSpan.FromHours(2));
+				shiftedDrift.ShouldBeInRange(TimeSpan.FromMinutes(-5), TimeSpan.FromMinutes(5));
+			}
+		}
 
 		/// <summary>
 		/// The acceptance rule for the two instant-reading members on <em>every</em> provider, including those that
@@ -1194,10 +1822,23 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			table.Select(r => r.Dto.ToUniversalTime()).Single().ShouldBe(stored.ToUniversalTime());
-			table.Select(r => r.Dto.ToOffset(TimeSpan.FromMinutes(-90))).Single().ShouldBe(stored.ToOffset(TimeSpan.FromMinutes(-90)));
+			var utc = table
+				.Select(r => r.Dto.ToUniversalTime())
+				.Single();
+
+			var shifted = table
+				.Select(r => r.Dto.ToOffset(TimeSpan.FromMinutes(-90)))
+				.Single();
+
+			// Equality compares instants, which both members keep by definition - the offset is what they change.
+			utc.ShouldBe(stored.ToUniversalTime());
+			utc.Offset.ShouldBe(TimeSpan.Zero);
+			shifted.ShouldBe(stored.ToOffset(TimeSpan.FromMinutes(-90)));
+			shifted.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
 		}
 
 		/// <summary>
@@ -1215,12 +1856,20 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			table.Select(r => r.Dto.DateTime).Single().ShouldBe(stored.DateTime);
+			table
+				.Select(r => r.Dto.DateTime)
+				.Single()
+				.ShouldBe(stored.DateTime);
 
 			// UtcDateTime names its own zone, so it is the one member whose answer does not depend on the round-trip.
-			table.Select(r => r.Dto.UtcDateTime).Single().ShouldBe(Value.UtcDateTime);
+			table
+				.Select(r => r.Dto.UtcDateTime)
+				.Single()
+				.ShouldBe(Value.UtcDateTime);
 		}
 
 		/// <summary>
@@ -1237,10 +1886,21 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var stored = table.Select(r => r.Dto).Single();
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
 
-			table.Select(r => r.Dto.LocalDateTime).Single().ShouldBe(stored.LocalDateTime);
-			table.Select(r => r.Dto.ToLocalTime()).Single().ShouldBe(stored.ToLocalTime());
+			var localDateTime = table
+				.Select(r => r.Dto.LocalDateTime)
+				.Single();
+
+			var localTime = table
+				.Select(r => r.Dto.ToLocalTime())
+				.Single();
+
+			localDateTime.ShouldBe(stored.LocalDateTime);
+			localTime.ShouldBe(stored.ToLocalTime());
+			localTime.Offset.ShouldBe(stored.ToLocalTime().Offset);
 		}
 
 		/// <summary>
@@ -1311,6 +1971,30 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The time-of-day half where SQL is required. SQLite leaves a stored offset's to .NET and refuses here, and
+		/// SQL Server 2005 has no <c>time</c> type to answer it with.
+		/// </summary>
+		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllSQLite, TestProvName.AllSqlServer2005)]
+		public void TimeOfDayAtADayBoundaryOnTheServer([SupportsDateTimeOffsetContext] string context)
+		{
+			var value = new DateTimeOffset(2021, 1, 1, 0, 20, 0, TimeSpan.FromMinutes(40));
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(value));
+
+			var stored = table
+				.Select(r => r.Dto)
+				.Single();
+
+			var timeOfDay = table
+				.Select(r => Sql.AsSql(r.Dto.TimeOfDay))
+				.Single();
+
+			timeOfDay.ShouldBe(stored.TimeOfDay);
+		}
+
+		/// <summary>
 		/// A filter on the date: the round-tripped value's midnight matches, an hour past it does not.
 		/// </summary>
 		[Test]
@@ -1362,10 +2046,6 @@ namespace Tests.Linq
 			shifted.ShouldBe(1);
 			shiftedOff.ShouldBe(0);
 		}
-
-		#endregion
-
-		#region Sql.AtTimeZone as an operand
 
 		/// <summary>
 		/// A wall clock in a zone as a filter, sort and update operand on every provider that reads zones: the
@@ -1510,10 +2190,6 @@ namespace Tests.Linq
 			actual.ColumnTimeOfDay.ShouldBe(local.TimeOfDay);
 		}
 
-		#endregion
-
-		#region Translation API
-
 		/// <summary>
 		/// The seven-argument constructor shipped before the zone capabilities were added keeps binding: compiled
 		/// code calls it by its parameter types.
@@ -1549,10 +2225,6 @@ namespace Tests.Linq
 			_ = new TranslationProviderFlags(NullsDefaultOrdering.Smallest, true, false, false, false, SqlIntervalUnit.Tick, true);
 		}
 
-		#endregion
-
-		#region Refusals
-
 		/// <summary>
 		/// The third acceptance outcome: where the value cannot leave the server and the provider genuinely cannot
 		/// express the operation, the refusal is by name rather than a wrong number or a generic failure.
@@ -1578,7 +2250,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone))).Single();
+			table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)))
+				.Single();
 		}
 
 		/// <summary>
@@ -1592,7 +2266,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			table.Count(r => r.Dto.ToOffset(TimeSpan.FromHours(2)) == Value).ShouldBe(1);
+			table
+				.Count(r => r.Dto.ToOffset(TimeSpan.FromHours(2)) == Value)
+				.ShouldBe(1);
 		}
 
 		/// <summary>
@@ -1607,7 +2283,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			table.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromMinutes(-90)).Hour)).Single();
+			table
+				.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromMinutes(-90)).Hour))
+				.Single();
 		}
 
 		/// <summary>
@@ -1622,9 +2300,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			table.Count(r => r.Dto.DateTime == Value.DateTime).ShouldBe(1);
+			table
+				.Count(r => r.Dto.DateTime == Value.DateTime)
+				.ShouldBe(1);
 		}
-
-		#endregion
 	}
 }
