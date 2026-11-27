@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Mapping
@@ -35,7 +40,50 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{IdentifierBuilder.GetObjectID(ConverterType)}.";
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{IdentifierBuilder.GetObjectID(ConverterType)}.{GetConverterID(ValueConverter)}.");
+		}
+
+		// Two schemas that convert one member differently must not share an identity, or whichever reaches the
+		// mapping caches first converts for both.
+		static string GetConverterID(IValueConverter? converter)
+		{
+			if (converter == null)
+				return string.Empty;
+
+			return string.Create(
+				CultureInfo.InvariantCulture,
+				$"{IdentifierBuilder.GetObjectID(converter.GetType())}:{(converter.HandlesNulls ? 1 : 0)}:{GetLambdaID(converter.ToProviderExpression)}:{GetLambdaID(converter.FromProviderExpression)}");
+
+			// An expression is identified by its text, which shows a captured variable by name and a delegate by type
+			// only; read as their values, and delegates by their methods, one helper called with different arguments
+			// gives different identities.
+			static string GetLambdaID(LambdaExpression lambda)
+			{
+				var delegates = new List<Delegate>();
+
+				var expression = lambda.Transform(delegates, static (found, e) =>
+				{
+					if (e is MemberExpression && e.TryEvaluateCapturedValue(out var value))
+					{
+						if (value is Delegate captured)
+							found.Add(captured);
+
+						return Expression.Constant(value, e.Type);
+					}
+
+					if (e is ConstantExpression { Value: Delegate constant })
+						found.Add(constant);
+
+					return e;
+				});
+
+				var id = IdentifierBuilder.GetObjectID(expression).ToString(CultureInfo.InvariantCulture);
+
+				foreach (var d in delegates)
+					id += "+" + IdentifierBuilder.GetObjectID(d);
+
+				return id;
+			}
 		}
 	}
 }

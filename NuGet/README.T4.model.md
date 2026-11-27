@@ -6,7 +6,7 @@
 
 This nuget package contains database scaffolding T4 templates to generate POCO classes from your database.
 
-You can read about T4 templates options [here](https://linq2db.github.io/articles/T4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html).
+You can read about T4 templates options [here](https://linq2db.github.io/articles/t4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/video.html).
 
 ## Important
 

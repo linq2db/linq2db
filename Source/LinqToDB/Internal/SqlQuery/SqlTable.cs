@@ -77,24 +77,17 @@ namespace LinqToDB.Internal.SqlQuery
 					}
 				}
 
-				foreach (var column in entityDescriptor.InheritanceSiblingColumns)
+				nextSiblingColumn: foreach (var column in entityDescriptor.InheritanceSiblingColumns)
 				{
 					// Two sibling types may map their (distinct) members to the same physical column.
 					// Emit that column only once — otherwise DDL/SELECT would carry it twice. The
 					// duplicate member still resolves to this single field via the inheritance lookup
 					// in TableContext.GetField (matched by physical column name).
-					var alreadyPresent = false;
 					foreach (var existing in _orderedFields)
 					{
 						if (string.Equals(existing.PhysicalName, column.ColumnName, StringComparison.Ordinal))
-						{
-							alreadyPresent = true;
-							break;
-						}
+							continue nextSiblingColumn;
 					}
-
-					if (alreadyPresent)
-						continue;
 
 					// ColumnName as Name avoids MemberName collision with the primary sibling field already in _fieldsLookup.
 					// If that key is itself already taken — a distinct member whose C# name equals this physical

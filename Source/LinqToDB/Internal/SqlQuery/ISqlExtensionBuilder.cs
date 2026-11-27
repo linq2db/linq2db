@@ -3,7 +3,5 @@
 	/// <summary>
 	/// Base interface for all extension builders.
 	/// </summary>
-	public interface ISqlExtensionBuilder
-	{
-	}
+	public interface ISqlExtensionBuilder;
 }

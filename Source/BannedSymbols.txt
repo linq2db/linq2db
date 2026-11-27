@@ -173,8 +173,11 @@ M:System.Text.StringBuilder.AppendFormat(System.String,System.Object); use expli
 M:System.Text.StringBuilder.AppendFormat(System.String,System.Object,System.Object); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendFormat(System.String,System.Object,System.Object,System.Object); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendFormat(System.String,System.Object[]); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendFormat(System.String,System.ReadOnlySpan{System.Object}); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendJoin(System.Char,System.Object[]); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendJoin(System.Char,System.ReadOnlySpan{System.Object}); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendJoin(System.String,System.Object[]); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendJoin(System.String,System.ReadOnlySpan{System.Object}); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendJoin``1(System.Char,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendJoin``1(System.String,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Insert(System.Int32,System.Decimal); use explicit formatting with IFormatProvider
@@ -187,8 +190,11 @@ M:System.String.Format(System.String,System.Object); use overload with IFormatPr
 M:System.String.Format(System.String,System.Object,System.Object); use overload with IFormatProvider parameter
 M:System.String.Format(System.String,System.Object,System.Object,System.Object); use overload with IFormatProvider parameter
 M:System.String.Format(System.String,System.Object[]); use overload with IFormatProvider parameter
+M:System.String.Format(System.String,System.ReadOnlySpan{System.Object}); use overload with IFormatProvider parameter
 M:System.String.Join(System.Char,System.Object[]); use explicit formatting with IFormatProvider
+M:System.String.Join(System.Char,System.ReadOnlySpan{System.Object}); use explicit formatting with IFormatProvider
 M:System.String.Join(System.String,System.Object[]); use explicit formatting with IFormatProvider
+M:System.String.Join(System.String,System.ReadOnlySpan{System.Object}); use explicit formatting with IFormatProvider
 M:System.String.Join``1(System.Char,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
 M:System.String.Join``1(System.String,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
 M:System.Convert.ToString(System.Object); use overload with IFormatProvider parameter

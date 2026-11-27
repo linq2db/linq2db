@@ -23,15 +23,13 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			var table = db.GetTable<TableWithoutKey>();
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 					.MergeInto(table)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
-					.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-			Assert.That(exception.Message, Is.EqualTo("Method OnTargetKey() needs at least one primary key column"));
+					.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("Method OnTargetKey() needs at least one primary key column"));
 		}
 
 		[Test]
@@ -385,7 +383,7 @@ namespace Tests.xUpdate
 
 			var table = GetTarget(db);
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 						.Merge()
 						.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
@@ -394,11 +392,8 @@ namespace Tests.xUpdate
 						{
 							Field3 = 321
 						})
-						.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-
-			Assert.That(exception.Message, Does.EndWith("'s.Field2' could not be converted to SQL."));
+						.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EndsWith("'s.Field2' could not be converted to SQL."));
 		}
 	}
 }

@@ -56,11 +56,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
 					_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
 						=> optionsBuilder.UseNpgsql(connectionString, o => o.UseNodaTime()).UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
+#if EF_MYSQL
 					_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
 #if !NETFRAMEWORK
 						.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
 #else
 						.UseMySql(connectionString),
+#endif
 #endif
 					_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
 					_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),
@@ -124,7 +126,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		// Named distinctly from IssueTests.Issue4669Test, which covers a different aspect of the same issue and
 		// is not gated - a FullyQualifiedName~ filter would otherwise select both.
-		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
 		public void Issue4669QueryFilterTest([EFDataSources] string provider)
 		{
@@ -136,11 +137,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			optionsBuilder = provider switch
 			{
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => optionsBuilder.UseNpgsql(connectionString),
+#if EF_MYSQL
 				_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
 #if !NETFRAMEWORK
 					.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
 #else
 					.UseMySql(connectionString),
+#endif
 #endif
 				_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
 				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),

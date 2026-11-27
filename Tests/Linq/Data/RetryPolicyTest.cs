@@ -89,12 +89,12 @@ namespace Tests.Data
 		public void TestRetryPolicy([DataSources(false)] string context)
 		{
 			var ret = new Retry();
-			Assert.Throws<TestException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataConnection(context, retryPolicy: ret);
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 				db.GetTable<FakeClass>().ToList();
-			});
+			}, Throws.TypeOf<TestException>());
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
@@ -103,12 +103,12 @@ namespace Tests.Data
 		public void RetryPolicyOptions1([DataSources(false)] string context)
 		{
 			var ret = new Retry();
-			Assert.Throws<TestException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 				db.GetTable<FakeClass>().ToList();
-			});
+			}, Throws.TypeOf<TestException>());
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
@@ -117,12 +117,12 @@ namespace Tests.Data
 		public void RetryPolicyOptions2([DataSources(false)] string context)
 		{
 			var ret = new Retry();
-			Assert.Throws<TestException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 				db.GetTable<FakeClass>().ToList();
-			});
+			}, Throws.TypeOf<TestException>());
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
