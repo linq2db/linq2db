@@ -35,6 +35,42 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
+		// DuckDB's parser is PostgreSQL's (libpg_query): prefix + - > ^ > * / // % > + - > any other operator (|| & | and
+		// prefix ~, one level, left to right) > BETWEEN IN LIKE > comparisons. // sits with * (measured: 1 * 7 + 1 // 2
+		// is 7).
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
+
+		static SqlPrecedenceTable CreatePrecedenceTable()
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
+
+			var prefix         = new SqlOperatorPrecedence(Precedence.Unary,          SqlAssociativity.Left, false, arithmetic);
+			var multiplicative = new SqlOperatorPrecedence(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic);
+			var additive       = new SqlOperatorPrecedence(Precedence.Additive,       SqlAssociativity.Left, false, arithmetic);
+			var other          = new SqlOperatorPrecedence(Precedence.Comparison + 5, SqlAssociativity.Left, true,  arithmetic);
+			var match          = new SqlOperatorPrecedence(Precedence.Comparison + 2, SqlAssociativity.None, false, SqlPrecedenceTable.AllGroups);
+
+			return SqlPrecedenceTable.Default.With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix),
+				(SqlPrecedenceKeys.BitwiseNegation, other with { Associative = false }),
+				("*",                               multiplicative),
+				("/",                               multiplicative),
+				("%",                               multiplicative),
+				("+",                               additive),
+				("-",                               additive),
+				("&",                               other),
+				("|",                               other),
+				("//",                              multiplicative),
+				(SqlPrecedenceKeys.Concatenation,   other),
+				(SqlPrecedenceKeys.Between,         match),
+				(SqlPrecedenceKeys.Class(Precedence.Unary),       prefix),
+				(SqlPrecedenceKeys.Class(Precedence.Bitwise),     other with { Associative = false }),
+				(SqlPrecedenceKeys.Class(Precedence.Concatenate), other with { Associative = false }));
+		}
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		protected override string LimitFormat (SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 

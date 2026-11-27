@@ -45,6 +45,38 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var l2dbResult = query.ToLinqToDB().ToArray();
 		}
 
+		// Npgsql's range operators are + (union), * (intersect) and - (except), which PostgreSQL groups by its own
+		// precedence: a nested operator keeps the grouping of the LINQ expression
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6390")]
+		public void NestedRangeOperatorsKeepTheirGrouping([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var db = CreateContext(provider);
+
+			var date = TestData.DateTime;
+
+			var unionThenIntersect = db.Events
+				.Where(e => e.Duration.Union(e.Duration).Intersect(e.Duration).Contains(date))
+				.ToLinqToDB();
+
+			var exceptOfUnion = db.Events
+				.Where(e => e.Duration.Except(e.Duration.Union(e.Duration)).Contains(date))
+				.ToLinqToDB();
+
+			unionThenIntersect.ToArray();
+			exceptOfUnion.ToArray();
+
+			var unionThenIntersectSql = unionThenIntersect
+				.ToSqlQuery()
+				.Sql;
+
+			var exceptOfUnionSql = exceptOfUnion
+				.ToSqlQuery()
+				.Sql;
+
+			unionThenIntersectSql.ShouldContain("(e.\"Duration\" + e.\"Duration\") * e.\"Duration\"", Case.Sensitive, unionThenIntersectSql);
+			exceptOfUnionSql.ShouldContain("e.\"Duration\" - (e.\"Duration\" + e.\"Duration\")", Case.Sensitive, exceptOfUnionSql);
+		}
+
 		[Test]
 		public void TestViewMapping([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{

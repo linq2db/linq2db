@@ -31,6 +31,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override ConcatBuildStyle ConcatStyle    => ConcatBuildStyle.Function;
 		protected override string           ConcatFunctionName => "concat";
+		protected override bool             LiteralBackslashEscapes => true;
+
+		// https://clickhouse.com/docs/sql-reference/operators: * / % (12) > + - (11), left to right, PostgreSQL's order;
+		// unary minus above both. Bitwise operators, ~ and concatenation are functions here.
+		static readonly SqlPrecedenceTable _precedenceTable = SqlPrecedenceTable.Default.WithOrderedArithmetic();
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");

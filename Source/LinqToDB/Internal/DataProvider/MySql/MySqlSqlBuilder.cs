@@ -32,6 +32,38 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override ConcatBuildStyle ConcatStyle         => ConcatBuildStyle.Function;
 
+		// https://dev.mysql.com/doc/refman/8.0/en/operator-precedence.html: unary - ~ > ^ > * / DIV % > + - > << >> > & > |
+		// > comparisons; concatenation is the CONCAT function
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
+
+		static SqlPrecedenceTable CreatePrecedenceTable()
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
+
+			var prefix         = new SqlOperatorPrecedence(Precedence.Unary,              SqlAssociativity.Left, false, arithmetic);
+			var xor            = new SqlOperatorPrecedence(Precedence.Multiplicative + 5, SqlAssociativity.Left, true,  arithmetic);
+			var multiplicative = new SqlOperatorPrecedence(Precedence.Multiplicative,     SqlAssociativity.Left, false, arithmetic);
+			var additive       = new SqlOperatorPrecedence(Precedence.Additive,           SqlAssociativity.Left, false, arithmetic);
+			var and            = new SqlOperatorPrecedence(Precedence.Comparison + 6,     SqlAssociativity.Left, true,  arithmetic);
+			var or             = new SqlOperatorPrecedence(Precedence.Comparison + 3,     SqlAssociativity.Left, true,  arithmetic);
+
+			return SqlPrecedenceTable.Default.With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix),
+				(SqlPrecedenceKeys.BitwiseNegation, prefix),
+				("^",                               xor),
+				("*",                               multiplicative),
+				("/",                               multiplicative),
+				("%",                               multiplicative),
+				("+",                               additive),
+				("-",                               additive),
+				("&",                               and),
+				("|",                               or),
+				(SqlPrecedenceKeys.Class(Precedence.Unary), prefix));
+		}
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
 			if (statement.SelectQuery != null)

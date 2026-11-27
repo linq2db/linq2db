@@ -24,7 +24,7 @@ namespace LinqToDB
 			if (type == typeof(string))
 				throw new InvalidOperationException("String concatenation must use builder.Concat(...) so it produces SqlConcatExpression. builder.Add is for numeric / temporal arithmetic only.");
 
-			return new SqlBinaryExpression(type, left, "+", right, Precedence.Additive);
+			return new SqlBinaryExpression(type, left, "+", right);
 		}
 
 		public static ISqlExpression Add<T>(this Sql.ISqlExtensionBuilder builder, ISqlExpression left, ISqlExpression right)
@@ -84,7 +84,7 @@ namespace LinqToDB
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Sub(this Sql.ISqlExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
-			return new SqlBinaryExpression(type, left, "-", right, Precedence.Subtraction);
+			return new SqlBinaryExpression(type, left, "-", right);
 		}
 
 		public static ISqlExpression Sub<T>(this Sql.ISqlExtensionBuilder builder, ISqlExpression left, ISqlExpression right)
@@ -105,7 +105,7 @@ namespace LinqToDB
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Mul(this Sql.ISqlExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
-			return new SqlBinaryExpression(type, left, "*", right, Precedence.Multiplicative);
+			return new SqlBinaryExpression(type, left, "*", right);
 		}
 
 		public static ISqlExpression Mul<T>(this Sql.ISqlExtensionBuilder builder, ISqlExpression left, ISqlExpression right)
@@ -121,7 +121,7 @@ namespace LinqToDB
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Div(this Sql.ISqlExtensionBuilder builder, ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative);
+			return new SqlBinaryExpression(type, expr1, "/", expr2);
 		}
 
 		public static ISqlExpression Div<T>(this Sql.ISqlExtensionBuilder builder, ISqlExpression expr1, ISqlExpression expr2)
@@ -137,13 +137,13 @@ namespace LinqToDB
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression BitNot(this Sql.ISqlExtensionBuilder builder, ISqlExpression expr, Type type)
 		{
-			return new SqlUnaryExpression(type, expr, SqlUnaryOperation.BitwiseNegation, Precedence.Bitwise);
+			return new SqlUnaryExpression(type, expr, SqlUnaryOperation.BitwiseNegation);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Negate(this Sql.ISqlExtensionBuilder builder, ISqlExpression expr, Type type)
 		{
-			return new SqlUnaryExpression(type, expr, SqlUnaryOperation.Negation, Precedence.Unary);
+			return new SqlUnaryExpression(type, expr, SqlUnaryOperation.Negation);
 		}
 	}
 }

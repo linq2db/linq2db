@@ -354,15 +354,27 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			using var sb = Pools.StringBuilder.Allocate();
 
-			var current   = StringBuilder;
-			StringBuilder = sb.Value;
+			var current          = StringBuilder;
+			var exposedPrefix    = _exposedPrefix;
+			var templateArgument = _templateArgument;
+
+			StringBuilder     = sb.Value;
+			_templateArgument = true;
 
 			BuildExpression(precedence, expr);
 
-			StringBuilder = current;
+			StringBuilder     = current;
+			_exposedPrefix    = exposedPrefix;
+			_templateArgument = templateArgument;
 
 			return sb.Value.ToString();
 		}
+
+		/// <summary>
+		/// Set while a template placeholder argument renders: a negative literal there is left bare, because a
+		/// template may put the placeholder where only a literal is accepted (<c>INTERVAL {0} DAY</c>).
+		/// </summary>
+		bool _templateArgument;
 
 		protected string WithStringBuilder<TContext>(Action<TContext> func, TContext context)
 		{
@@ -2763,15 +2775,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.BetweenPredicate:
 				{
-					BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr1);
+					var between    = (SqlPredicate.Between)predicate;
+					var precedence = PrecedenceTable[SqlPrecedenceKeys.Between];
 
-					if (((SqlPredicate.Between)predicate).IsNot)
+					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: false, between.Expr1);
+
+					if (between.IsNot)
 						StringBuilder.Append(" NOT");
 
 					StringBuilder.Append(" BETWEEN ");
-					BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr2);
+					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: false, between.Expr2);
 					StringBuilder.Append(" AND ");
-					BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr3);
+					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: true, between.Expr3);
 
 					break;
 				}
@@ -2831,7 +2846,9 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					BuildExpression(GetPrecedence(p), p.Expr1);
+					// the predicate takes its expression's precedence, so it is no parent of its own: its placement among
+					// other predicates is decided where it is built
+					BuildExpression(Precedence.Unknown, p.Expr1);
 
 					break;
 				}
@@ -4198,17 +4215,52 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(format);
 			else
 			{
-				var values = new object[parameters.Count];
+				var values   = new object[parameters.Count];
+				var hasCasts = format.Contains("}::", StringComparison.Ordinal);
 
 				for (var i = 0; i < values.Length; i++)
 				{
 					var value = parameters[i];
 
-					values[i] = WithStringBuilderBuildExpression(precedence, value);
+					values[i] = hasCasts && format.Contains(string.Concat("{", i.ToString(CultureInfo.InvariantCulture), "}::"), StringComparison.Ordinal)
+						? WithStringBuilderBuildCastOperand(value)
+						: WithStringBuilderBuildExpression(precedence, value);
 				}
 
 				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
+		}
+
+		/// <summary>
+		/// Renders a template argument whose placeholder the template text puts under a postfix <c>::</c> cast, which
+		/// binds tighter than any operator: everything but a primary operand is bracketed, a negative literal and a
+		/// template included (a template may hide an operator, <c>{0} AT TIME ZONE 'UTC'</c>, declared primary).
+		/// </summary>
+		string WithStringBuilderBuildCastOperand(ISqlExpression expr)
+		{
+			using var sb = Pools.StringBuilder.Allocate();
+
+			var current          = StringBuilder;
+			var exposedPrefix    = _exposedPrefix;
+			var templateArgument = _templateArgument;
+
+			StringBuilder     = sb.Value;
+			_templateArgument = false;
+
+			if (UnwrapTransparent(expr) is SqlExpression or SqlFragment)
+			{
+				StringBuilder.Append('(');
+				BuildExpression(expr);
+				StringBuilder.Append(')');
+			}
+			else
+				BuildExpression(Precedence.Primary, expr);
+
+			StringBuilder     = current;
+			_exposedPrefix    = exposedPrefix;
+			_templateArgument = templateArgument;
+
+			return sb.Value.ToString();
 		}
 
 		static (string format, ISqlExpression[] values) OrderFormatValues(string format, ISqlExpression[] values)
@@ -4262,12 +4314,255 @@ namespace LinqToDB.Internal.SqlProvider
 
 		void BuildExpression(int parentPrecedence, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
-			var wrap = Wrap(GetPrecedence(expr), parentPrecedence);
-
-			if (wrap) StringBuilder.Append('(');
-			BuildExpression(expr, true, true, alias, ref addAlias);
-			if (wrap) StringBuilder.Append(')');
+			// a bare int parent is anonymous: no operator identity, so an equal-level operand is parenthesized
+			BuildOperand(PrecedenceTable.ForClass(parentPrecedence), null, rightOperand: true, expr, alias, ref addAlias);
 		}
+
+		/// <summary>
+		/// The lowest-binding prefix operator (unary or negative literal) exposed at the end of the last rendered
+		/// operand, or <see langword="null"/>: a left operand that ends in one may need parentheses although its
+		/// own level is higher than its parent's.
+		/// </summary>
+		SqlOperatorPrecedence? _exposedPrefix;
+
+		void BuildOperand(SqlOperatorPrecedence parent, string? parentKey, bool rightOperand, ISqlExpression expr, bool bothSides = false)
+		{
+			var dummy = false;
+			BuildOperand(parent, parentKey, rightOperand, expr, null, ref dummy, bothSides);
+		}
+
+		// bothSides: the operand sits between two operators of its parent (a middle item of a chain), so it is checked
+		// as a right and as a left operand
+		void BuildOperand(SqlOperatorPrecedence parent, string? parentKey, bool rightOperand, ISqlExpression expr, string? alias, ref bool addAlias, bool bothSides = false)
+		{
+			var (child, childKey) = ResolvePrecedence(expr);
+
+			var len = StringBuilder.Length;
+
+			// only the placeholder argument itself is a template argument, not the operands nested inside it
+			var templateArgument = _templateArgument;
+			_templateArgument    = false;
+
+			if (SqlPrecedenceTable.NeedsParentheses(child, childKey, parent, parentKey, rightOperand)
+				|| bothSides && SqlPrecedenceTable.NeedsParentheses(child, childKey, parent, parentKey, !rightOperand))
+			{
+				StringBuilder.Append('(');
+				BuildExpression(expr, true, true, alias, ref addAlias);
+				StringBuilder.Append(')');
+
+				_exposedPrefix    = null;
+				_templateArgument = templateArgument;
+				return;
+			}
+
+			_exposedPrefix = null;
+
+			BuildExpression(expr, true, true, alias, ref addAlias);
+
+			_templateArgument = templateArgument;
+
+			// only an operator chain can end in an exposed prefix; a function call or CASE closes its own arguments, a
+			// concatenation rendered as CONCAT(...) included
+			if (UnwrapTransparent(expr) is not (SqlBinaryExpression or SqlUnaryExpression or SqlConcatExpression)
+				|| UnwrapTransparent(expr) is SqlConcatExpression && ConcatStyle == ConcatBuildStyle.Function)
+			{
+				_exposedPrefix = null;
+			}
+
+			// a literal states its shape only in the text it renders: a leading minus, an operator chain, a :: cast
+			if (IsLiteral(expr))
+			{
+				var (literal, literalKey) = ClassifyLiteral(len, templateArgument);
+
+				if (string.Equals(literalKey, SqlPrecedenceKeys.NegativeLiteral, StringComparison.Ordinal))
+					_exposedPrefix = literal;
+
+				if (literalKey != null
+					&& (SqlPrecedenceTable.NeedsParentheses(literal, literalKey, parent, parentKey, rightOperand)
+						|| bothSides && SqlPrecedenceTable.NeedsParentheses(literal, literalKey, parent, parentKey, !rightOperand)))
+				{
+					WrapRendered(len);
+					return;
+				}
+			}
+
+			// an anonymous parent (a predicate, a template placeholder) does not say what follows its operand
+			if ((!rightOperand || bothSides || parentKey == null) && _exposedPrefix != null && PrecedenceTable.PrefixReaches(_exposedPrefix.Value, parent))
+				WrapRendered(len);
+		}
+
+		void WrapRendered(int start)
+		{
+			StringBuilder.Insert(start, '(').Append(')');
+			_exposedPrefix = null;
+		}
+
+		bool IsLiteral(ISqlExpression expr)
+		{
+			return UnwrapTransparent(expr) switch
+			{
+				SqlValue                                   => true,
+				SqlParameter { IsQueryParameter: false }   => true,
+				_                                          => false,
+			};
+		}
+
+		/// <summary>
+		/// Classifies the literal rendered from <paramref name="start"/> by its own text: a leading minus is a negative
+		/// literal, a top-level <c>||</c> or <c>+</c> between two quoted or function segments a concatenation chain,
+		/// a top-level <c>::</c> a postfix cast; anything else is primary (<see langword="null"/> key).
+		/// </summary>
+		(SqlOperatorPrecedence Precedence, string? Key) ClassifyLiteral(int start, bool templateArgument)
+		{
+			var sb = StringBuilder;
+
+			if (start >= sb.Length)
+				return (SqlOperatorPrecedence.Primary, null);
+
+			if (sb[start] == '-')
+			{
+				return templateArgument
+					? (SqlOperatorPrecedence.Primary, null)
+					: (PrecedenceTable[SqlPrecedenceKeys.NegativeLiteral], SqlPrecedenceKeys.NegativeLiteral);
+			}
+
+			var inQuotes      = false;
+			var depth         = 0;
+			var prevSegment   = false;
+			var hasConcat     = false;
+			var hasCast       = false;
+
+			for (var i = start; i < sb.Length; i++)
+			{
+				var c = sb[i];
+
+				if (inQuotes)
+				{
+					if (c == '\\' && LiteralBackslashEscapes)
+						i++;
+					else if (c == '\'')
+					{
+						if (i + 1 < sb.Length && sb[i + 1] == '\'')
+							i++;
+						else
+						{
+							inQuotes    = false;
+							prevSegment = true;
+						}
+					}
+
+					continue;
+				}
+
+				switch (c)
+				{
+					case '\'': inQuotes = true; break;
+					case '(' : depth++;         break;
+					case ')' :
+						depth--;
+						if (depth == 0)
+							prevSegment = true;
+						break;
+					case ':' when depth == 0 && i + 1 < sb.Length && sb[i + 1] == ':':
+						hasCast = true;
+						i++;
+						break;
+					case '|' when depth == 0 && prevSegment && i + 1 < sb.Length && sb[i + 1] == '|':
+					case '+' when depth == 0 && prevSegment:
+						hasConcat = true;
+						break;
+				}
+			}
+
+			if (hasConcat)
+				return (PrecedenceTable[SqlPrecedenceKeys.Concatenation], SqlPrecedenceKeys.Concatenation);
+
+			if (hasCast)
+				return (PrecedenceTable[SqlPrecedenceKeys.Cast], SqlPrecedenceKeys.Cast);
+
+			return (SqlOperatorPrecedence.Primary, null);
+		}
+
+		/// <summary>
+		/// Whether this dialect's string literals escape a quote with a backslash (<c>'it\'s'</c>), which the literal
+		/// classification must skip.
+		/// </summary>
+		protected virtual bool LiteralBackslashEscapes => false;
+
+		static ISqlExpression UnwrapTransparent(ISqlExpression expr)
+		{
+			while (true)
+			{
+				switch (expr)
+				{
+					case SqlNullabilityExpression nullability:
+						expr = nullability.SqlExpression;
+						continue;
+					case SqlInlinedBase inlined:
+						expr = inlined.InlinedValue;
+						continue;
+					// a cast marker over an inlined value renders the bare literal (BuildSqlParameterCastExpression)
+					case SqlParameterCastExpression { Parameter.IsQueryParameter: false } parameterCast:
+						expr = parameterCast.Parameter;
+						continue;
+					case SqlExpression { Parameters.Length: 1 } e when string.Equals(e.Expr, "{0}", StringComparison.Ordinal):
+						expr = e.Parameters[0];
+						continue;
+					case SqlFragment { Parameters.Length: 1 } f when string.Equals(f.Expr, "{0}", StringComparison.Ordinal):
+						expr = f.Parameters[0];
+						continue;
+					default:
+						return expr;
+				}
+			}
+		}
+
+		/// <summary>
+		/// This dialect's operator precedence. Override to derive a dialect table from <see cref="SqlPrecedenceTable.Default"/>.
+		/// </summary>
+		protected virtual SqlPrecedenceTable PrecedenceTable => SqlPrecedenceTable.Default;
+
+		/// <summary>
+		/// Precedence of <paramref name="expr"/> as an operand, and its operator key (<see langword="null"/> for a node
+		/// that is not an operator). Transparent wrappers are looked through; operators resolve through
+		/// <see cref="PrecedenceTable"/>, every other node through <see cref="GetPrecedence(ISqlExpression)"/> read as a
+		/// <see cref="Precedence"/> class.
+		/// </summary>
+		protected virtual (SqlOperatorPrecedence Precedence, string? Key) ResolvePrecedence(ISqlExpression expr)
+		{
+			expr = UnwrapTransparent(expr);
+
+			switch (expr)
+			{
+				case SqlBinaryExpression binary:
+					return (PrecedenceTable[binary.Operation], binary.Operation);
+
+				case SqlUnaryExpression unary:
+				{
+					var key = UnaryKey(unary.Operation);
+					return (PrecedenceTable[key], key);
+				}
+
+				case SqlConcatExpression:
+					return ConcatStyle == ConcatBuildStyle.Function
+						? (SqlOperatorPrecedence.Primary, null)
+						: (PrecedenceTable[SqlPrecedenceKeys.Concatenation], SqlPrecedenceKeys.Concatenation);
+
+				case SqlCastExpression:
+				case SqlParameterCastExpression:
+					return (PrecedenceTable[SqlPrecedenceKeys.Cast], SqlPrecedenceKeys.Cast);
+
+				default:
+					return (PrecedenceTable.ForClass(GetPrecedence(expr)), null);
+			}
+		}
+
+		static string UnaryKey(SqlUnaryOperation operation) => operation switch
+		{
+			SqlUnaryOperation.Negation        => SqlPrecedenceKeys.Negation,
+			SqlUnaryOperation.BitwiseNegation => SqlPrecedenceKeys.BitwiseNegation,
+			_                                 => throw new LinqToDBException($"Unsupported unary operation {operation}"),
+		};
 
 		protected StringBuilder BuildExpression(ISqlExpression expr)
 		{
@@ -4359,15 +4654,46 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				if (value.Value is int i && i == -1)
 				{
-					StringBuilder.Append('-');
-					BuildExpression(GetPrecedence(expr), expr.Expr2);
+					// rendered as a prefix minus, so it groups and parenthesizes like one
+					BuildPrefixOperand('-', SqlPrecedenceKeys.Negation, expr.Expr2);
 					return;
 				}
 			}
 
-			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			var (precedence, key) = ResolvePrecedence(expr);
+
+			BuildInfixExpression(expr.Expr1, op, expr.Expr2, precedence, key);
+		}
+
+		/// <summary>
+		/// Renders <c>left op right</c>, parenthesizing each operand against <paramref name="precedence"/> by its side.
+		/// For a provider that renders a non-operator node (a function) as an infix operator.
+		/// </summary>
+		protected void BuildInfixExpression(ISqlExpression left, string op, ISqlExpression right, SqlOperatorPrecedence precedence, string? key)
+		{
+			BuildOperand(precedence, key, rightOperand: false, left);
 			StringBuilder.Append(' ').Append(op).Append(' ');
-			BuildExpression(GetPrecedence(expr), expr.Expr2);
+			BuildOperand(precedence, key, rightOperand: true, right);
+		}
+
+		/// <summary>
+		/// Renders <paramref name="opText"/> followed by <paramref name="operand"/>: the operand is parenthesized when it
+		/// binds looser than the prefix operator or renders with a leading minus (<c>--</c> would start a comment).
+		/// </summary>
+		void BuildPrefixOperand(char opText, string key, ISqlExpression operand)
+		{
+			var precedence = PrecedenceTable[key];
+
+			StringBuilder.Append(opText);
+
+			var len = StringBuilder.Length;
+
+			BuildOperand(precedence, key, rightOperand: true, operand);
+
+			if (StringBuilder.Length > len && StringBuilder[len] == '-')
+				WrapRendered(len);
+
+			_exposedPrefix = precedence;
 		}
 
 		#endregion
@@ -4421,12 +4747,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 		void BuildSqlConcatOperatorChain(SqlConcatExpression element, string op)
 		{
-			var precedence = GetPrecedence(element);
+			var (precedence, key) = ResolvePrecedence(element);
+
 			for (var i = 0; i < element.Expressions.Length; i++)
 			{
 				if (i > 0)
 					StringBuilder.Append(' ').Append(op).Append(' ');
-				BuildExpression(precedence, element.Expressions[i]);
+				BuildOperand(precedence, key, rightOperand: i > 0, element.Expressions[i], bothSides: i > 0 && i < element.Expressions.Length - 1);
 			}
 		}
 
@@ -4461,8 +4788,7 @@ namespace LinqToDB.Internal.SqlProvider
 				_                                 => throw new LinqToDBException($"Unsupported unary operation {op}"),
 			};
 
-			StringBuilder.Append(opText);
-			BuildExpression(GetPrecedence(expr), expr.Expr);
+			BuildPrefixOperand(opText, UnaryKey(op), expr.Expr);
 		}
 
 		#endregion
@@ -4588,12 +4914,19 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region GetPrecedence
 
+		/// <summary>
+		/// Declared precedence of a non-operator node, read as a <see cref="Precedence"/> class by
+		/// <see cref="ResolvePrecedence"/>. Operator nodes resolve through <see cref="PrecedenceTable"/> instead.
+		/// </summary>
 		protected virtual int GetPrecedence(ISqlExpression expr)
 		{
 			return expr.Precedence;
 		}
 
-		protected static int GetPrecedence(ISqlPredicate predicate)
+		/// <summary>
+		/// Precedence of a predicate, read as a <see cref="Precedence"/> class.
+		/// </summary>
+		protected virtual int GetPrecedence(ISqlPredicate predicate)
 		{
 			return predicate.Precedence;
 		}

@@ -131,14 +131,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new LinqToDBException("Skip could not be applied with Take with hints");
 
 			if (sql.Select.SkipValue != null)
-				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));
+				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr));
 			else
 				sql.Select.Skip(expr);
 
 			if (sql.Select.TakeValue != null)
 			{
 				sql.Select.Take(
-					new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive),
+					new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr),
 					sql.Select.TakeHints);
 			}
 		}

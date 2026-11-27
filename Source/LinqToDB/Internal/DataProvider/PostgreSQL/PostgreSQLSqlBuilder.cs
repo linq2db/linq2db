@@ -457,35 +457,50 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			// `::` binds tighter than unary minus: -9223372036854775808::bigint is -(9223372036854775808::bigint)
-			var wrap = IsNegativeLiteral(value);
-
-			if (wrap) StringBuilder.Append('(');
+			// `::` binds tighter than every operator, unary minus and a negative literal included
 			BuildExpression(Precedence.Primary, value);
-			if (wrap) StringBuilder.Append(')');
 
 			StringBuilder.Append("::");
 			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
 		}
 
-		bool IsNegativeLiteral(ISqlExpression value)
-		{
-			var literal = value switch
-			{
-				SqlValue sqlValue                                  => sqlValue.Value,
-				SqlParameter { IsQueryParameter: false } parameter => parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues).ProviderValue,
-				_                                                  => null,
-			};
+		// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-PRECEDENCE: :: > prefix + - > ^ > * / % > + - >
+		// any other operator (|| # & | and prefix ~, one level, left to right) > BETWEEN IN LIKE > comparisons > IS
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable(Precedence.Comparison + 5);
 
-			return literal switch
-			{
-				sbyte v => v < 0,
-				short v => v < 0,
-				int   v => v < 0,
-				long  v => v < 0,
-				_       => false,
-			};
+		// before 9.5, IS [NOT] NULL / IS DISTINCT FROM bind tighter than any other operator, so `a | b IS NULL` reads
+		// `a | (b IS NULL)`; any other operator is parenthesized under every predicate there
+		// https://www.postgresql.org/docs/9.4/sql-syntax-lexical.html#SQL-PRECEDENCE
+		internal static SqlPrecedenceTable PrecedenceTable94 { get; } = CreatePrecedenceTable(Precedence.Comparison - 1);
+
+		static SqlPrecedenceTable CreatePrecedenceTable(int otherLevel)
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
+
+			var prefix = new SqlOperatorPrecedence(Precedence.Unary,          SqlAssociativity.Left, false, arithmetic);
+			var other  = new SqlOperatorPrecedence(otherLevel,                SqlAssociativity.Left, true,  arithmetic);
+			var match  = new SqlOperatorPrecedence(Precedence.Comparison + 2, SqlAssociativity.None, false, SqlPrecedenceTable.AllGroups);
+
+			return SqlPrecedenceTable.Default.With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix),
+				(SqlPrecedenceKeys.BitwiseNegation, other with { Associative = false }),
+				("*",                               new(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+				("/",                               new(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+				("%",                               new(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+				("+",                               new(Precedence.Additive,       SqlAssociativity.Left, false, arithmetic)),
+				("-",                               new(Precedence.Additive,       SqlAssociativity.Left, false, arithmetic)),
+				("&",                               other),
+				("|",                               other),
+				("#",                               other),
+				(SqlPrecedenceKeys.Concatenation,   other),
+				(SqlPrecedenceKeys.Between,         match),
+				(SqlPrecedenceKeys.Class(Precedence.Unary),       prefix),
+				(SqlPrecedenceKeys.Class(Precedence.Bitwise),     other with { Associative = false }),
+				(SqlPrecedenceKeys.Class(Precedence.Concatenate), other with { Associative = false }));
 		}
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
 
 		protected override void BuildSql()
 		{

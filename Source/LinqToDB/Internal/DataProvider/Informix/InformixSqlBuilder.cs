@@ -32,6 +32,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// prefix - > * / > + -; the place of || is not stated in the reference, so it stays unordered. Bitwise operators
+		// are functions.
+		static readonly SqlPrecedenceTable _precedenceTable = SqlPrecedenceTable.Default.WithOrderedArithmetic();
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
 			StringBuilder.Append("TRUNCATE TABLE ");

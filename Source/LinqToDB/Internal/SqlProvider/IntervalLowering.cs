@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -385,9 +386,18 @@ namespace LinqToDB.Internal.SqlProvider
 			// The enclosing unit is stated by the node, so there is no table here - and no assumption that it is
 			// the next coarser one, which is what makes microseconds-within-a-second expressible alongside
 			// microseconds-within-a-millisecond.
-			return factory.Cast(
-				TryGetWrap(unit, within, out var wrap) ? truncateRemainder(whole, wrap) : whole,
-				resultType);
+			if (TryGetWrap(unit, within, out var wrap))
+				return factory.Cast(truncateRemainder(whole, wrap), resultType);
+
+			// a division truncated by a cast to its integer type (SAP HANA, Informix) is cast to the result type once
+			if (whole is SqlCastExpression { IsMandatory: true } truncated
+				&& truncated.ToType.SystemType.IsIntegerType
+				&& resultType.SystemType.IsIntegerType)
+			{
+				return factory.Cast(truncated.Expression, resultType, true);
+			}
+
+			return factory.Cast(whole, resultType);
 		}
 	}
 }

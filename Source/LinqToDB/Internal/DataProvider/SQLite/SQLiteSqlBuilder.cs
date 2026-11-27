@@ -35,9 +35,28 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
-		// SQLite binds `||` tighter than `* / %` and looser than unary operators (https://www.sqlite.org/lang_expr.html#operators)
-		protected override int GetPrecedence(ISqlExpression expr)
-			=> expr is SqlConcatExpression ? Precedence.Multiplicative + 1 : base.GetPrecedence(expr);
+		// https://www.sqlite.org/lang_expr.html#operators: unary ~ + - > || > * / % > + - > & | << >> (one level) > comparisons
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
+
+		static SqlPrecedenceTable CreatePrecedenceTable()
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup;
+
+			var prefix  = new SqlOperatorPrecedence(Precedence.Unary,          SqlAssociativity.Left, false, arithmetic | SqlPrecedenceTable.PrefixGroup);
+			var bitwise = new SqlOperatorPrecedence(Precedence.Comparison + 5, SqlAssociativity.Left, true,  arithmetic);
+
+			return SqlPrecedenceTable.Default.With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.BitwiseNegation, prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix),
+				(SqlPrecedenceKeys.Concatenation,   new(Precedence.Multiplicative + 5, SqlAssociativity.Left, true, arithmetic)),
+				("&",                               bitwise),
+				("|",                               bitwise),
+				(SqlPrecedenceKeys.Class(Precedence.Unary),   prefix),
+				(SqlPrecedenceKeys.Class(Precedence.Bitwise), bitwise with { Associative = false }));
+		}
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
 
 		protected override string LimitFormat(SelectQuery selectQuery)
 		{

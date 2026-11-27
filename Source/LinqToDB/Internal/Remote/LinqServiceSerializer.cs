@@ -1051,7 +1051,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.Expr1);
 							Append(elem.Operation);
 							Append(elem.Expr2);
-							Append(elem.Precedence);
 
 							break;
 						}
@@ -1063,7 +1062,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.SystemType);
 							Append(elem.Expr);
 							Append((int)elem.Operation);
-							Append(elem.Precedence);
 
 							break;
 						}
@@ -2274,9 +2272,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var expr1      = Read<ISqlExpression>()!;
 							var operation  = ReadString()!;
 							var expr2      = Read<ISqlExpression>()!;
-							var precedence = ReadInt();
 
-							obj = new SqlBinaryExpression(systemType, expr1, operation, expr2, precedence);
+							obj = new SqlBinaryExpression(systemType, expr1, operation, expr2);
 
 							break;
 						}
@@ -2286,9 +2283,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var systemType = ReadType()!;
 						var expr       = Read<ISqlExpression>()!;
 						var operation  = (SqlUnaryOperation)ReadInt()!;
-						var precedence = ReadInt();
 
-						obj = new SqlUnaryExpression(systemType, expr, operation, precedence);
+						obj = new SqlUnaryExpression(systemType, expr, operation);
 
 						break;
 					}

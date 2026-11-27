@@ -8,16 +8,15 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlUnaryExpression : SqlExpressionBase
 	{
-		public SqlUnaryExpression(DbDataType dbDataType, ISqlExpression expr, SqlUnaryOperation operation, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
+		public SqlUnaryExpression(DbDataType dbDataType, ISqlExpression expr, SqlUnaryOperation operation)
 		{
 			Expr       = expr      ?? throw new ArgumentNullException(nameof(expr));
 			Operation  = operation;
 			Type       = dbDataType;
-			Precedence = precedence;
 		}
 
-		public SqlUnaryExpression(Type systemType, ISqlExpression expr, SqlUnaryOperation operation, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
-			: this(new DbDataType(systemType), expr, operation, precedence)
+		public SqlUnaryExpression(Type systemType, ISqlExpression expr, SqlUnaryOperation operation)
+			: this(new DbDataType(systemType), expr, operation)
 		{
 		}
 
@@ -38,7 +37,12 @@ namespace LinqToDB.Internal.SqlQuery
 		public DbDataType Type { get; }
 
 		public override Type SystemType => Type.SystemType;
-		public override int  Precedence { get; }
+
+		/// <summary>
+		/// The class of a prefix operator on the <see cref="LinqToDB.SqlQuery.Precedence"/> scale. Dialect precedence is
+		/// decided by the SQL builder's precedence table, not by this value.
+		/// </summary>
+		public override int  Precedence => LinqToDB.SqlQuery.Precedence.Unary;
 
 		int?                   _hashCode;
 

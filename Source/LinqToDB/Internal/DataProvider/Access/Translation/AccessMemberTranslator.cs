@@ -213,11 +213,10 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
-			// Access evaluates ^ before negation, * / and MOD, so an operand built from any of them needs its own parentheses
+			// rendered as the infix ^ by AccessSqlBuilderBase, which also groups its operands
 			protected virtual ISqlExpression Power(ISqlExpressionFactory factory, DbDataType type, ISqlExpression x, ISqlExpression y)
 			{
-				// a right-nested power is grouped by AccessSqlBuilderBase.BuildBinaryExpression, a negated one by BuildUnaryExpression
-				return factory.Binary(type, x, "^", y, LinqToDB.SqlQuery.Precedence.Unary + 1);
+				return factory.Function(type, "Power", x, y);
 			}
 
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)

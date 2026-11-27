@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					var expr2 = CastOperand(binary.Expr2);
 
 					if (!ReferenceEquals(expr1, binary.Expr1) || !ReferenceEquals(expr2, binary.Expr2))
-						return new SqlBinaryExpression(binary.Type, expr1, binary.Operation, expr2, binary.Precedence);
+						return new SqlBinaryExpression(binary.Type, expr1, binary.Operation, expr2);
 				}
 
 				return e;

@@ -19,11 +19,40 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		/// <summary>
 		/// <c>DIV</c>, because MySQL's <c>/</c> is a decimal division even between two integers.
 		/// </summary>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
+			return Factory.Expression(type, Precedence.Multiplicative, "{0} DIV {1}", dividend, divisor);
+		}
 
-			return Factory.Expression(longType, Precedence.Multiplicative, "{0} DIV {1}", value, Factory.Value(longType, divisor));
+		// MySQL computes ~ & | ^ as BIGINT UNSIGNED, so ~4 is 18446744073709551611 where the CLR operator gives -5;
+		// CAST(... AS SIGNED) reads the same 64 bits back as two's complement. The inner node is typed ulong, which
+		// is what MySQL returns, so it is not taken for a signed operator again.
+		static bool IsSignedInteger(Type? type)
+		{
+			return type?.ToUnderlying() is { } underlying
+				&& underlying.IsIntegerType
+				&& underlying.IsSignedNumberType;
+		}
+
+		ISqlExpression AsSigned(ISqlExpression unsigned, DbDataType type)
+		{
+			return Factory.Cast(unsigned, Factory.GetDbDataType(type.SystemType.ToUnderlying()).WithSystemType(type.SystemType), true);
+		}
+
+		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
+		{
+			if (element.Operation is "&" or "|" or "^" && IsSignedInteger(element.SystemType))
+				return AsSigned(new SqlBinaryExpression(typeof(ulong), element.Expr1, element.Operation, element.Expr2), element.Type);
+
+			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation && IsSignedInteger(element.SystemType))
+				return AsSigned(new SqlUnaryExpression(Factory.GetDbDataType(typeof(ulong)), element.Expr, element.Operation), element.Type);
+
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
 		/// <inheritdoc />
@@ -60,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			var longType = Factory.GetDbDataType(typeof(long));
 
-			// Through the truncating divide, for the reason TruncateDivide states above: MySQL's / is a decimal
+			// Through the truncating divide, for the reason IntegerDivide states above: MySQL's / is a decimal
 			// division even between two integers, so a tick count that is not a whole number of microseconds would
 			// reach INTERVAL as a fraction rather than truncating toward zero the way the rest of the lowering does.
 			var microseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond / 1000);
@@ -81,17 +110,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				return cast.Expression;
 
 			return base.ConvertConversion(cast);
-		}
-
-		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
-		{
-			return element switch
-			{
-				// | has lower priority than & in MySQL...
-				SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise
-					=> new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1),
-				_ => base.ConvertSqlBinaryExpression(element),
-			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)

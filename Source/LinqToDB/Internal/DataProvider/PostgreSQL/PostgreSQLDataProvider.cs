@@ -275,9 +275,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return Version >= PostgreSQLVersion.v12
-				? new PostgreSQL12SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags)
-				: new PostgreSQLSqlBuilder  (this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version switch
+			{
+				>= PostgreSQLVersion.v12                       => new PostgreSQL12SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				PostgreSQLVersion.v92 or PostgreSQLVersion.v93 => new PostgreSQL92SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				_                                              => new PostgreSQLSqlBuilder  (this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

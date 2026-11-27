@@ -511,6 +511,119 @@ namespace Tests.Linq
 			AssertQuery(moduloAsExponent);
 		}
 
+		// C# integer division truncates toward zero; a dialect whose / returns a decimal or a float must not hand back the
+		// fraction (rounded on read), and the quotient's text has no decimal places
+		[Test]
+		public void IntegerDivisionTruncates([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var positive = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID * 7 + 1) / 2));
+
+			AssertQuery(positive);
+
+			var negativeDividend = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID * -7 - 1) / 2));
+
+			AssertQuery(negativeDividend);
+
+			var negativeDivisor = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID * 7 + 1) / (p.ID - 100)));
+
+			AssertQuery(negativeDivisor);
+
+			var wide = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(((long)p.ID * 9 + 2) / 4));
+
+			AssertQuery(wide);
+
+			var unsigned = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(((uint)p.ID * 7 + 1) / 2));
+
+			AssertQuery(unsigned);
+
+			var unsignedWide = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(((ulong)p.ID * 9 + 2) / 4));
+
+			AssertQuery(unsignedWide);
+
+			var nullable = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(((int?)p.ID * 7 + 1) / 2));
+
+			AssertQuery(nullable);
+
+			var divisor = 4;
+
+			var parameterDivisor = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID * 9 + 2) / divisor));
+
+			AssertQuery(parameterDivisor);
+
+			var minusOne = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID * 7 + 1) / -1));
+
+			AssertQuery(minusOne);
+
+			// exact only when the dividend is even: a fractional quotient would make every row match
+			var inWhere = db.Types
+				.Where(p => (p.ID * 7 + 1) / 2 * 2 == p.ID * 7 + 1)
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID);
+
+			AssertQuery(inWhere);
+
+			var text = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(((p.ID * 7 + 1) / 2).ToString()));
+
+			AssertQuery(text);
+
+			// a division with a fractional operand stays fractional (within a relative delta: Sybase's decimal division
+			// is off in the last digits)
+			var fractionalDouble = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.ID / 2.0));
+
+			AssertQueryWithinDelta(fractionalDouble);
+
+			var fractionalDecimal = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((decimal)p.ID / 2));
+
+			AssertQueryWithinDelta(fractionalDecimal);
+		}
+
+		// TimeOfDay divides integer nanoseconds by 100 in a division typed as a float: no integer division, so the
+		// ClickHouse / stays / and gains no intDiv
+		[Test]
+		public void FractionalDivisionOfIntegerOperandsStaysDivision([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.DateTimeValue.TimeOfDay));
+
+			AssertQuery(query);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain("/ 100", Case.Sensitive, sql);
+			sql.ShouldNotContain("intDiv", Case.Insensitive, sql);
+		}
+
 		// Access evaluates ^ before every other arithmetic operator, negation included, so a product, a sum, a difference or
 		// a negation as its operand needs its own parentheses.
 		[Test]

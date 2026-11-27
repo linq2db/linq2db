@@ -110,17 +110,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// The elapsed interval, built to stand on its own wherever it is embedded.
+		/// The elapsed interval. As the right operand of <c>+</c> it keeps its brackets (<c>base + (end - start)</c>):
+		/// PostgreSQL has no operator adding one timestamp to another.
 		/// </summary>
-		/// <remarks>
-		/// Declared with no precedence, which the builder reads as "always parenthesise". A subtraction otherwise
-		/// binds tighter than an addition, so <c>base + end - start</c> would be emitted for
-		/// <c>base + (end - start)</c>: the same number, but a different grouping of types, and PostgreSQL has no
-		/// operator adding one timestamp to another.
-		/// </remarks>
 		ISqlExpression Elapsed(SqlIntervalDifferenceExpression element)
 		{
-			return new SqlBinaryExpression(IntervalType, AsTimestamp(element.End), "-", AsTimestamp(element.Start), Precedence.Unknown);
+			return new SqlBinaryExpression(IntervalType, AsTimestamp(element.End), "-", AsTimestamp(element.Start));
 		}
 
 		DbDataType IntervalType => Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
@@ -264,10 +259,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						if (fromType.SystemType.IsNullableType)
 							systemType = systemType.AsNullable();
 
-						// The operand's own precedence is carried over. Left unstated it defaults to Unknown, which the
-						// renderer reads as binding loosest: as a parent it wraps nothing, so a rebuilt remainder over a
-						// sum rendered as a % b + c - the sum losing the brackets it was written with.
-						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2, element.Precedence), QueryHelper.GetDbDataType(element, MappingSchema));
+						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2), QueryHelper.GetDbDataType(element, MappingSchema));
 						return Visit(Optimize(newExpr));
 					}
 
