@@ -1,4 +1,4 @@
-﻿module Tests.FSharp.Issue1813
+﻿module Tests.FSharp.LeftJoinTests
 
 open Tests.FSharp.Models
 
@@ -62,7 +62,7 @@ let private encodeJoins (result: (TradeValid * (NominationValid | null) * (Nomin
     |> Array.sort
     |> String.concat ","
 
-let Issue1813Test1(db : IDataContext) =
+let SelectManyWhereDefaultIfEmptyLeftJoin(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
 
@@ -83,7 +83,7 @@ let Issue1813Test1(db : IDataContext) =
     Assert.That(result[0], Is.EqualTo( (1, "name1", {Addresses.Id=1; Text="address"}) ) )
     Assert.That(result[1], Is.EqualTo( (2, "name2", null) ) )
 
-let Issue1813Test2(db : IDataContext) =
+let LeftOuterJoinIntoGroup(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
 
@@ -104,7 +104,7 @@ let Issue1813Test2(db : IDataContext) =
     Assert.That(result[0], Is.EqualTo( (1, "name1", [{Addresses.Id=1; Text="address"}]) ) )
     Assert.That(result[1], Is.EqualTo( (2, "name2", [null]) ) )
 
-let Issue1813Test3(db : IDataContext) =
+let LeftOuterJoinIntoGroupFlattened(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
 
@@ -126,7 +126,7 @@ let Issue1813Test3(db : IDataContext) =
     Assert.That(result[0], Is.EqualTo( (1, "name1", {Addresses.Id=1; Text="address"}) ) )
     Assert.That(result[1], Is.EqualTo( (2, "name2", null) ) )
 
-let Issue1813Test4(db : IDataContext) =
+let ChainedGroupJoinDeliveryThenReceipt(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 
@@ -154,10 +154,10 @@ let Issue1813Test4(db : IDataContext) =
     let result = query.Take(90) |> Seq.toArray
 
     // trade LEFT JOIN nom (Delivery) then LEFT JOIN nom (Receipt); x = Delivery match, y = Receipt match.
-    // Same result set as Test5 (join order does not change it): 6 rows. Compared order-tolerantly within a trade.
+    // Same result set as ChainedGroupJoinReceiptThenDelivery (join order does not change it): 6 rows. Compared order-tolerantly within a trade.
     Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
 
-let Issue1813Test5(db : IDataContext) =
+let ChainedGroupJoinReceiptThenDelivery(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 
@@ -196,7 +196,7 @@ let Issue1813Test5(db : IDataContext) =
     // comparison is order-tolerant within a trade (only tr.Id is ordered).
     Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
 
-let Issue1813Test6(db : IDataContext) =
+let LeftJoinExtensionThenGroupJoin(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 
@@ -232,11 +232,11 @@ let Issue1813Test6(db : IDataContext) =
 
     let result = query.Take(90) |> Seq.toArray
 
-    // Same shape as Test5 (Receipt LEFT JOIN via .LeftJoin, then Delivery groupJoin): x = Delivery match,
+    // Same shape as ChainedGroupJoinReceiptThenDelivery (Receipt LEFT JOIN via .LeftJoin, then Delivery groupJoin): x = Delivery match,
     // y = Receipt match. Correct result is 6 rows; encoded and sorted for order-tolerant comparison.
     Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
 
-let Issue1813Test7(db : IDataContext) =
+let ChainedLeftJoinExtensions(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 
@@ -281,7 +281,7 @@ let Issue1813Test7(db : IDataContext) =
 // Regression pin: a captured interface-typed *local* used inside an F# join predicate translates
 // correctly. Such a local is an ordinary closure capture rather than a SubstHelper free variable, so it
 // takes the closure path and not the quotation reduction.
-let Issue1813Test8(db : IDataContext) =
+let JoinPredicateCapturesInterfaceTypedLocal(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
 
@@ -306,7 +306,7 @@ let Issue1813Test8(db : IDataContext) =
 
 // Regression pin: the outer query range variable is a Nullable<int> projected from an IQueryable, so the
 // quotation reduction gets a SubstHelper free variable that is a value type rather than an entity.
-let Issue1813Test9(db : IDataContext) =
+let JoinPredicateOverNullableProjectedRangeVariable(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
 
@@ -333,7 +333,7 @@ let Issue1813Test9(db : IDataContext) =
 
 // Regression pin: the outer query range variable is a string projected from an IQueryable - a type no
 // placeholder instance can be built for, which is why the reduction substitutes marker calls.
-let Issue1813Test10(db : IDataContext) =
+let JoinPredicateOverStringProjectedRangeVariable(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
 
@@ -362,7 +362,7 @@ let Issue1813Test10(db : IDataContext) =
 // accumulated element from AnonymousObject`2 to `4, so a flatten that re-closes the outer element's own
 // generic definition over two arguments throws and silently leaves the un-flattened shape - which drops
 // unmatched rows on providers with LATERAL and does not translate at all on those without.
-let Issue1813Test11(db : IDataContext) =
+let ThreeChainedGroupJoinsKeepUnmatchedRows(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 
@@ -394,7 +394,7 @@ let Issue1813Test11(db : IDataContext) =
 
     // Third join deliberately does NOT match every trade: DealNumbers are 2,3,5,8 and trade ids are 1..4, so
     // trades 1 and 2 match (z = 2, 3) while trades 3 and 4 do not (z = 0). Under a correct LEFT JOIN that is
-    // Test4's 6 rows with a fourth field; if the third join degrades to INNER JOIN LATERAL, the two unmatched
+    // ChainedGroupJoinDeliveryThenReceipt's 6 rows with a fourth field; if the third join degrades to INNER JOIN LATERAL, the two unmatched
     // rows (3-0-0-0 and 4-3-4-0) disappear and only 4 rows come back.
     let actual =
         result
@@ -404,11 +404,11 @@ let Issue1813Test11(db : IDataContext) =
 
     Assert.That(actual, Is.EqualTo "1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3,3-0-0-0,4-3-4-0")
 
-// Test11's chain with the third groupJoin replaced by a plain inner `join`. The trailing join puts a further
+// ThreeChainedGroupJoinsKeepUnmatchedRows's chain with the third groupJoin replaced by a plain inner `join`. The trailing join puts a further
 // range variable in scope, so F# re-projects the accumulated element instead of passing it through, the
 // flatten declines the shape, and the second DefaultIfEmpty is emitted as an INNER JOIN - silently dropping
 // the rows it should have kept. Gated on #5794.
-let Issue5794Test(db : IDataContext) =
+let ChainedGroupJoinsFollowedByInnerJoin(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 
@@ -437,7 +437,7 @@ let Issue5794Test(db : IDataContext) =
     let result = query.Take(90) |> Seq.toArray
 
     // The trailing join is INNER, so only trades whose DealNumber matches a TradeValid.Id survive:
-    // DealNumbers 2 and 3 match ids 2 and 3; 5 and 8 match nothing. That filters Test11's six
+    // DealNumbers 2 and 3 match ids 2 and 3; 5 and 8 match nothing. That filters ThreeChainedGroupJoinsKeepUnmatchedRows's six
     // LEFT-join rows down to the four belonging to trades 1 and 2.
     let actual =
         result
@@ -447,12 +447,12 @@ let Issue5794Test(db : IDataContext) =
 
     Assert.That(actual, Is.EqualTo "1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3")
 
-// Test4's chain with the second groupJoin's INNER SEQUENCE correlated to the outer range variable
+// ChainedGroupJoinDeliveryThenReceipt's chain with the second groupJoin's INNER SEQUENCE correlated to the outer range variable
 // (`.Where(fun z -> z.Id > tr.Id)` reads tr). Queryable.GroupJoin's inner is a plain sequence with no
 // lambda slot to bind the outer element, so the flatten cannot express the shape: it hoists the group
 // join above the SelectMany while passing the inner sequence through unchanged, leaving a reference to
 // an element that is no longer in scope. Gated on #5790.
-let Issue5790Test(db : IDataContext) =
+let ChainedGroupJoinWithCorrelatedInnerSequence(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 
@@ -479,7 +479,7 @@ let Issue5790Test(db : IDataContext) =
 
     let result = query.Take(90) |> Seq.toArray
 
-    // Test4's six rows with the Receipt side additionally filtered by n_rec.Id > tr.Id, which drops
+    // ChainedGroupJoinDeliveryThenReceipt's six rows with the Receipt side additionally filtered by n_rec.Id > tr.Id, which drops
     // trade 2's N2 match (2 > 2 is false) and trade 4's N4 match (4 > 4 is false) - so the correlation
     // has to reach the SQL for the assertion to hold, and both joins still have to stay LEFT.
     Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-3,3-0-0,4-3-0")
@@ -488,10 +488,10 @@ let Issue5790Test(db : IDataContext) =
 // the parameterless one is named once here, in type position, where the resolution is unambiguous.
 type private VoidAction = System.Action
 
-// Issue5790Test is [ActiveIssue]-gated and so never runs, leaving the flatten's fail-loud refusal itself
+// ChainedGroupJoinWithCorrelatedInnerSequence is [ActiveIssue]-gated and so never runs, leaving the flatten's fail-loud refusal itself
 // unexecuted. This pins the refusal, so downgrading the invariant back to a silent decline is caught.
 // Delete together with the gate when #5790 is fixed.
-let Issue5790RefusalTest(db : IDataContext) =
+let ChainedGroupJoinWithCorrelatedInnerSequenceIsRefused(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
     use table2 = db.CreateLocalTable<NominationValid>()
 

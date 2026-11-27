@@ -1,4 +1,4 @@
-﻿module Tests.FSharp.Issue3357
+﻿module Tests.FSharp.ConcatTest
 
 open System
 open System.Linq
@@ -15,7 +15,7 @@ type Record2 = {
     Name: string
 }
 
-let Union1(db : IDataContext) =
+let ConcatTupleProjection(db : IDataContext) =
     let persons = db.GetTable<Person>()
     let query1 = query {
         for p in persons do
@@ -33,7 +33,7 @@ let Union1(db : IDataContext) =
     
     Assert.That(result[0], Is.EqualTo((1, "John")));
 
-let Union2(db : IDataContext) =
+let ConcatRecordProjection(db : IDataContext) =
     let persons = db.GetTable<Person>()
     let query1 = query {
         for p in persons do
@@ -51,7 +51,7 @@ let Union2(db : IDataContext) =
     
     Assert.That(result[0], Is.EqualTo {Id = 1 ; Name = "John" });
 
-let Union3(db : IDataContext) =
+let ConcatAnonymousRecordProjection(db : IDataContext) =
     let persons = db.GetTable<Person>()
     let query1 = query {
         for p in persons do

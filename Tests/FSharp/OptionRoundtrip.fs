@@ -1,11 +1,11 @@
-module Tests.FSharp.Issue4646
+module Tests.FSharp.OptionRoundtrip
 
 open LinqToDB
 open LinqToDB.Mapping
 open NUnit.Framework
 open Tests
 
-[<Table("Issue4646Table", IsColumnAttributeRequired = false)>]
+[<Table("OptionRoundtripTable", IsColumnAttributeRequired = false)>]
 type OptionRow =
     { [<PrimaryKey>] Id : int
       IntValue        : int option

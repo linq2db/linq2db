@@ -1,11 +1,11 @@
-﻿module Tests.FSharp.Issue3743
+﻿module Tests.FSharp.JoinTest
 
 open Tests.FSharp.Models
 
 open System.Linq
 open LinqToDB
 
-let Issue3743Test1(db : IDataContext, id: int) =
+let LeftJoinAfterJoinTupleResult(db : IDataContext, id: int) =
     let parents = db.GetTable<Parent>()
     let children = db.GetTable<Child>()
     let query =
@@ -26,7 +26,7 @@ let Issue3743Test1(db : IDataContext, id: int) =
     query.ToArray()
     |> ignore
 
-let Issue3743Test2(db : IDataContext, id: int) =
+let LeftJoinAfterJoinAnonymousResult(db : IDataContext, id: int) =
     let parents = db.GetTable<Parent>()
     let children = db.GetTable<Child>()
     let query =

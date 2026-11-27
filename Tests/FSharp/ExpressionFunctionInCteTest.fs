@@ -1,4 +1,4 @@
-﻿module Tests.FSharp.Issue5428
+﻿module Tests.FSharp.ExpressionFunctionInCteTest
 
 open System
 open System.Linq
@@ -15,7 +15,7 @@ open Tests
 // Scope the DateInterval.Contains mapping to a dedicated configuration rather than the global ""
 // config, so it stays local to this test's MappingSchema and doesn't leak into the process-wide registry.
 [<Literal>]
-let CONFIG = "Issue5428"
+let CONFIG = "DateIntervalContains"
 
 type Template =
     {

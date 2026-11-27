@@ -1,4 +1,4 @@
-﻿module Tests.FSharp.Issue2678
+﻿module Tests.FSharp.MappedPropertiesTest
 
 open LinqToDB
 open LinqToDB.Mapping

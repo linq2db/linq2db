@@ -5,24 +5,24 @@ Imports Tests.Model
 
 Public Module VBTests
 
-	<Table("activity649")>
-	Public Class Activity649
+	<Table("vb_activity")>
+	Public Class GroupByActivity
 		<Column, Identity, PrimaryKey> Property activityid As Integer
 		<Column, NotNull> Property personid As Integer
 		<Column, NotNull> Property added As Date
 
-		<Association(ThisKey:=NameOf(personid), OtherKey:=NameOf(Person649.personid), CanBeNull:=False)> Public Property Person As Person649
+		<Association(ThisKey:=NameOf(personid), OtherKey:=NameOf(GroupByActivityPerson.personid), CanBeNull:=False)> Public Property Person As GroupByActivityPerson
 	End Class
 
-	<Table("person649")>
-	Public Class Person649
+	<Table("vb_activity_person")>
+	Public Class GroupByActivityPerson
 		<Column, Identity, PrimaryKey> Property personid As Integer
 		<Column, NotNull> Property personname As String
-		<Association(ThisKey:=NameOf(personid), OtherKey:=NameOf(Activity649.personid), CanBeNull:=False)> Public Property Activties As List(Of Activity649)
+		<Association(ThisKey:=NameOf(personid), OtherKey:=NameOf(GroupByActivity.personid), CanBeNull:=False)> Public Property Activties As List(Of GroupByActivity)
 	End Class
 
-	Public Function Issue649Test1(ByVal db As IDataContext) As IEnumerable(Of Object)
-		Return (From p In db.GetTable(Of Activity649)
+	Public Function GroupByAnonymousKeyWithGroupMax(ByVal db As IDataContext) As IEnumerable(Of Object)
+		Return (From p In db.GetTable(Of GroupByActivity)
 				Where p.added >= New Date(2017, 1, 1)
 				Group By pp = New With {Key p.Person.personid, Key p.Person.personname} Into ppp = Group
 				Select New With
@@ -34,8 +34,8 @@ Public Module VBTests
 
 	End Function
 
-	Public Function Issue649Test2(ByVal db As IDataContext) As IEnumerable(Of Object)
-		Return (From p In db.GetTable(Of Activity649)
+	Public Function GroupByAnonymousKeyWithIntoMax(ByVal db As IDataContext) As IEnumerable(Of Object)
+		Return (From p In db.GetTable(Of GroupByActivity)
 				Where p.added >= New Date(2017, 1, 1)
 				Group By pp = New With {Key p.Person.personid, Key p.Person.personname} Into LastAdded = Max(p.added)
 				Select New With
@@ -47,8 +47,8 @@ Public Module VBTests
 
 	End Function
 
-	Public Function Issue649Test3(ByVal db As IDataContext) As IEnumerable(Of Object)
-		Return db.GetTable(Of Activity649).
+	Public Function GroupByAnonymousKeyMethodSyntax(ByVal db As IDataContext) As IEnumerable(Of Object)
+		Return db.GetTable(Of GroupByActivity).
 				Where(Function(f) f.added >= New Date(2017, 1, 1)).
 				GroupBy(Function(f) New With
 				{
@@ -63,7 +63,7 @@ Public Module VBTests
 
 	End Function
 
-	Public Function Issue2746Test(ByVal db As IDataContext, SelectedValue As String) As IEnumerable(Of GrandChild1)
+	Public Function StringToNullableIntCoercion(ByVal db As IDataContext, SelectedValue As String) As IEnumerable(Of GrandChild1)
 		Return db.GetTable(Of GrandChild1).
 			Where(Function(w) w.ChildID.HasValue AndAlso w.ChildID.Value = CType(SelectedValue, Integer)).
 			ToList

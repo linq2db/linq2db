@@ -1,6 +1,6 @@
-module Tests.FSharp.Issue5598
+module Tests.FSharp.UpdateTest
 
-open Tests.FSharp.Issue4132
+open Tests.FSharp.RecordSetterTest
 
 open LinqToDB
 open LinqToDB.Data
@@ -21,7 +21,7 @@ let private setClauseOf (updateSql : string) =
 // relies on SQLite's bracket identifier quoting. This lets the same scenario also run on YDB - the
 // provider that originally rejected the all-column UPDATE - as a data-correctness round-trip.
 let UpdateSetsOnlyChangedColumn (db : DataConnection) (assertSql : bool) =
-    use table = db.CreateLocalTable<Issue4132Table>()
+    use table = db.CreateLocalTable<RecordSetterTable>()
     table.Insert(fun () -> { Id = 1; Number = 5; Text = "before" }) |> ignore
 
     table.Update((fun row -> row.Id = 1), (fun row -> { row with Text = "after" })) |> ignore
@@ -35,7 +35,7 @@ let UpdateSetsOnlyChangedColumn (db : DataConnection) (assertSql : bool) =
         Assert.That(setClause, Does.Not.Contain "[Number]")
         Assert.That(setClause, Does.Not.Contain "[Id]")
 
-    let row = query { for r in db.GetTable<Issue4132Table>() do
+    let row = query { for r in db.GetTable<RecordSetterTable>() do
                       where (r.Id = 1)
                       exactlyOne }
     Assert.That(row.Text,   Is.EqualTo "after")
@@ -47,7 +47,7 @@ let UpdateSetsOnlyChangedColumn (db : DataConnection) (assertSql : bool) =
 // this path too. Locks in that the async update emits only the changed column (PK was rejected by YDB).
 let UpdateSetsOnlyChangedColumnAsync (db : DataConnection) (assertSql : bool) : System.Threading.Tasks.Task =
     task {
-        use table = db.CreateLocalTable<Issue4132Table>()
+        use table = db.CreateLocalTable<RecordSetterTable>()
         table.Insert(fun () -> { Id = 1; Number = 5; Text = "before" }) |> ignore
 
         let! _ = table.UpdateAsync((fun row -> row.Id = 1), (fun row -> { row with Text = "after" }))
@@ -59,7 +59,7 @@ let UpdateSetsOnlyChangedColumnAsync (db : DataConnection) (assertSql : bool) : 
             Assert.That(setClause, Does.Not.Contain "[Number]")
             Assert.That(setClause, Does.Not.Contain "[Id]")
 
-        let row = query { for r in db.GetTable<Issue4132Table>() do
+        let row = query { for r in db.GetTable<RecordSetterTable>() do
                           where (r.Id = 1)
                           exactlyOne }
         Assert.That(row.Text,   Is.EqualTo "after")
@@ -71,7 +71,7 @@ let UpdateSetsOnlyChangedColumnAsync (db : DataConnection) (assertSql : bool) : 
 // update with no Where. Exercises the RewriteUpdate(mc, false) branch the predicate tests don't reach.
 // The emitted UPDATE has no WHERE, so the SET-clause check relies on setClauseOf tolerating its absence.
 let UpdateSetsOnlyChangedColumnNoPredicate (db : DataConnection) (assertSql : bool) =
-    use table = db.CreateLocalTable<Issue4132Table>()
+    use table = db.CreateLocalTable<RecordSetterTable>()
     table.Insert(fun () -> { Id = 1; Number = 5; Text = "before" }) |> ignore
 
     table.Update(fun row -> { row with Text = "after" }) |> ignore
@@ -83,7 +83,7 @@ let UpdateSetsOnlyChangedColumnNoPredicate (db : DataConnection) (assertSql : bo
         Assert.That(setClause, Does.Not.Contain "[Number]")
         Assert.That(setClause, Does.Not.Contain "[Id]")
 
-    let row = query { for r in db.GetTable<Issue4132Table>() do
+    let row = query { for r in db.GetTable<RecordSetterTable>() do
                       where (r.Id = 1)
                       exactlyOne }
     Assert.That(row.Text,   Is.EqualTo "after")
@@ -94,7 +94,7 @@ let UpdateSetsOnlyChangedColumnNoPredicate (db : DataConnection) (assertSql : bo
 // must still be kept out of SET (YDB rejects assigning a PK column) by assigning only the non-PK columns
 // to their own values, rather than re-emitting the full all-column UPDATE.
 let UpdateNoOpExcludesPrimaryKey (db : DataConnection) (assertSql : bool) =
-    use table = db.CreateLocalTable<Issue4132Table>()
+    use table = db.CreateLocalTable<RecordSetterTable>()
     table.Insert(fun () -> { Id = 1; Number = 5; Text = "before" }) |> ignore
 
     table.Update((fun row -> row.Id = 1), (fun row -> { row with Id = row.Id })) |> ignore
@@ -106,7 +106,7 @@ let UpdateNoOpExcludesPrimaryKey (db : DataConnection) (assertSql : bool) =
         Assert.That(setClause, Does.Contain "[Number]")
         Assert.That(setClause, Does.Contain "[Text]")
 
-    let row = query { for r in db.GetTable<Issue4132Table>() do
+    let row = query { for r in db.GetTable<RecordSetterTable>() do
                       where (r.Id = 1)
                       exactlyOne }
     Assert.That(row.Text,   Is.EqualTo "before")

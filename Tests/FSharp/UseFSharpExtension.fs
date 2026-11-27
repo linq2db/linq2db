@@ -1,9 +1,9 @@
-module Tests.FSharp.Issue4851
+module Tests.FSharp.UseFSharpExtension
 
 open LinqToDB
 open LinqToDB.FSharp
 
-let Issue4851Test1() =
+let UseFSharpAsExtensionMethodCompiles() =
     let _ =
         (new DataOptions())
             .UseFSharp()

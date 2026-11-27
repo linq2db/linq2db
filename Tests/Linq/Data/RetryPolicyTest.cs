@@ -8,6 +8,7 @@ using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
@@ -257,13 +258,11 @@ namespace Tests.Data
 			public Task          ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())                   => throw new NotImplementedException("ExecuteAsync");
 		}
 
-		#region Issue 3431
-
 		// issue reproduced on Open for MySqlConnector
 		[ActiveIssue(3431, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Cannot Open when State is Connecting.",
 			Details = "the retry policy reopens a connection that is already opening - #3431's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
-		public void Issue3431Test1([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
+		public void RetryPolicyDoesNotReopenConnectionThatIsOpening([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var provider = DataConnection.GetDataProvider(context);
@@ -271,16 +270,16 @@ namespace Tests.Data
 			using var db = GetDataContext(
 				context,
 				o => o
-					.UseRetryPolicy(new Issue3431RetryPolicy())
+					.UseRetryPolicy(new RetryOnAnyExceptionPolicy())
 					.UseConnectionString(provider, "BAD" + connectionString));
 
 			db.Person.ToArray();
 		}
 
 		[ActiveIssue(3431, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Cannot Open when State is Connecting.",
-			Details = "as Issue3431Test1, through the async path.")]
+			Details = "as RetryPolicyDoesNotReopenConnectionThatIsOpening, through the async path.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
-		public async Task Issue3431Test2([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
+		public async Task RetryPolicyDoesNotReopenConnectionThatIsOpeningAsync([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var provider = DataConnection.GetDataProvider(context);
@@ -288,23 +287,21 @@ namespace Tests.Data
 			using var db = GetDataContext(
 				context,
 				o => o
-					.UseRetryPolicy(new Issue3431RetryPolicy())
+					.UseRetryPolicy(new RetryOnAnyExceptionPolicy())
 					.UseConnectionString(provider, "BAD" + connectionString));
 
 			await db.Person.ToArrayAsync();
 		}
 
-		sealed class Issue3431RetryPolicy : RetryPolicyBase
+		sealed class RetryOnAnyExceptionPolicy : RetryPolicyBase
 		{
-			public Issue3431RetryPolicy()
+			public RetryOnAnyExceptionPolicy()
 				: base(1, default, 1, 1, default)
 			{
 			}
 
 			protected override bool ShouldRetryOn(Exception exception) => true;
 		}
-
-		#endregion
 
 		sealed class TestDelayRetryPolicy(double expBase) : RetryPolicyBase(
 			10,
@@ -334,6 +331,67 @@ namespace Tests.Data
 				IRetryPolicy policy = new TestDelayRetryPolicy(1.0);
 				policy.Execute(() => throw new InvalidOperationException());
 			}, Throws.InstanceOf<InvalidOperationException>());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1174")]
+		public async Task ConcurrentAsyncSelectsWithRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		{
+			var dbFactory = RetryTestConnection.CreateFactory(context, 1, TimeSpan.FromSeconds(1), LinqToDB.Common.Configuration.RetryPolicy.DefaultRandomFactor, LinqToDB.Common.Configuration.RetryPolicy.DefaultExponentialBase, LinqToDB.Common.Configuration.RetryPolicy.DefaultCoefficient);
+
+			var users = new[]
+			{
+				new RetryUserRecord { Id = TestData.Guid1, Name = "User1" },
+				new RetryUserRecord { Id = TestData.Guid2, Name = "User2" }
+			};
+
+			// Ensures that concurrent async queries for multiple db instances are handled correctly
+			using (var db = dbFactory())
+			using (db.CreateLocalTable(users))
+			{
+				using var db1 = dbFactory();
+				using var db2 = dbFactory();
+				var user1Task = db1.Users.FirstAsync();
+				var user2Task = db2.Users.FirstAsync();
+
+				await Task.WhenAll(user1Task, user2Task);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(user1Task.Result, Is.Not.Null);
+					Assert.That(user2Task.Result, Is.Not.Null);
+				}
+			}
+		}
+
+		public class RetryTestConnection : DataConnection
+		{
+			public static Func<RetryTestConnection> CreateFactory(string configuration, int retryCount, TimeSpan delay, double randomFactor, double exponentialBase, TimeSpan coefficient)
+			{
+				return () =>
+				{
+					var db = new RetryTestConnection(new DataOptions().UseConfiguration(configuration).UseRetryPolicy(new SqlServerRetryPolicy(retryCount, delay, randomFactor, exponentialBase, coefficient, null)));
+					return db;
+				};
+			}
+			public ITable<RetryUserRecord> Users => this.GetTable<RetryUserRecord>();
+
+			public RetryTestConnection()
+			{
+			}
+
+			public RetryTestConnection(DataOptions options)
+				: base(options)
+			{
+			}
+
+			public RetryTestConnection(IDataProvider dataProvider, string connectionString) : base(new DataOptions().UseConnectionString(dataProvider, connectionString))
+			{
+			}
+		}
+
+		public class RetryUserRecord
+		{
+			[PrimaryKey, NotNull] public Guid Id { get; set; }
+			[Column, Nullable] public string? Name { get; set; }
 		}
 	}
 }
