@@ -715,7 +715,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#region Issue 1906
 		public class CtqResultModel
 		{
 			[Column, PrimaryKey, Identity]
@@ -758,8 +757,8 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 		}
 
-		[Test]
-		public void Issue1906Test([IncludeDataSources(TestProvName.AllAccess)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1906")]
+		public void LoadWithNestedInnerJoinInsideLeftJoin([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<CtqResultModel>())
@@ -772,9 +771,7 @@ namespace Tests.DataProvider
 					.ToList();
 			}
 		}
-		#endregion
 
-		#region Issue 3893
 		// use characters from https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
 		// Split three ways by what Access actually does with each identifier: a gate cannot target a ValueSource
 		// argument, and one gate over all 33 marked the 21 that work as failing.
@@ -826,51 +823,50 @@ namespace Tests.DataProvider
 		];
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
-		public void Issue3893Test([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiers))] string columName)
+		public void SpecialCharactersInColumnName([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiers))] string columName)
 		{
-			Issue3893TestCore(context, columName);
+			SpecialCharactersInColumnNameCore(context, columName);
 		}
 
 		[ActiveIssue(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'. LibRed raises an ArgumentException naming the column, except for the brackets, which its lexer refuses outright.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
-		public void Issue3893Test_Rejected([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejected))] string columName)
+		public void SpecialCharactersInColumnName_Rejected([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejected))] string columName)
 		{
-			Issue3893TestCore(context, columName);
+			SpecialCharactersInColumnNameCore(context, columName);
 		}
 
 		[ActiveIssue(3893, Configuration = TestProvName.AllAccessOdbc,
 			Details = "no-declaration: the two arms fail differently and neither can be targeted by argument: 'char ?' is rejected by name, while 'char {' is created and then read back under a different name, so it fails the assertion rather than throwing. OleDb accepts both, which is why this is scoped to the ODBC driver - both of them, Jet as well as ACE.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
-		public void Issue3893Test_RejectedByOdbc([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejectedByOdbc))] string columName)
+		public void SpecialCharactersInColumnName_RejectedByOdbc([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejectedByOdbc))] string columName)
 		{
-			Issue3893TestCore(context, columName);
+			SpecialCharactersInColumnNameCore(context, columName);
 		}
 
-		void Issue3893TestCore(string context, string columName)
+		void SpecialCharactersInColumnNameCore(string context, string columName)
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema())
-				.Entity<Issue3893Table>()
+				.Entity<SpecialCharColumnNameTable>()
 					.Property(x => x.Id)
 					.HasColumnName(columName)
 				.Build();
 
 			using var db = GetDataConnection(context, builder.MappingSchema);
 
-			using var tb = db.CreateLocalTable<Issue3893Table>();
+			using var tb = db.CreateLocalTable<SpecialCharColumnNameTable>();
 
 			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-			var table = schema.Tables.Single(t => t.TableName == nameof(Issue3893Table));
+			var table = schema.Tables.Single(t => t.TableName == nameof(SpecialCharColumnNameTable));
 			var column = table.Columns.Single();
 
 			Assert.That(column.ColumnName, Is.EqualTo(columName));
 		}
 
 		[Table]
-		sealed class Issue3893Table
+		sealed class SpecialCharColumnNameTable
 		{
 			public int Id { get; set; }
 		}
-		#endregion
 
 		#region Type Convert With Null
 
@@ -1034,6 +1030,68 @@ namespace Tests.DataProvider
 				.Select(r => r.Id)
 				.ToArray()
 				.ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.LINQPad/issues/10")]
+		public void AccessOleDbSchemaRepeatedCallKeepsConnectionUsable([IncludeDataSources(ProviderName.AccessAceOleDb)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+			using var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: cs), "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\issue_10_linqpad.accdb;"));
+			var schemaProvider = db.DataProvider.GetSchemaProvider();
+
+			// call twice to ensure connection is still in good shape after call
+			var schema = schemaProvider.GetSchema(db);
+			schema = schemaProvider.GetSchema(db);
+
+			// and query known table to be completely sure connection is not broken
+			db.Execute("SELECT * FROM CLONECODE");
+
+			// all returned primary keys are defined on system/access tables
+			Assert.That(schema.Tables.Any(t => t.Columns.Any(c => c.IsPrimaryKey)), Is.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.LINQPad/issues/10")]
+		public void AccessOdbcSchemaRepeatedCallKeepsConnectionUsable([IncludeDataSources(ProviderName.AccessAceOdbc)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+			using var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: cs), "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\issue_10_linqpad.accdb;"));
+			var schemaProvider = db.DataProvider.GetSchemaProvider();
+
+			// call twice to ensure connection is still in good shape after call
+			var schema = schemaProvider.GetSchema(db);
+			schema = schemaProvider.GetSchema(db);
+
+			// and query known table to be completely sure connection is not broken
+			db.Execute("SELECT * FROM CLONECODE");
+
+			// PKs not available from ODBC
+			// all returned primary keys are defined on system/access tables
+			// Assert.True(schema.Tables.Any(t => t.Columns.Any(c => c.IsPrimaryKey)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1164")]
+		public void AccessOleDbSchemaLoadsForUserDatabase([IncludeDataSources(TestProvName.AllAccessOleDb)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context).Replace("TestData", "issue_1164");
+
+			using var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: cs), cs));
+			var schemaProvider = db.DataProvider.GetSchemaProvider();
+
+			var schema = schemaProvider.GetSchema(db);
+
+			Assert.That(schema, Is.Not.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1164")]
+		public void AccessOdbcSchemaLoadsForUserDatabase([IncludeDataSources(TestProvName.AllAccessOdbc)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context).Replace("TestData.ODBC", "issue_1164");
+			using var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: cs), cs));
+			var schemaProvider = db.DataProvider.GetSchemaProvider();
+
+			var schema = schemaProvider.GetSchema(db);
+
+			Assert.That(schema, Is.Not.Null);
 		}
 	}
 }

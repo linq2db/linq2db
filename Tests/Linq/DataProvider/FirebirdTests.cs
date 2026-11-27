@@ -24,6 +24,7 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Linq.Helpers.FirebirdList;
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -502,7 +503,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		public class Issue76Entity
+		public class FirebirdFolderEntity
 		{
 			[Column] public long    Id          { get; set; }
 			[Column] public string? Caption     { get; set; }
@@ -511,23 +512,23 @@ namespace Tests.DataProvider
 			         public bool    HasChildren { get; set; }
 		}
 
-		[Test]
-		public void Issue76([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/76")]
+		public void QuotedIdentifiersWithCorrelatedAnyAndJoin([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Quote })))
-			using (db.CreateLocalTable<Issue76Entity>())
+			using (db.CreateLocalTable<FirebirdFolderEntity>())
 			{
-				var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
+				var folders = db.GetTable<FirebirdFolderEntity>().Select(f => new FirebirdFolderEntity()
 				{
 					Id          = f.Id,
 					Caption     = f.Caption,
 					ParentId    = f.ParentId,
-					HasChildren = db.GetTable<Issue76Entity>().Any(f2 => f2.ParentId == f.Id)
+					HasChildren = db.GetTable<FirebirdFolderEntity>().Any(f2 => f2.ParentId == f.Id)
 				});
 
 				folders =
 					from folder in folders
-					join folder2 in db.GetTable<Issue76Entity>() on folder.ParentId equals folder2.Id
+					join folder2 in db.GetTable<FirebirdFolderEntity>() on folder.ParentId equals folder2.Id
 					where folder2.Caption == "dewde"
 					select folder;
 
@@ -698,7 +699,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		#region issue 2445
 		[Table]
 		public class Card
 		{
@@ -730,8 +730,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void Issue2445Test(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2445")]
+		public void LoadWithExpressionMethodColumnTableAliasQuoting(
 			[IncludeDataSources(false, TestProvName.AllFirebird)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode)
 		{
@@ -751,7 +751,6 @@ namespace Tests.DataProvider
 				sql.ShouldContain("\"Client\" \"a_Owner\"");
 			}
 		}
-		#endregion
 
 		[Table]
 		public partial class TestFbTypesTable
@@ -1280,6 +1279,185 @@ namespace Tests.DataProvider
 			db.LastQuery
 				.ShouldNotBeNull()
 				.ShouldContain(inline ? "= ''''" : "@");
+		}
+
+		public class FbListPerson
+		{
+			public int CardTypeId { get; set; }
+			public string? CardNumber { get; set; }
+
+			[ExpressionMethod(nameof(Person_LicPlates), IsColumn = true)]
+			public string? Lics { get; set; }
+
+			public static Expression<Func<FbListPerson, IDataContext, string?>> Person_LicPlates()
+			{
+				return (person, db) => db.GetTable<FbListExternalId>()
+					.Where(x => x.CardTypeId == person.CardTypeId && x.CardNumber == person.CardNumber && x.TypeId == 2)
+					.Select(x => Sql.Ext.FbList(x.Id)).FirstOrDefault();
+			}
+		}
+
+		public class FbListExternalId
+		{
+			public int CardTypeId { get; set; }
+			public string CardNumber { get; set; } = null!;
+			public int TypeId { get; set; }
+			public string Id { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2562")]
+		public void ExpressionMethodColumnWithListAggregate([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<FbListPerson>())
+			using (db.CreateLocalTable<FbListExternalId>())
+			{
+				var actual = table.ToArray();
+
+				var expected = db.GetTable<FbListPerson>().Select(person => new FbListPerson()
+				{
+					CardNumber = person.CardNumber,
+					CardTypeId = person.CardTypeId,
+					Lics = db.GetTable<FbListExternalId>()
+						.Where(x => x.CardTypeId == person.CardTypeId && x.CardNumber == person.CardNumber &&
+						            x.TypeId == 2)
+						.Select(x => Sql.Ext.FbList(x.Id)).FirstOrDefault()
+				}).ToArray();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/464")]
+		public void BulkCopyCustomFieldType([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			var schema = new MappingSchema();
+
+			schema.SetDataType(typeof(CustomIntWrapper), DataType.Int32);
+
+			schema.SetConvertExpression<CustomIntWrapper,   int>          (x => x.Value);
+			schema.SetConvertExpression<int,     CustomIntWrapper>        (x => new CustomIntWrapper { Value = x });
+			schema.SetConvertExpression<long,    CustomIntWrapper>        (x => new CustomIntWrapper { Value = (int)x }); //SQLite
+			schema.SetConvertExpression<string,  CustomIntWrapper>        (x => new CustomIntWrapper { Value = int.Parse(x, CultureInfo.InvariantCulture) }); //ClickHouse.MySql
+			schema.SetConvertExpression<decimal, CustomIntWrapper>        (x => new CustomIntWrapper { Value = (int)x }); //Oracle
+			schema.SetConvertExpression<CustomIntWrapper,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
+
+			new FluentMappingBuilder(schema)
+				  .Entity<BulkCopyCustomTypeEntity>()
+				  .HasTableName("BulkCopyCustomTypeEntity")
+				  .HasColumn(x => x.Id)
+				  .HasColumn(x => x.Value)
+				  .Build();
+
+			using var db = new DataConnection(new DataOptions().UseConfiguration(context).UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto }));
+			db.AddMappingSchema(schema);
+			try
+			{
+				var temptable = db.CreateTable<BulkCopyCustomTypeEntity>();
+
+				var data = new[]
+					{
+						new BulkCopyCustomTypeEntity {Id = 1, Value = new CustomIntWrapper {Value = 1}},
+						new BulkCopyCustomTypeEntity {Id = 2, Value = new CustomIntWrapper {Value = 2}},
+						new BulkCopyCustomTypeEntity {Id = 3, Value = new CustomIntWrapper {Value = 3}}
+					};
+
+				temptable.BulkCopy(GetDefaultBulkCopyOptions(context), data);
+
+				AreEqual(data, temptable.ToList());
+			}
+			finally
+			{
+				db.DropTable<BulkCopyCustomTypeEntity>();
+			}
+		}
+
+		public class BulkCopyCustomTypeEntity
+		{
+			public int    Id    { get; set; }
+			public CustomIntWrapper? Value { get; set; }
+
+			public override bool Equals(object? obj)
+			{
+				return obj is BulkCopyCustomTypeEntity e
+					&& Id == e.Id
+					&& Value!.Value == Id;
+			}
+
+			public override int GetHashCode()
+			{
+				return Id;
+			}
+		}
+
+		public class CustomIntWrapper
+		{
+			public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2823")]
+		public void GuidColumnsDdlAndRoundTrip([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool inlineParameters)
+		{
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<FirebirdGuidColumns>();
+			Assert.That(db.LastQuery!, Does.Contain("\"String\"   CHAR(38)"));
+			Assert.That(db.LastQuery!, Does.Contain("\"StringN\"  CHAR(38)"));
+
+			if (context.IsAnyOf(TestProvName.AllFirebirdLess4))
+			{
+				Assert.That(db.LastQuery!, Does.Contain("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
+				Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
+				Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
+				Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
+			}
+			else
+			{
+				Assert.That(db.LastQuery!, Does.Contain("\"Default\"  BINARY(16)"));
+				Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   BINARY(16)"));
+				Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" BINARY(16)"));
+				Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  BINARY(16)"));
+			}
+
+			db.InlineParameters = inlineParameters;
+
+			table.Insert(() => new FirebirdGuidColumns
+			{
+				Default = TestData.Guid1,
+				Binary = TestData.Guid2,
+				String = TestData.Guid3,
+				DefaultN = TestData.Guid4,
+				BinaryN = TestData.Guid5,
+				StringN = TestData.Guid6,
+			});
+
+			var data = table.ToArray();
+			Assert.That(data, Has.Length.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(data[0].Default, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[0].Binary, Is.EqualTo(TestData.Guid2));
+				Assert.That(data[0].String, Is.EqualTo(TestData.Guid3));
+				Assert.That(data[0].DefaultN, Is.EqualTo(TestData.Guid4));
+				Assert.That(data[0].BinaryN, Is.EqualTo(TestData.Guid5));
+				Assert.That(data[0].StringN, Is.EqualTo(TestData.Guid6));
+
+				Assert.That(table.Where(x => x.Default == TestData.Guid1).Count(), Is.EqualTo(1));
+				Assert.That(table.Where(x => x.Binary == TestData.Guid2).Count(), Is.EqualTo(1));
+				Assert.That(table.Where(x => x.String == TestData.Guid3).Count(), Is.EqualTo(1));
+				Assert.That(table.Where(x => x.DefaultN == TestData.Guid4).Count(), Is.EqualTo(1));
+				Assert.That(table.Where(x => x.BinaryN == TestData.Guid5).Count(), Is.EqualTo(1));
+				Assert.That(table.Where(x => x.StringN == TestData.Guid6).Count(), Is.EqualTo(1));
+			}
+		}
+
+		[Table]
+		sealed class FirebirdGuidColumns
+		{
+			[Column                           ] public Guid Default   { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid Binary    { get; set; }
+			[Column(DataType = DataType.Char) ] public Guid String    { get; set; }
+
+			[Column                           ] public Guid? DefaultN { get; set; }
+			[Column(DataType = DataType.Guid) ] public Guid? BinaryN  { get; set; }
+			[Column(DataType = DataType.NChar)] public Guid? StringN  { get; set; }
 		}
 	}
 

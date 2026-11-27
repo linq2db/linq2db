@@ -1246,7 +1246,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		public partial class Issue3834Table
+		public partial class OutputColumnRenamedTable
 		{
 			[Column("Id"     , IsPrimaryKey = true )] public int       Id         { get; set; }
 			[Column("Nesto"  , CanBeNull    = false)] public string    Nesto      { get; set; } = null!;
@@ -1256,13 +1256,13 @@ namespace Tests.xUpdate
 			[Column("Co2aend")                      ] public string?   Co2Aend    { get; set; }
 		}
 
-		[Test]
-		public void Issue3834([IncludeDataSources(true, FeatureInsertOutputSingle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3834")]
+		public void InsertWithOutputColumnNameCaseDiffersFromMember([IncludeDataSources(true, FeatureInsertOutputSingle)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue3834Table>();
+			using var table = db.CreateLocalTable<OutputColumnRenamedTable>();
 
-			var what = new Issue3834Table()
+			var what = new OutputColumnRenamedTable()
 			{
 				Id       = 123,
 				Co2Aend  = "What",
@@ -1284,10 +1284,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		#region Issue 3581
-
 		[Table]
-		sealed class Issue3581Table
+		sealed class OutputComplexColumnTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column ]public string? Name { get; set; }
@@ -1304,12 +1302,12 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3581")]
-		public void Issue3581Test([IncludeDataSources(true, FeatureInsertOutputSingle)] string context)
+		public void InsertWithOutputComplexColumnMapping([IncludeDataSources(true, FeatureInsertOutputSingle)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue3581Table>();
+			using var table = db.CreateLocalTable<OutputComplexColumnTable>();
 
-			var row = new Issue3581Table {Id = 1, Name = "John Doe", ExternalId = new ExternalId() { Id = "1", Source = "unknown" } };
+			var row = new OutputComplexColumnTable {Id = 1, Name = "John Doe", ExternalId = new ExternalId() { Id = "1", Source = "unknown" } };
 			var created = table.InsertWithOutput(row);
 
 			Assert.That(created, Is.Not.Null);
@@ -1322,6 +1320,5 @@ namespace Tests.xUpdate
 				Assert.That(created.ExternalId.Source, Is.EqualTo(row.ExternalId.Source));
 			}
 		}
-		#endregion
 	}
 }

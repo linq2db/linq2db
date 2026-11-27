@@ -266,7 +266,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InheritanceMappingIssueTest([DataSources] string context)
+		public void InheritanceMappingWithComplexColumnFilter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -290,8 +290,8 @@ namespace Tests.Linq
 		public class MyChild11 : MyChildBase_11_21;
 		public class MyChild21 : MyChildBase_11_21;
 
-		[Test]
-		public void InheritanceMappingIssue106Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/106")]
+		public void SelectIntermediateTypeReturnsOnlyMappedDescendants([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var childIDs = db.GetTable<MyChildBase_11_21>().AsEnumerable()
@@ -611,8 +611,6 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		#region issue 2429
-
 		public abstract class Root
 		{
 			public abstract int Value { get; set; }
@@ -669,8 +667,8 @@ namespace Tests.Linq
 			public override int GetValue() => BaseValue * -1;
 		}
 
-		[Test]
-		public void Issue2429PropertiesTest1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2429")]
+		public void ExpressionMethodColumnPropertyOnBaseTable([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(BaseTable.Data))
@@ -691,8 +689,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue2429MethodsTest1([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2429")]
+		public void ExpressionMethodMethodOnBaseTable([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(BaseTable.Data))
@@ -715,8 +713,8 @@ namespace Tests.Linq
 
 		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
 			Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?) - the overridden column property #2429 describes. That issue is closed; this shape is the residue.")]
-		[Test]
-		public void Issue2429PropertiesTest2([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2429")]
+		public void ExpressionMethodColumnPropertyOverriddenInDerivedTable([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(BaseTable2.Data))
@@ -736,9 +734,9 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
-			Details = "as Issue2429PropertiesTest2, through the method form.")]
-		[Test]
-		public void Issue2429MethodsTest2([DataSources] string context)
+			Details = "as ExpressionMethodColumnPropertyOverriddenInDerivedTable, through the method form.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2429")]
+		public void ExpressionMethodMethodOverriddenInDerivedTable([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(BaseTable2.Data))
@@ -756,26 +754,23 @@ namespace Tests.Linq
 				}
 			}
 		}
-		#endregion
 
-		#region issue4280
-
-		[InheritanceMapping(Code = "DISPLAY", Type = typeof(Issue4280T1))]
-		[InheritanceMapping(Code = "TV", Type = typeof(Issue4280T2))]
-		[Table("Issue4280")]
-		public abstract class Issue4280Base
+		[InheritanceMapping(Code = "DISPLAY", Type = typeof(DisplayDevice))]
+		[InheritanceMapping(Code = "TV", Type = typeof(TvDevice))]
+		[Table("DeviceInheritance")]
+		public abstract class DeviceBase
 		{
 			[PrimaryKey                    ] public          int     Id           { get; set; }
 			[Column                        ] public          string? SerialNumber { get; set; }
 			[Column(IsDiscriminator = true)] public abstract string  DeviceType   { get; set; }
 		}
 
-		public class Issue4280T1 : Issue4280Base
+		public class DisplayDevice : DeviceBase
 		{
 			public override string DeviceType { get; set; } = "DISPLAY";
 		}
 
-		public class Issue4280T2 : Issue4280Base
+		public class TvDevice : DeviceBase
 		{
 			public override string DeviceType { get; set; } = "TV";
 
@@ -784,57 +779,57 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
-		public void TestIssue4280AsBase([DataSources] string context)
+		public void OverriddenDiscriminatorInsertUpdateAsBase([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4280Base>();
+			using var tb = db.CreateLocalTable<DeviceBase>();
 
-			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
-			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+			var displayDevice = new DisplayDevice { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new TvDevice { Id = 2, SerialNumber = "TV00001", Location = "Something" };
 
-			db.Insert<Issue4280Base>(tvDevice);
-			db.Insert<Issue4280Base>(displayDevice);
+			db.Insert<DeviceBase>(tvDevice);
+			db.Insert<DeviceBase>(displayDevice);
 
 			var data = tb.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
-				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+				Assert.That(data[0], Is.InstanceOf<DisplayDevice>());
+				Assert.That(data[1], Is.InstanceOf<TvDevice>());
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
-				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
+				Assert.That(((TvDevice)data[1]).Location, Is.EqualTo("Something"));
 			}
 
 			displayDevice.SerialNumber = "Disp00002";
 			tvDevice.SerialNumber      = "TV00002";
 			tvDevice.Location          = "Anything";
 
-			db.Update<Issue4280Base>(tvDevice);
-			db.Update<Issue4280Base>(displayDevice);
+			db.Update<DeviceBase>(tvDevice);
+			db.Update<DeviceBase>(displayDevice);
 
 			data = tb.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
-				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+				Assert.That(data[0], Is.InstanceOf<DisplayDevice>());
+				Assert.That(data[1], Is.InstanceOf<TvDevice>());
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
-				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
+				Assert.That(((TvDevice)data[1]).Location, Is.EqualTo("Anything"));
 			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
-		public void TestIssue4280AsIs([DataSources] string context)
+		public void OverriddenDiscriminatorInsertUpdateAsDerived([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4280Base>();
+			using var tb = db.CreateLocalTable<DeviceBase>();
 
-			var displayDevice = new Issue4280T1 { Id = 1, SerialNumber = "Disp00001" };
-			var tvDevice      = new Issue4280T2 { Id = 2, SerialNumber = "TV00001", Location = "Something" };
+			var displayDevice = new DisplayDevice { Id = 1, SerialNumber = "Disp00001" };
+			var tvDevice      = new TvDevice { Id = 2, SerialNumber = "TV00001", Location = "Something" };
 
 			db.Insert(tvDevice);
 			db.Insert(displayDevice);
@@ -844,11 +839,11 @@ namespace Tests.Linq
 			Assert.That(data, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
-				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+				Assert.That(data[0], Is.InstanceOf<DisplayDevice>());
+				Assert.That(data[1], Is.InstanceOf<TvDevice>());
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
-				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
+				Assert.That(((TvDevice)data[1]).Location, Is.EqualTo("Something"));
 			}
 
 			displayDevice.SerialNumber = "Disp00002";
@@ -863,16 +858,14 @@ namespace Tests.Linq
 			Assert.That(data, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
-				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
+				Assert.That(data[0], Is.InstanceOf<DisplayDevice>());
+				Assert.That(data[1], Is.InstanceOf<TvDevice>());
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
-				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
+				Assert.That(((TvDevice)data[1]).Location, Is.EqualTo("Anything"));
 			}
 		}
-		#endregion
 
-		#region issue 3891
 		public class Name
 		{
 			public string? First { get; set; }
@@ -926,7 +919,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
-		public void Issue3891AttributesMapping([InsertOrUpdateDataSources] string context)
+		public void InsertUpdateInheritedWithNestedColumnAttributes([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Base>();
@@ -973,7 +966,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
-		public void Issue3891FluentMapping([InsertOrUpdateDataSources] string context)
+		public void InsertUpdateInheritedWithNestedColumnFluentMapping([InsertOrUpdateDataSources] string context)
 		{
 			var ms = new FluentMappingBuilder()
 				.Entity<Base2>()
@@ -1031,7 +1024,6 @@ namespace Tests.Linq
 				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
 			}
 		}
-		#endregion
 
 		#region Calculated column on inheritance subtype
 		public class CalcSubtypeName
@@ -1128,32 +1120,31 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		#region Issue 4666
-		public enum Issue4666EntityType { None, Type1, Type2 }
+		public enum TphMergeEntityType { None, Type1, Type2 }
 
-		[InheritanceMapping(Code = Issue4666EntityType.None, Type = typeof(Issue4666BaseEntity))]
-		[InheritanceMapping(Code = Issue4666EntityType.Type1, Type = typeof(Issue4666Type1Entity))]
-		[InheritanceMapping(Code = Issue4666EntityType.Type2, Type = typeof(Issue4666Type2Entity))]
+		[InheritanceMapping(Code = TphMergeEntityType.None, Type = typeof(TphMergeBaseEntity))]
+		[InheritanceMapping(Code = TphMergeEntityType.Type1, Type = typeof(TphMergeType1Entity))]
+		[InheritanceMapping(Code = TphMergeEntityType.Type2, Type = typeof(TphMergeType2Entity))]
 		[Table]
-		public class Issue4666BaseEntity
+		public class TphMergeBaseEntity
 		{
 			[Column] public int Id { get; set; }
 			[Column] public string? Description { get; set; }
-			[Column(IsDiscriminator = true)] public Issue4666EntityType Type { get; set; }
+			[Column(IsDiscriminator = true)] public TphMergeEntityType Type { get; set; }
 		}
 
-		public class Issue4666Type1Entity : Issue4666BaseEntity
+		public class TphMergeType1Entity : TphMergeBaseEntity
 		{
 			[Column] public string? Type1EntityProp { get; set; }
 
-			public static Issue4666Type1Entity[] Data =
+			public static TphMergeType1Entity[] Data =
 			[
-				new Issue4666Type1Entity() { Id = 1, Description = "Test1", Type1EntityProp = "Prop1" },
-				new Issue4666Type1Entity() { Id = 2, Description = "Test2", Type1EntityProp = "Prop2" }
+				new TphMergeType1Entity() { Id = 1, Description = "Test1", Type1EntityProp = "Prop1" },
+				new TphMergeType1Entity() { Id = 2, Description = "Test2", Type1EntityProp = "Prop2" }
 			];
 		}
 
-		public class Issue4666Type2Entity : Issue4666BaseEntity
+		public class TphMergeType2Entity : TphMergeBaseEntity
 		{
 			[Column] public string? Type2EntityProp { get; set; }
 		}
@@ -1162,11 +1153,11 @@ namespace Tests.Linq
 		[ActiveIssue(4666, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Member 'System.String Type1EntityProp' not found in type",
 			Details = "merging into a TPH table cannot resolve the derived member - #4666's subject. The fragment stops before the type name.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
-		public void Issue4666Test([MergeDataContextSource] string context)
+		public void MergeIntoTphDerivedTable([MergeDataContextSource] string context)
 		{
 			using var db = GetDataContext(context);
-			using var destination = db.CreateLocalTable<Issue4666Type1Entity>();
-			using var source = db.CreateLocalTable("Issue4666Temp", Issue4666Type1Entity.Data);
+			using var destination = db.CreateLocalTable<TphMergeType1Entity>();
+			using var source = db.CreateLocalTable("TphMergeSourceTemp", TphMergeType1Entity.Data);
 
 			destination
 				.Merge()
@@ -1174,11 +1165,10 @@ namespace Tests.Linq
 				.On((target, source) => target.Id == source.Id)
 				.InsertWhenNotMatched()
 				.UpdateWhenMatched()
-				.DeleteWhenNotMatchedBySourceAnd(i => i.Type == Issue4666EntityType.Type1)
+				.DeleteWhenNotMatchedBySourceAnd(i => i.Type == TphMergeEntityType.Type1)
 				.Merge();
 
 		}
-		#endregion
 
 		#region Discriminator Filtering
 		[Table("InheritanceFilter")]
@@ -1355,7 +1345,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
-			ErrorMessage = "Inheritance mapping is not defined for discriminator value '2'",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value",
 			Details = "no-issue: Partial mapping is not supported for now")]
 		[Test]
 		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)
@@ -1401,7 +1391,7 @@ namespace Tests.Linq
 			ErrorMessage = "Inheritance mapping is not defined for discriminator value '0'",
 			Details = "no-issue: ClickHouse fails a stage earlier and in kind - linq2db refuses the mapping rather than the server refusing the row.")]
 		[Test]
-		public void TestInsertIssue1([DataSources] string context)
+		public void InsertWithoutDiscriminatorThroughBaseTable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _ = db.CreateLocalTable<BaseClass>();
@@ -1428,7 +1418,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configurations = [TestProvName.AllMariaDB, TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllYdb],
 			Details = "no-declaration: these four reject the NULL discriminator at the server before the assertion is reached, and each words it differently.")]
 		[Test]
-		public void TestInsertIssue2([DataSources] string context)
+		public void InsertWithoutDiscriminatorThroughDerivedTable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _ = db.CreateLocalTable<BaseClass>();
@@ -1673,5 +1663,459 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Table, InheritanceMapping(Code = OfTypeBdaTask.Code, Type = typeof(OfTypeBdaTask))]
+		class OfTypeTaskBase
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public string? TargetName { get; set; }
+		}
+
+		[Table("OfTypeTaskBase")]
+		sealed class OfTypeTaskTable
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public string? TargetName { get; set; }
+
+			[Column]
+			public string? BdaValue { get; set; }
+		}
+
+		[Table("OfTypeTaskBase")]
+		sealed class OfTypeBdaTask : OfTypeTaskBase
+		{
+			public const string Code = "bda.Requests";
+
+			[Column]
+			public string? BdaValue { get; set; }
+		}
+
+		sealed class SelectAllAndExpand<T>
+		{
+			public T Instance { get; set; } = default!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1046")]
+		public void OfTypeProjectionIntoGenericWrapper([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<OfTypeTaskTable>())
+			{
+				db.Insert(new OfTypeBdaTask
+				{
+					BdaValue = "Bda value",
+					TargetName = OfTypeBdaTask.Code,
+					Id = 1
+				});
+
+				var items = db.GetTable<OfTypeTaskBase>()
+					.OfType<OfTypeBdaTask>()
+					.Select(p => new SelectAllAndExpand<OfTypeBdaTask>
+					{
+						Instance = p
+					})
+					.ToArray();
+
+				Assert.That(items, Has.Length.EqualTo(1));
+				Assert.That(items[0].Instance.BdaValue, Is.EqualTo("Bda value"));
+
+				var items2 = db.GetTable<OfTypeTaskBase>()
+					.OfType<OfTypeBdaTask>()
+					.Select(p => new SelectAllAndExpand<OfTypeBdaTask>
+					{
+						Instance = new OfTypeBdaTask
+						{
+							BdaValue = p.BdaValue
+						}
+					})
+					.ToArray();
+
+				Assert.That(items2, Has.Length.EqualTo(1));
+				Assert.That(items2[0].Instance.BdaValue, Is.EqualTo("Bda value"));
+			}
+		}
+
+		[Table, InheritanceMapping(Code = "bda.Requests", Type = typeof(DiscriminatedBdaTask))]
+		[Table, InheritanceMapping(Code = "None", Type = typeof(DiscriminatedOtherTask))]
+		class DiscriminatedTaskBase
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public string? TargetName { get; set; }
+
+			[Association(ExpressionPredicate = nameof(ActualStageExp))]
+			public DiscriminatedTaskStage? ActualStage { get; set; }
+
+			private static Expression<Func<DiscriminatedTaskBase, DiscriminatedTaskStage, bool>> ActualStageExp()
+				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
+		}
+
+		sealed class DiscriminatedBdaTask : DiscriminatedTaskBase
+		{
+			public const string Code = "bda.Requests";
+		}
+
+		sealed class DiscriminatedOtherTask : DiscriminatedTaskBase
+		{
+			public const string Code = "None";
+		}
+
+		[Table]
+		sealed class DiscriminatedTaskStage
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column]
+			public int TaskId { get; set; }
+
+			[Column]
+			[Column(Configuration = ProviderName.DB2, DbType = "char")]
+			public bool Actual { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1057")]
+		public void OfTypeSelectsExpressionPredicateAssociation([DataSources] string configuration)
+		{
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<DiscriminatedTaskBase>())
+			using (db.CreateLocalTable<DiscriminatedTaskStage>())
+			{
+				db.Insert(new DiscriminatedTaskBase { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new DiscriminatedTaskBase { Id = 2, TargetName = "None" });
+				db.Insert(new DiscriminatedTaskStage { Id = 2, TaskId = 1, Actual = true });
+
+				var query = db.GetTable<DiscriminatedTaskBase>()
+						.OfType<DiscriminatedBdaTask>()
+						.Select(p => new
+						{
+							Instance = p,
+							ActualStageId = p.ActualStage!.Id
+						});
+				var res = query.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].Instance, Is.Not.Null);
+					Assert.That(res[0].ActualStageId, Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1057")]
+		public void ExpressionPredicateAssociationThroughBaseCast([DataSources] string configuration)
+		{
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<DiscriminatedTaskBase>())
+			using (db.CreateLocalTable<DiscriminatedTaskStage>())
+			{
+				db.Insert(new DiscriminatedTaskBase { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new DiscriminatedTaskBase { Id = 2, TargetName = "None" });
+				db.Insert(new DiscriminatedTaskStage { Id = 2, TaskId = 1, Actual = true });
+
+				var query = db.GetTable<DiscriminatedTaskBase>()
+						.OfType<DiscriminatedBdaTask>()
+						.Select(p => new
+						{
+							Instance = p,
+							ActualStageId = (p as DiscriminatedTaskBase).ActualStage!.Id
+						});
+				var res = query.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].Instance, Is.Not.Null);
+					Assert.That(res[0].ActualStageId, Is.EqualTo(2));
+				}
+
+				var query2 = db.GetTable<DiscriminatedTaskBase>()
+						.Select(p => new
+						{
+							Instance = p,
+							ActualStageId = (p as DiscriminatedTaskBase).ActualStage!.Id
+						});
+
+				var res2 = query2.OrderBy(_ => _.Instance.Id).ToArray();
+
+				Assert.That(res2, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res2[0].Instance, Is.Not.Null);
+					Assert.That(res2[0].ActualStageId, Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/513")]
+		public void InheritanceMappedParentsAndChildrenMatchData([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
+				Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
+				Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
+			}
+
+			AreEqual(InheritanceParent, db.InheritanceParent);
+			AreEqual(InheritanceChild, db.InheritanceChild);
+		}
+
+		// Base entity with discriminator
+		[Table("WideInheritEntity")]
+		[InheritanceMapping(Code = "Base", Type = typeof(WideInheritanceBase), IsDefault = true)]
+		[InheritanceMapping(Code = "Type01", Type = typeof(WideInheritanceType01))]
+		[InheritanceMapping(Code = "Type02", Type = typeof(WideInheritanceType02))]
+		[InheritanceMapping(Code = "Type03", Type = typeof(WideInheritanceType03))]
+		[InheritanceMapping(Code = "Type04", Type = typeof(WideInheritanceType04))]
+		[InheritanceMapping(Code = "Type05", Type = typeof(WideInheritanceType05))]
+		[InheritanceMapping(Code = "Type06", Type = typeof(WideInheritanceType06))]
+		[InheritanceMapping(Code = "Type07", Type = typeof(WideInheritanceType07))]
+		[InheritanceMapping(Code = "Type08", Type = typeof(WideInheritanceType08))]
+		[InheritanceMapping(Code = "Type09", Type = typeof(WideInheritanceType09))]
+		[InheritanceMapping(Code = "Type10", Type = typeof(WideInheritanceType10))]
+		[InheritanceMapping(Code = "Type11", Type = typeof(WideInheritanceType11))]
+		[InheritanceMapping(Code = "Type12", Type = typeof(WideInheritanceType12))]
+		[InheritanceMapping(Code = "Type13", Type = typeof(WideInheritanceType13))]
+		[InheritanceMapping(Code = "Type14", Type = typeof(WideInheritanceType14))]
+		[InheritanceMapping(Code = "Type15", Type = typeof(WideInheritanceType15))]
+		[InheritanceMapping(Code = "Type16", Type = typeof(WideInheritanceType16))]
+		[InheritanceMapping(Code = "Type17", Type = typeof(WideInheritanceType17))]
+		public class WideInheritanceBase
+		{
+			[PrimaryKey, Identity]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public string EntityType { get; set; } = null!;
+
+			[Column]
+			public string Name { get; set; } = null!;
+
+			[Column]
+			public DateTime CreatedDate { get; set; }
+		}
+
+		// 17 descendant types
+		public class WideInheritanceType01 : WideInheritanceBase
+		{
+			[Column] public string? Property01 { get; set; }
+		}
+
+		public class WideInheritanceType02 : WideInheritanceBase
+		{
+			[Column] public string? Property02 { get; set; }
+		}
+
+		public class WideInheritanceType03 : WideInheritanceBase
+		{
+			[Column] public string? Property03 { get; set; }
+		}
+
+		public class WideInheritanceType04 : WideInheritanceBase
+		{
+			[Column] public string? Property04 { get; set; }
+		}
+
+		public class WideInheritanceType05 : WideInheritanceBase
+		{
+			[Column] public string? Property05 { get; set; }
+		}
+
+		public class WideInheritanceType06 : WideInheritanceBase
+		{
+			[Column] public string? Property06 { get; set; }
+		}
+
+		public class WideInheritanceType07 : WideInheritanceBase
+		{
+			[Column] public string? Property07 { get; set; }
+		}
+
+		public class WideInheritanceType08 : WideInheritanceBase
+		{
+			[Column] public string? Property08 { get; set; }
+		}
+
+		public class WideInheritanceType09 : WideInheritanceBase
+		{
+			[Column] public string? Property09 { get; set; }
+		}
+
+		public class WideInheritanceType10 : WideInheritanceBase
+		{
+			[Column] public string? Property10 { get; set; }
+		}
+
+		public class WideInheritanceType11 : WideInheritanceBase
+		{
+			[Column] public string? Property11 { get; set; }
+		}
+
+		public class WideInheritanceType12 : WideInheritanceBase
+		{
+			[Column] public string? Property12 { get; set; }
+		}
+
+		public class WideInheritanceType13 : WideInheritanceBase
+		{
+			[Column] public string? Property13 { get; set; }
+		}
+
+		public class WideInheritanceType14 : WideInheritanceBase
+		{
+			[Column] public string? Property14 { get; set; }
+		}
+
+		public class WideInheritanceType15 : WideInheritanceBase
+		{
+			[Column] public string? Property15 { get; set; }
+		}
+
+		public class WideInheritanceType16 : WideInheritanceBase
+		{
+			[Column] public string? Property16 { get; set; }
+		}
+
+		public class WideInheritanceType17 : WideInheritanceBase
+		{
+			[Column] public string? Property17 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5274")]
+		public void LargeInheritanceHierarchy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<WideInheritanceBase>();
+			// Insert test data for each type
+			var baseDate = TestData.Date;
+
+			db.Insert(new WideInheritanceType01 { EntityType = "Type01", Name = "Entity 01", CreatedDate = baseDate.AddDays(1), Property01  = "Value01" });
+			db.Insert(new WideInheritanceType02 { EntityType = "Type02", Name = "Entity 02", CreatedDate = baseDate.AddDays(2), Property02  = "Value02" });
+			db.Insert(new WideInheritanceType03 { EntityType = "Type03", Name = "Entity 03", CreatedDate = baseDate.AddDays(3), Property03  = "Value03" });
+			db.Insert(new WideInheritanceType04 { EntityType = "Type04", Name = "Entity 04", CreatedDate = baseDate.AddDays(4), Property04  = "Value04" });
+			db.Insert(new WideInheritanceType05 { EntityType = "Type05", Name = "Entity 05", CreatedDate = baseDate.AddDays(5), Property05  = "Value05" });
+			db.Insert(new WideInheritanceType06 { EntityType = "Type06", Name = "Entity 06", CreatedDate = baseDate.AddDays(6), Property06  = "Value06" });
+			db.Insert(new WideInheritanceType07 { EntityType = "Type07", Name = "Entity 07", CreatedDate = baseDate.AddDays(7), Property07  = "Value07" });
+			db.Insert(new WideInheritanceType08 { EntityType = "Type08", Name = "Entity 08", CreatedDate = baseDate.AddDays(8), Property08  = "Value08" });
+			db.Insert(new WideInheritanceType09 { EntityType = "Type09", Name = "Entity 09", CreatedDate = baseDate.AddDays(9), Property09  = "Value09" });
+			db.Insert(new WideInheritanceType10 { EntityType = "Type10", Name = "Entity 10", CreatedDate = baseDate.AddDays(10), Property10 = "Value10" });
+			db.Insert(new WideInheritanceType11 { EntityType = "Type11", Name = "Entity 11", CreatedDate = baseDate.AddDays(11), Property11 = "Value11" });
+			db.Insert(new WideInheritanceType12 { EntityType = "Type12", Name = "Entity 12", CreatedDate = baseDate.AddDays(12), Property12 = "Value12" });
+			db.Insert(new WideInheritanceType13 { EntityType = "Type13", Name = "Entity 13", CreatedDate = baseDate.AddDays(13), Property13 = "Value13" });
+			db.Insert(new WideInheritanceType14 { EntityType = "Type14", Name = "Entity 14", CreatedDate = baseDate.AddDays(14), Property14 = "Value14" });
+			db.Insert(new WideInheritanceType15 { EntityType = "Type15", Name = "Entity 15", CreatedDate = baseDate.AddDays(15), Property15 = "Value15" });
+			db.Insert(new WideInheritanceType16 { EntityType = "Type16", Name = "Entity 16", CreatedDate = baseDate.AddDays(16), Property16 = "Value16" });
+			db.Insert(new WideInheritanceType17 { EntityType = "Type17", Name = "Entity 17", CreatedDate = baseDate.AddDays(17), Property17 = "Value17" });
+
+			// Test querying all entities - this should not cause stack overflow
+			var allEntities = table.ToList();
+			Assert.That(allEntities, Has.Count.EqualTo(17));
+
+			// Test querying specific types
+			var entity01 = table.OfType<WideInheritanceType01>().FirstOrDefault();
+			Assert.That(entity01,             Is.Not.Null);
+			Assert.That(entity01!.Property01, Is.EqualTo("Value01"));
+
+			// Test filtering by discriminator
+			var type05Entities = table.Where(e => e.EntityType == "Type05").ToList();
+			Assert.That(type05Entities, Has.Count.EqualTo(1));
+
+			// Test complex query with multiple type checks
+			var multiTypeQuery = table
+				.Where(e => e.EntityType == "Type01" || e.EntityType == "Type10" || e.EntityType == "Type17")
+				.OrderBy(e => e.Name)
+				.ToList();
+			Assert.That(multiTypeQuery, Has.Count.EqualTo(3));
+
+			// Test projection with inheritance
+			var projectedData = table
+				.Select(e => new { e.Id, e.Name, e.EntityType })
+				.OrderBy(e => e.EntityType)
+				.ToList();
+			Assert.That(projectedData, Has.Count.EqualTo(17));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5274")]
+		public void InheritanceWithComplexConditions([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var table    = db.CreateLocalTable<WideInheritanceBase>();
+			var       baseDate = TestData.Date;
+
+			// Insert subset of data
+			db.Insert(new WideInheritanceType01 { EntityType = "Type01", Name = "A-Entity", CreatedDate = baseDate, Property01             = "Test1" });
+			db.Insert(new WideInheritanceType05 { EntityType = "Type05", Name = "B-Entity", CreatedDate = baseDate.AddDays(5), Property05  = "Test5" });
+			db.Insert(new WideInheritanceType10 { EntityType = "Type10", Name = "C-Entity", CreatedDate = baseDate.AddDays(10), Property10 = "Test10" });
+			db.Insert(new WideInheritanceType17 { EntityType = "Type17", Name = "D-Entity", CreatedDate = baseDate.AddDays(17), Property17 = "Test17" });
+
+			// Test complex condition that triggers OptimizeExpression
+			var result = table
+				.Where(e => 
+					(e.EntityType == "Type01" && e.Name.StartsWith("A"))    ||
+					(e.EntityType == "Type05" && e.CreatedDate > baseDate)  ||
+					(e.EntityType == "Type10" && e.Name.Contains("Entity")) ||
+					(e.EntityType == "Type17" && e.Id > 0))
+				.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(4));
+		}
+
+		[Table("InheritInsertParent")]
+		[InheritanceMapping(Code = "InheritanceInsertChildA", Type = typeof(InheritanceInsertChildA))]
+		[InheritanceMapping(Code = "InheritanceInsertChildB", Type = typeof(InheritanceInsertChildB))]
+		public class InheritInsertParent
+		{
+			[PrimaryKey, Identity]
+			public int Id;
+
+			[Column(IsDiscriminator = true)]
+			public string? Type;
+		}
+
+		public class InheritanceInsertChildA : InheritInsertParent
+		{
+			public InheritanceInsertChildA()
+			{
+				Type = "InheritanceInsertChildA";
+			}
+
+			[Column(Length = 20)]
+			public string? StringValue { get; set; }
+		}
+
+		public class InheritanceInsertChildB : InheritInsertParent
+		{
+			public InheritanceInsertChildB()
+			{
+				Type = "InheritanceInsertChildB";
+			}
+
+			[Column(CanBeNull = true)]
+			public int IntValue { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/564")]
+		public void InsertDerivedEntitiesThroughDiscriminatedParent([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<InheritInsertParent>())
+			{
+				db.Insert(new InheritanceInsertChildA() {StringValue = "SomeValue"});
+				db.Insert(new InheritanceInsertChildB() {IntValue    = 911});
+
+				Assert.That(db.GetTable<InheritInsertParent>().Count(), Is.EqualTo(2));
+			}
+		}
 	}
 }

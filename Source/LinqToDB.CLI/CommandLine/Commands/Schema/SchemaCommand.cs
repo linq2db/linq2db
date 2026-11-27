@@ -44,6 +44,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Password);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.PasswordEnv);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Credentials);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CredentialsCli);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Impersonate);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
@@ -92,7 +93,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			var output = CommandOutput.Create(environment, settings.OutputFile);
 			await using var _ = output;
 
-			var result = await new SchemaInspectionExecutor(settings).Execute(output.Writer, cancellationToken);
+			var result = await new SchemaInspectionExecutor(environment, settings).Execute(output.Writer, cancellationToken);
 
 			if (result.Error != null)
 			{
@@ -122,6 +123,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			options.Remove(QueryExecutionCliOptions.  Password,                    out var password);
 			options.Remove(QueryExecutionCliOptions.  PasswordEnv,                 out var passwordEnv);
 			options.Remove(QueryExecutionCliOptions.  Credentials,          out var credentials);
+			options.Remove(QueryExecutionCliOptions.  CredentialsCli,              out var credentialsCli);
 			options.Remove(QueryExecutionCliOptions.  Impersonate,                 out var impersonate);
 			options.Remove(QueryExecutionCliOptions.  ImpersonateMode,             out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.  CommandTimeout,              out var commandTimeout);
@@ -155,7 +157,10 @@ namespace LinqToDB.CommandLine.Commands.Schema
 				(bool?)  impersonate,
 				(string?)impersonateMode,
 				(string?)commandTimeout,
-				null));
+				null)
+			{
+				CredentialsCli = (string?)credentialsCli,
+			});
 
 			if (connection == null)
 			{

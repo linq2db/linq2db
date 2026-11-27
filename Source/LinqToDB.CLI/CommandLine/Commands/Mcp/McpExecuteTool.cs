@@ -67,7 +67,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 
-			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken);
+			var result = await new QueryExecutionExecutor(environment, settings).Execute(resultWriter, cancellationToken);
 
 			if (result.Error != null)
 				return CreateErrorResult(result.Error);
@@ -101,7 +101,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				QueryExecutionMode.Execute,
 				sql,
 				null,
-				"json-table");
+				"json-table")
+			{
+				CredentialsCli = _startupOptions.CredentialsCli,
+			};
 		}
 
 		static bool IsMcpOutputFormat(string output)

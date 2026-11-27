@@ -224,13 +224,32 @@ namespace LinqToDB.Remote
 
 				await using var _3 = rd.ConfigureAwait(false);
 
-				var ret = ProcessDataReaderWrapper(query, db, rd);
+				LinqServiceResult ret;
+
+				try
+				{
+					ret = ProcessDataReaderWrapper(query, db, rd, cancellationToken);
+				}
+				catch (Exception) when (IsCancelled(cancellationToken))
+				{
+					// Stop the command before the reader is disposed: some providers otherwise read the
+					// remaining rows to the end on dispose, which is exactly the work the caller cancelled.
+					CancelCommand(rd);
+					throw;
+				}
 
 				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
 			}
 			catch (Exception exception)
 			{
 				HandleException(exception);
+
+				// A provider may report the command it stopped for the caller's token with an error of its own, from a
+				// read or from the disposal of the reader (MySqlConnector kills the query, and the next Read fails with
+				// "Query execution was interrupted"): the caller cancelled, so the call ends as cancelled.
+				if (exception is not OperationCanceledException && IsCancelled(cancellationToken))
+					throw new OperationCanceledException(exception.Message, exception, cancellationToken);
+
 				throw;
 			}
 		}
@@ -275,7 +294,28 @@ namespace LinqToDB.Remote
 
 		#endregion
 
-		private LinqServiceResult ProcessDataReaderWrapper(LinqServiceQuery query, DataConnection db, DataReaderWrapper rd)
+		// Whether a failure came after the caller cancelled the call, which then decides how the failure is reported.
+		static bool IsCancelled(CancellationToken cancellationToken)
+		{
+#pragma warning disable RS0030 // The cancellation has happened already: there is nothing to throw here, only a failure to classify.
+			return cancellationToken.IsCancellationRequested;
+#pragma warning restore RS0030
+		}
+
+		static void CancelCommand(DataReaderWrapper rd)
+		{
+			try
+			{
+				rd.Command?.Cancel();
+			}
+			catch
+			{
+				// Best effort: the read is already being abandoned with OperationCanceledException, and a
+				// provider that cannot cancel a command must not replace that with its own error.
+			}
+		}
+
+		private LinqServiceResult ProcessDataReaderWrapper(LinqServiceQuery query, DataConnection db, DataReaderWrapper rd, CancellationToken cancellationToken)
 		{
 			DbDataReader reader;
 
@@ -367,6 +407,10 @@ namespace LinqToDB.Remote
 
 			while (rd.DataReader!.Read())
 			{
+				// The rows are read synchronously, so this is the only point where a cancelled call stops
+				// reading a large result.
+				cancellationToken.ThrowIfCancellationRequested();
+
 				var data = new string[rd.DataReader!.FieldCount];
 
 				ret.RowCount++;

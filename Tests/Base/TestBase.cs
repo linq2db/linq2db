@@ -90,7 +90,7 @@ namespace Tests
 
 						var trace = GetTraceBuilder(ctx);
 
-						// necessary for multi-threaded tests like `Issue1398Tests.cs`
+						// necessary for multi-threaded tests like `MultiThreadingTests.InsertFromConcurrentConnections`
 						lock (trace)
 							trace.AppendLine(CultureInfo.InvariantCulture, $"{name}: {message}");
 

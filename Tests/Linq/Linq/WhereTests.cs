@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -13,6 +17,7 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Linq.Helpers.PredicateComposition;
 using Tests.Model;
 
 namespace Tests.Linq
@@ -1695,8 +1700,8 @@ namespace Tests.Linq
 				select new { nm });
 		}
 
-		[Test]
-		public void Issue1755Test1([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1755")]
+		public void OptionalNullableFlagFilterWithHasValue([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
 		{
 			using var db = GetDataContext(context);
 			var results = (from c in db.Parent
@@ -1717,8 +1722,8 @@ namespace Tests.Linq
 			Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
 		}
 
-		[Test]
-		public void Issue1755Test2([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1755")]
+		public void OptionalNullableFlagFilterWithNullCheck([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
 		{
 			using var db = GetDataContext(context);
 			var results = (from c in db.Parent
@@ -2002,23 +2007,22 @@ namespace Tests.Linq
 				result.Length.ShouldBe(0);
 		}
 
-		#region issue 2424
 		// TODO: add test case with non-constant expected result
-		sealed class Isue2424Table
+		sealed class StringCompareTable
 		{
 			[PrimaryKey               ] public int     Pk;
 			[Column                   ] public int     Id;
 			[Column(CanBeNull = false)] public string  StrValue = null!;
 			[Column                   ] public string? StrValueNullable;
 
-			public static readonly Isue2424Table[] Data = new[]
+			public static readonly StringCompareTable[] Data = new[]
 			{
-				new Isue2424Table(){ Pk = 1, Id = 0, StrValue = "0", StrValueNullable = null },
-				new Isue2424Table(){ Pk = 2, Id = 1, StrValue = "1", StrValueNullable = "1" },
-				new Isue2424Table(){ Pk = 3, Id = 2, StrValue = "2", StrValueNullable = "2" },
-				new Isue2424Table(){ Pk = 4, Id = 2, StrValue = "3", StrValueNullable = "3" },
-				new Isue2424Table(){ Pk = 5, Id = 2, StrValue = "4", StrValueNullable = "4" },
-				new Isue2424Table(){ Pk = 6, Id = 2, StrValue = "5", StrValueNullable = "5" },
+				new StringCompareTable(){ Pk = 1, Id = 0, StrValue = "0", StrValueNullable = null },
+				new StringCompareTable(){ Pk = 2, Id = 1, StrValue = "1", StrValueNullable = "1" },
+				new StringCompareTable(){ Pk = 3, Id = 2, StrValue = "2", StrValueNullable = "2" },
+				new StringCompareTable(){ Pk = 4, Id = 2, StrValue = "3", StrValueNullable = "3" },
+				new StringCompareTable(){ Pk = 5, Id = 2, StrValue = "4", StrValueNullable = "4" },
+				new StringCompareTable(){ Pk = 6, Id = 2, StrValue = "5", StrValueNullable = "5" },
 			};
 		}
 
@@ -2030,11 +2034,11 @@ namespace Tests.Linq
 		void AssertCompareQuery<T>(IEnumerable<T> expected, IQueryable<T> query, Expression<Func<T, bool>> predicate)
 			=> AreEqual(t => t, expected.Where(predicate.Compile()), query.Where(predicate), ComparerBuilder.GetEqualityComparer<T>(), allowEmpty: true);
 
-		[Test]
-		public void Issue2424([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2424")]
+		public void StringCompareToWithConstant([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Isue2424Table.Data);
+			using var tb = db.CreateLocalTable(StringCompareTable.Data);
 
 			AssertQuery(tb.Where(i => 0 <= i.StrValue.CompareTo("0")));
 			AssertQuery(tb.Where(i => 0 <= i.StrValue.CompareTo("1")));
@@ -2067,50 +2071,50 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(i => 0 != i.StrValue.CompareTo("5")));
 		}
 
-		[Test]
-		public void Issue2424Nullable([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2424")]
+		public void StringCompareWithNullableColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Isue2424Table.Data);
+			using var tb = db.CreateLocalTable(StringCompareTable.Data);
 
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, null));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "1"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "3"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "5"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "5"));
 
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, null));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "1"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "3"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "5"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "5"));
 
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, null));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "1"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "3"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "5"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 < string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "5"));
 
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, null));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "1"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "3"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "5"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 > string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "5"));
 
 #pragma warning disable CA2251 // Use 'string.Equals'
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, null));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "1"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "3"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "5"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 == string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "5"));
 
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, null));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "1"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "3"));
-			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "5"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 != string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(StringCompareTable.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "5"));
 #pragma warning restore CA2251 // Use 'string.Equals'
 		}
 
-		[Test]
-		public void Issue2424Fields([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2424")]
+		public void StringCompareBetweenColumns([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Isue2424Table.Data);
+			using var tb = db.CreateLocalTable(StringCompareTable.Data);
 			var src = from left in tb
 					  from right in tb
 					  select new
@@ -2123,8 +2127,8 @@ namespace Tests.Linq
 						  RightStringN = right.StrValueNullable,
 					  };
 
-			var srcExpected = from left in Isue2424Table.Data
-							  from right in Isue2424Table.Data
+			var srcExpected = from left in StringCompareTable.Data
+							  from right in StringCompareTable.Data
 							  select new
 							  {
 								  LeftId = left.Id,
@@ -2161,10 +2165,9 @@ namespace Tests.Linq
 			AssertCompareQuery(srcExpected, src, i => 0 != string.Compare(i.LeftStringN, i.RightStringN));
 #pragma warning restore CA2251 // Use 'string.Equals'
 		}
-		#endregion
 
-		[Test]
-		public void Issue1767Test1([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1767")]
+		public void NotNullAndNotEqualOmitsIsNull([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 			var query = db.Parent.Where(p => p.Value1 != null && p.Value1 != 1);
@@ -2181,8 +2184,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1767Test2([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1767")]
+		public void NullOrNotEqualUsesSingleIsNull([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 			var query = db.Parent.Where(p => p.Value1 == null || p.Value1 != 1);
@@ -2200,7 +2203,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_SubQueryFilter1([DataSources] string context)
+		public void SubQueryFilterOrUncorrelated([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2225,7 +2228,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Issue_SubQueryFilter2([DataSources] string context)
+		public void SubQueryFilterOrCorrelated([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2250,7 +2253,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue_SubQueryFilter3([DataSources(
+		public void SubQueryFilterAndBuiltExpressionTree([DataSources(
 			TestProvName.AllClickHouse,
 			TestProvName.AllNativeAccess,
 			TestProvName.AllSapHana,
@@ -2351,7 +2354,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_Filter_Checked([DataSources(
+		public void FullJoinOfGroupedQueriesInCheckedContext([DataSources(
 			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
@@ -2377,7 +2380,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void CompareQueriesWithEmptyArray([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2391,7 +2394,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void CompareQueriesWithDisjointSets([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2404,7 +2407,6 @@ namespace Tests.Linq
 			Assert.That(result1 && result2, Is.False);
 		}
 
-		#region Issue 2667
 		[Table("LinkedContracts", IsColumnAttributeRequired = false)]
 		public class LinkedContractsRaw
 		{
@@ -2450,8 +2452,8 @@ namespace Tests.Linq
 			public int Id { get; set; }
 		}
 
-		[Test]
-		public void Issue2667Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2667")]
+		public void LoadWithNavigationToNullableBoolEntity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(ContractRaw.Data))
@@ -2466,8 +2468,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue2667Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2667")]
+		public void SelectNavigationToNullableBoolEntity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var linkedContracts = db.CreateLocalTable(LinkedContractsRaw.Data))
@@ -2481,10 +2483,9 @@ namespace Tests.Linq
 				Assert.That(result[0], Is.Not.Null);
 			}
 		}
-		#endregion
 
-		[Test]
-		public void Issue2897_ParensGeneration_Or([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2897")]
+		public void ParensGeneration_Or([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			db.Parent.Where(p => p.ParentID > 1 || p.ParentID > 2 || p.ParentID > 3).ToList();
@@ -2494,8 +2495,8 @@ namespace Tests.Linq
 			Assert.That(sql, Does.Not.Contain(")"), sql);
 		}
 
-		[Test]
-		public void Issue2897_ParensGeneration_And([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2897")]
+		public void ParensGeneration_And([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			db.Parent.Where(p => p.ParentID > 1 && p.ParentID > 2 && p.ParentID > 3).ToList();
@@ -2505,8 +2506,8 @@ namespace Tests.Linq
 			Assert.That(sql, Does.Not.Contain(")"), sql);
 		}
 
-		[Test]
-		public void Issue2897_ParensGeneration_MixedFromAnd([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2897")]
+		public void ParensGeneration_MixedFromAnd([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			db.Parent
@@ -2529,8 +2530,8 @@ namespace Tests.Linq
 		(p.ParentID > 11 OR p.ParentID > 12)", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", "").Replace(" as ParentID", "").Replace(" as Value1", ""));
 		}
 
-		[Test]
-		public void Issue2897_ParensGeneration_MixedFromOr([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2897")]
+		public void ParensGeneration_MixedFromOr([DataSources(false)] string context)
 		{
 			using var db = new TestDataConnection(context);
 			db.Parent
@@ -2787,5 +2788,650 @@ namespace Tests.Linq
 				.ShouldBe(3);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1750")]
+		public void WhereWithNullableArrayFiltersAndBooleanFlags(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
+			[Values] bool includeX,
+			[Values] bool includeY,
+			[Values] bool includeZ)
+		{
+			using var db = GetDataContext(context);
+			// Arrange
+			var childrenIn = (int[]?)null;
+			var grandChildIn = GrandChild.Select(x => x.ParentID).Distinct().ToArray();
+
+			// Act
+			var query = from p in db.Parent
+						where
+						(childrenIn == null || childrenIn.Contains(p.ParentID)) && (grandChildIn == null || grandChildIn.Contains(p.ParentID)) &&
+						((includeX && p.Value1 == 1) || (includeY && p.Value1 == 2) || (includeZ && p.ParentID % 2 == 0))
+						select p;
+
+			var expected = (from p in Parent
+							where
+						(childrenIn == null || childrenIn.Contains(p.ParentID)) && (grandChildIn == null || grandChildIn.Contains(p.ParentID)) &&
+						((includeX && p.Value1 == 1) || (includeY && p.Value1 == 2) || (includeZ && p.ParentID % 2 == 0))
+							select p).ToArray();
+
+			if (expected.Length == 0)
+				Assert.That(query.Count(), Is.EqualTo(expected.Length));
+			else
+				AreEqual(expected, query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2296")]
+		public void WhereClosureVariableOnLeftAfterJoin(
+			[IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
+			[Values] bool reverseWhereQuery)
+		{
+			using var db = GetDataContext(context);
+			var varInt = 3;
+
+			var localQuery =
+					from p in Parent
+					join c in GrandChild on p.ParentID equals c.ParentID
+					select p;
+
+			localQuery = localQuery.Where(p => varInt < p.ParentID);
+			var expected = localQuery.ToArray();
+
+			var dbQuery =
+					from p in db.Parent
+					join c in db.GrandChild on p.ParentID equals c.ParentID
+					select p;
+
+			if (reverseWhereQuery)
+				dbQuery = dbQuery.Where(p => varInt < p.ParentID);
+			else
+				dbQuery = dbQuery.Where(p => p.ParentID > varInt);
+
+			var actual = dbQuery.ToArray();
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/447")]
+		public void BooleanConstantsInPredicateWithClosureValue([DataSources] string context)
+		{
+			var value = true;
+
+			using var db = GetDataContext(context);
+			var query = from p in db.Parent where p.ParentID > 2 && value && true && !false select p;
+
+			var res = query.ToList();
+		}
+
+		public class DynamicPredicateBaseDto;
+
+		[Table]
+		public class DynamicPredicateDtoWithPks : DynamicPredicateBaseDto
+		{
+			[Column(IsPrimaryKey = true)]
+			public Guid Id { get; set; }
+
+			[Column(IsPrimaryKey = true)]
+			public int Number { get; set; }
+
+			[Column]
+			public string? Test { get; set; }
+		}
+
+		private object? GetExistingDto(object obj, IQueryable queryable, MappingSchema mappingSchema)
+		{
+			var type   = obj.GetType();
+			var ed     = mappingSchema.GetEntityDescriptor(type);
+			var listPk = ed.Columns.Where(c => c.IsPrimaryKey).Select(c => c.MemberName).ToList();
+
+			var         parExp  = Expression.Parameter(typeof(object));
+			var         castExp = Expression.Convert(parExp, type);
+			Expression? e       = null;
+			foreach (var pkName in listPk)
+			{
+				var par1  = Expression.Property(castExp, pkName);
+				var par2  = Expression.Constant(type.GetProperty(pkName)?.GetValue(obj));
+				var inner = Expression.Equal(par1, par2);
+				e = e == null ? inner : Expression.AndAlso(e, inner);
+			}
+
+			var query = Expression.Lambda<Func<DynamicPredicateBaseDto, bool>>(e!, parExp);
+
+			return queryable.Cast<DynamicPredicateBaseDto>().FirstOrDefault(query);
+		}
+
+		private T? GetExistingDto<T>(IQueryable<T> queryable, T obj)
+			where T : DynamicPredicateBaseDto
+		{
+			var predicateLambda = BuildSearchPredicate(queryable, obj);
+
+			return queryable.FirstOrDefault(predicateLambda);
+		}
+
+		private async Task<T?> GetExistingDtoAsync<T>(IQueryable<T> queryable, T obj, CancellationToken cancellationToken)
+			where T : DynamicPredicateBaseDto
+		{
+			var predicateLambda = BuildSearchPredicate(queryable, obj);
+
+			return await queryable.FirstOrDefaultAsync(predicateLambda, cancellationToken);
+		}
+
+		static Expression<Func<T, bool>> BuildSearchPredicate<T>(IQueryable<T> queryable, T obj) where T : DynamicPredicateBaseDto
+		{
+			var dc = Internals.GetDataContext(queryable);
+			if (dc == null)
+				throw new InvalidOperationException("Unable to get DataContext from queryable.");
+
+			var type   = typeof(T);
+			var ed     = dc.MappingSchema.GetEntityDescriptor(type);
+			var listPk = ed.Columns.Where(c => c.IsPrimaryKey).Select(c => c.MemberInfo).ToList();
+
+			if (listPk.Count == 0)
+				throw new InvalidOperationException("Entity does not have primary keys defined.");
+
+			var parExp = Expression.Parameter(type);
+
+			var objExpr = Expression.Constant(obj);
+
+			var predicate = listPk
+				.Select(x => Expression.Equal(Expression.MakeMemberAccess(parExp, x), Expression.MakeMemberAccess(objExpr, x)))
+				.Aggregate(Expression.AndAlso);
+
+			var predicateLambda = Expression.Lambda<Func<T, bool>>(predicate, parExp);
+			return predicateLambda;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5336")]
+		public void DynamicCreatedQueryFromPks([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<DynamicPredicateDtoWithPks>();
+
+			var dto = new DynamicPredicateDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
+			db.Insert(dto);
+
+			var existingDto = GetExistingDto(dto, table, db.MappingSchema);
+			Assert.That(existingDto, Is.Not.Null);
+
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5336")]
+		public void PrimaryKeyPredicateOnCastToBaseType([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<DynamicPredicateDtoWithPks>();
+
+			var dto = new DynamicPredicateDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
+			var id  = dto.Id;
+			var nr  = dto.Number;
+			db.Insert(dto);
+
+			var existingDto = ((IQueryable)db.GetTable<DynamicPredicateDtoWithPks>()).Cast<DynamicPredicateBaseDto>().FirstOrDefault(x => ((DynamicPredicateDtoWithPks)x).Id == id && ((DynamicPredicateDtoWithPks)x).Number == nr);
+			Assert.That(existingDto, Is.Not.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5336")]
+		public void GenericPrimaryKeyPredicate([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<DynamicPredicateDtoWithPks>();
+
+			var dto = new DynamicPredicateDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
+			db.Insert(dto);
+
+			var existingDto = GetExistingDto(table, dto);
+			Assert.That(existingDto, Is.Not.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5336")]
+		public async Task GenericPrimaryKeyPredicateAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			await using var db    = GetDataContext(context);
+			await using var table = db.CreateLocalTable<DynamicPredicateDtoWithPks>();
+
+			var dto = new DynamicPredicateDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
+			db.Insert(dto);
+
+			var existingDto = await GetExistingDtoAsync(table, dto, CancellationToken.None);
+			Assert.That(existingDto, Is.Not.Null);
+
+		}
+
+		[Table]
+		sealed class NullableHasValueTable
+		{
+			[PrimaryKey]           public int  Id        { get; set; }
+			[Column, Nullable]     public int? NullField { get; set; }
+		}
+
+		static readonly NullableHasValueTable[] _testData =
+		[
+			new() { Id = 1, NullField = 1 },
+			new() { Id = 2, NullField = null },
+		];
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5445")]
+		public void NullableHasValueWithNonNullParam([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(_testData);
+
+			int? nullable = 1;
+			Expression<Func<NullableHasValueTable, bool>> filter = t => nullable.HasValue && t.NullField == nullable;
+
+			var result = table.Where(filter).ToList();
+
+			result.Count.ShouldBe(1);
+			result[0].Id.ShouldBe(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5445")]
+		public void NullableHasValueWithNullParam([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(_testData);
+
+			int? nullable = null;
+			Expression<Func<NullableHasValueTable, bool>> filter = t => nullable.HasValue && t.NullField == nullable;
+
+			// HasValue is false, so the entire predicate is false — no rows should be returned
+			var result = table.Where(filter).ToList();
+
+			result.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5445")]
+		public void NullableHasValueExtractedWithNullParam([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(_testData);
+
+			int? nullable = null;
+			bool hasValue = nullable.HasValue;
+
+			// Control case: extracting HasValue before expression works correctly
+			var result = table.Where(t => hasValue && t.NullField == nullable).ToList();
+
+			result.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/667")]
+		public void ComposedAndPredicateFromTrue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var predicate = PredicateBuilder.True<Parent>();
+			predicate = predicate.And(p => p.ParentID >= 1);
+			predicate = predicate.And(p => p.ParentID <= 4);
+
+			var q = db.Parent.Where(predicate);
+			var e = Parent.Where(predicate.CompileExpression());
+
+			AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder.GetEqualityComparer<Parent>(), src => src.OrderBy(p => p.ParentID));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/667")]
+		public void ComposedAndPredicateFromFalse([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var predicate = PredicateBuilder.False<Parent>();
+			predicate = predicate.And(p => p.ParentID >= 1);
+			predicate = predicate.And(p => p.ParentID <= 4);
+
+			var q = db.Parent.Where(predicate);
+			var e = Parent.Where(predicate.CompileExpression());
+
+			Assert.That(q, Is.EqualTo(e));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/667")]
+		public void ComposedOrPredicateFromTrue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var predicate = PredicateBuilder.True<Parent>();
+			predicate = predicate.Or(p => p.ParentID >= 1);
+			predicate = predicate.Or(p => p.ParentID <= 4);
+
+			var q = db.Parent.Where(predicate);
+			var e = Parent.Where(predicate.CompileExpression());
+
+			AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder.GetEqualityComparer<Parent>(), src => src.OrderBy(p => p.ParentID));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/667")]
+		public void ComposedOrPredicateFromFalse([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var predicate = PredicateBuilder.False<Parent>();
+			predicate = predicate.Or(p => p.ParentID >= 1);
+			predicate = predicate.Or(p => p.ParentID <= 4);
+
+			var q = db.Parent.Where(predicate);
+			var e = Parent.Where(predicate.CompileExpression());
+
+			AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder.GetEqualityComparer<Parent>(), src => src.OrderBy(p => p.ParentID));
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		private static short NullableShortPassThrough(short? value)
+		{
+			return value!.Value;
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		private static short ShortPassThrough(short value)
+		{
+			return value;
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		private static long NullableLongPassThrough(long? value)
+		{
+			return value!.Value;
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true)]
+		private static long LongPassThrough(long value)
+		{
+			return value;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableShortParameterGuardedByFunction([DataSources] string context)
+		{
+			short? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && NullableShortPassThrough(param) == _.SmallIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableLongParameterGuardedByFunction([DataSources] string context)
+		{
+			long? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && NullableLongPassThrough(param) == _.BigIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableShortParameterGuardedByCastAndFunction([DataSources] string context)
+		{
+			short? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && ShortPassThrough((short)param) == _.SmallIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableLongParameterGuardedByCastAndFunction([DataSources] string context)
+		{
+			long? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && LongPassThrough((short)param) == _.BigIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableShortParameterGuardedByCast([DataSources] string context)
+		{
+			short? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && (short)param == _.SmallIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableLongParameterGuardedByCast([DataSources] string context)
+		{
+			long? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && (long)param == _.BigIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableShortParameterGuardedByValue([DataSources] string context)
+		{
+			short? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && param.Value == _.SmallIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableLongParameterGuardedByValue([DataSources] string context)
+		{
+			long? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && param.Value == _.BigIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableShortParameterComparedWithoutGuard([DataSources] string context)
+		{
+			short? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == _.SmallIntValue);
+
+			var result1 = query.ToList();
+
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Is.Empty);
+				Assert.That(GetCurrentBaselines(), Does.Contain("IS NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableLongParameterComparedWithoutGuard([DataSources] string context)
+		{
+			long? param = 1;
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == _.BigIntValue);
+
+			var result1 = query.ToList();
+
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Has.Count.EqualTo(10));
+				Assert.That(GetCurrentBaselines(), Does.Contain("IS NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableShortParameterOrNullGuard([DataSources] string context)
+		{
+			short? param = 1;
+			using var db = GetDataContext(context);
+			var cnt = db.GetTable<LinqDataTypes2>().Count();
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == null || param.Value == _.SmallIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Has.Count.EqualTo(cnt));
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/820")]
+		public void NullableLongParameterOrNullGuard([DataSources] string context)
+		{
+			long? param = 1;
+			using var db = GetDataContext(context);
+			var cnt = db.GetTable<LinqDataTypes2>().Count();
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == null || param.Value == _.BigIntValue);
+
+			var result1 = query.ToList();
+			param = null;
+			var result2 = query.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(1));
+				Assert.That(result2, Has.Count.EqualTo(cnt));
+				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/822")]
+		public void ClosureValueChangedBeforeExecution([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
+		{
+			// ID1/ID2 are locals (not fixture fields) so parallel cases don't share state; the query closures
+			// still capture them and linq2db re-reads the value at execution, so mutating before ToList() is the point of the test.
+			int? ID1 = null;
+			int? ID2 = null;
+
+			using var db = GetDataContext(context);
+			var query = db.GetTable<LinqDataTypes2>()
+					.Where(_ => GetLinqDataTypes2ById(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));
+
+			ID1 = 3;
+			var result = query.ToList();
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].ID, Is.EqualTo(3));
+
+			query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => GetLinqDataTypes2ById(db, ID2!.Value).Select(r => r.ID).Contains(_.ID));
+
+			ID1 = 2;
+			ID2 = 4;
+			result = query.ToList();
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].ID, Is.EqualTo(4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/822")]
+		public void ClosureValueResetToNullBeforeExecution([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
+		{
+			int? ID1 = null;
+			int? ID2 = null;
+
+			using var db = GetDataContext(context);
+			var query = db.GetTable<LinqDataTypes2>()
+					.Where(_ => GetLinqDataTypes2ById(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));
+
+			ID1 = 3;
+			var result = query.ToList();
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].ID, Is.EqualTo(3));
+
+			query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => GetLinqDataTypes2ById(db, ID2!.Value).Select(r => r.ID).Contains(_.ID));
+
+			ID1 = null;
+			ID2 = 4;
+			result = query.ToList();
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].ID, Is.EqualTo(4));
+		}
+
+		IQueryable<LinqDataTypes2> GetLinqDataTypes2ById(ITestDataContext db, int id)
+		{
+			return db.GetTable<LinqDataTypes2>().Where(_ => _.ID == id);
+		}
 	}
 }

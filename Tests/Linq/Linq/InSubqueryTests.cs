@@ -478,5 +478,183 @@ namespace Tests.Linq
 
 			AssertTest(query, true);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4415")]
+		public void InSubqueryOverGroupedMaxNullableColumn([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<GroupedMaxLanguage>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+			using var db = GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new GroupedMaxLanguage
+					{
+						LanguageID = "de",
+						Name = "deutsch"
+					},
+					new GroupedMaxLanguage
+					{
+						Name = "english"
+					}
+				});
+
+			var p = db.GetTable<GroupedMaxLanguage>();
+			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
+			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+			var lst = qry2.ToList();
+
+			Assert.That(lst, Has.Count.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4415")]
+		public void InSubqueryOverGroupedMaxNotNullColumn([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<GroupedMaxLanguage>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNotNull()
+					.Build()
+					.MappingSchema;
+
+			using var db = GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new GroupedMaxLanguage
+					{
+						LanguageID = "de",
+						Name = "deutsch"
+					},
+				});
+
+			var p = db.GetTable<GroupedMaxLanguage>();
+			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
+			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+			var lst = qry2.ToList();
+
+			Assert.That(lst, Has.Count.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4415")]
+		public void InSubqueryOverGroupedMaxWithAsNotNull([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<GroupedMaxLanguage>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID)
+					.Build()
+					.MappingSchema;
+
+			using var db = GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new GroupedMaxLanguage
+					{
+						LanguageID = "de",
+						Name = "deutsch"
+					},
+					new GroupedMaxLanguage
+					{
+						Name = "english"
+					}
+				});
+
+			var p = db.GetTable<GroupedMaxLanguage>();
+			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID));
+			var qry2 = p.Where(x => qry.Contains(Sql.AsNotNull(x.LanguageID)));
+			var lst = qry2.ToList();
+
+			Assert.That(lst, Has.Count.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4415")]
+		public void InSubqueryOverGroupedMaxConcatenatedColumn([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<GroupedMaxLanguage>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+			using var db = GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new GroupedMaxLanguage
+					{
+						LanguageID = "de",
+						Name = "deutsch"
+					},
+					new GroupedMaxLanguage
+					{
+						Name = "english"
+					}
+				});
+
+			var p = db.GetTable<GroupedMaxLanguage>();
+			// use complex column. `string + string` translation now wraps each operand in
+			// `Coalesce(..., '')` (C# null-as-empty); `Max(null) + "test"` evaluates to
+			// `"test"` rather than NULL, so the null-LanguageID row no longer matches the
+			// IN-list (was Count=1 under SQL null-propagation).
+			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID) + "test");
+			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+			var lst = qry2.ToList();
+
+			Assert.That(lst, Has.Count.EqualTo(0));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4415")]
+		public void InSubqueryOverGroupedMaxCoalescedConcatMatchesClientEvaluation([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<GroupedMaxLanguage>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+			using var db = GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new GroupedMaxLanguage
+					{
+						LanguageID = "de",
+						Name = "deutsch"
+					},
+					new GroupedMaxLanguage
+					{
+						Name = "english"
+					}
+				});
+
+			var p_2 = db.GetTable<GroupedMaxLanguage>().ToList();
+			var qry_2 = p_2.GroupBy(x => x.Name).Select(x => (x.Max(y => y.LanguageID) ?? "") + "test");
+			var qry2_2 = p_2.Where(x => qry_2.Contains(x.LanguageID));
+			var expected = qry2_2.ToList();
+
+			var p = db.GetTable<GroupedMaxLanguage>();
+			// use complex column
+			var qry = p.GroupBy(x => x.Name).Select(x => (x.Max(y => y.LanguageID) ?? "") + "test");
+			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
+			var lst = qry2.ToList();
+
+			Assert.That(lst, Has.Count.EqualTo(expected.Count));
+		}
+
+		public class GroupedMaxLanguage
+		{
+			public string? LanguageID { get; set; }
+
+			public string? Name { get; set; }
+		}
 	}
 }

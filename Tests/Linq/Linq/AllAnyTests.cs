@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -320,8 +321,8 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		// Access: unsupported syntax for enumerable subquery
 		[ActiveIssue(4261, Configuration = TestProvName.AllNativeAccess, ErrorMessage = "Query input must contain at least one table or query.")]
-		[Test]
-		public void TestIssue4261([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4261")]
+		public void AnyOverLocalArrayPropertyInWhere([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -333,10 +334,52 @@ namespace Tests.Linq
 			Assert.That(res[0].ID, Is.EqualTo(1));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6429")]
+		public void AnyOverNullLocalCollectionBehindNullCheck([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			List<string>? names = null;
+			int[]?        ids   = null;
+
+			AssertQuery(
+				db.Person
+					.Where(p => names == null || names.Any(n => n == p.FirstName)));
+
+			AssertQuery(
+				db.Person
+					.Where(p => names != null && names.Any(n => n == p.FirstName)));
+
+			AssertQuery(
+				db.Person
+					.Where(p => names == null || !names.Any(n => n == p.FirstName)));
+
+			AssertQuery(
+				db.Person
+					.Where(p => ids == null || ids.Any(i => i == p.ID)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6429")]
+		public void AnyOverLocalCollectionAlternatingWithNull([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(FilterByNames(null));
+			AssertQuery(FilterByNames(["John"]));
+			AssertQuery(FilterByNames(null));
+			AssertQuery(FilterByNames(["Tester", "Jane"]));
+
+			IQueryable<Person> FilterByNames(List<string>? names)
+			{
+				return db.Person
+					.Where(p => names == null || names.Any(n => n == p.FirstName));
+			}
+		}
+
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2156")]
-		public void Issue2156Test([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ChainedLeftJoinsWithAnyInProjection([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -363,7 +406,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
-		public void Issue6024_RootAnyOwnIsNotNull([DataSources] string context)
+		public void RootAnyOwnIsNotNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -378,7 +421,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
-		public void Issue6024_RootAllOwnIsNotNull([DataSources] string context)
+		public void RootAllOwnIsNotNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -394,7 +437,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
-		public void Issue6024_CorrelatedAnyOwnIsNotNull([DataSources] string context)
+		public void CorrelatedAnyOwnIsNotNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -414,7 +457,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
-		public void Issue6024_CorrelatedAnyNestedOwnIsNotNull([DataSources] string context)
+		public void CorrelatedAnyNestedOwnIsNotNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -434,7 +477,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
-		public void Issue6024_CorrelatedMaxSelectOwnIsNotNull([DataSources] string context)
+		public void CorrelatedMaxSelectOwnIsNotNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -454,7 +497,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
-		public void Issue6024_CorrelatedCountOwnIsNotNull([DataSources] string context)
+		public void CorrelatedCountOwnIsNotNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -473,7 +516,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
-		public void Issue6024_CorrelatedParentIsNotNull([DataSources] string context)
+		public void CorrelatedParentIsNotNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -487,6 +530,17 @@ namespace Tests.Linq
 				};
 
 			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1261")]
+		public void AllPredicateOperandOrderIndependent([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var q  = db.GrandChild.Where(x => x.ParentID == 1);
+			var q1 = q.All(x => x.ChildID == 11 && x.GrandChildID == 777);
+			var q2 = q.All(x => x.GrandChildID == 777 && x.ChildID == 11);
+
+			Assert.That(q2, Is.EqualTo(q1));
 		}
 	}
 }

@@ -14,93 +14,95 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Exceptions
 {
 	// mutates the global Configuration.TranslationThreadMaxHopCount (via ThreadHopsScope)
 	[TestFixture, NonParallelizable]
 	public class StackUseTests : TestBase
 	{
-		sealed class Issue5265Table
+		sealed class AssociationChainRoot
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int Field { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable01? SubTable1 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable02? SubTable2 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable03? SubTable3 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable04? SubTable4 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable05? SubTable5 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode01? SubTable1 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode02? SubTable2 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode03? SubTable3 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode04? SubTable4 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode05? SubTable5 { get; set; }
 		}
 
-		sealed class Issue5265SubTable01
+		sealed class AssociationChainNode01
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int FK { get; set; }
 			public int Field { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable01? SubTable1 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable02? SubTable2 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable03? SubTable3 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable04? SubTable4 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable05? SubTable5 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode01? SubTable1 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode02? SubTable2 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode03? SubTable3 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode04? SubTable4 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode05? SubTable5 { get; set; }
 		}
 
-		sealed class Issue5265SubTable02
+		sealed class AssociationChainNode02
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int FK { get; set; }
 			public int Field { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable01? SubTable1 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable02? SubTable2 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable03? SubTable3 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable04? SubTable4 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable05? SubTable5 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode01? SubTable1 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode02? SubTable2 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode03? SubTable3 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode04? SubTable4 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode05? SubTable5 { get; set; }
 		}
 
-		sealed class Issue5265SubTable03
+		sealed class AssociationChainNode03
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int FK { get; set; }
 			public int Field { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable01? SubTable1 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable02? SubTable2 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable03? SubTable3 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable04? SubTable4 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable05? SubTable5 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode01? SubTable1 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode02? SubTable2 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode03? SubTable3 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode04? SubTable4 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode05? SubTable5 { get; set; }
 		}
 
-		sealed class Issue5265SubTable04
+		sealed class AssociationChainNode04
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int FK { get; set; }
 			public int Field { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable01? SubTable1 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable02? SubTable2 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable03? SubTable3 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable04? SubTable4 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable05? SubTable5 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode01? SubTable1 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode02? SubTable2 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode03? SubTable3 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode04? SubTable4 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode05? SubTable5 { get; set; }
 		}
 
-		sealed class Issue5265SubTable05
+		sealed class AssociationChainNode05
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 			public int FK { get; set; }
 			public int Field { get; set; }
 
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable01? SubTable1 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable02? SubTable2 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable03? SubTable3 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable04? SubTable4 { get; set; }
-			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public Issue5265SubTable05? SubTable5 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode01? SubTable1 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode02? SubTable2 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode03? SubTable3 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode04? SubTable4 { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = "FK")] public AssociationChainNode05? SubTable5 { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5265")]
@@ -108,12 +110,12 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(-1);
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5265Table>();
-			using var t1 = db.CreateLocalTable<Issue5265SubTable01>();
-			using var t2 = db.CreateLocalTable<Issue5265SubTable02>();
-			using var t3 = db.CreateLocalTable<Issue5265SubTable03>();
-			using var t4 = db.CreateLocalTable<Issue5265SubTable04>();
-			using var t5 = db.CreateLocalTable<Issue5265SubTable05>();
+			using var tb = db.CreateLocalTable<AssociationChainRoot>();
+			using var t1 = db.CreateLocalTable<AssociationChainNode01>();
+			using var t2 = db.CreateLocalTable<AssociationChainNode02>();
+			using var t3 = db.CreateLocalTable<AssociationChainNode03>();
+			using var t4 = db.CreateLocalTable<AssociationChainNode04>();
+			using var t5 = db.CreateLocalTable<AssociationChainNode05>();
 
 			// initial stack use: 710K under DEBUG, 390K under RELEASE; both tuned down to the same
 			// last-known-good size, so the configuration split is no longer needed here
@@ -137,12 +139,12 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(1);
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5265Table>();
-			using var t1 = db.CreateLocalTable<Issue5265SubTable01>();
-			using var t2 = db.CreateLocalTable<Issue5265SubTable02>();
-			using var t3 = db.CreateLocalTable<Issue5265SubTable03>();
-			using var t4 = db.CreateLocalTable<Issue5265SubTable04>();
-			using var t5 = db.CreateLocalTable<Issue5265SubTable05>();
+			using var tb = db.CreateLocalTable<AssociationChainRoot>();
+			using var t1 = db.CreateLocalTable<AssociationChainNode01>();
+			using var t2 = db.CreateLocalTable<AssociationChainNode02>();
+			using var t3 = db.CreateLocalTable<AssociationChainNode03>();
+			using var t4 = db.CreateLocalTable<AssociationChainNode04>();
+			using var t5 = db.CreateLocalTable<AssociationChainNode05>();
 
 			// start from small-stack thread to hop fast as otherwise we need to add more associations
 			// which make this query really slow
@@ -265,5 +267,213 @@ namespace Tests.Exceptions
 		}
 
 		sealed class TestSqlVisitor() : QueryElementVisitor(VisitMode.ReadOnly);
+
+		// access needs more stack  as it is in-process provider and needs to use our stack
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
+		public void LargeOrFilterInSmallStackThread([DataSources(false, TestProvName.AllNativeAccess)] string context)
+		{
+			using var sc = new ThreadHopsScope(-1);
+			using var db = GetDataContext((string)context!);
+			using var tb = db.CreateLocalTable<LargeOrFilterEntity>();
+
+			// 512 Kb used by IIS and MacOS runtime
+			// we will use less to detect regressions earlier
+			// e.g. now it required 130Kb (release) / 190Kb (debug) of memory
+			// Note that stack use could depend on provider, so we test all of them
+			// UPDATE: after fixes of binary expression aggregation implementation it works with 70K limit (debug, net9.0)
+
+			var size = 80 * 1024;
+
+			// octonica provider needs some extra stack space
+			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
+				size += 10 * 1024;
+
+			var thread = new Thread(RunLargeOrFilterQuery, size);
+			thread.Start(tb);
+			thread.Join();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
+		public void LargeOrFilterInCurrentThread([DataSources(false)] string context)
+		{
+			using var sc = new ThreadHopsScope(-1);
+			using var db = GetDataContext((string)context!);
+			using var tb = db.CreateLocalTable<LargeOrFilterEntity>();
+
+			RunLargeOrFilterQuery(tb);
+		}
+
+		void RunLargeOrFilterQuery(object? context)
+		{
+			var entity = ((ITable<LargeOrFilterEntity>)context!).FirstOrDefault(p => p.Code == "42" && (
+						p.DIM_Company == null || p.DIM_Company == ""
+						|| p.DIM_Company == "1" || p.DIM_Company == "2" || p.DIM_Company == "3" || p.DIM_Company == "4" || p.DIM_Company == "5" || p.DIM_Company == "6" || p.DIM_Company == "7" || p.DIM_Company == "8" || p.DIM_Company == "9" || p.DIM_Company == "0"
+					) && (
+						p.DIM_Branch == null || p.DIM_Branch == ""
+						|| p.DIM_Branch == "1" || p.DIM_Branch == "2" || p.DIM_Branch == "3" || p.DIM_Branch == "4" || p.DIM_Branch == "5" || p.DIM_Branch == "6" || p.DIM_Branch == "7" || p.DIM_Branch == "8" || p.DIM_Branch == "9" || p.DIM_Branch == "0"
+					) && (
+						p.DIM_Location == null || p.DIM_Location == ""
+						|| p.DIM_Location == "1" || p.DIM_Location == "2" || p.DIM_Location == "3" || p.DIM_Location == "4" || p.DIM_Location == "5" || p.DIM_Location == "6" || p.DIM_Location == "7" || p.DIM_Location == "8" || p.DIM_Location == "9" || p.DIM_Location == "0"
+					) && (
+						p.DIM_MSegment == null || p.DIM_MSegment == ""
+						|| p.DIM_MSegment == "1" || p.DIM_MSegment == "2" || p.DIM_MSegment == "3" || p.DIM_MSegment == "4" || p.DIM_MSegment == "5" || p.DIM_MSegment == "6" || p.DIM_MSegment == "7" || p.DIM_MSegment == "8" || p.DIM_MSegment == "9" || p.DIM_MSegment == "0"
+					) && (
+						p.DIM_Make == null || p.DIM_Make == ""
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+						|| p.DIM_Make == "1" || p.DIM_Make == "2" || p.DIM_Make == "3" || p.DIM_Make == "4" || p.DIM_Make == "5" || p.DIM_Make == "6" || p.DIM_Make == "7" || p.DIM_Make == "8" || p.DIM_Make == "9" || p.DIM_Make == "0"
+					)
+				);
+		}
+
+		[Table("LargeOrFilterEntity")]
+		sealed class LargeOrFilterEntity
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(Length = 30, CanBeNull = false)] public string Code { get; set; } = null!;
+			[Column(Length = 30)] public string? DIM_Company { get; set; }
+			[Column(Length = 30)] public string? DIM_Branch { get; set; }
+			[Column(Length = 30)] public string? DIM_Location { get; set; }
+			[Column(Length = 30)] public string? DIM_MSegment { get; set; }
+			[Column(Length = 30)] public string? DIM_Make { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/447")]
+		public void LargeOrPredicateDoesNotOverflowStack([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+
+			var array = Enumerable.Range(0, 3000).ToArray();
+
+			// Build "where" conditions
+			var param = Expression.Parameter(typeof(Model.Child));
+			Expression<Func<Model.Child, bool>>? predicate = null;
+
+			for (var i = 0; i < array.Length; i++)
+			{
+				var id = array[i];
+
+				var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
+					(Expression.Equal(
+						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
+						Expression.Constant(id)
+					), param);
+
+				predicate = predicate != null ? Or(predicate, filterExpression) : filterExpression;
+			}
+
+			result = result.Where(predicate!);
+
+			// StackOverflowException cannot be handled and will terminate process
+			_ = result.ToSqlQuery().Sql;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/447"), QueryCacheTest]
+		public void LargeOrPredicateIsServedFromQueryCache([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+
+			var array = Enumerable.Range(0, 3000).ToArray();
+
+			// Build "where" conditions
+			var param = Expression.Parameter(typeof(Model.Child));
+			Expression<Func<Model.Child, bool>>? predicate1 = null;
+			Expression<Func<Model.Child, bool>>? predicate2 = null;
+
+			for (var i = 0; i < array.Length; i++)
+			{
+				var id = array[i];
+
+				var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
+					(Expression.Equal(
+						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
+						Expression.Constant(id)
+					), param);
+
+				predicate1 = predicate1 != null ? Or(predicate1, filterExpression) : filterExpression;
+				predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
+			}
+
+			var result1 = result.Where(predicate1!);
+			var result2 = result.Where(predicate2!);
+
+			// StackOverflowException cannot be handled and will terminate process
+			_ = result1.ToSqlQuery().Sql;
+
+			var cacheMiss = result1.GetCacheMissCount();
+
+			// from cache
+			_ = result2.ToSqlQuery().Sql;
+
+			result1.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/447"), QueryCacheTest]
+		public void LargeOrPredicateInSelectManyIsServedFromQueryCache([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+
+			var array = Enumerable.Range(0, 3000).ToArray();
+
+			// Build "where" conditions
+			var                                  param      = Expression.Parameter(typeof(Model.Child));
+			Expression<Func<Model.Child, bool>>? predicate1 = null;
+			Expression<Func<Model.Child, bool>>? predicate2 = null;
+
+			for (var i = 0; i < array.Length; i++)
+			{
+				var id = array[i];
+
+				var filterExpression = Expression.Lambda<Func<Model.Child, bool>>(
+					Expression.Equal(
+						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
+						Expression.Constant(id)
+					),
+					param
+				);
+
+				predicate1 = predicate1 != null ? Or(predicate1, filterExpression) : filterExpression;
+				predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
+			}
+
+			var result1 = result.Where(predicate1!);
+
+			var combined1 =
+					from r in result1
+					from r1 in result1
+					select r1;
+
+			var result2 = result.Where(predicate2!);
+
+			var combined2 =
+					from r in result2
+					from r1 in result2
+					select r1;
+
+			// StackOverflowException cannot be handled and will terminate process
+			_ = combined1.ToSqlQuery().Sql;
+
+			var cacheMiss = combined1.GetCacheMissCount();
+
+			// from cache
+			_ = combined2.ToSqlQuery().Sql;
+
+			combined2.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		private static Expression<Func<T, bool>> Or<T>(Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
+		{
+			var invokedExpr = Expression.Invoke(expr2, expr1.Parameters);
+			return Expression.Lambda<Func<T, bool>>(Expression.Or(expr1.Body, invokedExpr), expr1.Parameters);
+		}
 	}
 }

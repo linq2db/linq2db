@@ -1367,8 +1367,8 @@ namespace Tests.DataProvider
 			Assert.That(res, Is.Not.Null);
 		}
 
-		[Test(Description = "TODO: Issue not reproduced")]
-		public void Issue1993([IncludeDataSources(TestProvName.AllMySql)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1993")]
+		public void SchemaTableColumnsOfPreexistingTable([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
 			DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -2106,17 +2106,17 @@ namespace Tests.DataProvider
 			}
 		}
 
-		sealed class Issue3611Table
+		sealed class VarLengthColumnsTable
 		{
 			[Column(Length = 2000, DataType = DataType.VarChar)]   public string? VarChar   { get; set; }
 			[Column(Length = 2000, DataType = DataType.VarBinary)] public byte[]? VarBinary { get; set; }
 		}
 
-		[Test]
-		public void Issue3611([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3611")]
+		public void CreateTableVarCharVarBinaryLength([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataConnection(context))
-			using (db.CreateLocalTable<Issue3611Table>())
+			using (db.CreateLocalTable<VarLengthColumnsTable>())
 			{
 				// VARCHAR/VARBINARY max length depends on many factors:
 				// 1. MySQL version: 255 prior to 5.0.3 and 65535 for 5.0.3+
@@ -2272,9 +2272,8 @@ END");
 			}
 		}
 
-		#region Issue 4439
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4439")]
-		public void Issue4439Test([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		public void TemporaryTableDropKeepsTransactionRollback([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable<TEST_TB_AA>();
@@ -2322,15 +2321,13 @@ END");
 			[Column(CanBeNull = false, Length = 80)]
 			public string CODE_AA { get; set; } = null!;
 		}
-		#endregion
 
-		#region issue 4354
 		// Split four ways by what BulkCopy actually does with the configured width, because a gate cannot target a
 		// [Values] argument and one gate over all 112 cases marked the 60 that work as failing. Char36 is the width
 		// the server already stores, so it round-trips in every mode; the narrower formats only survive the paths
 		// that hand the value to the driver rather than writing it into the statement. None and Default stay in the
 		// non-Char36 source because the test declares them Inconclusive, which no gate touches either way.
-		static readonly MySqlConnectorGuidFormat[] _issue4354NonChar36Formats =
+		static readonly MySqlConnectorGuidFormat[] _nonChar36GuidFormats =
 		[
 			MySqlConnectorGuidFormat.None,
 			MySqlConnectorGuidFormat.Default,
@@ -2341,55 +2338,55 @@ END");
 		];
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
-		public void Issue4354TestChar36(
+		public void BulkCopyGuidFormatChar36(
 			// MySql.Data has enum, but it is not configurable
 			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
 			[Values] BulkCopyType copyType,
 			[Values] bool inline)
 		{
-			Issue4354TestCore(context, MySqlConnectorGuidFormat.Char36, copyType, inline);
+			BulkCopyGuidFormatCore(context, MySqlConnectorGuidFormat.Char36, copyType, inline);
 		}
 
 		[ActiveIssue(4354, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "Data too long for column 'Value' at row 1",
 			Details = "BulkCopy ignores the configured GuidFormat, so the value arrives in the wrong width - #4354's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
-		public void Issue4354Test(
+		public void BulkCopyGuidFormatNonChar36(
 			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
-			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format,
+			[ValueSource(nameof(_nonChar36GuidFormats))] MySqlConnectorGuidFormat format,
 			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows)] BulkCopyType copyType,
 			[Values] bool inline)
 		{
-			Issue4354TestCore(context, format, copyType, inline);
+			BulkCopyGuidFormatCore(context, format, copyType, inline);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
-		public void Issue4354TestProviderSpecific(
+		public void BulkCopyGuidFormatNonChar36ProviderSpecific(
 			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
-			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format,
+			[ValueSource(nameof(_nonChar36GuidFormats))] MySqlConnectorGuidFormat format,
 			[Values] bool inline)
 		{
-			Issue4354TestCore(context, format, BulkCopyType.ProviderSpecific, inline);
+			BulkCopyGuidFormatCore(context, format, BulkCopyType.ProviderSpecific, inline);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
-		public void Issue4354TestRowByRow(
+		public void BulkCopyGuidFormatNonChar36RowByRow(
 			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
-			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format)
+			[ValueSource(nameof(_nonChar36GuidFormats))] MySqlConnectorGuidFormat format)
 		{
-			Issue4354TestCore(context, format, BulkCopyType.RowByRow, inline: false);
+			BulkCopyGuidFormatCore(context, format, BulkCopyType.RowByRow, inline: false);
 		}
 
 		[ActiveIssue(4354, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "Data too long for column 'Value' at row 1",
-			Details = "as Issue4354Test: inlined, the row-by-row path writes the value into the statement at the default width instead of handing it to the driver.")]
+			Details = "as BulkCopyGuidFormatNonChar36: inlined, the row-by-row path writes the value into the statement at the default width instead of handing it to the driver.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
-		public void Issue4354TestRowByRowInlined(
+		public void BulkCopyGuidFormatNonChar36RowByRowInlined(
 			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
-			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format)
+			[ValueSource(nameof(_nonChar36GuidFormats))] MySqlConnectorGuidFormat format)
 		{
-			Issue4354TestCore(context, format, BulkCopyType.RowByRow, inline: true);
+			BulkCopyGuidFormatCore(context, format, BulkCopyType.RowByRow, inline: true);
 		}
 
-		void Issue4354TestCore(string context, MySqlConnectorGuidFormat format, BulkCopyType copyType, bool inline)
+		void BulkCopyGuidFormatCore(string context, MySqlConnectorGuidFormat format, BulkCopyType copyType, bool inline)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
@@ -2421,7 +2418,7 @@ END");
 
 			var fb = new FluentMappingBuilder();
 
-			var prop = fb.Entity<Issue4354Table>()
+			var prop = fb.Entity<GuidFormatTable>()
 				.Property(x => x.Value)
 					.HasDataType(type);
 
@@ -2436,9 +2433,9 @@ END");
 
 			db.InlineParameters = inline;
 
-			using var tb = db.CreateLocalTable<Issue4354Table>();
+			using var tb = db.CreateLocalTable<GuidFormatTable>();
 
-			var items = new Issue4354Table[] { new Issue4354Table() { Value = TestData.Guid1 } };
+			var items = new GuidFormatTable[] { new GuidFormatTable() { Value = TestData.Guid1 } };
 
 			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, items);
 
@@ -2447,20 +2444,18 @@ END");
 			Assert.That(record.Value, Is.EqualTo(TestData.Guid1));
 		}
 
-		sealed class Issue4354Table
+		sealed class GuidFormatTable
 		{
 			public Guid Value { get; set; }
 		}
-		#endregion
 
-		#region Issue 3726
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3726")]
-		public void Issue3726Test([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] bool inline)
+		public void UpdateUInt32ParameterCast([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] bool inline)
 		{
 			using var db = GetDataConnection(context);
-			using var tb = db.CreateLocalTable<Issue3726Table>();
+			using var tb = db.CreateLocalTable<UIntValueTable>();
 
-			db.Insert(new Issue3726Table() { Id = 1, Value = 123 });
+			db.Insert(new UIntValueTable() { Id = 1, Value = 123 });
 
 			db.InlineParameters = inline;
 
@@ -2473,21 +2468,19 @@ END");
 			Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("cast"));
 		}
 
-		sealed class Issue3726Table
+		sealed class UIntValueTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public uint Value { get; set; }
 			[Column] public string? Value2 { get; set; }
 		}
-		#endregion
 
-		#region Issue 4929
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4929")]
-		public void Issue4929Test([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		public void DayAndMonthFilterOnDateColumn([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			var ms = new MappingSchema();
 			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
-			using var tb = db.CreateLocalTable<Issue4929Table>();
+			using var tb = db.CreateLocalTable<DateFilterTable>();
 
 			var query = from a in tb
 					where
@@ -2498,12 +2491,11 @@ END");
 			query.ToArray();
 		}
 
-		sealed class Issue4929Table
+		sealed class DateFilterTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public DateTime Date { get; set; }
 		}
-		#endregion
 	}
 
 	#region Extensions

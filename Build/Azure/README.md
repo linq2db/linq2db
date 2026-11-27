@@ -21,7 +21,7 @@ Automatically triggered for all PR commits. Performs build to verify code could 
 
 ### `testing` pipeline
 
-Runs manually using `/azp run test-all` command from PR comment by team member.
+Runs manually using `/azp run test-all` command from PR comment by team member. A new `test-all` run cancels the PR's older in-flight test runs (`test-all` and db-specific) on both Azure and GitHub; a db-specific run or a push cancels nothing.
 
 ### cli test pipeline
 

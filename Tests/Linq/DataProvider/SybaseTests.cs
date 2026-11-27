@@ -639,9 +639,9 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class Issue1707
+		sealed class TimeColumnsRecord
 		{
-			public static IEqualityComparer<Issue1707> Comparer = ComparerBuilder.GetEqualityComparer<Issue1707>();
+			public static IEqualityComparer<TimeColumnsRecord> Comparer = ComparerBuilder.GetEqualityComparer<TimeColumnsRecord>();
 			[Column]
 			public int Id { get; set; }
 
@@ -664,8 +664,8 @@ namespace Tests.DataProvider
 			public DateTime? DateTimeN { get; set; }
 		}
 
-		[Test]
-		public void Issue1707Test([IncludeDataSources(true, TestProvName.AllSybase)] string context, [Values] bool useParameters)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1707")]
+		public void TimeAndDateTimeColumnsRoundTrip([IncludeDataSources(true, TestProvName.AllSybase)] string context, [Values] bool useParameters)
 		{
 			var testIntervals = new[]
 			{
@@ -677,13 +677,13 @@ namespace Tests.DataProvider
 			};
 
 			var start    = new DateTime(1900, 1, 1);
-			var testData = new List<Issue1707>();
+			var testData = new List<TimeColumnsRecord>();
 
 			for (var i = 0; i < testIntervals.Length; i++)
 			{
 				var ts = testIntervals[i];
 
-				testData.Add(new Issue1707()
+				testData.Add(new TimeColumnsRecord()
 				{
 					Id        = i + 1,
 					Time      = ts,
@@ -696,12 +696,12 @@ namespace Tests.DataProvider
 			}
 
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue1707>();
+			using var table = db.CreateLocalTable<TimeColumnsRecord>();
 			db.InlineParameters = !useParameters;
 
 			foreach (var record in testData)
 			{
-				table.Insert(() => new Issue1707()
+				table.Insert(() => new TimeColumnsRecord()
 				{
 					Id = record.Id,
 					Time = record.Time,
@@ -715,9 +715,9 @@ namespace Tests.DataProvider
 
 			var results = table.OrderBy(_ => _.Id);
 
-			AreEqual(testData.Select(fixRecord), results, Issue1707.Comparer);
+			AreEqual(testData.Select(fixRecord), results, TimeColumnsRecord.Comparer);
 
-			Issue1707 fixRecord(Issue1707 record)
+			TimeColumnsRecord fixRecord(TimeColumnsRecord record)
 			{
 				record.Time   = fixTime(record.Time);
 				record.TimeN  = fixTime(record.TimeN!.Value);
@@ -736,7 +736,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class Issue3902
+		sealed class LongColumnNameRecord
 		{
 			[PrimaryKey, NotNull] public char    TPPSLT_TYPE                 { get; set; }
 			[PrimaryKey, NotNull] public string  TPPSLT_KIND_ID              { get; set; } = null!;
@@ -744,11 +744,11 @@ namespace Tests.DataProvider
 			[Column]              public string  TPPSLT_USER_ID              { get; set; } = null!;
 		}
 
-		[Test]
-		public void Issue3902Test([IncludeDataSources(true, TestProvName.AllSybase)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3902")]
+		public void UpdateWithLongColumnNames([IncludeDataSources(true, TestProvName.AllSybase)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue3902>();
+			using var table = db.CreateLocalTable<LongColumnNameRecord>();
 
 			table
 				.Where(c => c.TPPSLT_TYPE == '4' && c.TPPSLT_KIND_ID == "AAA")
@@ -1165,6 +1165,45 @@ namespace Tests.DataProvider
 				.Sql;
 
 			sql.ShouldContain(".[]");
+		}
+
+		[Table]
+		sealed class HashColumnTable
+		{
+			[Column]
+			public int ProbeColumn { get; set; }
+		}
+
+		[Table("HashColumnTable")]
+		sealed class HashColumnTableRenamed
+		{
+			[Column("#ProbeColumn")]
+			public int ProbeColumn { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1064")]
+		public void ColumnNameStartingWithHash([IncludeDataSources(TestProvName.AllSybase)] string configuration)
+		{
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<HashColumnTable>())
+			{
+				db.Execute("sp_configure 'allow updates', 1");
+				try
+				{
+					db.Execute("UPDATE syscolumns SET name = '#ProbeColumn' where name = 'ProbeColumn'");
+
+					db.Insert(new HashColumnTableRenamed() { ProbeColumn = 123 });
+
+					var records = db.GetTable<HashColumnTableRenamed>().ToList();
+
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].ProbeColumn, Is.EqualTo(123));
+				}
+				finally
+				{
+					db.Execute("sp_configure 'allow updates', 0");
+				}
+			}
 		}
 	}
 }

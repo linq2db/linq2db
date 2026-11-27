@@ -1,8 +1,10 @@
 using System;
+using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -13,11 +15,14 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.Logging;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -579,8 +584,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/784")]
+		public void SchemaForeignKeyColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 			var sp = db.DataProvider.GetSchemaProvider();
@@ -633,7 +638,7 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local))",
-			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back with the wrong Kind; the value itself round-trips, so only that half of #2107 is left.")]
+			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back with the wrong Kind; off UTC hosts it also comes back as the stored wall-clock time rather than local time. Both checks share one assert scope, so the Kind failure is reported on any host timezone.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_InsertUtc(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -688,10 +693,14 @@ namespace Tests.DataProvider
 
 			if (kind == DateTimeKind.Utc)
 			{
-				// utc values returned as local
-				Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
-				// local/unspecified values returned as unspecified (makes sense)
-				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				// both checks in one scope: off UTC the value check fails too, and must not hide the Kind failure
+				using (Assert.EnterMultipleScope())
+				{
+					// utc values returned as local
+					Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				}
 			}
 			else
 			{
@@ -762,10 +771,14 @@ namespace Tests.DataProvider
 
 			if (kind == DateTimeKind.Utc)
 			{
-				// utc values returned as local
-				Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
-				// local/unspecified values returned as unspecified (makes sense)
-				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				// both checks in one scope: off UTC the value check fails too, and must not hide the Kind failure
+				using (Assert.EnterMultipleScope())
+				{
+					// utc values returned as local
+					Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				}
 			}
 			else
 			{
@@ -813,12 +826,12 @@ namespace Tests.DataProvider
 		[ActiveIssue(3899, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for a UInt64.",
 			Details = "One declaration covers both transports: direct throws the OverflowException bare, while LinqService wraps it in Grpc.Core.RpcException whose detail still spells out the same type and text.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3899")]
-		public void Issue3899Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertAndReadUInt64Extremes([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue3899Table>();
+			using var tb = db.CreateLocalTable<UInt64ColumnsTable>();
 
-			db.Insert(new Issue3899Table()
+			db.Insert(new UInt64ColumnsTable()
 			{
 				Value1 = ulong.MinValue,
 				Value2 = ulong.MaxValue,
@@ -832,28 +845,28 @@ namespace Tests.DataProvider
 			}
 		}
 
-		sealed class Issue3899Table
+		sealed class UInt64ColumnsTable
 		{
 			public ulong  Value1 { get; set; }
 			public ulong? Value2 { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
-		public void Issue3766Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void InsertOrReplaceDateTimeOffsetKey([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue3766Table>();
+			using var tb = db.CreateLocalTable<DateTimeOffsetKeyTable>();
 			db.InlineParameters = inline;
 
-			var record = new Issue3766Table() { Id = TestData.DateTimeOffsetUtc };
+			var record = new DateTimeOffsetKeyTable() { Id = TestData.DateTimeOffsetUtc };
 			db.InsertOrReplace(record);
 			db.InsertOrReplace(record);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
-		public void Issue3766Test2Inlined([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void UpdateDateTimeOffsetKeyInlined([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			Issue3766Test2(context, inline: true);
+			UpdateDateTimeOffsetKeyCore(context, inline: true);
 		}
 
 		// Split from the inlined case: only the parameterized path fails, and the gate can target a provider but
@@ -861,18 +874,18 @@ namespace Tests.DataProvider
 		// passed but is marked".
 		[ActiveIssue(3766, Configuration = TestProvName.AllSQLiteClassic, ErrorMessage = "Assert.That(cnt, Is.EqualTo(1))")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
-		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void UpdateDateTimeOffsetKeyParameterized([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			Issue3766Test2(context, inline: false);
+			UpdateDateTimeOffsetKeyCore(context, inline: false);
 		}
 
-		void Issue3766Test2(string context, bool inline)
+		void UpdateDateTimeOffsetKeyCore(string context, bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue3766Table>();
+			using var tb = db.CreateLocalTable<DateTimeOffsetKeyTable>();
 			db.InlineParameters = inline;
 
-			var record = new Issue3766Table() { Id = TestData.DateTimeOffsetUtc };
+			var record = new DateTimeOffsetKeyTable() { Id = TestData.DateTimeOffsetUtc };
 			db.Insert(record);
 			var cnt = db.Update(record);
 
@@ -880,7 +893,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class Issue3766Table
+		sealed class DateTimeOffsetKeyTable
 		{
 			[PrimaryKey] public DateTimeOffset Id { get; set; }
 			[Column] public int Value { get; set; }
@@ -893,18 +906,18 @@ namespace Tests.DataProvider
 		[ActiveIssue(2432, ErrorMessage = "datatype mismatch",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Mapping DateTime to Int64 produces a column the parameterised insert cannot write.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertUpdateDateTimeAsInt64Parameterized([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			Issue2432Test1Core(context, inline: false);
+			InsertUpdateDateTimeAsInt64Core(context, inline: false);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test1Inline([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertUpdateDateTimeAsInt64Inlined([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			Issue2432Test1Core(context, inline: true);
+			InsertUpdateDateTimeAsInt64Core(context, inline: true);
 		}
 
-		void Issue2432Test1Core(string context, bool inline)
+		void InsertUpdateDateTimeAsInt64Core(string context, bool inline)
 		{
 			var ms = new MappingSchema();
 
@@ -921,10 +934,10 @@ namespace Tests.DataProvider
 			);
 
 			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable<Issue2432Table>();
+			using var tb = db.CreateLocalTable<DateTimeInt64Table>();
 			db.InlineParameters = inline;
 
-			var record = new Issue2432Table() { DateTime = TestData.DateTime };
+			var record = new DateTimeInt64Table() { DateTime = TestData.DateTime };
 
 			db.Insert(record);
 			var cnt = db.Update(record);
@@ -937,20 +950,20 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue(2432, ErrorMessage = "datatype mismatch",
-			Details = "as Issue2432Test1.")]
+			Details = "as InsertUpdateDateTimeAsInt64Parameterized.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertAndReadDateTimeAsInt64Parameterized([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			Issue2432Test2Core(context, inline: false);
+			InsertAndReadDateTimeAsInt64Core(context, inline: false);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test2Inline([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertAndReadDateTimeAsInt64Inlined([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			Issue2432Test2Core(context, inline: true);
+			InsertAndReadDateTimeAsInt64Core(context, inline: true);
 		}
 
-		void Issue2432Test2Core(string context, bool inline)
+		void InsertAndReadDateTimeAsInt64Core(string context, bool inline)
 		{
 			var ms = new MappingSchema();
 
@@ -967,10 +980,10 @@ namespace Tests.DataProvider
 			);
 
 			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable<Issue2432Table>();
+			using var tb = db.CreateLocalTable<DateTimeInt64Table>();
 			db.InlineParameters = inline;
 
-			var record = new Issue2432Table() { DateTime = TestData.DateTime };
+			var record = new DateTimeInt64Table() { DateTime = TestData.DateTime };
 
 			db.Insert(record);
 
@@ -979,31 +992,31 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class Issue2432Table
+		sealed class DateTimeInt64Table
 		{
 			[PrimaryKey] public DateTime DateTime { get; set; }
 			[Column] public int Field { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2099")]
-		public void Issue2099Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void InsertDefaultValuesIdentityStartsAtOne([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue2099Table>();
+			using var tb = db.CreateLocalTable<LongIdentityTable>();
 
-			db.Insert(new Issue2099Table());
+			db.Insert(new LongIdentityTable());
 			var result = tb.Single();
 
 			Assert.That(result.Id, Is.EqualTo(1));
 		}
 
-		sealed class Issue2099Table
+		sealed class LongIdentityTable
 		{
 			[PrimaryKey, Identity] public long Id { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/934")]
-		public void Issue934Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SchemaRowidIdentityDetection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -1058,7 +1071,7 @@ DROP TABLE withoutid_4;
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4736")]
-		public void Issue4736Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SchemaCompositeForeignKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -1100,16 +1113,15 @@ DROP TABLE SecondTable;
 			}
 		}
 
-		#region issue 4808
-		[Table(nameof(Issue4808Table))]
-		sealed class Issue4808TableRaw
+		[Table(nameof(GuidListTable))]
+		sealed class GuidListRawTable
 		{
 			[Column(DataType = DataType.Text)  ] public Guid? ValueText { get; set; }
 			[Column(DataType = DataType.Binary)] public Guid? ValueBinary { get; set; }
 
-			public static readonly Issue4808TableRaw[] Data =
+			public static readonly GuidListRawTable[] Data =
 			[
-				new Issue4808TableRaw()
+				new GuidListRawTable()
 				{
 					ValueText = TestData.Guid1,
 					ValueBinary = TestData.Guid2,
@@ -1118,17 +1130,17 @@ DROP TABLE SecondTable;
 		}
 
 		[Table]
-		sealed class Issue4808Table
+		sealed class GuidListTable
 		{
 			[Column(DbType = "TEXT")] public Guid? ValueText { get; set; }
 			[Column(DbType = "BINARY")] public Guid? ValueBinary { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4808")]
-		public void Issue4808Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void GuidListContainsOnTextAndBinaryColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4808TableRaw.Data);
+			using var tb = db.CreateLocalTable(GuidListRawTable.Data);
 			db.InlineParameters = inline;
 
 			var listText = new Guid[] { TestData.Guid1 };
@@ -1136,18 +1148,17 @@ DROP TABLE SecondTable;
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
-				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
-				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
-				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListRawTable>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListRawTable>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListRawTable>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListRawTable>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
 
-				Assert.That(db.GetTable<Issue4808Table>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
-				Assert.That(db.GetTable<Issue4808Table>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
-				Assert.That(db.GetTable<Issue4808Table>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
-				Assert.That(db.GetTable<Issue4808Table>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListTable>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListTable>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListTable>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<GuidListTable>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
 			}
 		}
-		#endregion
 
 		[Sql.TableFunction("pragma_table_info")]
 		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new ServerSideOnlyException(nameof(PragmaTableInfo));
@@ -1183,20 +1194,20 @@ DROP TABLE SecondTable;
 			_ = query.ToArray();
 		}
 
-		sealed record Issue4904Table
+		sealed record RecordDateTable
 		{
 			public DateTime RecordDate { get; init; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4904")]
-		public void Issue4904Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void InlineDateTimeMaxValueComparison([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4904Table>();
+			using var tb = db.CreateLocalTable<RecordDateTable>();
 
-			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime.AddDays(-1) });
-			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime });
-			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime.AddDays(1) });
+			db.Insert(new RecordDateTable { RecordDate = TestData.DateTime.AddDays(-1) });
+			db.Insert(new RecordDateTable { RecordDate = TestData.DateTime });
+			db.Insert(new RecordDateTable { RecordDate = TestData.DateTime.AddDays(1) });
 
 			db.InlineParameters = true;
 
@@ -1212,13 +1223,13 @@ DROP TABLE SecondTable;
 
 		// TODO: Enable AllSQLite when MSSQLite provider is supported. Related: #4117
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5014")]
-		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SchemaWithoutRowIdPrimaryKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 
-			db.Execute("DROP TABLE IF EXISTS Issue5014TestTable");
+			db.Execute("DROP TABLE IF EXISTS WithoutRowIdPkTable");
 			db.Execute("""
-				CREATE TABLE "Issue5014TestTable" (
+				CREATE TABLE "WithoutRowIdPkTable" (
 					"Id" INTEGER NOT NULL PRIMARY KEY,
 					"Name" TEXT NOT NULL
 				) without rowid;
@@ -1229,13 +1240,196 @@ DROP TABLE SecondTable;
 				var provider = new SQLiteSchemaProvider();
 				var schema   = provider.GetSchema(db);
 
-				var table = schema.Tables.First(x => x.TableName == "Issue5014TestTable");
+				var table = schema.Tables.First(x => x.TableName == "WithoutRowIdPkTable");
 
 				Assert.That(table.Columns.Count(x => x.IsPrimaryKey), Is.EqualTo(1));
 			}
 			finally
 			{
-				db.Execute("DROP TABLE IF EXISTS Issue5014TestTable");
+				db.Execute("DROP TABLE IF EXISTS WithoutRowIdPkTable");
+			}
+		}
+
+		// A dedicated SQLite provider whose IN list limit is preset to one value. Using a separate provider
+		// instance keeps the limit off the shared per-provider SqlProviderFlags singleton, which a parallel
+		// test run would otherwise observe (each provider instance owns its own SqlProviderFlags).
+		sealed class LimitedInListSQLiteProvider : SQLiteDataProvider
+		{
+			public LimitedInListSQLiteProvider(string name, SQLiteProvider provider, int maxInListValuesCount)
+				: base(name, provider)
+			{
+				SqlProviderFlags.MaxInListValuesCount = maxInListValuesCount;
+			}
+		}
+
+		// IN list splitting lives in BasicSqlBuilder and is provider-agnostic, so one provider covers it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/228")]
+		public void InListSplitByMaxValuesCount([IncludeDataSources(false, TestProvName.AllSQLiteBase)] string context)
+		{
+			var sqliteProvider = context == ProviderName.SQLiteClassic ? SQLiteProvider.System : SQLiteProvider.Microsoft;
+			var dataProvider   = new LimitedInListSQLiteProvider(context + ".MaxInList1", sqliteProvider, maxInListValuesCount: 1);
+			var options        = new DataOptions().UseConnectionString(dataProvider, GetConnectionString(context));
+
+			using var db = GetDataConnection(options);
+
+			var ids = new[] { 1, 2 };
+			AreEqualWithinDelta(
+				GetTypes(context).Where(_ => !ids.Contains(_.ID)),
+				db.Types.Where(_ => !ids.Contains(_.ID)));
+
+			// the split list is semantically identical to a single one, so the results alone cannot tell whether
+			// the limit was applied at all
+			db.LastQuery!.ShouldContain("NOT IN (1) AND");
+			db.LastQuery!.ShouldContain("NOT IN (2)");
+		}
+
+		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		public class LinqDataTypesDateColumn
+		{
+			public int      ID;
+			public decimal  MoneyValue;
+			[Column(DataType = DataType.Date)]
+			public DateTime DateTimeValue;
+			public bool     BoolValue;
+			public Guid     GuidValue;
+			public Binary?  BinaryValue;
+			public short    SmallIntValue;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/488")]
+		public void DateParameterUsesDateDbTypeInJoin([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			var commandInterceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(commandInterceptor);
+
+			var date = TestData.Date;
+			var q = (from t1 in db.GetTable<LinqDataTypesDateColumn>()
+					 join t2 in db.GetTable<LinqDataTypesDateColumn>() on t1.ID equals t2.ID
+					 where t2.DateTimeValue == date
+					 select t2);
+
+			var _ = q.FirstOrDefault();
+
+			var dc = (DataConnection)db;
+			commandInterceptor.Parameters.Length.ShouldBe(1);
+			commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/488")]
+		public void DateParameterUsesDateDbTypeInWhere([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			var commandInterceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(commandInterceptor);
+
+			var date = TestData.Date;
+			var q = (from t1 in db.GetTable<LinqDataTypesDateColumn>()
+					 where t1.DateTimeValue == date
+					 select t1);
+
+			var _ = q.FirstOrDefault();
+
+			var dc = (DataConnection)db;
+			commandInterceptor.Parameters.Length.ShouldBe(1);
+			commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1);
+		}
+
+		public static class SQLiteFtsExtensions
+		{
+			sealed class MatchBuilder : Sql.IExtensionCallBuilder
+			{
+				public void Build(Sql.ISqlExtensionBuilder builder)
+				{
+					var method = (MethodInfo) builder.Member;
+					var arg = method.GetGenericArguments().Single();
+
+					builder.AddParameter("table_field", new SqlTable(builder.Mapping.GetEntityDescriptor(arg)));
+				}
+			}
+
+			// ReSharper disable once UnusedTypeParameter
+			[Sql.Extension("{table_field} match {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
+			public static bool MatchFts<TEntity>([ExprParameter]string match)
+			{
+				throw new ServerSideOnlyException(nameof(MatchFts));
+			}
+		}
+
+		[Table("dataFTS")]
+		public partial class FtsDataRow
+		{
+			[Column] public long    Id        { get; set; }
+			[Column] public string? FirstName { get; set; }
+			[Column] public string? LastName  { get; set; }
+			[Column] public string? MidName   { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/773")]
+		public void FtsMatchExtensionWithAnonymousProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.Execute(@"
+DROP TABLE IF EXISTS dataFTS;
+CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
+
+			try
+			{
+				var data = db.GetTable<FtsDataRow>()
+						.Select(result =>
+						new
+						{
+							result.FirstName,
+							result.MidName,
+							result.LastName,
+						});
+
+				var query = data.Where(arg => SQLiteFtsExtensions.MatchFts<FtsDataRow>("John*"));
+				_ = query.ToList();
+			}
+			finally
+			{
+				// cleanup
+				db.Execute("DROP TABLE dataFTS");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/773")]
+		public void FtsMatchExtensionFiltersInsertedRows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.Execute(@"
+DROP TABLE IF EXISTS dataFTS;
+CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
+
+			try
+			{
+				var data = db.GetTable<FtsDataRow>()
+						.Where(arg => SQLiteFtsExtensions.MatchFts<FtsDataRow>("John*"))
+						.Select(result =>
+						new
+						{
+							result.FirstName,
+							result.MidName,
+							result.LastName,
+						});
+
+				var list = data.ToList(); // <=THROWS EXCEPTION
+
+				Assert.That(list, Is.Empty);
+
+				db.GetTable<FtsDataRow>().Insert(() => new FtsDataRow { FirstName = "JohnTheRipper" });
+				db.GetTable<FtsDataRow>().Insert(() => new FtsDataRow { FirstName = "DoeJohn" });
+
+				list = data.ToList(); // <=THROWS EXCEPTION
+
+				Assert.That(list, Has.Count.EqualTo(1));
+				Assert.That(list[0].FirstName, Is.EqualTo("JohnTheRipper"));
+			}
+			finally
+			{
+				// cleanup
+				db.Execute("DROP TABLE dataFTS");
 			}
 		}
 	}

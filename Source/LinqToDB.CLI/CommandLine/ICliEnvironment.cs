@@ -2,6 +2,7 @@ using System;
 using System.IO;
 
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine
 {
@@ -17,8 +18,17 @@ namespace LinqToDB.CommandLine
 
 		/// <summary>Available console buffer width.</summary>
 		int BufferWidth { get; }
-		/// <summary>Credential store used by connection resolution and credential management.</summary>
+		/// <summary>
+		/// Windows Credential Manager: the default credential store on Windows, and <c>@credential-manager</c>.
+		/// </summary>
 		ICredentialStore CredentialStore { get; }
+		/// <summary>
+		/// Creates the built-in local store in a credentials directory: the default credential store on Linux and macOS,
+		/// and <c>@local</c>.
+		/// </summary>
+		ICredentialStore CreateLocalCredentialStore(string directory);
+		/// <summary>Creates a credential store backed by a credentials CLI.</summary>
+		ICredentialStore CreateCredentialsCliStore(CredentialsCliSettings settings);
 
 		/// <summary>Checks whether a file exists.</summary>
 		bool FileExists(string path);
@@ -42,5 +52,10 @@ namespace LinqToDB.CommandLine
 		bool TryReadSecret(string prompt, out string? secret, out string? error);
 		/// <summary>Reads one line from standard input.</summary>
 		string? ReadLine();
+		/// <summary>
+		/// Logs on as a Windows user for database work. Work run in the session must not load code or read the
+		/// tool's files: the impersonated identity usually cannot access them.
+		/// </summary>
+		IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode);
 	}
 }

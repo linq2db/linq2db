@@ -230,8 +230,8 @@ namespace Tests.Linq
 			q.ToList();
 		}
 
-		[Test, Category(TestCategory.FTS)]
-		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/386"), Category(TestCategory.FTS)]
+		public void FreeTextTableInnerJoin([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using var db = new NorthwindDB(context);
 			var q =
@@ -243,8 +243,8 @@ namespace Tests.Linq
 			Assert.That(list, Is.Not.Empty);
 		}
 
-		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/386"), Category(TestCategory.FTS)]
+		public void FreeTextTableLeftJoin([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using var db = new NorthwindDB(context);
 			var q =
@@ -252,19 +252,6 @@ namespace Tests.Linq
 					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
 					select t;
-			var list = q.ToList();
-			Assert.That(list, Is.Not.Empty);
-		}
-
-		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
-		{
-			using var db = new NorthwindDB(context);
-			var q
-					= from t in db.Product
-					  from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
-					  orderby t.ProductName descending
-					  select t;
 			var list = q.ToList();
 			Assert.That(list, Is.Not.Empty);
 		}

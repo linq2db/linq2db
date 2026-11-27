@@ -1383,5 +1383,211 @@ namespace Tests.Linq
 			if (skip > 1 || take > 1)
 				db.Parent.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
+
+		[AttributeUsage(AttributeTargets.Parameter)]
+		sealed class CorrelatedSubqueryDataSourcesAttribute : DataSourcesAttribute
+		{
+			public static string[] Unsupported = new[]
+			{
+				TestProvName.AllNativeAccess,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle,
+				TestProvName.AllMySql,
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer,
+				ProviderName.DB2,
+				ProviderName.SqlCe,
+				TestProvName.AllSapHana,
+			}.SelectMany(_ => _.Split(',')).ToArray();
+
+			public CorrelatedSubqueryDataSourcesAttribute(params string[] except) : base(
+				Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
+			{
+			}
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/269")]
+		public void CorrelatedSubqueryTakeAny([CorrelatedSubqueryDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q = db.Patient
+					.Where(pat => db.Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Take(1)
+						.Any(_ => _.Contains("with")));
+
+			var e = Patient
+					.Where(pat => Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Take(1)
+						.Any(_ => _.Contains("with")));
+
+			AreEqual(e, q);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/269")]
+		public void CorrelatedSubqueryDistinctAny([CorrelatedSubqueryDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q = db.Patient
+					.Where(pat => db.Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Distinct()
+						.Any(_ => _.Contains("with")));
+
+			// DISTINCT should be optimized out
+			Assert.That(q.EnumQueries().All(x => !x.Select.IsDistinct), Is.True);
+
+			var e = Patient
+					.Where(pat => Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Distinct()
+						.Any(_ => _.Contains("with")));
+
+			AreEqual(e, q);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/269")]
+		public void CorrelatedSubquerySkipThenDistinctAny([CorrelatedSubqueryDataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q = db.Patient
+					.Where(pat => db.Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Skip(0)
+						.Distinct()
+						.Any(_ => _.Contains("with")));
+
+			var e = Patient
+					.Where(pat => Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Skip(0)
+						.Distinct()
+						.Any(_ => _.Contains("with")));
+
+			AreEqual(e, q);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/269")]
+		public void CorrelatedSubqueryDistinctThenSkipAny([CorrelatedSubqueryDataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q = db.Patient
+					.Where(pat => db.Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Distinct()
+						.Skip(0)
+						.Any(_ => _.Contains("with")));
+
+			var e = Patient
+					.Where(pat => Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Distinct()
+						.Skip(0)
+						.Any(_ => _.Contains("with")));
+
+			AreEqual(e, q);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/269")]
+		public void CorrelatedSubquerySkipAny([CorrelatedSubqueryDataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q = db.Patient
+					.Where(pat => db.Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Skip(0)
+						.Any(_ => _.Contains("with")));
+
+			var e = Patient
+					.Where(pat => Person
+						.Where(per => per.ID == pat.PersonID)
+						.OrderByDescending(per => per.FirstName)
+						.Select(c => c.Patient!.Diagnosis)
+						.Skip(0)
+						.Any(_ => _.Contains("with")));
+
+			AreEqual(e, q);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2785")]
+		public void TakeOnSelfJoinProjection([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var query = from a in db.Person
+						join b in  db.Person on a.ID equals b.ID
+						select new { Id = a.ID, Id2 = b.ID };
+
+			var res = query.Take(10).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2785")]
+		public void OrderByAfterTakeOnSelfJoinProjection([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var query = from a in db.Person
+						join b in  db.Person on a.ID equals b.ID
+						select new { Id = a.ID, Id2 = b.ID };
+
+			query.Take(10).OrderBy(_ => _.Id2).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/817")]
+		public void TakeWithoutOrderEmptyProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Person>().Take(1).Select(_ => new { }).ToList();
+
+			Assert.That(result, Has.Count.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/817")]
+		public void SkipWithoutOrderEmptyProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var cnt = db.GetTable<Person>().Count();
+
+			var result = db.GetTable<Person>().Skip(1).Select(_ => new { }).ToList();
+
+			Assert.That(result, Has.Count.EqualTo(cnt - 1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/817")]
+		public void SkipTakeWithoutOrderEmptyProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Person>().Skip(1).Take(1).Select(_ => new { }).ToList();
+
+			Assert.That(result, Has.Count.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/817")]
+		public void SkipZeroTakeWithoutOrderEmptyProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Person>().Skip(0).Take(1).Select(_ => new { }).ToList();
+
+			Assert.That(result, Has.Count.EqualTo(1));
+		}
 	}
 }

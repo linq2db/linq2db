@@ -540,10 +540,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Issue 4222
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4222")]
-		public void Issue4222Test1([DataSources] string context)
+		public void CompositeKeyEqualsExtensionSingleKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Entry>();
@@ -553,7 +551,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4222")]
-		public void Issue4222Test2([DataSources] string context)
+		public void CompositeKeyEqualsExtensionMultipleKeys([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Entry>();
@@ -670,6 +668,5 @@ namespace Tests.Linq
 
 			public IEntryKey Key => this;
 		}
-		#endregion
 	}
 }

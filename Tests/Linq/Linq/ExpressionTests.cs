@@ -110,10 +110,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4226")]
-		public void Issue4226Test([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void FluentConversionWithDatePartFilter([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			var fluentBuilder = new FluentMappingBuilder()
-				.Entity<Issue4226Table>()
+				.Entity<ConvertedDateTable>()
 					.HasPrimaryKey(e => e.Id)
 					.Property(e => e.Date)
 						.HasDataType(DataType.NVarChar)
@@ -126,25 +126,24 @@ namespace Tests.Linq
 				.Build();
 
 			using var db = GetDataContext(context, fluentBuilder.MappingSchema);
-			using var tb = db.CreateLocalTable<Issue4226Table>();
+			using var tb = db.CreateLocalTable<ConvertedDateTable>();
 
-			db.Insert(new Issue4226Table() { Id = 1, Date = TestData.Date });
+			db.Insert(new ConvertedDateTable() { Id = 1, Date = TestData.Date });
 
 			tb.Where(e => e.Date!.Value.Month == TestData.Date.Month).Single();
 		}
 
-		sealed class Issue4226Table
+		sealed class ConvertedDateTable
 		{
 			public int Id { get; set; }
 			public DateTime? Date { get; set; }
 		}
 
-		#region Issue 3807
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
-		public void Issue3807Test1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void TableFunctionAssociationArrayProjected([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3807Table.Data);
+			using var tb = db.CreateLocalTable(StringSplitArrayTable.Data);
 
 			var res = tb
 				.Select(a => new
@@ -172,13 +171,13 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
-		public void Issue3807Test2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void TableFunctionAssociationArrayContainsAfterProjection([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3807Table.Data);
+			using var tb = db.CreateLocalTable(StringSplitArrayTable.Data);
 
 			var res = tb
-				.Select(a => new Issue3807Table()
+				.Select(a => new StringSplitArrayTable()
 				{
 					Id    = a.Id,
 					Array = a.Array
@@ -197,13 +196,13 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
-		public void Issue3807Test3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void TableFunctionAssociationArrayInAfterProjection([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3807Table.Data);
+			using var tb = db.CreateLocalTable(StringSplitArrayTable.Data);
 
 			var res = tb
-				.Select(a => new Issue3807Table()
+				.Select(a => new StringSplitArrayTable()
 				{
 					Id    = a.Id,
 					Array = a.Array
@@ -222,13 +221,13 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
-		public void Issue3807Test4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void TableFunctionAssociationArrayAnyAfterProjection([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3807Table.Data);
+			using var tb = db.CreateLocalTable(StringSplitArrayTable.Data);
 
 			var res = tb
-				.Select(a => new Issue3807Table()
+				.Select(a => new StringSplitArrayTable()
 				{
 					Id    = a.Id,
 					Array = a.Array
@@ -247,10 +246,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
-		public void Issue3807Test12([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void TableFunctionAssociationArrayContainsBeforeProjection([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3807Table.Data);
+			using var tb = db.CreateLocalTable(StringSplitArrayTable.Data);
 
 			var res = tb
 				.Where(r => r.Array.Contains("two"))
@@ -272,10 +271,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
-		public void Issue3807Test13([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void TableFunctionAssociationArrayInBeforeProjection([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3807Table.Data);
+			using var tb = db.CreateLocalTable(StringSplitArrayTable.Data);
 
 			var res = tb
 				.Where(r => "two".In(r.Array))
@@ -297,10 +296,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
-		public void Issue3807Test14([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void TableFunctionAssociationArrayAnyBeforeProjection([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue3807Table.Data);
+			using var tb = db.CreateLocalTable(StringSplitArrayTable.Data);
 
 			var res = tb
 				.Where(r => r.Array.Any(i => i == "two"))
@@ -342,7 +341,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue3807Table
+		sealed class StringSplitArrayTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public string? ArrayString { get; set; }
@@ -350,44 +349,41 @@ namespace Tests.Linq
 			[Association(QueryExpressionMethod = nameof(ArrayExpression))]
 			public IEnumerable<string> Array { get; set; } = null!;
 
-			private static Expression<Func<Issue3807Table, IDataContext, IQueryable<string>>> ArrayExpression()
+			private static Expression<Func<StringSplitArrayTable, IDataContext, IQueryable<string>>> ArrayExpression()
 			{
 				return (e, dc) => SqlFnEx.StringSplit(e.ArrayString, ',').Select(r => r.Value);
 			}
 
-			public static readonly Issue3807Table[] Data =
+			public static readonly StringSplitArrayTable[] Data =
 			[
-				new Issue3807Table() { Id = 1, ArrayString = "one,two,three" },
-				new Issue3807Table() { Id = 2, ArrayString = "one,three" },
-				new Issue3807Table() { Id = 3 },
+				new StringSplitArrayTable() { Id = 1, ArrayString = "one,two,three" },
+				new StringSplitArrayTable() { Id = 2, ArrayString = "one,three" },
+				new StringSplitArrayTable() { Id = 3 },
 			];
 		}
-		#endregion
 
-		#region Issue 4622
-		public record Issue4674StockItem([property: PrimaryKey, Column(CanBeNull = false, Length = 50)] string TenantId, string Code, string Description);
-		public record Issue4674StockRoomItem(string TenantId, string StockroomCode, [property:PrimaryKey, Column(CanBeNull = false, Length = 50)] string ItemCode, decimal Quantity);
+		public record StockItemRecord([property: PrimaryKey, Column(CanBeNull = false, Length = 50)] string TenantId, string Code, string Description);
+		public record StockRoomItemRecord(string TenantId, string StockroomCode, [property:PrimaryKey, Column(CanBeNull = false, Length = 50)] string ItemCode, decimal Quantity);
 
-		static IQueryable<T2> Issue4674JoinTable<T2>(IDataContext db, Expression<Func<T2, bool>> joinExpression)
+		static IQueryable<T2> JoinTableByExpression<T2>(IDataContext db, Expression<Func<T2, bool>> joinExpression)
 		  where T2 : class
 		{
 			return db.GetTable<T2>().Where(joinExpression);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4674")]
-		public void Issue4674Test([DataSources(false)] string context)
+		public void JoinHelperMethodCannotBeConverted([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue4674StockItem>();
-			using var t2 = db.CreateLocalTable<Issue4674StockRoomItem>();
+			using var t1 = db.CreateLocalTable<StockItemRecord>();
+			using var t2 = db.CreateLocalTable<StockRoomItemRecord>();
 
 			var qry = from a in t1
-					   from b in Issue4674JoinTable<Issue4674StockRoomItem>(db, b => b.TenantId == a.TenantId && b.StockroomCode == a.Code)
+					   from b in JoinTableByExpression<StockRoomItemRecord>(db, b => b.TenantId == a.TenantId && b.StockroomCode == a.Code)
 					   select new { a.TenantId, a.Code, a.Description, b.StockroomCode, b.Quantity };
 			Assert.That(() => qry.ToArray(), Throws.InstanceOf<LinqToDBException>()
 				.With.Message.Contain("The LINQ expression could not be converted to SQL."));
 		}
-		#endregion
 
 		[ExpressionMethod(nameof(GetValueNullableExpr))]
 		static int? GetValue(int? value) => throw new ServerSideOnlyException(nameof(GetValue));

@@ -10,6 +10,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -669,8 +671,8 @@ namespace Tests.Linq
 		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "uncompatible coalesce types, first type: Optional<Decimal(35,2)>, second type: Decimal(22,9)",
 			Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets.")]
-		[Test]
-		public void Issue1601([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1601")]
+		public void LetSumReusedInProjection([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			var query = from q in db.Types
@@ -783,8 +785,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
-		public void Issue383Test1([DataSources(false, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/383")]
+		public void ManyJoinsCollectionSubqueryInProjection([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
@@ -831,8 +833,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue383Test2([DataSources(false, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/383")]
+		public void ManyJoinsSingleSubqueryInProjection([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
@@ -892,17 +894,16 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		#region Issue 4458
 		[Table]
-		sealed class Issue4458Item
+		sealed class StockItem
 		{
 			[Column(CanBeNull = false, Length = 100), PrimaryKey] public string Id { get; set; } = null!;
 
-			public static readonly Issue4458Item[] Data =
+			public static readonly StockItem[] Data =
 			[
-				new Issue4458Item() { Id = "1", },
-				new Issue4458Item() { Id = "2", },
-				new Issue4458Item() { Id = "3", }
+				new StockItem() { Id = "1", },
+				new StockItem() { Id = "2", },
+				new StockItem() { Id = "3", }
 			];
 		}
 
@@ -975,10 +976,10 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4458Test1([DataSources] string context)
+		public void FilterByNestedCollectionAfterGroupedLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable(Issue4458Item.Data);
+			using var t1 = db.CreateLocalTable(StockItem.Data);
 			using var t2 = db.CreateLocalTable(WarehouseStock.Data);
 			using var t3 = db.CreateLocalTable(Review.Data);
 
@@ -1000,10 +1001,10 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4458Test2([DataSources] string context)
+		public void FilterBySubqueryAfterGroupedLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable(Issue4458Item.Data);
+			using var t1 = db.CreateLocalTable(StockItem.Data);
 			using var t2 = db.CreateLocalTable(WarehouseStock.Data);
 			using var t3 = db.CreateLocalTable(Review.Data);
 
@@ -1029,9 +1030,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
 			}
 		}
-		#endregion
 
-		#region Issue 4347
 		[Table]
 		sealed record TransactionEntity
 		{
@@ -1108,7 +1107,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4347Test1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
+		public void FilterAndOrderByIntersectedDtoCollection([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<TransactionEntity>();
@@ -1130,7 +1129,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4347Test2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
+		public void FilterByIntersectedDtoCollection([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<TransactionEntity>();
@@ -1150,7 +1149,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
-		public void Issue4347Test3([DataSources] string context)
+		public void OrderByExpressionMethodDtoProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<TransactionEntity>();
@@ -1166,12 +1165,11 @@ namespace Tests.Linq
 				.Select(x => x.Dto)
 				.ToList();
 		}
-		#endregion
 
 		[ActiveIssue(Configurations = [TestProvName.AllOracle], ErrorMessage = "ORA-12704",
-			Details = "no-issue: Oracle rejects the CASE expression with a character set mismatch - https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917. Not 3295, which the fixture is named after: that one is a closed PostgreSQL issue about a let-var FirstOrDefault filter. No exception type is declared because it differs per Oracle client, while ORA-12704 does not.")]
+			Details = "no-issue: Oracle rejects the CASE expression with a character set mismatch - https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917. Not 3295, which this test's Description cites: that one is a closed PostgreSQL issue about a let-var FirstOrDefault filter. No exception type is declared because it differs per Oracle client, while ORA-12704 does not.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
-		public void Issue3295Test1([DataSources(TestProvName.AllSybase)] string context)
+		public void LetFirstOrDefaultProjectionFilter([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1188,12 +1186,12 @@ namespace Tests.Linq
 
 		// Sybase splits off: everywhere else the query runs and answers wrongly, there it is refused outright.
 		[ActiveIssue(3295, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))",
-			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. #3295 is closed and its own repro is the Test1 sibling, which passes; this variant still answers wrongly on every provider that can run it.")]
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. #3295 is closed and its own repro is the LetFirstOrDefaultProjectionFilter sibling, which passes; this variant still answers wrongly on every provider that can run it.")]
 		[ActiveIssue(3295, Configuration = TestProvName.AllSybase, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "The LINQ expression could not be converted to SQL.",
 			Details = "Sybase refuses the shape rather than answering wrongly.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
-		public void Issue3295Test2([DataSources] string context)
+		public void FirstOrDefaultInAssociationFilterCount([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1210,7 +1208,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3334")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Issue3334Test([DataSources] string context)
+		public void GroupJoinOnFirstOrDefaultSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1232,7 +1230,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3365")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Issue3365Test([DataSources] string context)
+		public void OrderByFirstOrDefaultAssociationProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1246,10 +1244,8 @@ namespace Tests.Linq
 			orderedQuery.ToArray();
 		}
 
-		#region Issue 4184
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4184")]
-		public void Issue4184Test([DataSources] string context)
+		public void JoinGroupedRecordSubqueryThrows([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1272,8 +1268,6 @@ namespace Tests.Linq
 			public int PcId = pcId;
 			public int ScanId = scanId;
 		}
-
-		#endregion
 
 		// technically it is not correct as such rownum generation is not guaranteed to follow query ordering
 		// that's why many dbs disabled and only sqlserver and oracle work
@@ -1321,8 +1315,6 @@ namespace Tests.Linq
 
 			Assert.That(result.RowNumber, Is.EqualTo(4));
 		}
-
-		#region Issue 4751
 
 		public class Trp004
 		{
@@ -1399,7 +1391,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4751")]
-		public void Issue4751Test([DataSources] string context)
+		public void PagedLeftJoinsOverAsSubQuery([DataSources] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Tdm100>();
@@ -1448,7 +1440,6 @@ namespace Tests.Linq
 			var items = query3.Skip(20).Take(10).ToList();
 			var totalCount = query3.Count();
 		}
-		#endregion
 
 		[Test]
 		public void DistinctSubqueryTest([DataSources(TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllYdb)] string context)
@@ -1473,6 +1464,1167 @@ namespace Tests.Linq
 					"SELECT",
 					"SELECT",
 					"DISTINCT"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1298")]
+		public void SubqueryByScalarColumnIntoViewType([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSapHana)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			using (db.CreateLocalTable<mega_composites>())
+			using (db.CreateLocalTable<Qwerty>())
+			{
+				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
+				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
+
+				db.Insert(new mega_composites()
+				{
+					ref1 = 100500,
+					y1 = new mega_composites.mega_composites__y1()
+					{
+						q1 = new mega_composites.mega_composites__y1.mega_composites__y1__q1()
+						{
+							ref1 = 100500
+						}
+					}
+				});
+				db.Insert(new mega_composites()
+				{
+					ref1 = 1,
+					y1 = new mega_composites.mega_composites__y1()
+					{
+						q1 = new mega_composites.mega_composites__y1.mega_composites__y1__q1()
+						{
+							ref1 = 100500
+						}
+					}
+				});
+				db.Insert(new mega_composites()
+				{
+					ref1 = 100500,
+					y1 = new mega_composites.mega_composites__y1()
+					{
+						q1 = new mega_composites.mega_composites__y1.mega_composites__y1__q1()
+						{
+							ref1 = 1
+						}
+					}
+				});
+
+				var ref1 = db.GetTable<mega_composites>()
+					.Select(x => new __mega_composites_View
+					{
+						ref1 = x.ref1,
+						__face_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.ref1).Select(q => q.asdfgh).FirstOrDefault()
+					}).Take(2).ToArray();
+
+				Assert.That(ref1, Is.Not.Null);
+			}
+
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1298")]
+		public void SubqueryByNestedCompositeColumnIntoViewType([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			using (db.CreateLocalTable<mega_composites>())
+			using (db.CreateLocalTable<Qwerty>())
+			{
+				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
+				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
+
+				db.Insert(new mega_composites()
+				{
+					ref1 = 100500,
+					y1 = new mega_composites.mega_composites__y1()
+					{
+						q1 = new mega_composites.mega_composites__y1.mega_composites__y1__q1()
+						{
+							ref1 = 100500
+						}
+					}
+				});
+				db.Insert(new mega_composites()
+				{
+					ref1 = 1,
+					y1 = new mega_composites.mega_composites__y1()
+					{
+						q1 = new mega_composites.mega_composites__y1.mega_composites__y1__q1()
+						{
+							ref1 = 100500
+						}
+					}
+				});
+				db.Insert(new mega_composites()
+				{
+					ref1 = 100500,
+					y1 = new mega_composites.mega_composites__y1()
+					{
+						q1 = new mega_composites.mega_composites__y1.mega_composites__y1__q1()
+						{
+							ref1 = 1
+						}
+					}
+				});
+
+				var ref1 = db.GetTable<mega_composites>()
+					.Select(x => new __mega_composites_View
+					{
+						y1 = x.y1,
+						__face_y1_q1_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.y1.q1.ref1).Select(q => q.asdfgh).FirstOrDefault()
+					}).Take(2).ToArray();
+
+				Assert.That(ref1, Is.Not.Null);
+			}
+		}
+
+		[Table("qwerty")]
+		public sealed class Qwerty
+		{
+			[Column]
+			public long Id { get; set; }
+
+			[Column]
+			public string? asdfgh { get; set; }
+		}
+
+		[Table("mega_composites")]
+		[Column("y1.q1.ref1", $"{nameof(y1)}.{nameof(mega_composites__y1.q1)}.{nameof(mega_composites__y1.mega_composites__y1__q1.ref1)}")]
+		public class mega_composites
+		{
+			public mega_composites() : base()
+			{
+				y1 = new mega_composites__y1();
+			}
+
+			public virtual mega_composites__y1 y1 { get; set; }
+
+			[Column]
+			public long? ref1 { get; set; }
+
+			public sealed class mega_composites__y1
+			{
+				public mega_composites__y1() : base()
+				{
+					q1 = new mega_composites__y1__q1();
+				}
+
+				public mega_composites__y1__q1 q1 { get; set; }
+
+				public sealed class mega_composites__y1__q1
+				{
+					//[Column("\"y1.q1.ref1\"")]
+					public long? ref1 { get; set; }
+				}
+			}
+		}
+
+		public sealed class __mega_composites_View : mega_composites
+		{
+			public string? __face_y1_q1_ref1 { get; set; }
+			public string? __face_ref1 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2767")]
+		public void CorrelatedCollectionProjectionOverLeftJoins([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllMySql)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<DBExercise>(DBExercise.Seed()))
+			using (db.CreateLocalTable<DBDescription>())
+			using (db.CreateLocalTable<DBExerciseEquipmentLinker>(DBExerciseEquipmentLinker.Seed()))
+			using (db.CreateLocalTable<DBEquipment>(DBEquipment.Seed()))
+			{
+				var language        = "en";
+				var currentLanguage = language;
+				var OriginId        = new { Exercise = "1", Equipment = "2" };
+
+				var query = from exercise in db.GetTable<DBExercise>()
+							join exerciseDescription in db.GetTable<DBDescription>().Where(x => x.Locale == language && x.ObjectClass == OriginId.Exercise && x.Field == "expl") on Sql.Convert<string, int>(exercise.Id) equals exerciseDescription.ForeignKey into exDesc
+							from exerciseDescription in exDesc.DefaultIfEmpty()
+							join exerciseStartDescription in db.GetTable<DBDescription>().Where(x => x.Locale == language && x.ObjectClass == OriginId.Exercise && x.Field == "startexpl") on Sql.Convert<string, int>(exercise.Id) equals exerciseStartDescription.ForeignKey into exStartDesc
+							from exerciseStartDescription in exStartDesc.DefaultIfEmpty()
+							orderby exercise.Timestamp descending, exercise.Id descending
+							select new ExerciseInfoSelectModel
+							{
+								Id          = exercise.Id,
+								IsPrivate   = exercise.IsPrivate,
+								Number      = exercise.Number,
+								Level       = exercise.Level,
+								Description = exerciseDescription != null ? exerciseDescription.Content : exercise.Description,
+								Set         = exercise.Reeks,
+								Times       = exercise.Num,
+								Time        = exercise.Time,
+								Rest        = exercise.Rest,
+								Side        = exercise.Side,
+								Image       = exercise.Image,
+								Video       = exercise.Video,
+
+								Equipments = (from equipmentLinker in db.GetTable<DBExerciseEquipmentLinker>()
+											  join equipment in db.GetTable<DBEquipment>() on equipmentLinker.EquipmentId equals equipment.Id
+											  join description in db.GetTable<DBDescription>().Where(x => x.Locale == currentLanguage && x.ObjectClass == OriginId.Equipment && x.Field == "name") on Sql.Convert<string, int>(equipment.Id) equals description.ForeignKey into desc
+											  from description in desc.DefaultIfEmpty()
+											  where exercise.Id == equipmentLinker.ExerciseId
+											  select new DescriptionJoinModel<DBEquipment>
+											  {
+												  Object = equipment,
+												  Description = description.Content,
+												  DescriptionId = description.Id
+											  })
+							.ToList(),
+								StartPositionDescription = exerciseStartDescription != null ? exerciseStartDescription.Content : exercise.Startexpl,
+							};
+
+				var result = query.ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(result[0].Id, Is.EqualTo(3441));
+					Assert.That(result[0].Equipments, Has.Count.EqualTo(1));
+					Assert.That(result[0].Equipments.Any(x => x.Object.Id == 41), Is.True);
+
+					Assert.That(result[1].Id, Is.EqualTo(3440));
+					Assert.That(result[1].Equipments, Has.Count.EqualTo(1));
+					Assert.That(result[1].Equipments.Any(x => x.Object.Id == 59), Is.True);
+
+					Assert.That(result[2].Id, Is.EqualTo(3438));
+					Assert.That(result[2].Equipments, Has.Count.EqualTo(2));
+					Assert.That(result[2].Equipments.Any(x => x.Object.Id == 50), Is.True);
+					Assert.That(result[2].Equipments.Any(x => x.Object.Id == 83), Is.True);
+				}
+			}
+		}
+
+		[Table("exercise")]
+		public class DBExercise
+		{
+			[Column("id")        , PrimaryKey                   ] public int      Id          { get; set; }
+			[Column("name")      , Nullable                     ] public string   Name        { get; set; } = null!;
+			[Column("number")    , Nullable                     ] public int?     Number      { get; set; }
+			[Column("startexpl") , Nullable                     ] public string   Startexpl   { get; set; } = null!;
+			[Column("level")     , NotNull                      ] public int      Level       { get; set; }
+			[Column("expl")      , NotNull                      ] public string   Description { get; set; } = null!;
+			[Column("date")      , NotNull                      ] public DateTime Date        { get; set; } = TestData.DateTime;
+			[Column("image")     , Nullable                     ] public string   Image       { get; set; } = null!;
+			[Column("video")     , Nullable                     ] public string   Video       { get; set; } = null!;
+			[Column("num")       , NotNull                      ] public int      Num         { get; set; }
+			[Column("side")      , NotNull                      ] public int      Side        { get; set; }
+			[Column("reeks")     , NotNull                      ] public int      Reeks       { get; set; }
+			[Column("time")      , NotNull                      ] public int      Time        { get; set; }
+			[Column("rest")      , NotNull                      ] public int      Rest        { get; set; }
+			[Column("weight")    , NotNull                      ] public int      Weight      { get; set; }
+			[Column("is_private"), NotNull                      ] public bool     IsPrivate   { get; set; }
+			[Column("timestamp"  , SkipOnUpdate = true), NotNull] public DateTime Timestamp   { get; set; } = TestData.DateTime;
+
+			public static DBExercise[] Seed()
+			{
+				return new DBExercise[]
+				{
+					new DBExercise { Id = 3438, Name = "ex1", Description = "desc 1" },
+					new DBExercise { Id = 3440, Name = "ex2", Description = "desc 2" },
+					new DBExercise { Id = 3441, Name = "ex3", Description = "desc 3" }
+				};
+			}
+		}
+		[Table("ext_translations")]
+		public class DBDescription
+		{
+			[Column("id")          , PrimaryKey] public int     Id          { get; set; }
+			[Column("locale")      , NotNull   ] public string? Locale      { get; set; }
+			[Column("object_class"), NotNull   ] public string  ObjectClass { get; set; } = null!;
+			[Column("field")       , NotNull   ] public string  Field       { get; set; } = null!;
+			[Column("foreign_key") , NotNull   ] public string? ForeignKey  { get; set; }
+			[Column("content")     , Nullable  ] public string  Content     { get; set; } = null!;
+		}
+		[Table("exercise_equipment_linker")]
+		public class DBExerciseEquipmentLinker
+		{
+			[Column("exercise_id") , PrimaryKey(1), NotNull] public int ExerciseId  { get; set; }
+			[Column("equipment_id"), PrimaryKey(2), NotNull] public int EquipmentId { get; set; }
+
+			public static DBExerciseEquipmentLinker[] Seed()
+			{
+				return new[]
+				{
+					new DBExerciseEquipmentLinker { ExerciseId = 3438, EquipmentId = 50 },
+					new DBExerciseEquipmentLinker { ExerciseId = 3438, EquipmentId = 83 },
+					new DBExerciseEquipmentLinker { ExerciseId = 3440, EquipmentId = 59 },
+					new DBExerciseEquipmentLinker { ExerciseId = 3441, EquipmentId = 41 }
+				};
+			}
+		}
+		[Table("exercise_equipment")]
+		public class DBEquipment
+		{
+			[Column("id")                      , PrimaryKey] public int    Id                     { get; set; }
+			[Column("parent_id")               , Nullable  ] public int?   ParentId               { get; set; }
+			[Column("name")                    , NotNull   ] public string Name                   { get; set; } = null!;
+			[Column("icon")                    , Nullable  ] public string Icon                   { get; set; } = null!;
+			[Column("online")                  , NotNull   ] public bool   Online                 { get; set; }
+			[Column("user_id")                 , Nullable  ] public int?   UserId                 { get; set; }
+			[Column("original_creator_id")     , Nullable  ] public int?   OriginalCreatorId      { get; set; }
+			[Column("is_private")              , NotNull   ] public bool   IsPrivate              { get; set; }
+			[Column("organisation_id")         , Nullable  ] public int?   OrganisationId         { get; set; }
+			[Column("original_organisation_id"), Nullable  ] public int?   OriginalOrganisationId { get; set; }
+
+			public static DBEquipment[] Seed()
+			{
+				return new DBEquipment[]
+				{
+					new DBEquipment { Id = 50, Name = "AB wheel" },
+					new DBEquipment { Id = 83, Name = "Airex balance beam" },
+					new DBEquipment { Id = 59, Name = "Matje (geen materiaal)" },
+					new DBEquipment { Id = 41, Name = "Bosu" }
+				};
+			}
+		}
+
+		public class DescriptionJoinModel<T>
+		{
+			public T                       Object        { get; set; } = default!;
+			public int?                    DescriptionId { get; set; }
+			public string                  Description   { get; set; } = null!;
+			public DescriptionJoinModel<T> Child         { get; set; } = null!;
+		}
+		public class ExerciseInfoSelectModel
+		{
+			public int                                     Id                       { get; set; }
+			public int?                                    Number                   { get; set; }
+			public string                                  Name                     { get; set; } = null!;
+			public int                                     Level                    { get; set; }
+			public string                                  Description              { get; set; } = null!;
+			public int?                                    Set                      { get; set; }
+			public int?                                    Times                    { get; set; }
+			public int?                                    Time                     { get; set; }
+			public int?                                    Rest                     { get; set; }
+			public int?                                    Side                     { get; set; }
+			public int                                     EffectiveTime            { get; set; }
+			public string                                  Image                    { get; set; } = null!;
+			public string                                  Video                    { get; set; } = null!;
+			public List<DescriptionJoinModel<DBEquipment>> Equipments               { get; set; } = null!;
+			public string                                  StartPositionDescription { get; set; } = null!;
+			public bool                                    IsPrivate                { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3906")]
+		public void SumSubqueryProjectionWithNestedFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<SumSubqueryPosition>())
+			using (db.CreateLocalTable<SumSubqueryInventory>())
+			using (db.CreateLocalTable<SumSubqueryAddon>())
+			{
+				db.Insert(new SumSubqueryPosition() { Id = 1 });
+				db.Insert(new SumSubqueryInventory() { InfeedAdviceID = 1, Quantity = 9 });
+				db.Insert(new SumSubqueryAddon() { Id = 1, Nr = 77 });
+				var qryA = from infeed in db.GetTable<SumSubqueryPosition>()
+						   select new
+						   {
+							   InfeedAdvicePosition = infeed,
+							   CurrentQuantity = db.GetTable<SumSubqueryInventory>().Where(x => x.InfeedAdviceID == infeed.Id).Sum(x => x.Quantity),
+						   };
+
+				var qryB = from oto in qryA
+						   select new
+						   {
+							   oto,
+							   InfeedAddons =
+								   (from ir in db.GetTable<SumSubqueryAddon>()
+									where ir.Id == oto.InfeedAdvicePosition.Id
+									select ir).DefaultIfEmpty().FirstOrDefault(),
+						   };
+
+				var l = qryB.First();
+			}
+		}
+
+		[Table]
+		public class SumSubqueryPosition
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		[Table]
+		public class SumSubqueryInventory
+		{
+			[Column] public int InfeedAdviceID { get; set; }
+			[Column] public int Quantity { get; set; }
+		}
+
+		[Table]
+		public class SumSubqueryAddon
+		{
+			[Column] public int Id { get; set; }
+
+			[Column] public int Nr { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4090")]
+		public void NestedOuterApplyIdFirstEmptyLeaf([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyRoot { Id1 = 1, Name1 = "Some1" },
+				new NestedApplyRoot { Id1 = 2, Name1 = "Some2" },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyMiddle { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new NestedApplyMiddle { Id2 = 12, ParentId2 = 1, Name2 = "Child12" },
+				new NestedApplyMiddle { Id2 = 13, ParentId2 = 2, Name2 = "Child13" },
+			});
+			using var tbl3 = db.CreateLocalTable(Array.Empty<NestedApplyLeaf>());
+			var ret = db.GetTable<NestedApplyRoot>()
+				.Select(t1 => new
+				{
+					Name1 = t1.Name1,
+					Value1 = db.GetTable<NestedApplyMiddle>()
+						.Where(x => x.ParentId2 == t1.Id1)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Id2 = t2.Id2,
+							Value2 = db.GetTable<NestedApplyLeaf>()
+								.Where(x => x.ParentId3 == t2.Id2)
+								.Select(t3 => new
+								{
+									//nested cross apply
+									Name3 = t3.Name3,
+									Value3 = t3.Id3
+								})
+								.FirstOrDefault(),
+							Name2 = t2.Name2
+						})
+						.FirstOrDefault()
+				})
+				.ToList();
+			Assert.That(ret, Has.Count.EqualTo(2));
+			Assert.That(ret[0].Value1, Is.Not.Null);
+			Assert.That(ret[0].Value1!.Value2, Is.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4090")]
+		public void NestedOuterApplyIdFirst([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyRoot { Id1 = 1, Name1 = "Some1" },
+				new NestedApplyRoot { Id1 = 2, Name1 = "Some2" },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyMiddle { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new NestedApplyMiddle { Id2 = 12, ParentId2 = 1, Name2 = "Child12" },
+				new NestedApplyMiddle { Id2 = 13, ParentId2 = 2, Name2 = "Child13" },
+			});
+			using var tbl3 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyLeaf { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new NestedApplyLeaf { Id3 = 22, ParentId3 = 11, Name3 = "Child22" },
+				new NestedApplyLeaf { Id3 = 23, ParentId3 = 12, Name3 = "Child23" },
+			});
+			var ret = db.GetTable<NestedApplyRoot>()
+				.Select(t1 => new
+				{
+					Name1 = t1.Name1,
+					Value1 = db.GetTable<NestedApplyMiddle>()
+						.Where(x => x.ParentId2 == t1.Id1)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Id2 = t2.Id2,
+							Value2 = db.GetTable<NestedApplyLeaf>()
+								.Where(x => x.ParentId3 == t2.Id2)
+								.Select(t3 => new
+								{
+									//nested cross apply
+									Name3 = t3.Name3,
+									Value3 = t3.Id3
+								})
+								.FirstOrDefault(),
+							Name2 = t2.Name2
+						})
+						.FirstOrDefault()
+				})
+				.ToList();
+			Assert.That(ret, Has.Count.EqualTo(2));
+			Assert.That(ret[0].Value1, Is.Not.Null);
+			Assert.That(ret[0].Value1!.Value2, Is.Not.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4090")]
+		public void NestedOuterApplyIdLastEmptyLeaf([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyRoot { Id1 = 1, Name1 = "Some1" },
+				new NestedApplyRoot { Id1 = 2, Name1 = "Some2" },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyMiddle { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new NestedApplyMiddle { Id2 = 12, ParentId2 = 1, Name2 = "Child12" },
+				new NestedApplyMiddle { Id2 = 13, ParentId2 = 2, Name2 = "Child13" },
+			});
+			using var tbl3 = db.CreateLocalTable(Array.Empty<NestedApplyLeaf>());
+			var ret = db.GetTable<NestedApplyRoot>()
+				.Select(t1 => new
+				{
+					Name1 = t1.Name1,
+					Value1 = db.GetTable<NestedApplyMiddle>()
+						.Where(x => x.ParentId2 == t1.Id1)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Value2 = db.GetTable<NestedApplyLeaf>()
+								.Where(x => x.ParentId3 == t2.Id2)
+								.Select(t3 => new
+								{
+									//nested cross apply
+									Name3 = t3.Name3,
+									Value3 = t3.Id3
+								})
+								.FirstOrDefault(),
+							Id2 = t2.Id2,
+							Name2 = t2.Name2
+						})
+						.FirstOrDefault()
+				})
+				.ToList();
+			Assert.That(ret, Has.Count.EqualTo(2));
+			Assert.That(ret[0].Value1, Is.Not.Null);
+			Assert.That(ret[0].Value1!.Value2, Is.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4090")]
+		public void NestedOuterApplyIdLast([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyRoot { Id1 = 1, Name1 = "Some1" },
+				new NestedApplyRoot { Id1 = 2, Name1 = "Some2" },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyMiddle { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new NestedApplyMiddle { Id2 = 12, ParentId2 = 1, Name2 = "Child12" },
+				new NestedApplyMiddle { Id2 = 13, ParentId2 = 2, Name2 = "Child13" },
+			});
+			using var tbl3 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyLeaf { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new NestedApplyLeaf { Id3 = 22, ParentId3 = 11, Name3 = "Child22" },
+				new NestedApplyLeaf { Id3 = 23, ParentId3 = 12, Name3 = "Child23" },
+			});
+			var ret = db.GetTable<NestedApplyRoot>()
+				.Select(t1 => new
+				{
+					Name1 = t1.Name1,
+					Value1 = db.GetTable<NestedApplyMiddle>()
+						.Where(x => x.ParentId2 == t1.Id1)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Value2 = db.GetTable<NestedApplyLeaf>()
+								.Where(x => x.ParentId3 == t2.Id2)
+								.Select(t3 => new
+								{
+									//nested cross apply
+									Name3 = t3.Name3,
+									Value3 = t3.Id3
+								})
+								.FirstOrDefault(),
+							Id2 = t2.Id2,
+							Name2 = t2.Name2
+						})
+						.FirstOrDefault()
+				})
+				.ToList();
+			Assert.That(ret, Has.Count.EqualTo(2));
+			Assert.That(ret[0].Value1, Is.Not.Null);
+			Assert.That(ret[0].Value1!.Value2, Is.Not.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4090")]
+		public void NestedOuterApplyNullableFieldsWithIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyRoot { Id1 = 1, Name1 = "Some1" },
+				new NestedApplyRoot { Id1 = 2, Name1 = null },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyMiddle { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new NestedApplyMiddle { Id2 = 12, ParentId2 = 2, Name2 = "Child12" },
+				new NestedApplyMiddle { Id2 = 13, ParentId2 = null, Name2 = "Child13" },
+				new NestedApplyMiddle { Id2 = 14, ParentId2 = 1, Name2 = null },
+				new NestedApplyMiddle { Id2 = 15, ParentId2 = 2, Name2 = null },
+				new NestedApplyMiddle { Id2 = 16, ParentId2 = null, Name2 = null },
+			});
+			using var tbl3 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyLeaf { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new NestedApplyLeaf { Id3 = 22, ParentId3 = 12, Name3 = "Child22" },
+				new NestedApplyLeaf { Id3 = 23, ParentId3 = 13, Name3 = "Child23" },
+				new NestedApplyLeaf { Id3 = 24, ParentId3 = 14, Name3 = "Child24" },
+				new NestedApplyLeaf { Id3 = 25, ParentId3 = 15, Name3 = "Child25" },
+				new NestedApplyLeaf { Id3 = 26, ParentId3 = 16, Name3 = "Child26" },
+				new NestedApplyLeaf { Id3 = 27, ParentId3 = null, Name3 = "Child27" },
+			});
+			var query = db.GetTable<NestedApplyLeaf>()
+				.OrderBy(x => x.Id3)
+				.Select(t3 => new
+				{
+					Name3 = t3.Name3,
+					Value2 = db.GetTable<NestedApplyMiddle>()
+						.Where(x => x.Id2 == t3.ParentId3)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Value1 = db.GetTable<NestedApplyRoot>()
+								.Where(x => x.Id1 == t2.ParentId2)
+								.Select(t1 => new
+								{
+									//nested cross apply
+									Name1 = t1.Name1,
+									Id1 = t1.Id1,
+								})
+								.FirstOrDefault(),
+							Name2 = t2.Name2,
+							Id2 = t2.Id2,
+						})
+						.FirstOrDefault()
+			});
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4090")]
+		public void NestedOuterApplyNullableFieldsWithoutIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyRoot { Id1 = 1, Name1 = "Some1" },
+				new NestedApplyRoot { Id1 = 2, Name1 = null },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyMiddle { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new NestedApplyMiddle { Id2 = 12, ParentId2 = 2, Name2 = "Child12" },
+				new NestedApplyMiddle { Id2 = 13, ParentId2 = null, Name2 = "Child13" },
+				new NestedApplyMiddle { Id2 = 14, ParentId2 = 1, Name2 = null },
+				new NestedApplyMiddle { Id2 = 15, ParentId2 = 2, Name2 = null },
+				new NestedApplyMiddle { Id2 = 16, ParentId2 = null, Name2 = null },
+			});
+			using var tbl3 = db.CreateLocalTable(new[]
+			{
+				new NestedApplyLeaf { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new NestedApplyLeaf { Id3 = 22, ParentId3 = 12, Name3 = "Child22" },
+				new NestedApplyLeaf { Id3 = 23, ParentId3 = 13, Name3 = "Child23" },
+				new NestedApplyLeaf { Id3 = 24, ParentId3 = 14, Name3 = "Child24" },
+				new NestedApplyLeaf { Id3 = 25, ParentId3 = 15, Name3 = "Child25" },
+				new NestedApplyLeaf { Id3 = 26, ParentId3 = 16, Name3 = "Child26" },
+				new NestedApplyLeaf { Id3 = 27, ParentId3 = null, Name3 = "Child27" },
+			});
+			var ret = db.GetTable<NestedApplyLeaf>()
+				.OrderBy(x => x.Id3)
+				.Select(t3 => new
+				{
+					Name3 = t3.Name3,
+					Value2 = db.GetTable<NestedApplyMiddle>()
+						.Where(x => x.Id2 == t3.ParentId3)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Value1 = db.GetTable<NestedApplyRoot>()
+								.Where(x => x.Id1 == t2.ParentId2)
+								.Select(t1 => new
+								{
+									//nested cross apply
+									Name1 = t1.Name1,
+								})
+								.FirstOrDefault(),
+							Name2 = t2.Name2,
+						})
+						.FirstOrDefault()
+				})
+				.ToList();
+			Assert.That(ret, Has.Count.EqualTo(7));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(ret[0].Name3!, Is.EqualTo("Child21"));
+				Assert.That(ret[0].Value2, Is.Not.Null);
+				Assert.That(ret[0].Value2!.Name2!, Is.EqualTo("Child11"));
+				Assert.That(ret[0].Value2!.Value1, Is.Not.Null);
+				Assert.That(ret[0].Value2!.Value1!.Name1!, Is.EqualTo("Some1"));
+
+				Assert.That(ret[1].Name3!, Is.EqualTo("Child22"));
+				Assert.That(ret[1].Value2, Is.Not.Null);
+				Assert.That(ret[1].Value2!.Name2!, Is.EqualTo("Child12"));
+				Assert.That(ret[1].Value2!.Value1, Is.Not.Null);
+				Assert.That(ret[1].Value2!.Value1!.Name1, Is.Null);
+
+				Assert.That(ret[2].Name3!, Is.EqualTo("Child23"));
+				Assert.That(ret[2].Value2, Is.Not.Null);
+				Assert.That(ret[2].Value2!.Name2!, Is.EqualTo("Child13"));
+				Assert.That(ret[2].Value2!.Value1, Is.Null);
+
+				Assert.That(ret[3].Name3!, Is.EqualTo("Child24"));
+				Assert.That(ret[3].Value2, Is.Not.Null);
+				Assert.That(ret[3].Value2!.Name2!, Is.Null);
+				Assert.That(ret[3].Value2!.Value1, Is.Not.Null);
+				Assert.That(ret[3].Value2!.Value1!.Name1!, Is.EqualTo("Some1"));
+
+				Assert.That(ret[4].Name3!, Is.EqualTo("Child25"));
+				Assert.That(ret[4].Value2, Is.Not.Null);
+				Assert.That(ret[4].Value2!.Name2!, Is.Null);
+				Assert.That(ret[4].Value2!.Value1, Is.Not.Null);
+				Assert.That(ret[4].Value2!.Value1!.Name1, Is.Null);
+
+				Assert.That(ret[5].Name3!, Is.EqualTo("Child26"));
+				Assert.That(ret[5].Value2, Is.Not.Null);
+				Assert.That(ret[5].Value2!.Name2!, Is.Null);
+				Assert.That(ret[5].Value2!.Value1, Is.Null);
+
+				Assert.That(ret[6].Name3!, Is.EqualTo("Child27"));
+				Assert.That(ret[6].Value2, Is.Null);
+			}
+		}
+
+		[Table("NestedApplyRoot")]
+		public partial class NestedApplyRoot
+		{
+			[Column("ID1"), PrimaryKey, NotNull] public int Id1 { get; set; }
+			[Column("NAME1"), Nullable] public string? Name1 { get; set; }
+		}
+
+		[Table("NestedApplyMiddle")]
+		public partial class NestedApplyMiddle
+		{
+			[Column("ID2"), PrimaryKey, NotNull] public int Id2 { get; set; }
+			[Column("PARENTID2"), Nullable] public int? ParentId2 { get; set; }
+			[Column("NAME2"), Nullable] public string? Name2 { get; set; }
+		}
+
+		[Table("NestedApplyLeaf")]
+		public partial class NestedApplyLeaf
+		{
+			[Column("ID3"), PrimaryKey, NotNull] public int Id3 { get; set; }
+			[Column("PARENTID3"), Nullable] public int? ParentId3 { get; set; }
+			[Column("NAME3"), Nullable] public string? Name3 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void FirstOrDefaultSubqueryInAnonymousProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new
+						  {
+							  Child =
+								  (from l in db.Child
+								   select new
+								   {
+									   Id = l.ParentID + 1
+								   }).FirstOrDefault()
+						  }).ToList();
+
+			var expected = from sep in Parent
+						   select new
+						   {
+							   Child =
+								   (from l in Child
+									select new
+									{
+										Id = l.ParentID + 1
+									}).FirstOrDefault()
+						   };
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void FirstOrDefaultSubqueryInAnonymousProjectionWithParentId([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new
+						  {
+							  Child =
+								  (from l in db.Child
+								   select new
+								   {
+									   Id = l.ParentID + 1,
+									   ParentId = l.ParentID
+								   }).FirstOrDefault()
+						  }).ToList();
+
+			var expected = from sep in Parent
+						   select new
+						   {
+							   Child =
+								   (from l in Child
+									select new
+									{
+										Id = l.ParentID + 1,
+										ParentId = l.ParentID
+									}).FirstOrDefault()
+						   };
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void FirstOrDefaultSubqueryInTypedProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new ProjectedChildWrapper
+						  {
+							  Child =
+								  (from l in db.Child
+								   select new ProjectedChild
+								   {
+									   Id = l.ParentID + 1
+								   }).FirstOrDefault()
+						  }).ToList();
+
+			var expected = from sep in Parent
+						   select new ProjectedChildWrapper
+						   {
+							   Child =
+								   (from l in Child
+									select new ProjectedChild
+									{
+										Id = l.ParentID + 1
+									}).FirstOrDefault()
+						   };
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void FirstOrDefaultSubqueryInTypedProjectionWithParentId([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new ProjectedChildWrapper
+						  {
+							  Child =
+								  (from l in db.Child
+								   select new ProjectedChild
+								   {
+									   Id = l.ParentID + 1,
+									   ParentId = l.ParentID
+								   }).FirstOrDefault()
+						  }).ToList();
+
+			var expected = from sep in Parent
+						   select new ProjectedChildWrapper
+						   {
+							   Child =
+								   (from l in Child
+									select new ProjectedChild
+									{
+										Id = l.ParentID + 1,
+										ParentId = l.ParentID
+									}).FirstOrDefault()
+						   };
+
+			AreEqual(expected, result);
+		}
+
+		// Sybase do not supports limiting subqueries
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		public void FirstOrDefaultScalarSubqueryInProjection([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			var expected =    Parent.Select(p =>    Child.Select(c => c.ParentID + 1).FirstOrDefault());
+			var result   = db.Parent.Select(p => db.Child.Select(c => c.ParentID + 1).FirstOrDefault());
+
+			AreEqual(expected, result);
+		}
+
+		// Sybase do not supports limiting subqueries
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		public void FirstOrDefaultScalarSubqueryInAnonymousColumn([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			var expected =    Parent.Select(p => new { Id = p.ParentID, V =    Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
+			var result   = db.Parent.Select(p => new { Id = p.ParentID, V = db.Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		public void NestedTypedProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(_ => new ProjectedChildWrapper { Child = new ProjectedChild { Id = _.ParentID + 1 } }),
+				db.Parent.Select(_ => new ProjectedChildWrapper { Child = new ProjectedChild { Id = _.ParentID + 1 } })
+			);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/461")]
+		public void NestedAnonymousProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(_ => new { Child = new { Id = _.ParentID + 1, ParentId = _.ParentID } }),
+				db.Parent.Select(_ => new { Child = new { Id = _.ParentID + 1, ParentId = _.ParentID } })
+			);
+		}
+
+		public class ProjectedChild
+		{
+			//public ProjectedChild(int id)
+			//{
+			//	Id = id;
+			//}
+
+			//public ProjectedChild()
+			//	: this(0)
+			//{ }
+
+			public int Id;
+
+			public int ParentId;
+
+			public override bool Equals(object? obj)
+			{
+				if (!(obj is ProjectedChild vh))
+					return false;
+
+				if (ReferenceEquals(this, vh))
+					return true;
+
+				return Id == vh.Id && ParentId == vh.ParentId;
+			}
+
+			public override int GetHashCode()
+			{
+				return (Id * 407) ^ (ParentId * -407);
+			}
+		}
+
+		public class ProjectedChildWrapper
+		{
+			public ProjectedChild? Child;
+
+			public override bool Equals(object? obj)
+			{
+				if (!(obj is ProjectedChildWrapper vvh))
+					return false;
+
+				if (ReferenceEquals(this, vvh))
+					return true;
+
+				if (Child != null)
+					return Child.Equals(vvh.Child);
+
+				return vvh.Child == null;
+			}
+
+			public override int GetHashCode()
+			{
+				return Child != null ? Child.GetHashCode() : 0;
+			}
+		}
+
+		[Table]
+		public sealed class NestedFilterTransition
+		{
+			[PrimaryKey]                public int      ThingId        { get; set; }
+			[PrimaryKey]                public DateTime CreatedDate    { get; set; }
+			[Column(CanBeNull = false)] public string   TransitionType { get; set; } = null!;
+		}
+
+		[Table]
+		public sealed class NestedFilterState
+		{
+			[PrimaryKey] public int       ThingId            { get; set; }
+			[Column]     public DateTime? LastTransitionDate { get; set; }
+		}
+
+		[Table]
+		public sealed class NestedFilterThing
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		public void NestedSingleOrDefaultSubqueriesInFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<NestedFilterTransition>();
+			using var t2 = db.CreateLocalTable<NestedFilterState>();
+			using var t3 = db.CreateLocalTable<NestedFilterThing>();
+
+			Expression<Func<NestedFilterTransition?, bool?, bool>> fitsUndeletedStatusFilter =
+			(transition, filter) =>
+				filter == null || filter == (transition == null || transition.TransitionType != "Delete");
+
+			Expression<Func<NestedFilterState?, bool?, bool>> stateFitsUndeletedStatusFilter =
+			(state, filter) =>
+				state != null
+					? fitsUndeletedStatusFilter.Compile()(
+						t1.SingleOrDefault(t =>
+							t.ThingId == state.ThingId &&
+							t.CreatedDate == state.LastTransitionDate),
+						filter)
+					: fitsUndeletedStatusFilter.Compile()(null, filter);
+
+			Expression<Func<NestedFilterThing, bool?, bool>> thingFitsUndeletedStatusFilter =
+			(thing, filter) => stateFitsUndeletedStatusFilter.Compile()(
+				t2.SingleOrDefault(s => s.ThingId == thing.Id), filter);
+
+			var filterQuery = t3.Where(thing => thingFitsUndeletedStatusFilter.Compile()(thing, true));
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		public void NestedSingleOrDefaultSubqueriesInFilterMerged([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<NestedFilterTransition>();
+			using var t2 = db.CreateLocalTable<NestedFilterState>();
+			using var t3 = db.CreateLocalTable<NestedFilterThing>();
+
+			var filterQuery = t3.Where(thing => t2.SingleOrDefault(s => s.ThingId == thing.Id) != null
+					? t1.SingleOrDefault(t =>
+							t.ThingId == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.ThingId
+							&& t.CreatedDate == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.LastTransitionDate) == null
+							|| t1.SingleOrDefault(t => t.ThingId == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.ThingId &&
+							t.CreatedDate == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.LastTransitionDate)!.TransitionType != "Delete"
+					: true);
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ActiveIssue(6501, Configuration = TestProvName.AllInformix)]
+		public void NestedSingleOrDefaultSubqueriesInFilterRewrittenWithAny([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<NestedFilterTransition>();
+			using var t2 = db.CreateLocalTable<NestedFilterState>();
+			using var t3 = db.CreateLocalTable<NestedFilterThing>();
+
+			Expression<Func<NestedFilterThing, bool>> thingHasDeletedState =
+			thing => t2
+				.Where(state => state.ThingId == thing.Id)
+				.SelectMany(state => t1
+					.Where(t => t.ThingId == state.ThingId && t.CreatedDate == state.LastTransitionDate))
+				.Any(transition => transition.TransitionType == "Delete");
+			var filterQuery = t3.Where(thing => !thingHasDeletedState.Compile()(thing));
+
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		[Table("AliasBaseTable")]
+		sealed class AliasBaseRow
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
+		[Table("AliasDetailTable")]
+		sealed class AliasDetailRow
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int OutId { get; set; }
+			[Column]     public int Cnt   { get; set; }
+		}
+
+		// Behavior pin for PR #5657 alias finalization.
+		// Parameter-dependent queries (nullable-param WHERE) set IsParameterDependent = true, which means
+		// the build-time ConvertElement(selectQuery.Select) runs in BuildColumns after aliasing.
+		// Verifies that correlated field references inside a scalar subquery still resolve to the correct
+		// outer-table alias after that build-time convert pass.
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void ParameterDependentWithCorrelatedSubquery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var outer = db.CreateLocalTable<AliasBaseRow>();
+			using var inner = db.CreateLocalTable<AliasDetailRow>();
+
+			outer.Insert(() => new AliasBaseRow { Id = 1, Value = 10 });
+			outer.Insert(() => new AliasBaseRow { Id = 2, Value = 20 });
+			inner.Insert(() => new AliasDetailRow { Id = 1, OutId = 1, Cnt = 3 });
+			inner.Insert(() => new AliasDetailRow { Id = 2, OutId = 1, Cnt = 5 });
+			inner.Insert(() => new AliasDetailRow { Id = 3, OutId = 2, Cnt = 7 });
+
+			int? minValue = 15;
+
+			var result =
+				(from o in outer
+				 where o.Value >= minValue
+				 select new
+				 {
+					 o.Id,
+					 o.Value,
+					 InnerCount = inner.Where(i => i.OutId == o.Id).Count()
+				 }).ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].Id.ShouldBe(2);
+			result[0].InnerCount.ShouldBe(1);
+		}
+
+		// Same shape with a derived inner table (GroupBy forces a nested SelectQuery inside the scalar subquery).
+		// The GroupBy turns the scalar correlated subquery into a derived-table (OUTER/LATERAL) join: YDB /
+		// ClickHouse can express it and return correct results (unlike the simple form they reject), while
+		// Sybase rejects the OUTER/LATERAL join it lowers to (a different limitation than the simple form's
+		// correlated-subquery rejection).
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void ParameterDependentWithCorrelatedDerivedSubquery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var outer = db.CreateLocalTable<AliasBaseRow>();
+			using var inner = db.CreateLocalTable<AliasDetailRow>();
+
+			outer.Insert(() => new AliasBaseRow { Id = 1, Value = 10 });
+			outer.Insert(() => new AliasBaseRow { Id = 2, Value = 20 });
+			inner.Insert(() => new AliasDetailRow { Id = 1, OutId = 1, Cnt = 3 });
+			inner.Insert(() => new AliasDetailRow { Id = 2, OutId = 1, Cnt = 5 });
+			inner.Insert(() => new AliasDetailRow { Id = 3, OutId = 2, Cnt = 7 });
+
+			int? minValue = 15;
+
+			var result =
+				(from o in outer
+				 where o.Value >= minValue
+				 select new
+				 {
+					 o.Id,
+					 o.Value,
+					 SumCnt = inner
+						.Where(i => i.OutId == o.Id)
+						.GroupBy(i => i.OutId)
+						.Select(g => g.Sum(x => x.Cnt))
+						.FirstOrDefault()
+				 }).ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].Id.ShouldBe(2);
+			result[0].SumCnt.ShouldBe(7);
 		}
 	}
 }

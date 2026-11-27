@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
@@ -356,8 +358,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4496")]
-		public void Issue4496Test([DataSources] string context)
+		[Test]
+		public void QueryFilterInnerJoinDistinctRepeatedQuery([DataSources] string context)
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
@@ -381,10 +383,10 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		int Issue4508Test_Id;
+		int QueryFilterCounter;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508"), QueryCacheTest]
-		public void Issue4508Test([DataSources] string context)
+		[Test, QueryCacheTest]
+		public void QueryFilterCapturedCounterReevaluated([DataSources] string context)
 		{
 			Test(context);
 			Test(context);
@@ -393,13 +395,13 @@ namespace Tests.Linq
 			{
 				var builder = new FluentMappingBuilder(new MappingSchema());
 
-				Issue4508Test_Id = 0;
+				QueryFilterCounter = 0;
 
 				builder
 					.Entity<Person>()
 					.HasQueryFilter((q, ctx) =>
 					{
-						var idCopy = Issue4508Test_Id++;
+						var idCopy = QueryFilterCounter++;
 						return q.Where(p => p.ID > idCopy);
 					});
 
@@ -413,7 +415,7 @@ namespace Tests.Linq
 
 				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
 
-				Issue4508Test_Id = 0;
+				QueryFilterCounter = 0;
 
 				arr1 = query.ToArray();
 				arr2 = query.ToArray();
@@ -423,7 +425,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		public partial class Issue5289Table
+		public partial class SoftDeletedPictureTable
 		{
 			[PrimaryKey] public int  Id        { get; set; }
 			[Column    ] public int? PictureId { get; set; }
@@ -434,20 +436,20 @@ namespace Tests.Linq
 		public void InsertOrUpdate([InsertOrUpdateDataSources] string context)
 		{
 			var builder = new FluentMappingBuilder();
-			builder.Entity<Issue5289Table>().HasQueryFilter((r, db) => !r.Deleted);
+			builder.Entity<SoftDeletedPictureTable>().HasQueryFilter((r, db) => !r.Deleted);
 			builder.Build();
 
 			using var db = GetDataContext(context, builder.MappingSchema);
-			using var tb = db.CreateLocalTable<Issue5289Table>();
+			using var tb = db.CreateLocalTable<SoftDeletedPictureTable>();
 
 			tb.InsertOrUpdate(
-				() => new Issue5289Table()
+				() => new SoftDeletedPictureTable()
 				{
 					Id = 1,
 					PictureId = 2,
 					Deleted = false
 				},
-				r => new Issue5289Table()
+				r => new SoftDeletedPictureTable()
 				{
 					PictureId = 3,
 				});
@@ -458,13 +460,13 @@ namespace Tests.Linq
 			Assert.That(record.PictureId, Is.EqualTo(2));
 
 			tb.InsertOrUpdate(
-				() => new Issue5289Table()
+				() => new SoftDeletedPictureTable()
 				{
 					Id = 1,
 					PictureId = 2,
 					Deleted = false
 				},
-				r => new Issue5289Table()
+				r => new SoftDeletedPictureTable()
 				{
 					PictureId = 3
 				});
@@ -1244,5 +1246,172 @@ namespace Tests.Linq
 				result.Count.ShouldBe(5);
 			}
 		}
+
+#if !NETFRAMEWORK
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5069")]
+		public void AssociationAsInterfaceMethod([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = InterfaceEntityFilterModel.ModelBuilderExtensions.ApplyEntityFilters();
+
+			using var db = GetDataContext(context, ms);
+			using var t1 = db.CreateLocalTable<InterfaceEntityFilterModel.EntityFilterUser>();
+			using var t2 = db.CreateLocalTable<InterfaceEntityFilterModel.EntityFilterAccount>();
+
+			var q = t2
+				.Take(1)
+				.Select(x => x.GetOwnerUsers());
+
+			_ = q.ToList();
+		}
+
+		sealed class InterfaceEntityFilterModel
+		{
+			static int? UserId { get; set; } = 123;
+
+			public interface IBaseEntity;
+
+			public interface IIdentifiable<T> : IBaseEntity
+			{
+				T Id { get; set; }
+			}
+
+			[EntityFilter(typeof(IUserOwned<>), nameof(Filter))]
+			public interface IUserOwned<out TOwner>
+				where TOwner : IIdentifiable<int>
+			{
+				TOwner[] GetOwnerUsers();
+
+				private static IQueryable<T> Filter<T>(IQueryable<T> q, IDataContext dbCtx)
+					where T : IUserOwned<IIdentifiable<int>>
+					=> q.Where(x => x.GetOwnerUsers().Any(y => y.Id == UserId));
+			}
+
+			public class EntityFilterAccount : IBaseEntity, IIdentifiable<int>, IUserOwned<EntityFilterUser>
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				[Column]
+				public int UserId { get; set; }
+
+				[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(EntityFilterUser.Id))]
+				public EntityFilterUser User { get; } = null!;
+
+				[Association(ThisKey = nameof(UserId), OtherKey = nameof(EntityFilterUser.Id), CanBeNull = false)]
+				public EntityFilterUser[] GetOwnerUsers() => null!;
+			}
+
+			public class EntityFilterUser : IBaseEntity, IIdentifiable<int>
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				[Association(ThisKey = nameof(Id), OtherKey = nameof(EntityFilterAccount.UserId))]
+				public EntityFilterAccount[] Accounts { get; } = null!;
+			}
+
+			[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
+			public class EntityFilterAttribute(Type providerType, string propertyName) : Attribute
+			{
+				public Type ProviderType { get; } = providerType;
+
+				public string PropertyName { get; } = propertyName;
+			}
+
+			internal static class EntityFilterHelper
+			{
+				public static Func<IQueryable<TEntity>, IDataContext, IQueryable<TEntity>>?
+					GetEntityFilter<TEntity>()
+				{
+					var filters = FindAllInheritances(typeof(TEntity))
+						.SelectMany(
+							x => x
+								.GetAttributes<EntityFilterAttribute>()
+								.Select(y => (InheritType: x, Attribute: y)))
+						.Select(x => GetLambda<TEntity>(x.InheritType, x.Attribute))
+						.ToArray();
+
+					return filters.Any()
+						? (q, dbCtx) => filters.Aggregate(q, (currQ, nextFunc) => nextFunc(currQ, dbCtx))
+						: null;
+				}
+
+				private static HashSet<Type> FindAllInheritances(Type entityType)
+				{
+					var relevantTypes = new HashSet<Type>();
+					var processQueue = new Queue<Type>();
+
+					processQueue.Enqueue(entityType);
+
+					while (processQueue.TryDequeue(out var processType))
+					{
+						if (processType.BaseType != null)
+							processQueue.Enqueue(processType.BaseType);
+
+						foreach (var iFace in processType.GetInterfaces())
+							processQueue.Enqueue(iFace);
+
+						relevantTypes.Add(processType);
+					}
+
+					return relevantTypes;
+				}
+
+				private static Func<IQueryable<TEntity>, IDataContext, IQueryable<TEntity>> GetLambda<TEntity>(
+					Type inheritType,
+					EntityFilterAttribute entityFilter)
+				{
+					var providerType = entityFilter.ProviderType;
+
+					if (providerType.IsGenericType)
+						providerType = providerType.MakeGenericType(inheritType.GetGenericArguments());
+
+					var methodInfo = providerType
+						.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+						.FirstOrDefault(m => m.Name == entityFilter.PropertyName && m.IsGenericMethodDefinition)
+						?.MakeGenericMethod(typeof(TEntity))
+						?? throw new ArgumentException($"Method '{entityFilter.PropertyName}' not found in type '{providerType.FullName}' or is not a generic method definition.");
+
+					var qParam = Expression.Parameter(typeof(IQueryable<TEntity>), "q");
+					var dbCtxParam = Expression.Parameter(typeof(IDataContext), "dbCtx");
+
+					var methodCall = Expression.Call(null, methodInfo, qParam, dbCtxParam);
+
+					var lambda = Expression.Lambda<Func<IQueryable<TEntity>, IDataContext, IQueryable<TEntity>>>(
+						methodCall,
+						qParam,
+						dbCtxParam);
+
+					return lambda.Compile();
+				}
+			}
+
+			public static class ModelBuilderExtensions
+			{
+				public static MappingSchema ApplyEntityFilters()
+				{
+					var ms = new MappingSchema();
+
+					var builder = new FluentMappingBuilder(ms);
+					var baseEntityType = typeof(IBaseEntity);
+
+					ProcessEntity<EntityFilterAccount>(builder);
+					ProcessEntity<EntityFilterUser>(builder);
+
+					builder.Build();
+
+					return ms;
+				}
+
+				private static void ProcessEntity<TEntity>(FluentMappingBuilder builder)
+				{
+					var filter = EntityFilterHelper.GetEntityFilter<TEntity>();
+
+					if (filter != null)
+						builder.Entity<TEntity>().HasQueryFilter(filter);
+				}
+			}
+		}
+#endif
 	}
 }
