@@ -844,5 +844,372 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Outer join projection hoisting
+
+		// A conditional projection of an outer-joined source reads NULL for an outer row without a match. Lifting the
+		// projection out of the joined subquery evaluates it over the NULL-extended row instead, where `Value1 IS NULL`
+		// holds, so the last parent (no ParentID + 1) reads "none".
+		[Test]
+		public void OuterJoinedConditionalProjectionReadsNullWithoutMatch([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var plain =
+				from p in db.Parent
+				from x in db.Parent
+					.Where(q => q.ParentID == p.ParentID + 1)
+					.Select(q => q.Value1 == null ? "none" : null)
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			AssertQuery(plain);
+
+			var subQuery =
+				from p in db.Parent
+				from x in db.Parent
+					.Where(q => q.ParentID == p.ParentID + 1)
+					.Select(q => q.Value1 == null ? "none" : null)
+					.AsSubQuery()
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			AssertQuery(subQuery);
+		}
+
+		// A RIGHT or FULL join inside the outer-joined subquery yields rows without its main source, so the NULL
+		// marker of the lifted projection cannot come from the main source alone: a parent without children would
+		// read NULL instead of its value. The range condition has no `=` to take the marker from, so it comes from
+		// the sources of the subquery.
+		[Test]
+		public void OuterJoinedSubqueryWithRightJoinKeepsMatchedValue([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sub = db.Child
+				.RightJoin(db.Parent, (c, p) => c.ParentID == p.ParentID, (c, p) => new { p.ParentID, Flag = p.Value1 > 4 ? "big" : null });
+
+			var expected =
+				from x in Parent
+				from c in Child
+					.Where(c => c.ParentID == x.ParentID)
+					.Select(c => (Child?)c)
+					.DefaultIfEmpty()
+				select new { x.ParentID, Flag = x.Value1 > 4 ? "big" : null };
+
+			var query =
+				from x in db.Parent
+				from s in sub
+					.Where(s => s.ParentID == x.ParentID)
+					.DefaultIfEmpty()
+				select new { x.ParentID, s.Flag };
+
+			AreEqual(expected, query);
+
+			var leftJoinQuery =
+				from x in db.Parent
+				from s in sub.LeftJoin(s => s.ParentID == x.ParentID)
+				select new { x.ParentID, s.Flag };
+
+			AreEqual(expected, leftJoinQuery);
+
+			var rangeQuery =
+				from x in db.Parent
+				from s in sub
+					.Where(s => s.ParentID >= x.ParentID && s.ParentID <= x.ParentID)
+					.DefaultIfEmpty()
+				select new { x.ParentID, s.Flag };
+
+			AreEqual(expected, rangeQuery);
+		}
+
+		[Test]
+		public void OuterJoinedSubqueryWithFullJoinKeepsMatchedValue([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllMySql, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sub = db.Child
+				.FullJoin(db.Parent, (c, p) => c.ParentID == p.ParentID, (c, p) => new { ParentID = (int?)p.ParentID, Flag = p.Value1 > 4 ? "big" : null });
+
+			var expected =
+				from x in Parent
+				from c in Child
+					.Where(c => c.ParentID == x.ParentID)
+					.Select(c => (Child?)c)
+					.DefaultIfEmpty()
+				select new { x.ParentID, Flag = x.Value1 > 4 ? "big" : null };
+
+			var query =
+				from x in db.Parent
+				from s in sub
+					.Where(s => s.ParentID == x.ParentID)
+					.DefaultIfEmpty()
+				select new { x.ParentID, s.Flag };
+
+			AreEqual(expected, query);
+
+			var rangeQuery =
+				from x in db.Parent
+				from s in sub
+					.Where(s => s.ParentID >= x.ParentID && s.ParentID <= x.ParentID)
+					.DefaultIfEmpty()
+				select new { x.ParentID, s.Flag };
+
+			AreEqual(expected, rangeQuery);
+		}
+
+		// The subquery side of a RIGHT join keeps every row: a lifted projection reads its value also for a row the ON
+		// condition does not match, here parents 2 and 4 with NULL in the compared column.
+		[Test]
+		public void RightJoinedSubqueryKeepsUnmatchedValue([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sub = db.Parent
+				.Select(p => new { p.ParentID, p.Value1, Flag = p.Value1 == null ? "none" : null });
+
+			var query =
+				from x in db.Parent
+				from s in sub.RightJoin(s => s.Value1 == x.ParentID)
+				select new { s.ParentID, s.Flag };
+
+			var expected =
+				from p in Parent
+				select new { p.ParentID, Flag = p.Value1 == null ? "none" : null };
+
+			AreEqual(expected, query);
+		}
+
+		[Table]
+		sealed class NullableOnlyRow
+		{
+			[Column] public int? A { get; set; }
+			[Column] public int? B { get; set; }
+		}
+
+		// The joined source has no non-nullable column to mark a matched row. The projection references a sibling
+		// source, so it cannot stay in a derived table under a LEFT JOIN, and it still reads NULL for an outer row
+		// without a match (ChildID 22).
+		[Test]
+		public void OuterJoinedSiblingProjectionWithoutNotNullColumn([DataSources] string context)
+		{
+			NullableOnlyRow[] rows = [new() { A = 11, B = null }, new() { A = 21, B = 1 }];
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(rows);
+
+			var query =
+				from c in db.Child
+				where c.ChildID == 11 || c.ChildID == 21 || c.ChildID == 22
+				from n in t
+					.Where(n => n.A == c.ChildID)
+					.Select(n => n.B == null ? (int?)c.ParentID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, N = n };
+
+			var expected =
+				from c in Child
+				where c.ChildID == 11 || c.ChildID == 21 || c.ChildID == 22
+				from n in rows
+					.Where(n => n.A == c.ChildID)
+					.Select(n => n.B == null ? (int?)c.ParentID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, N = n };
+
+			AreEqual(expected, query);
+		}
+
+		// No column marks a matched row: the source has no non-nullable one and the range condition has no `=`. The
+		// FROM moves into a subquery with a constant marker. Access does not NULL-extend it and lifts the column
+		// unguarded; Oracle 11 merges the subquery over the table and loses it. Both read the sibling value, as on master.
+		[Test]
+		public void OuterJoinedSiblingProjectionWithoutAnyMarker([DataSources(TestProvName.AllAccess, TestProvName.AllOracle11)] string context)
+		{
+			NullableOnlyRow[] rows = [new() { A = 11, B = null }, new() { A = 21, B = 1 }];
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(rows);
+
+			var query =
+				from c in db.Child
+				where c.ChildID == 11 || c.ChildID == 21 || c.ChildID == 22
+				from n in t
+					.Where(n => n.A >= c.ChildID && n.A <= c.ChildID)
+					.Select(n => n.B == null ? (int?)c.ParentID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, N = n };
+
+			var expected =
+				from c in Child
+				where c.ChildID == 11 || c.ChildID == 21 || c.ChildID == 22
+				from n in rows
+					.Where(n => n.A == c.ChildID)
+					.Select(n => n.B == null ? (int?)c.ParentID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, N = n };
+
+			AreEqual(expected, query);
+		}
+
+		// With `=` in the ON condition the marker is the compared CTE column, without it a non-nullable CTE column.
+		[Test]
+		public void OuterJoinedSiblingProjectionOverCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Child
+				.Where(c => c.ChildID > 0)
+				.AsCte();
+
+			var expected =
+				from p in Parent
+				where p.ParentID == 1 || p.ParentID == 4 || p.ParentID == 5
+				from x in Child
+					.Where(cc => cc.ParentID == p.ParentID)
+					.Select(cc => cc.ChildID > 40 ? (int?)p.Value1 : p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			var query =
+				from p in db.Parent
+				where p.ParentID == 1 || p.ParentID == 4 || p.ParentID == 5
+				from x in cte
+					.Where(cc => cc.ParentID == p.ParentID)
+					.Select(cc => cc.ChildID > 40 ? (int?)p.Value1 : p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			AreEqual(expected, query);
+
+			var rangeQuery =
+				from p in db.Parent
+				where p.ParentID == 1 || p.ParentID == 4 || p.ParentID == 5
+				from x in cte
+					.Where(cc => cc.ParentID >= p.ParentID && cc.ParentID <= p.ParentID)
+					.Select(cc => cc.ChildID > 40 ? (int?)p.Value1 : p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			AreEqual(expected, rangeQuery);
+
+			// ChildID comes from a source the CTE body outer-joins: it is NULL on a row of the CTE
+			var joinedCte =
+				(
+					from pp in db.Parent
+					from cc in db.Child.Where(cc => cc.ParentID == pp.ParentID).DefaultIfEmpty()
+					select new { ChildID = (int?)cc.ChildID, pp.Value1 }
+				)
+				.AsCte();
+
+			var joinedExpected =
+				from p in Parent
+				where p.ParentID == 1 || p.ParentID == 4 || p.ParentID == 5
+				from x in
+					(
+						from pp in Parent
+						from cc in Child.Where(cc => cc.ParentID == pp.ParentID).DefaultIfEmpty()
+						select new { ChildID = cc == null ? null : (int?)cc.ChildID, pp.Value1 }
+					)
+					.Where(cc => cc.Value1 == p.ParentID)
+					.Select(cc => cc.ChildID > 40 ? (int?)p.Value1 : p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			var joinedQuery =
+				from p in db.Parent
+				where p.ParentID == 1 || p.ParentID == 4 || p.ParentID == 5
+				from x in joinedCte
+					.Where(cc => cc.Value1 >= p.ParentID && cc.Value1 <= p.ParentID)
+					.Select(cc => cc.ChildID > 40 ? (int?)p.Value1 : p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			AreEqual(joinedExpected, joinedQuery);
+		}
+
+		[Test]
+		public void OuterJoinedSiblingProjectionOverConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var union = db.Parent
+				.Where(p => p.ParentID < 3)
+				.Concat(db.Parent.Where(p => p.ParentID > 5));
+
+			var query =
+				from c in db.Child
+				where c.ParentID == 1 || c.ParentID == 2 || c.ParentID == 3 || c.ParentID == 6
+				from v in union
+					.Where(q => q.ParentID == c.ParentID)
+					.Select(q => q.Value1 == null ? (int?)c.ChildID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			var expected =
+				from c in Child
+				where c.ParentID == 1 || c.ParentID == 2 || c.ParentID == 3 || c.ParentID == 6
+				from v in Parent
+					.Where(q => (q.ParentID < 3 || q.ParentID > 5) && q.ParentID == c.ParentID)
+					.Select(q => q.Value1 == null ? (int?)c.ChildID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AreEqual(expected, query);
+
+			var rangeQuery =
+				from c in db.Child
+				where c.ParentID == 1 || c.ParentID == 2 || c.ParentID == 3 || c.ParentID == 6
+				from v in union
+					.Where(q => q.ParentID >= c.ParentID && q.ParentID <= c.ParentID)
+					.Select(q => q.Value1 == null ? (int?)c.ChildID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, V = v };
+
+			AreEqual(expected, rangeQuery);
+		}
+
+		// Access rejects the FROM-less selects of a VALUES source inside a derived table
+		[Test]
+		public void OuterJoinedSiblingProjectionOverValues([DataSources(TestProvName.AllAccess)] string context)
+		{
+			NullableOnlyRow[] rows = [new() { A = 11, B = null }, new() { A = 21, B = 1 }];
+
+			using var db = GetDataContext(context);
+
+			var values = rows.AsQueryable(db);
+
+			var expected =
+				from c in Child
+				where c.ChildID == 11 || c.ChildID == 21 || c.ChildID == 22
+				from n in rows
+					.Where(n => n.A == c.ChildID)
+					.Select(n => n.B == null ? (int?)c.ParentID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, N = n };
+
+			var query =
+				from c in db.Child
+				where c.ChildID == 11 || c.ChildID == 21 || c.ChildID == 22
+				from n in values
+					.Where(n => n.A == c.ChildID)
+					.Select(n => n.B == null ? (int?)c.ParentID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, N = n };
+
+			AreEqual(expected, query);
+
+			var rangeQuery =
+				from c in db.Child
+				where c.ChildID == 11 || c.ChildID == 21 || c.ChildID == 22
+				from n in values
+					.Where(n => n.A >= c.ChildID && n.A <= c.ChildID)
+					.Select(n => n.B == null ? (int?)c.ParentID : null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, N = n };
+
+			AreEqual(expected, rangeQuery);
+		}
+
+		#endregion
 	}
 }

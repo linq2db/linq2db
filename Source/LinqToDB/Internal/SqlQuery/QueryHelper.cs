@@ -2478,6 +2478,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsLimitedToOneRecord(SelectQuery query)
 		{
+			// every branch of a set operation contributes rows, whatever limits the first branch
+			if (query.HasSetOperators)
+			{
+				return false;
+			}
+
 			if (query.HasNoTables)
 			{
 				return true;
