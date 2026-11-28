@@ -37,6 +37,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 			};
 		}
 
+		/// <summary>
+		/// The ODBC driver rewrites a double quote inside a bracketed name before parsing it
+		/// (<c>[Say "Hi"]</c> reaches the engine as <c>[Say [Hi]]</c>), so such a name is refused here.
+		/// </summary>
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			if (value.Contains('"', StringComparison.Ordinal))
+				throw new LinqToDBException($"Access cannot represent the identifier '{value}' over ODBC: the driver cannot read a double quote inside a bracketed identifier.");
+
+			return base.DelimitIdentifier(sb, value);
+		}
+
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (DataProvider is AccessDataProvider { Provider: AccessProvider.ODBC } provider)
