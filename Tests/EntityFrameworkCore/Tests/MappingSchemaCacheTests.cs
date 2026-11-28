@@ -7,6 +7,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -46,6 +47,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				// per context — the scenario where linq2db's model-instance-keyed schema
 				// cache misses. With provider caching on, EF shares one model and the bug hides.
 				.EnableServiceProviderCaching(false)
+				.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 				.UseSqlite("Data Source=:memory:")
 				.Options;
 
@@ -104,11 +106,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var sqlite = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlite("Data Source=:memory:")
 					.Options);
 
 			using var sqlServer = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlServer("Server=.;Database=MappingSchemaCacheTests;Integrated Security=SSPI;TrustServerCertificate=true")
 					.Options);
 
@@ -144,11 +148,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var plain = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlite("Data Source=:memory:")
 					.Options);
 
 			using var customized = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlite("Data Source=:memory:")
 					.ReplaceService<IModelCustomizer, RenamingModelCustomizer>()
 					.Options);
@@ -189,6 +195,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				using (var ctx = new RetentionContext(
 					new DbContextOptionsBuilder<RetentionContext>()
 						.EnableServiceProviderCaching(false)
+						.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 						.UseApplicationServiceProvider(services)
 						.UseSqlite("Data Source=:memory:")
 						.Options))
