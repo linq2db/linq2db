@@ -120,6 +120,11 @@ namespace Tests.Analyzers.Internal
 				public sealed class TranslationRegistration
 				{
 					public delegate object? TranslateFunc(object member);
+
+					public void RegisterMethodInternal(LambdaExpression methodCallPattern, TranslateFunc func, bool isGenericTypeMatch) { }
+					public void RegisterMemberInternal(LambdaExpression memberAccessPattern, TranslateFunc func) { }
+					public void RegisterConstructorInternal(LambdaExpression memberAccessPattern, TranslateFunc func) { }
+					public void RegisterMemberReplacement(LambdaExpression pattern, LambdaExpression replacement) { }
 				}
 
 				public static class TranslationRegistrationExtensions
@@ -271,6 +276,39 @@ namespace Tests.Analyzers.Internal
 			Source(
 				common:  "{ {|LINQ2DB0007:M(() => Math.Pow(0, 0))|}, N(() => null) },",
 				baseReg: "Registration.RegisterReplacement((double x, double y) => Math.Pow(x, y), (double x, double y) => Math.Exp(y * Math.Log(x)));"));
+
+		// The instance method the extensions forward to registers a member as well when called directly.
+		[Test]
+		public Task DirectInternalRegistrationIsReported() => Verify(
+			Source(
+				common:  "{ {|LINQ2DB0007:M(() => Math.Pow(0, 0))|}, N(() => null) },",
+				baseReg: "Registration.RegisterMethodInternal((double x, double y) => Math.Pow(x, y), H, isGenericTypeMatch: false);"));
+
+		[Test]
+		public Task DirectInternalMemberRegistrationIsReported() => Verify(
+			Source(
+				common:  "{ {|LINQ2DB0007:M(() => \"\".Length)|}, N(() => null) },",
+				baseReg: "Registration.RegisterMemberInternal((string s) => s.Length, H);"));
+
+		[Test]
+		public Task DirectInternalConstructorRegistrationIsReported() => Verify(
+			Source(
+				common:  "{ {|LINQ2DB0007:M(() => new DateTime(0L))|}, N(() => null) },",
+				baseReg: "Registration.RegisterConstructorInternal((long ticks) => new DateTime(ticks), H);"));
+
+		[Test]
+		public Task DirectReplacementRegistrationIsReported() => Verify(
+			Source(
+				common:  "{ {|LINQ2DB0007:M(() => Math.Pow(0, 0))|}, N(() => null) },",
+				baseReg: "Registration.RegisterMemberReplacement((double x, double y) => Math.Pow(x, y), (double x, double y) => Math.Exp(y * Math.Log(x)));"));
+
+		// A pattern built at run time names no member the analyzer can see, so a shadow of it would go unreported.
+		[Test]
+		public Task DirectInternalRegistrationOfABuiltPatternIsDrift() => Verify(
+			Source(baseReg: """
+				var call = Expression.Call(typeof(Math).GetMethod("Floor", new[] { typeof(double) })!, Expression.Constant(0.0));
+				{|LINQ2DB0009:Registration.RegisterMethodInternal(Expression.Lambda(call), H, isGenericTypeMatch: false)|};
+				"""));
 
 		// A parameterless pattern binds to the Expression<Action> overload, whose lambda body ends in an implicit return.
 		[Test]

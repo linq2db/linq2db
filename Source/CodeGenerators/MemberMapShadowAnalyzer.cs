@@ -35,6 +35,7 @@ namespace CodeGenerators
 	{
 		const string ExpressionsTypeName     = "LinqToDB.Linq.Expressions";
 		const string ExtensionsTypeName      = "LinqToDB.Internal.DataProvider.Translation.TranslationRegistrationExtensions";
+		const string RegistrationTypeName    = "LinqToDB.Internal.DataProvider.Translation.TranslationRegistration";
 		const string AttributeTypeName       = "LinqToDB.Sql+ExpressionAttribute";
 		const string ProviderNamespacePrefix = "LinqToDB.Internal.DataProvider.";
 
@@ -93,8 +94,9 @@ namespace CodeGenerators
 				if (expressionsType == null)
 					return;
 
-				var extensionsType = assembly.GetTypeByMetadataName(ExtensionsTypeName);
-				var attributeType  = assembly.GetTypeByMetadataName(AttributeTypeName);
+				var extensionsType   = assembly.GetTypeByMetadataName(ExtensionsTypeName);
+				var registrationType = assembly.GetTypeByMetadataName(RegistrationTypeName);
+				var attributeType    = assembly.GetTypeByMetadataName(AttributeTypeName);
 
 				var entries       = new ConcurrentBag<MapEntry>();
 				var registrations = new ConcurrentBag<Registration>();
@@ -114,7 +116,14 @@ namespace CodeGenerators
 						&& extensionsType != null
 						&& SymbolEqualityComparer.Default.Equals(method.ContainingType, extensionsType))
 					{
-						CollectRegistration(invocation, operationContext.ContainingSymbol, extensionsType, registrations, failures);
+						CollectRegistration(invocation, patternOrdinal: 1, operationContext.ContainingSymbol, extensionsType, registrations, failures);
+					}
+					// The instance methods the extensions forward to; a call made anywhere else registers a member too.
+					else if (method.Name is "RegisterMethodInternal" or "RegisterMemberInternal" or "RegisterConstructorInternal" or "RegisterMemberReplacement"
+						&& extensionsType != null
+						&& SymbolEqualityComparer.Default.Equals(method.ContainingType, registrationType))
+					{
+						CollectRegistration(invocation, patternOrdinal: 0, operationContext.ContainingSymbol, extensionsType, registrations, failures);
 					}
 					else if (method.Name == "Add"
 						&& SymbolEqualityComparer.Default.Equals(operationContext.ContainingSymbol.ContainingType, expressionsType))
@@ -161,6 +170,7 @@ namespace CodeGenerators
 
 		static void CollectRegistration(
 			IInvocationOperation              invocation,
+			int                               patternOrdinal,
 			ISymbol                           containingSymbol,
 			INamedTypeSymbol                  extensionsType,
 			ConcurrentBag<Registration>       registrations,
@@ -174,8 +184,8 @@ namespace CodeGenerators
 				if (argument.Parameter is not { } parameter)
 					continue;
 
-				// Ordinal 0 is the extended registration; the pattern lambda follows it.
-				if (parameter.Ordinal == 1)
+				// An extension method's ordinal 0 is the extended registration, and the pattern lambda follows it.
+				if (parameter.Ordinal == patternOrdinal)
 					pattern = argument.Value;
 				else if (parameter.Name == "isGenericTypeMatch" && argument.Value.ConstantValue is { HasValue: true, Value: true })
 					isGenericTypeMatch = true;

@@ -444,7 +444,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (typeof(string).GetMethodEx(name, BindingFlags.Public | BindingFlags.Instance, parameterTypes) is { } method)
 			{
 				var call = Expression.Call(Expression.Constant(string.Empty), method, parameterTypes.Select(Expression.Default));
+				// LINQ2DB0007 cannot see a pattern built here, so a map entry for any member registered through this helper goes unreported
+#pragma warning disable LINQ2DB0009 // The member map model could not be read
 				Registration.RegisterMethodInternal(Expression.Lambda(call), translate, isGenericTypeMatch: false);
+#pragma warning restore LINQ2DB0009
 			}
 		}
 
