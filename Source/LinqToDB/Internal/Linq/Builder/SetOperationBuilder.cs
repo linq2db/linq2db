@@ -8,6 +8,7 @@ using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -411,6 +412,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
 			}
 
+			// A dynamic column is named rather than declared, so two branches can put values of different types under one
+			// name, and a shared column would be read as either.
+			static bool IsDynamicColumnOfDifferentTypes(Expression[] path, SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)
+				=> path.Length > 0
+					&& path[path.Length - 1] is ConstantExpression { Value: DynamicColumnInfo }
+					&& placeholder1.Type.UnwrapNullableType() != placeholder2.Type.UnwrapNullableType();
+
 			Expression MergeProjections(Expression path, Expression projection1, Expression projection2, ProjectFlags flags)
 			{
 				var sameWay = BranchesReadTheSameWay(projection1, projection2);
@@ -655,7 +663,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var (candidate2, _) = placeholders2.Find(p2 => PathComparer.Instance.Equals(p2.path, path));
 
-					if (candidate2 != null && !ReadsTheSameWay(candidate1, candidate2))
+					if (candidate2 != null && (!ReadsTheSameWay(candidate1, candidate2) || IsDynamicColumnOfDifferentTypes(path, candidate1, candidate2)))
 					{
 						_divergentPaths ??= new HashSet<Expression[]>(PathComparer.Instance);
 						_divergentPaths.Add(path);
