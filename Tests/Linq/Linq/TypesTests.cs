@@ -914,10 +914,25 @@ namespace Tests.Linq
 			}
 		}
 
+		// Split by the inline argument for the same reason as the decimal pair below: inlined, the division loses its
+		// scale on every SQLite driver; as a parameter, which travels as a decimal, only the Classic ones get it wrong.
 		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Decimal / param, 5)))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void DivisionByIntParameterKeepsScale([DataSources] string context, [Values] bool inline)
+		public void DivisionByIntParameterKeepsScaleInlined([DataSources] string context)
+		{
+			DivisionByIntParameterCore(context, inline: true);
+		}
+
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLiteClassic], ErrorMessage = "Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Decimal / param, 5)))",
+			Details = "as DivisionByIntParameterKeepsScaleInlined, but Microsoft.Data.Sqlite keeps the scale when the divisor travels as a parameter.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
+		public void DivisionByIntParameterKeepsScale([DataSources] string context)
+		{
+			DivisionByIntParameterCore(context, inline: false);
+		}
+
+		void DivisionByIntParameterCore(string context, bool inline)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NumericDivisionTable.Data);
@@ -1010,6 +1025,125 @@ namespace Tests.Linq
 				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round((double)NumericDivisionTable.Data[0].Decimal / param, 5)));
 				Assert.That(Math.Round(result.Double, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Double / param, 5)));
 			}
+		}
+
+		// A conversion of an integer operand to a wider or floating type decides the type the database computes in:
+		// dropping it makes 1.0 / (double)x.Value an integer division, and int.MaxValue * (long)x.Value an int overflow.
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void DivisionByIntegerConvertedToDoubleKeepsFraction([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => new
+				{
+					CastColumn      = 1.0 / (double)x.Value,
+					CastInSum       = 1.0 / (60 + (double)x.Value),
+					ImplicitInt     = 1.0 / x.Value,
+					ImplicitLongSum = 1.0 / (60 + x.Big),
+					ImplicitNull    = 1.0 / x.Nullable,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.CastColumn.ShouldBe(1.0 / 3, 1e-9);
+				result.CastInSum.ShouldBe(1.0 / 63, 1e-9);
+				result.ImplicitInt.ShouldBe(1.0 / 3, 1e-9);
+				result.ImplicitLongSum.ShouldBe(1.0 / 63, 1e-9);
+				result.ImplicitNull!.Value.ShouldBe(1.0 / 3, 1e-9);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void ArithmeticOnIntegerConvertedToDoubleKeepsFraction([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => new
+				{
+					Subtract = (1.0 - x.Value) / 4,
+					Multiply = 2.0 * x.Value / 4,
+					Modulo   = (10.0 % x.Value) / 4,
+					Negate   = 4.0 / -x.Value,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.Subtract.ShouldBe(-0.5, 1e-9);
+				result.Multiply.ShouldBe(1.5, 1e-9);
+				result.Modulo.ShouldBe(0.25, 1e-9);
+				result.Negate.ShouldBe(-4.0 / 3, 1e-9);
+			}
+		}
+
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "should be{0}0.33333m{1}but was",
+			Details = "the decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void DivisionByIntegerConvertedToDecimalKeepsFraction([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => new
+				{
+					Implicit = 1m / x.Value,
+					Cast     = 1m / (decimal)x.Big,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Math.Round(result.Implicit, 5).ShouldBe(0.33333m);
+				Math.Round(result.Cast, 5).ShouldBe(0.33333m);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void ArithmeticOnFloatingConvertedToIntegerTruncates([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => 0.5 * (int)x.Fraction)
+				.Single();
+
+			result.ShouldBe(0.5, 1e-9);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void MultiplicationByIntegerConvertedToLongDoesNotOverflow([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => int.MaxValue * (long)x.Value)
+				.Single();
+
+			result.ShouldBe(int.MaxValue * 3L);
+		}
+
+		[Table]
+		sealed class WideningOperandTable
+		{
+			[PrimaryKey] public int    Id       { get; set; }
+			[Column]     public int    Value    { get; set; }
+			[Column]     public long   Big      { get; set; }
+			[Column]     public int?   Nullable { get; set; }
+			[Column]     public double Fraction { get; set; }
+
+			public static readonly WideningOperandTable[] Data =
+			[
+				new WideningOperandTable() { Id = 1, Value = 3, Big = 3, Nullable = 3, Fraction = 1.5 },
+			];
 		}
 
 		sealed class NumericDivisionTable

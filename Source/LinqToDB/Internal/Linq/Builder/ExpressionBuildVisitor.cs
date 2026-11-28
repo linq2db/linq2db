@@ -3791,15 +3791,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
+			var isModulo = node.NodeType is ExpressionType.Modulo;
+
 			if (shouldCheckColumn)
 			{
-				right = right.Unwrap();
+				right = UnwrapMathOperand(right, isModulo);
 			}
 			else
 			{
-				left  = left.Unwrap();
-				right = right.Unwrap();
+				left  = UnwrapMathOperand(left,  isModulo);
+				right = UnwrapMathOperand(right, isModulo);
 			}
+
+			// A remainder whose integer operand lost its conversion to a floating type is an integer in SQL: it is cast to
+			// the type it is written in, or a calculation over it goes on in integers ((10.0 % x.Int) / 4).
+			var castRemainder = isModulo && (IsIntegerAsFloat(node.Left, left) || IsIntegerAsFloat(node.Right, right));
 
 			SuggestedDescriptor columnDescriptor = default;
 			switch (node.NodeType)
@@ -3894,6 +3900,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!rightKeepsNull)
 				r = ReadAsTheReaderReads(node.Right, rightPlaceholder).Sql;
 
+			// Beside a table column of the type an integer operand is converted to, the database promotes the integer
+			// itself, so the cast is left out. That keeps a decimal column's arithmetic off the provider's default decimal
+			// type, which narrows the integer range (decimal(18, 10) on SQL Server).
+			if (!shouldCheckColumn)
+				l = WithoutPromotedCast(left, l, r);
+
+			r = WithoutPromotedCast(right, r, l);
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.Add            :
@@ -3901,7 +3915,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.And            : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise),        node); break;
 				case ExpressionType.Divide         : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.ExclusiveOr    : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise),        node); break;
-				case ExpressionType.Modulo         : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.Modulo         :
+				{
+					ISqlExpression remainder = new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative);
+
+					if (castRemainder)
+						remainder = PseudoFunctions.MakeMandatoryCast(remainder, MappingSchema.GetDbDataType(t));
+
+					translated = CreatePlaceholder(remainder, node);
+					break;
+				}
 				case ExpressionType.Multiply       :
 				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.Or             : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise),      node); break;
@@ -3914,6 +3937,122 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Removes the wrappers around an operand of a calculation that leave its value and the type it is computed in as
+		/// they are: a quote, a type adjustment, a nullable lift, a conversion between an enum and its underlying type.
+		/// A conversion from one number type to another stays: the database computes in the operand's type, so without it
+		/// <c>1.0 / (double)x.Int</c> is an integer division and <c>int.MaxValue * (long)x.Int</c> overflows an int.
+		/// </summary>
+		/// <param name="expression">The operand as written.</param>
+		/// <param name="isModulo">
+		/// The operand is one of a remainder. The remainder of integral values is the same in an integer and in a floating
+		/// computation, and several databases have no floating remainder (SQL Server, PostgreSQL), so a conversion of an
+		/// integer to a floating type is removed here too; the caller casts the remainder to its type instead.
+		/// </param>
+		static Expression UnwrapMathOperand(Expression expression, bool isModulo)
+		{
+			while (true)
+			{
+				switch (expression.NodeType)
+				{
+					case ExpressionType.Quote:
+					{
+						expression = ((UnaryExpression)expression).Operand;
+						continue;
+					}
+
+					case ExpressionType.Convert:
+					case ExpressionType.ConvertChecked:
+					{
+						var unary = (UnaryExpression)expression;
+
+						if (ChangesNumberType(unary.Operand.Type, unary.Type)
+							&& !(isModulo && IsIntegerAsFloat(unary, unary.Operand)))
+						{
+							return expression;
+						}
+
+						expression = unary.Operand;
+						continue;
+					}
+
+					case ExpressionType.Extension when expression is SqlAdjustTypeExpression adjustType:
+					{
+						expression = adjustType.Expression;
+						continue;
+					}
+				}
+
+				return expression;
+			}
+
+			static bool ChangesNumberType(Type from, Type to)
+			{
+				from = from.UnwrapNullableType();
+				to   = to.UnwrapNullableType();
+
+				return from != to && !from.IsEnum && !to.IsEnum && from.IsNumberType && to.IsNumberType;
+			}
+		}
+
+		/// <summary>
+		/// The operand <paramref name="written"/> is a floating number (<see cref="float"/>, <see cref="double"/>,
+		/// <see cref="decimal"/>) computed from <paramref name="unwrapped"/>, which is an integer.
+		/// </summary>
+		static bool IsIntegerAsFloat(Expression written, Expression unwrapped)
+		{
+			var writtenType   = written.Type.UnwrapNullableType();
+			var unwrappedType = unwrapped.Type.UnwrapNullableType();
+
+			return !writtenType.IsEnum && !unwrappedType.IsEnum && writtenType.IsFloatType && unwrappedType.IsIntegerType;
+		}
+
+		/// <summary>
+		/// The SQL <paramref name="sql"/> of <paramref name="operand"/> without the cast of a widening conversion of an
+		/// integer when <paramref name="other"/> is a table column of the conversion's type, read directly or through the
+		/// columns of subqueries.
+		/// </summary>
+		static ISqlExpression WithoutPromotedCast(Expression operand, ISqlExpression sql, ISqlExpression other)
+		{
+			if (operand is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } conversion
+				&& IsIntegerWidening(conversion.Operand.Type, conversion.Type)
+				&& sql is SqlCastExpression { IsMandatory: false } cast
+				&& QueryHelper.GetUnderlyingField(other) is { } field
+				&& field.Type.SystemType.UnwrapNullableType() == conversion.Type.UnwrapNullableType())
+			{
+				return cast.Expression;
+			}
+
+			return sql;
+
+			static bool IsIntegerWidening(Type from, Type to)
+			{
+				from = from.UnwrapNullableType();
+				to   = to.UnwrapNullableType();
+
+				if (from.IsEnum || to.IsEnum || !from.IsIntegerType)
+					return false;
+
+				if (to.IsFloatType)
+					return true;
+
+				return to.IsIntegerType
+					&& IntegerSize(to) > IntegerSize(from)
+					&& (to.IsSignedNumberType || !from.IsSignedNumberType);
+			}
+
+			static int IntegerSize(Type type)
+			{
+				return Type.GetTypeCode(type) switch
+				{
+					TypeCode.SByte or TypeCode.Byte   => 1,
+					TypeCode.Int16 or TypeCode.UInt16 => 2,
+					TypeCode.Int32 or TypeCode.UInt32 => 4,
+					_                                 => 8,
+				};
+			}
 		}
 
 		public override Expression VisitSqlAggregateLifterExpression(SqlAggregateLifterExpression node)
