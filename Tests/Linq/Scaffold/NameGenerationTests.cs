@@ -1,10 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 
 using LinqToDB.Naming;
 using LinqToDB.Scaffold.Internal;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools.ModelGeneration;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Scaffold
 {
@@ -98,6 +102,33 @@ namespace Tests.Scaffold
 				Assert.That(sourceSideAssociationName, Is.EqualTo(expectedSourceName));
 				Assert.That(targetSideAssociationName, Is.EqualTo(expectedTargetName));
 			}
+		}
+
+		private sealed class TestModelGenerator : ModelGenerator
+		{
+			public TestModelGenerator()
+				: base(null!, new StringBuilder(), _ => { }, _ => { }, _ => { }, () => string.Empty, _ => { })
+			{
+			}
+		}
+
+		[TestCase("user_id", false, "UserId")]
+		[TestCase("user_id", true,  "userId")]
+		[TestCase("Item_Id", true,  "itemId")]
+		[TestCase("Item",    true,  "item")]
+		[TestCase("ID_ITEM", true,  "idItem")]
+		[TestCase("id",      false, "Id")]
+		[TestCase("item",    false, "Item")]
+		public void ToValidNameIgnoresCurrentCulture(string name, bool isParameter, string expected)
+		{
+			// the dotted and dotless "i" are mapped differently by the Turkish culture
+			using var _ = new CultureRegion("tr-TR");
+
+			var generator = new TestModelGenerator { IsParameter = isParameter };
+
+			generator
+				.ToValidNameDefault(name, true)
+				.ShouldBe(expected);
 		}
 	}
 }

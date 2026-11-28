@@ -267,13 +267,13 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				if (IsParameter)
 				{
-					name = isAllUpper ? name.ToLowerInvariant() : char.ToLower(name[0]) + name[1..];
+					name = isAllUpper ? name.ToLowerInvariant() : char.ToLowerInvariant(name[0]) + name[1..];
 				}
 				else
 				{
 					if (isAllUpper && name.Length > 2 && ConvertUpperNamesToLower)
 						name = name.ToLowerInvariant();
-					name = char.ToUpper(name[0]) + name[1..];
+					name = char.ToUpperInvariant(name[0]) + name[1..];
 				}
 			}
 
@@ -288,7 +288,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		static string NormalizeFragment(string s)
 		{
-			return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLowerInvariant() : s.Substring(1));
+			return s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLowerInvariant() : s.Substring(1));
 		}
 
 		public string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
