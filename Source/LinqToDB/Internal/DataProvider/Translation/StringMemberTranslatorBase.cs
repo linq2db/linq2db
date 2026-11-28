@@ -279,14 +279,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
-
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedField))
-				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
-
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedValue))
-				return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
-
+			// the escape character is translated outside the string type scope below: a char? parameter cannot take
+			// the matched column's string type
 			ISqlExpression? escape = null;
 
 			if (methodCall.Arguments.Count == 3)
@@ -294,6 +288,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out escape))
 					return translationContext.CreateErrorExpression(methodCall.Arguments[2], type: methodCall.Type);
 			}
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedField))
+				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedValue))
+				return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
 
 			var predicate       = translationContext.ExpressionFactory.LikePredicate(translatedField, false, translatedValue, escape);
 			var searchCondition = translationContext.ExpressionFactory.SearchCondition().Add(predicate);
