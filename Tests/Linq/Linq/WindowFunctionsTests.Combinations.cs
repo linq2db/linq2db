@@ -857,5 +857,101 @@ namespace Tests.Linq
 			result.Select(r => r.RowNumber).ShouldBe(expected.Select(r => r.RowNumber));
 			result.Select(r => r.Sum)      .ShouldBe(expected.Select(r => r.Sum));
 		}
+
+		// A window defined once and reused through UseWindow, read through a left join.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void DefinedWindowSubqueryLeftJoinMethod([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked =
+				from t in table
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
+				select new
+				{
+					t.Id,
+					RowNumber = Sql.Window.RowNumber(w => w.UseWindow(wnd)),
+					Rank      = Sql.Window.Rank(w => w.UseWindow(wnd)),
+				};
+
+			var result =
+				(
+					from t in table
+					from r in ranked.LeftJoin(r => r.Id == t.Id)
+					select new { t.Id, r.RowNumber, r.Rank }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			var expected = data
+				.OrderBy(t => t.Id)
+				.Select(t => (long)data.Count(o => o.CategoryId == t.CategoryId && o.Id <= t.Id))
+				.ToList();
+
+			result.Select(r => r.RowNumber).ShouldBe(expected);
+			result.Select(r => r.Rank)     .ShouldBe(expected);
+		}
+
+		// Outer rows without a match read NULL for every window column.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void WindowSubqueryLeftJoinMethodNonMatching([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = JoinedWindowQuery(table);
+
+			var result =
+				(
+					from t in table
+					from r in ranked.LeftJoin(r => r.Id == t.Id && t.Id % 2 == 0)
+					select new { t.Id, RowNumber = (long?)r.RowNumber, Sum = (int?)r.Sum, r.Lag }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			var expected = JoinedWindowExpected(data);
+
+			result.Select(r => r.RowNumber).ShouldBe(expected.Select(r => r.Id % 2 == 0 ? r.RowNumber : (long?)null));
+			result.Select(r => r.Sum)      .ShouldBe(expected.Select(r => r.Id % 2 == 0 ? r.Sum       : (int?)null));
+			result.Select(r => r.Lag)      .ShouldBe(expected.Select(r => r.Id % 2 == 0 ? r.Lag       : null));
+		}
+
+		// UPDATE … FROM a left-joined window projection writes the values computed over the whole table.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void WindowSubqueryLeftJoinMethodUpdate([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = JoinedWindowQuery(table);
+
+			(
+				from t in table
+				from r in ranked.LeftJoin(r => r.Id == t.Id)
+				select new { t, r }
+			)
+			.Update(x => x.t, x => new WindowFunctionTestEntity { NullableLongValue = x.r.RowNumber, NullableIntValue = x.r.Sum });
+
+			var result = table
+				.Select(t => new { t.Id, t.NullableLongValue, t.NullableIntValue })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			var expected = JoinedWindowExpected(data);
+
+			result.Select(r => r.NullableLongValue).ShouldBe(expected.Select(r => (long?)r.RowNumber));
+			result.Select(r => r.NullableIntValue) .ShouldBe(expected.Select(r => (int?)r.Sum));
+		}
 	}
 }
