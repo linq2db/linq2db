@@ -12,11 +12,11 @@ namespace LinqToDB.Internal.Linq
 	/// <summary>
 	/// Global LINQ query cache.
 	/// Buckets queries by a shallow composite key, then verifies candidates inside each bucket
-	/// via <see cref="Query.Compare"/>.
+	/// via <see cref="Query.Compare(IDataContext, IQueryExpressions, out IQueryExpressions)"/>.
 	/// </summary>
 	/// <remarks>
 	/// Lookup is O(1) at the bucket-map level. Inside each bucket, candidates are still verified
-	/// with the original <see cref="Query.Compare"/> equality check.
+	/// with the original <see cref="Query.Compare(IDataContext, IQueryExpressions, out IQueryExpressions)"/> equality check.
 	///
 	/// Expiration:
 	/// - Each entry stores its own base timeout, captured from the context that created it.
@@ -345,6 +345,8 @@ namespace LinqToDB.Internal.Linq
 
 			var entries = Volatile.Read(ref bucket.Entries);
 
+			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: entries.Length > 1);
+
 			for (var i = 0; i < entries.Length; i++)
 			{
 				var entry = entries[i];
@@ -358,7 +360,7 @@ namespace LinqToDB.Internal.Linq
 				if (IsExpired(entry, now))
 					continue;
 
-				if (entry.Query.Compare(dataContext, expressions, out var matched))
+				if (entry.Query.Compare(dataContext, expressions, ref dynamicAccessorResults, out var matched))
 				{
 					// Refresh on a real match: Compare may have taken non-trivial time, and
 					// RecordAccess wants a fresh `now` for LastAccessTicks / deadline extension.
@@ -432,6 +434,8 @@ namespace LinqToDB.Internal.Linq
 					var survivors = new List<Entry>(current.Length + 1);
 					Entry? duplicate = null;
 
+					var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: current.Length > 1);
+
 					for (var i = 0; i < current.Length; i++)
 					{
 						var existing = current[i];
@@ -443,7 +447,7 @@ namespace LinqToDB.Internal.Linq
 
 						// No QueryFlags check: flags are pinned by the bucket key, so every
 						// surviving entry already shares this add's QueryFlags.
-						if (existing.Query.Compare(dataContext, expressions, out _))
+						if (existing.Query.Compare(dataContext, expressions, ref dynamicAccessorResults, out _))
 						{
 							duplicate = existing;
 						}

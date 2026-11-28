@@ -11,6 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metrics;
@@ -42,7 +43,9 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal IQueryExpressions? CompiledExpressions;
 
-		// A compiled table hands over the container its Info's accessors were built against. Rebuilding one from
+		// A compiled table hands over the container its Info's accessors were built against - or none, when the call left
+		// checking Info against the context to the first execution - and a query kept with a query
+		// interceptor's rewrite keeps the rewritten one beside Info (see GetQuery). Rebuilding one from
 		// the main expression alone carries no dynamic entries, and an accessor rooted at one - which a query
 		// filter closing over a value produces - then has nothing to resolve. Only for enumerating this query as
 		// it is: a composed expression is a different tree and gets its own container.
@@ -98,15 +101,73 @@ namespace LinqToDB.Internal.Linq
 
 			if (cache && Info != null)
 			{
-				return Info;
+				if (Info.CompiledSource is { } source)
+					return GetCompiledQuery(source, Info, ref expression);
+
+				// the context configuration (interceptors included) may have changed since the query was kept, and a
+				// [SqlQueryDependent] collection may have been changed in place
+				if (Info.ConfigurationID == DataContext.ConfigurationID && Info.DependentValuesMatch(DataContext, expression, Parameters))
+				{
+					if (CompiledExpressions != null)
+					{
+						expression          = CompiledExpressions;
+						dependsOnParameters = true;
+					}
+
+					return Info;
+				}
+
+				Info = null;
+
+				if (CompiledExpressions != null)
+				{
+					CompiledExpressions = null;
+					expression          = new RuntimeExpressionsContainer(Expression);
+				}
 			}
 
-			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
+			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters, out var isRewritten);
 
-			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
+			// a query interceptor without IInterceptorCacheKey may rewrite the query differently on another execution
+			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters && !DataContext.HasUntrustedQueryInterceptor())
 			{
 				Info = info;
+
+				// The query runs with the interceptor's rewrite, which is kept beside it: Expression stays the caller's tree,
+				// so that it outlives the interceptor.
+				if (isRewritten)
+					CompiledExpressions = expression;
 			}
+
+			dependsOnParameters |= isRewritten;
+
+			return info;
+		}
+
+		// The IQueryable a compiled query returned keeps its query while the context configuration is the one it was built
+		// for, no argument selects it by value, and the query still matches the executing context's query interceptor.
+		// Otherwise, and when the call left the check to this execution (it handed over no expressions), the compiled query
+		// resolves it again for the current context and arguments.
+		Query<T> GetCompiledQuery(ICompiledQuerySource<T> source, Query<T> info, ref IQueryExpressions expression)
+		{
+			if (CompiledExpressions != null && info.ConfigurationID == DataContext.ConfigurationID && !source.HasDependentArguments)
+			{
+				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: false);
+
+				if (info.TryReuse(DataContext, Parameters, ref dynamicAccessorResults, out var reused))
+				{
+					CompiledExpressions = reused;
+					expression          = reused;
+
+					return info;
+				}
+			}
+
+			info = source.GetInfo(DataContext, Parameters!, out var compiled);
+
+			Info                = info;
+			CompiledExpressions = compiled;
+			expression          = compiled;
 
 			return info;
 		}

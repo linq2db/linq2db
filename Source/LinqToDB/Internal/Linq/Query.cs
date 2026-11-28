@@ -51,6 +51,7 @@ namespace LinqToDB.Internal.Linq
 			SqlOptimizer     = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 			DataOptions      = dataContext.Options;
+			ConfigurationID  = dataContext.ConfigurationID;
 		}
 
 		#endregion
@@ -65,8 +66,20 @@ namespace LinqToDB.Internal.Linq
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
 		internal readonly DataOptions      DataOptions;
+		/// <summary>
+		/// Configuration ID of the context the query was built for.
+		/// </summary>
+		internal readonly int              ConfigurationID;
 
 		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		{
+			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: false);
+
+			return Compare(dataContext, expressions, ref dynamicAccessorResults, out matchedQueryExpressions);
+		}
+
+		/// <param name="dynamicAccessorResults">The dynamic accessors already evaluated in the lookup this comparison is part of.</param>
+		internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, ref QueryCacheCompareInfo.DynamicAccessorResults dynamicAccessorResults, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
 			matchedQueryExpressions = null;
 
@@ -78,16 +91,30 @@ namespace LinqToDB.Internal.Linq
 			if (!result)
 				return false;
 
-			var runtimeExpressions = new RuntimeExpressionsContainer(expressions.MainExpression);
+			return Revalidate(dataContext, expressions.MainExpression, compiledParameters: null, ref dynamicAccessorResults, out matchedQueryExpressions);
+		}
+
+		/// <summary>
+		/// The part of <see cref="Compare(IDataContext, IQueryExpressions, out IQueryExpressions)"/> that does not follow
+		/// from the main expression: re-evaluates the dynamic expression accessors for <paramref name="dataContext"/> and
+		/// runs the value comparisons. On success returns the expressions to run the query with.
+		/// </summary>
+		/// <param name="compiledParameters">Arguments of a compiled query; <see langword="null"/> otherwise.</param>
+		/// <param name="dynamicAccessorResults">The dynamic accessors already evaluated in the lookup this check is part of.</param>
+		internal bool Revalidate(IDataContext dataContext, Expression mainExpression, object?[]? compiledParameters, ref QueryCacheCompareInfo.DynamicAccessorResults dynamicAccessorResults, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		{
+			bool result;
+
+			var runtimeExpressions = new RuntimeExpressionsContainer(mainExpression);
 			matchedQueryExpressions = runtimeExpressions;
 
-			if (CompareInfo.DynamicAccessors != null)
+			if (CompareInfo!.DynamicAccessors != null)
 			{
 				List<(int, Expression)>? testedExpressions = null;
 
 				foreach (var da in CompareInfo.DynamicAccessors)
 				{
-					var current = da.AccessorFunc(dataContext, da.MappingSchema);
+					var current = dynamicAccessorResults.Get(dataContext, da);
 					result = da.Used.EqualsTo(current);
 					if (!result)
 						return false;
@@ -107,13 +134,28 @@ namespace LinqToDB.Internal.Linq
 
 			if (CompareInfo.ComparisionFunctions != null)
 			{
-				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
+				foreach (var compare in CompareInfo.ComparisionFunctions)
 				{
-					var value1 = main(matchedQueryExpressions, dataContext, null);
-					var value2 = other(matchedQueryExpressions, dataContext, null);
-					result = ExpressionEqualityComparer.CompareValues(value1, value2);
+					if (!compare(matchedQueryExpressions, dataContext, compiledParameters))
+						return false;
+				}
+			}
 
-					if (!result)
+			return DependentValuesMatch(dataContext, matchedQueryExpressions, compiledParameters);
+		}
+
+		/// <summary>
+		/// Checks that the <see cref="SqlQueryDependentAttribute"/> arguments the main expression does not compare still have
+		/// the values the query was built for.
+		/// </summary>
+		/// <param name="compiledParameters">Arguments of a compiled query; <see langword="null"/> otherwise.</param>
+		internal bool DependentValuesMatch(IDataContext dataContext, IQueryExpressions expressions, object?[]? compiledParameters)
+		{
+			if (CompareInfo?.DependentValueChecks != null)
+			{
+				foreach (var check in CompareInfo.DependentValueChecks)
+				{
+					if (!check.Attribute.ObjectsEqual(check.Value, check.Current(expressions, dataContext, compiledParameters)))
 						return false;
 				}
 			}

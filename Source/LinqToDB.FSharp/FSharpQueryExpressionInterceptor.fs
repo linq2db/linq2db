@@ -11,6 +11,7 @@ open LinqToDB.Interceptors
 open LinqToDB.Mapping
 open LinqToDB.Reflection
 open LinqToDB.Internal.Common
+open LinqToDB.Internal.Interceptors
 open LinqToDB.Internal.Reflection
 
 /// Stands in for a captured free variable while the quotation is converted back to an expression tree: the
@@ -417,3 +418,7 @@ type FSharpQueryExpressionInterceptor private () =
                 FSharpRewriteVisitor(args.DataContext.MappingSchema).Visit expression
             else
                 expression
+
+    // A single stateless instance: its rewrites depend on the query and the mapping schema alone.
+    interface IInterceptorCacheKey with
+        member _.CacheKey = null

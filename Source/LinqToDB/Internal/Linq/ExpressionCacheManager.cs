@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq.Builder;
@@ -66,16 +70,29 @@ namespace LinqToDB.Internal.Linq
 
 			DynamicAccessors ??= new(ExpressionEqualityComparer.Instance);
 
-			if (!DynamicAccessors.ContainsKey(forExpression))
+			if (!DynamicAccessors.TryGetValue(forExpression, out var info))
 			{
-				var info = new DynamicExpressionInfo(_generator.GetNext(), result, mappingSchema, accessorFunc);
+				info = new DynamicExpressionInfo(_generator.GetNext(), forExpression, ExpressionEqualityComparer.Instance.GetHashCode(forExpression), result, mappingSchema, accessorFunc);
 				DynamicAccessors.Add(forExpression, info);
 
-				var newRoot = Expression.Call(RootPath, nameof(IQueryExpressions.GetQueryExpression), Type.EmptyTypes, Expression.Constant(info.ExpressionId));
-				AccessorsMapping.Add(info.ExpressionId, result.GetExpressionAccessors(newRoot));
+				AccessorsMapping.Add(info.ExpressionId, result.GetExpressionAccessors(GetDynamicExpressionRoot(info.ExpressionId)));
+			}
+			else if (!ReferenceEquals(info.Used, result) && info.Used.EqualsTo(result))
+			{
+				// Another reference with the same key gets a new tree of the same shape. Its constants map to the same paths,
+				// so that they are read from the executing context, as the first reference's are, instead of kept as built.
+				var mapping = AccessorsMapping[info.ExpressionId];
+
+				foreach (var pair in result.GetExpressionAccessors(GetDynamicExpressionRoot(info.ExpressionId)))
+					mapping.TryAdd(pair.Key, pair.Value);
 			}
 
 			return result;
+		}
+
+		Expression GetDynamicExpressionRoot(int expressionId)
+		{
+			return Expression.Call(RootPath, nameof(IQueryExpressions.GetQueryExpression), Type.EmptyTypes, Expression.Constant(expressionId));
 		}
 
 		public bool GetAccessorExpression(Expression expression, [NotNullWhen(true)] out Expression? accessor)
@@ -570,7 +587,8 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			List<DynamicExpressionInfo>? dynamicAccessors   = null;
+			List<DynamicExpressionInfo>? dynamicAccessors     = null;
+			List<DependentValueCheck>?   dependentValueChecks = null;
 
 			var replacements = new Dictionary<Expression, ConstantPlaceholderExpression>();
 
@@ -583,6 +601,8 @@ namespace LinqToDB.Internal.Linq
 				{
 					runtimeExpressions.AddExpression(da.ExpressionId, da.Used);
 
+					AddDependentValueChecks(dc, da.Used, nonComparable, ref dependentValueChecks);
+
 					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, replacements, dc.MappingSchema);
 
 					dynamicAccessors.Add(da with { Used = replaced });
@@ -591,26 +611,17 @@ namespace LinqToDB.Internal.Linq
 				parameterExpressions = runtimeExpressions;
 			}
 
-			List<(ValueAccessorFunc main, ValueAccessorFunc other)>? comparisionFunctions = null;
+			List<ValueCompareFunc>? comparisionFunctions = null;
 
 			if (_duplicateParametersCheck != null)
 			{
 				foreach (var (main, other) in _duplicateParametersCheck.Values)
 				{
-					var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable).EnsureType<object>();
-					var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable).EnsureType<object>();
-
-					// IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
+					var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable);
+					var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable);
 
 					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
+					comparisionFunctions.Add(BuildValueComparison(mainValueExpr, otherValueExpr));
 				}
 			}
 
@@ -618,19 +629,10 @@ namespace LinqToDB.Internal.Linq
 			{
 				foreach (var (value, accessor) in _byValueCompare)
 				{
-					var mainValueExpr  = Expression.Constant(value).EnsureType<object>();
-					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
-
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
+					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable);
 
 					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
+					comparisionFunctions.Add(BuildValueComparison(ValueConstant(value, otherValueExpr.Type), otherValueExpr));
 				}
 			}
 
@@ -641,27 +643,157 @@ namespace LinqToDB.Internal.Linq
 					if (!sqlValues.Contains(value))
 						continue;
 
-					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
-
-					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
-
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
+					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable);
 
 					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
+					comparisionFunctions.Add(BuildValueComparison(ValueConstant(evaluator.Evaluate(accessor), otherValueExpr.Type), otherValueExpr));
 				}
 			}
 
+			AddDependentValueChecks(dc, MainExpression, nonComparable, ref dependentValueChecks);
+
 			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, replacements, dc.MappingSchema);
-			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
+			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions, dependentValueChecks);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
+		}
+
+		static Expression ValueConstant(object? value, Type type)
+		{
+			return value != null && value.GetType() == type
+				? Expression.Constant(value, type)
+				: Expression.Constant(value);
+		}
+
+		/// <summary>
+		/// Compiles the comparison of a value the query was built with against the current one. Two values of one type with
+		/// a known value equality (see <see cref="HasPlainValueEquality"/>) are compared with
+		/// <see cref="EqualityComparer{T}.Default"/>, which does not box them; anything else goes through
+		/// <see cref="ExpressionEqualityComparer.CompareValues"/> (sequences by content, queryables as opaque, other values
+		/// by <see cref="object.Equals(object)"/>).
+		/// </summary>
+		static ValueCompareFunc BuildValueComparison(Expression main, Expression other)
+		{
+			Expression body;
+
+			if (main.Type == other.Type && HasPlainValueEquality(main.Type))
+				body = Expression.Call(_valuesEqualMethod.MakeGenericMethod(main.Type), main, other);
+			else
+				body = Expression.Call(_compareValuesMethod, main.EnsureType<object>(), other.EnsureType<object>());
+
+			// IQueryExpressions queryExpressions, IDataContext dataContext, object?[]? compiledParameters
+			return Expression.Lambda<ValueCompareFunc>(body, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+					ExpressionBuilder.ParametersParam)
+				.CompileExpression();
+		}
+
+		// Types whose IEquatable<T>.Equals agrees with Equals(object), so the typed comparison gives the result
+		// CompareValues gives. A user struct may implement the two differently, and must keep the old comparison.
+		static bool HasPlainValueEquality(Type type)
+		{
+			type = Nullable.GetUnderlyingType(type) ?? type;
+
+			if (type.IsPrimitive || type.IsEnum)
+				return true;
+
+			return type == typeof(decimal)
+				|| type == typeof(DateTime)
+				|| type == typeof(DateTimeOffset)
+				|| type == typeof(TimeSpan)
+				|| type == typeof(Guid)
+#if SUPPORTS_DATEONLY
+				|| type == typeof(DateOnly)
+				|| type == typeof(TimeOnly)
+#endif
+				;
+		}
+
+		static bool ValuesEqual<TValue>(TValue value1, TValue value2)
+		{
+			return EqualityComparer<TValue>.Default.Equals(value1, value2);
+		}
+
+		static readonly System.Reflection.MethodInfo _valuesEqualMethod   = MemberHelper.MethodOfGeneric<int>(v => ValuesEqual(v, v));
+		static readonly System.Reflection.MethodInfo _compareValuesMethod = MemberHelper.MethodOf(() => ExpressionEqualityComparer.CompareValues(null, null));
+
+		/// <summary>
+		/// A <see cref="SqlQueryDependentAttribute"/> argument selects the query by its value. The cached tree does not
+		/// compare one that becomes a placeholder - a collection the mapping schema does not treat as scalar, an object, a
+		/// value a parameter reads - and compares a collection it keeps by reference first, which misses a change made in
+		/// place. Such an argument is checked against a copy of the value the query was built for instead.
+		/// </summary>
+		void AddDependentValueChecks(IDataContext dc, Expression expression, HashSet<Expression> nonComparable, ref List<DependentValueCheck>? checks)
+		{
+			var found = new List<(ConstantExpression argument, SqlQueryDependentAttribute attribute)>();
+
+			expression.Visit((nonComparable, mappingSchema: dc.MappingSchema, found), static (ctx, e) =>
+			{
+				if (e is not MethodCallExpression mc)
+					return;
+
+				var attributes = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(mc.Method);
+
+				if (attributes == null)
+					return;
+
+				for (var i = 0; i < mc.Arguments.Count; i++)
+				{
+					if (attributes[i] is { } attribute
+						&& mc.Arguments[i] is ConstantExpression { Value: not null } argument
+						&& (IsCollection(argument.Value) || ctx.nonComparable.Contains(argument) || ExpressionCacheHelpers.ShouldRemoveConstantFromCache(argument, ctx.mappingSchema)))
+					{
+						ctx.found.Add((argument, attribute));
+					}
+				}
+			});
+
+			foreach (var (argument, attribute) in found)
+			{
+				var currentExpr = PrepareExpressionAccessors(dc, argument, nonComparable).EnsureType<object>();
+
+				var current = Expression.Lambda<ValueAccessorFunc>(currentExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+						ExpressionBuilder.ParametersParam)
+					.CompileExpression();
+
+				checks ??= [];
+				checks.Add(new DependentValueCheck(GetDependentValueSnapshot(argument.Value!, attribute), current, attribute));
+			}
+		}
+
+		// Not a query: copying one would run it.
+		static bool IsCollection(object value)
+		{
+			return value is IEnumerable and not string and not IQueryable;
+		}
+
+		// A custom ObjectsEqual gets a collection other than an array itself, as it may expect its type.
+		static object GetDependentValueSnapshot(object value, SqlQueryDependentAttribute attribute)
+		{
+			return value is Array || !HasCustomObjectsEqual(attribute.GetType())
+				? GetValueSnapshot(value)!
+				: value;
+		}
+
+		static readonly ConcurrentDictionary<Type, bool> _customObjectsEqual = new();
+
+		static bool HasCustomObjectsEqual(Type attributeType)
+		{
+			return _customObjectsEqual.GetOrAdd(attributeType, static type =>
+				type.GetMethodEx(nameof(SqlQueryDependentAttribute.ObjectsEqual), BindingFlags.Public | BindingFlags.Instance, typeof(object), typeof(object))!
+					.DeclaringType != typeof(SqlQueryDependentAttribute));
+		}
+
+		// The caller may change a collection in place after the build, so a comparison keeps a copy: an array of the same
+		// type, any other collection as an object array, which is compared by content.
+		static object? GetValueSnapshot(object? value)
+		{
+			if (value is Array array)
+				return array.Clone();
+
+			if (value != null && IsCollection(value))
+				return ((IEnumerable)value).Cast<object?>().ToArray();
+
+			return value;
 		}
 
 		/// <summary>
@@ -681,7 +813,7 @@ namespace LinqToDB.Internal.Linq
 		public void MarkAsValue(Expression expression, object? currentValue)
 		{
 			_byValueCompare ??= new();
-			_byValueCompare.Add((currentValue, expression));
+			_byValueCompare.Add((GetValueSnapshot(currentValue), expression));
 		}
 
 		public void RegisterSqlValue(Expression constantExpr, SqlValue value)

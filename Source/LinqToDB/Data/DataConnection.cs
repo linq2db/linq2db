@@ -1974,8 +1974,6 @@ namespace LinqToDB.Data
 			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
 				return null;
 
-			var configurationID = _configurationID;
-
 			Options          = newOptions;
 			_configurationID = null;
 
@@ -1984,12 +1982,8 @@ namespace LinqToDB.Data
 			action += () =>
 			{
 				Options          = prevOptions;
-
-#if DEBUG
+				// not restored: an interceptor added or removed inside the scope changes it
 				_configurationID = null;
-#else
-				_configurationID = configurationID;
-#endif
 			};
 
 			return new DisposableAction(action);
@@ -1998,15 +1992,14 @@ namespace LinqToDB.Data
 		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
 		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
 		{
-			var oldSchema       = MappingSchema;
-			var configurationID = _configurationID;
+			var oldSchema = MappingSchema;
 
 			AddMappingSchema(mappingSchema);
 
 			return new DisposableAction(() =>
 			{
+				// resets the configuration ID, which is not restored: an interceptor added or removed inside the scope changes it
 				((IDataContext)this).SetMappingSchema(oldSchema);
-				_configurationID = configurationID;
 			});
 		}
 	}

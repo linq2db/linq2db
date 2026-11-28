@@ -141,7 +141,24 @@ namespace LinqToDB.Internal.Linq.Builder
 				filteredExpression = ExpressionBuilder.ExposeExpression(filteredExpression, builder.DataContext, builder.OptimizationContext, builder.ParameterValues, optimizeConditions: true, compactBinary: true);
 
 				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
-					filteredExpression = interceptor.ProcessExpression(filteredExpression, new QueryExpressionArgs(builder.DataContext, filteredExpression, QueryExpressionArgs.ExpressionKind.QueryFilter));
+				{
+					if (builder.DataContext.HasUntrustedQueryInterceptor())
+					{
+						var exposedFilter = filteredExpression;
+
+						// An interceptor without IInterceptorCacheKey may rewrite the filters differently for another instance of
+						// its type, which the cache key does not tell apart: the rewrite is registered as a dynamic accessor, which a
+						// cache hit runs for the executing context's interceptor and compares.
+						filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(GetFilterAccessorKey(tableExpression, activeFilters), builder.DataContext, mappingSchema, (dc, _) =>
+							dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } current }
+								? current.ProcessExpression(exposedFilter, new QueryExpressionArgs(dc, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter))
+								: exposedFilter);
+					}
+					else
+					{
+						filteredExpression = interceptor.ProcessExpression(filteredExpression, new QueryExpressionArgs(builder.DataContext, filteredExpression, QueryExpressionArgs.ExpressionKind.QueryFilter));
+					}
+				}
 			}
 			else
 			{
@@ -153,7 +170,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					activeKeys.Add(entry.FilterKey);
 
 				// Closure should capture mappingSchema, entityType and tableExpression only. Used in EqualsToVisitor
-				filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(tableExpression, builder.DataContext, mappingSchema, (dc, ms) =>
+				filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(GetFilterAccessorKey(tableExpression, activeFilters), builder.DataContext, mappingSchema, (dc, ms) =>
 				{
 					var ed = ms.GetEntityDescriptor(entityType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
@@ -196,6 +213,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return filteredExpression;
+		}
+
+		// References to one table can differ by their active filter set (IgnoreFilters with keys), which gives another filter
+		// chain, so the set is part of the key of the dynamic accessor registered for a reference.
+		static Expression GetFilterAccessorKey(Expression tableExpression, List<EntityQueryFilter> activeFilters)
+		{
+			var items = new Expression[activeFilters.Count + 1];
+
+			items[0] = Expression.Convert(tableExpression, typeof(object));
+
+			for (var i = 0; i < activeFilters.Count; i++)
+				items[i + 1] = Expression.Constant(activeFilters[i].FilterKey, typeof(object));
+
+			return Expression.NewArrayInit(typeof(object), items);
 		}
 
 		// Builds the Where-lambda for a single query filter: substitutes the data-context parameter with the

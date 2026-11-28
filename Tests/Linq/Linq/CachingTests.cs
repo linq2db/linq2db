@@ -6,12 +6,15 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.DataProvider;
 
@@ -235,11 +238,12 @@ namespace Tests.Linq
 				Assert.That(sql, Contains.Substring("WITH TIES"));
 		}
 
-		[ActiveIssue(4266, ErrorMessage = "Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1))",
-			Details = "the collection parameter does not take part in the cache key, so a query that should miss is reused - #4266's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			// the miss counts below need a query no earlier test cached
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
 			using var db = GetDataContext(context);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
@@ -273,11 +277,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(4266, ErrorMessage = "Expected and result lists are different",
-			Details = "the reused query answers with the previous collection's rows - the wrong-results half of #4266.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			// the miss counts below need a query no earlier test cached
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
 			using var db = GetDataContext(context);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
@@ -315,6 +320,548 @@ namespace Tests.Linq
 			{
 				db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			}
+		}
+
+		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InlineValuesBuilder), ServerSideOnly = true)]
+		static bool InValues([ExprParameter] int field, [SqlQueryDependent] IEnumerable<int> values) => throw new ServerSideOnlyException(nameof(InValues));
+
+		// A subclass that keeps the base comparison.
+		[AttributeUsage(AttributeTargets.Parameter)]
+		sealed class DerivedDependentAttribute : SqlQueryDependentAttribute;
+
+		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InlineValuesBuilder), ServerSideOnly = true)]
+		static bool InValuesDerived([ExprParameter] int field, [DerivedDependent] IEnumerable<int> values) => throw new ServerSideOnlyException(nameof(InValuesDerived));
+
+		// The values are inlined: the SQL depends on them.
+		sealed class InlineValuesBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				foreach (var value in builder.GetValue<IEnumerable<int>>("values"))
+					builder.AddParameter("values", new SqlValue(value));
+			}
+		}
+
+		int[] ExpectedPersonIds(IEnumerable<int> ids)
+		{
+			return Person
+				.Select(p => p.ID)
+				.Where(ids.Contains)
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		static int[] PersonIdsIn(ITestDataContext db, IEnumerable<int> ids)
+		{
+			var query =
+				from p in db.Person
+				where InValues(p.ID, ids)
+				select p.ID;
+
+			return query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		// A [SqlQueryDependent] collection that is not an array: the query built for one collection must not answer for
+		// another. PostgreSQL maps such a list as a scalar (an array type), the other providers do not.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentCollection_OtherValues([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			foreach (var ids in new[] { new List<int> { 1, 2 }, new List<int> { 3, 4 }, new List<int> { 1, 2 } })
+			{
+				PersonIdsIn(db, ids)
+					.ShouldBe(ExpectedPersonIds(ids), $"[{string.Join(", ", ids)}]");
+			}
+		}
+
+		static IQueryable<int> PersonIdsInQuery(ITestDataContext db, IList<int> ids, bool derived)
+		{
+			return derived
+				? from p in db.Person
+				  where InValuesDerived(p.ID, ids)
+				  select p.ID
+				: from p in db.Person
+				  where InValues(p.ID, ids)
+				  select p.ID;
+		}
+
+		// The same collection - a list or an array - changed in place after the query was built.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentCollection_ChangedInPlace(
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context,
+			[Values]                                                                       bool   sameQueryable,
+			[Values]                                                                       bool   array,
+			[Values]                                                                       bool   derived)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
+
+			var query = PersonIdsInQuery(db, ids, derived);
+
+			query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "before the change");
+
+			ids[0] = 3;
+			ids[1] = 4;
+
+			if (!sameQueryable)
+				query = PersonIdsInQuery(db, ids, derived);
+
+			query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "after the change");
+		}
+
+		static readonly Func<IDataContext, IList<int>, IQueryable<int>> _compiledPersonIdsIn =
+			CompiledQuery.Compile((IDataContext db, IList<int> ids) =>
+				from p in db.GetTable<Person>()
+				where InValues(p.ID, ids)
+				select p.ID);
+
+		static readonly Func<IDataContext, IList<int>, IQueryable<int>> _compiledPersonIdsInDerived =
+			CompiledQuery.Compile((IDataContext db, IList<int> ids) =>
+				from p in db.GetTable<Person>()
+				where InValuesDerived(p.ID, ids)
+				select p.ID);
+
+		// The same through a compiled query, whose cache key holds the argument itself.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentCollection_ChangedInPlace_CompiledQuery(
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context,
+			[Values]                                                                       bool   array,
+			[Values]                                                                       bool   derived)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
+
+			var compiled = derived ? _compiledPersonIdsInDerived : _compiledPersonIdsIn;
+
+			compiled(db, ids)
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "before the change");
+
+			ids[0] = 3;
+			ids[1] = 4;
+
+			compiled(db, ids)
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "after the change");
+		}
+
+		static readonly MappingSchema _personIdFilterSchema = new FluentMappingBuilder(new MappingSchema())
+			.Entity<Person>()
+				.HasQueryFilter(p => p.ID > 1)
+			.Build()
+			.MappingSchema;
+
+		// IgnoreFilters takes its entity types as a [SqlQueryDependent] array the cached tree does not compare by value. The
+		// IQueryable keeps its query between executions all the same, and still sees the array changed in place.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentArray_QueryableKeepsQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(_personIdFilterSchema));
+
+			var types = new[] { typeof(Person) };
+			var query = db.GetTable<Person>().IgnoreFilters(types);
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(Person.Count());
+
+			var info = query.GetCompiledQueryInfo();
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(Person.Count());
+
+			query
+				.GetCompiledQueryInfo()
+				.ShouldBeSameAs(info);
+
+			types[0] = typeof(Child);
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(Person.Count(p => p.ID > 1), "after the change");
+		}
+
+		// The builder reads the values when the query is built and inlines their maximum.
+		sealed class MaxOfBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var values = builder.GetValue<IEnumerable<int>>("values");
+
+				builder.ResultExpression = new SqlValue(values.Max());
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(MaxOfBuilder), ServerSideOnly = true)]
+		static int MaxOf(IEnumerable<int> values) => throw new ServerSideOnlyException(nameof(MaxOf));
+
+		// An extension argument the builder reads - a list or an array - changed in place after the query was built.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6225"), QueryCacheTest]
+		public void ExtensionArgument_CollectionChangedInPlace(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   array)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			IList<int> values = array ? new[] { 1, 3 } : new List<int> { 1, 3 };
+
+			IQueryable<int> PersonIdsEqualToMax()
+			{
+				return
+					from p in db.Person
+					where p.ID == MaxOf(values)
+					select p.ID;
+			}
+
+			PersonIdsEqualToMax()
+				.ToArray()
+				.ShouldBe([3], "before the change");
+
+			values[1] = 2;
+
+			PersonIdsEqualToMax()
+				.ToArray()
+				.ShouldBe([2], "after the change");
+
+			// equal values in a new collection find the query built for them
+			var query     = PersonIdsEqualToMax();
+			var missCount = query.GetCacheMissCount();
+
+			values = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
+
+			PersonIdsEqualToMax()
+				.ToArray()
+				.ShouldBe([2], "equal values");
+
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(0);
+		}
+
+		// A [SqlQueryDependent] object: a SqlType is created anew by every query, and equal types share one cached query.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5810"), QueryCacheTest]
+		public void SqlQueryDependentObject_EqualSqlTypesShareQuery()
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = SqlServerConnectionForSqlOnly();
+
+			IQueryable<string?> Names(int size)
+			{
+				return
+					from p in db.GetTable<Person>()
+					select SqlFn.Cast(p.FirstName, SqlType.VarChar(size));
+			}
+
+			var query     = Names(10);
+			var missCount = query.GetCacheMissCount();
+
+			foreach (var size in new[] { 10, 10, 20, 10 })
+			{
+				Names(size)
+					.ToSqlQuery()
+					.Sql
+					.ShouldContain($"varchar({size})");
+			}
+
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
+		}
+
+		// The same for a data type given as a function - a method group or a lambda: every query creates the delegate
+		// anew, and functions that return equal types share one cached query.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5810"), QueryCacheTest]
+		public void SqlQueryDependentObject_EqualSqlTypeFunctionsShareQuery([Values] bool lambda)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = SqlServerConnectionForSqlOnly();
+
+			IQueryable<string?> Names(bool unicode)
+			{
+				if (lambda)
+				{
+					if (unicode)
+					{
+						return
+							from p in db.GetTable<Person>()
+							select SqlFn.Cast(p.FirstName, () => SqlType.NVarChar());
+					}
+
+					return
+						from p in db.GetTable<Person>()
+						select SqlFn.Cast(p.FirstName, () => SqlType.VarChar());
+				}
+
+				if (unicode)
+				{
+					return
+						from p in db.GetTable<Person>()
+						select SqlFn.Cast(p.FirstName, SqlType.NVarChar);
+				}
+
+				return
+					from p in db.GetTable<Person>()
+					select SqlFn.Cast(p.FirstName, SqlType.VarChar);
+			}
+
+			var query     = Names(false);
+			var missCount = query.GetCacheMissCount();
+
+			foreach (var unicode in new[] { false, false, true, false })
+			{
+				Names(unicode)
+					.ToSqlQuery()
+					.Sql
+					.ShouldContain(unicode ? " as nvarchar)" : " as varchar)");
+			}
+
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
+		}
+
+		// The same for a lambda that reads a variable, which changes between the queries: each query takes the type the
+		// function returns when the query runs.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5810"), QueryCacheTest]
+		public void SqlQueryDependentObject_SqlTypeFunctionReadsVariable()
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = SqlServerConnectionForSqlOnly();
+
+			var size = 10;
+
+			IQueryable<string?> Names()
+			{
+				return
+					from p in db.GetTable<Person>()
+					select SqlFn.Cast(p.FirstName, () => SqlType.VarChar(size));
+			}
+
+			var query     = Names();
+			var missCount = query.GetCacheMissCount();
+
+			foreach (var newSize in new[] { 10, 10, 20, 10 })
+			{
+				size = newSize;
+
+				Names()
+					.ToSqlQuery()
+					.Sql
+					.ShouldContain($"varchar({newSize})");
+			}
+
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
+		}
+
+		// SQL generation only: nothing connects.
+		static DataConnection SqlServerConnectionForSqlOnly()
+		{
+			var options = new DataOptions()
+				.UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient);
+
+			return new DataConnection(options);
+		}
+
+		interface IPersonIdLimit
+		{
+			int Value { get; }
+		}
+
+		sealed class PersonIdLimit(int value) : IPersonIdLimit
+		{
+			public int Value => value;
+		}
+
+		sealed record PersonIdLimitWithEquals(int Value) : IPersonIdLimit;
+
+		// The limit is inlined: the SQL depends on it.
+		sealed class InlineLimitBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.AddParameter("limit", new SqlValue(builder.GetValue<IPersonIdLimit>("limit").Value));
+			}
+		}
+
+		[Sql.Extension("{field} <= {limit}", IsPredicate = true, BuilderType = typeof(InlineLimitBuilder), ServerSideOnly = true)]
+		static bool AtMost([ExprParameter] int field, [SqlQueryDependent] IPersonIdLimit limit) => throw new ServerSideOnlyException(nameof(AtMost));
+
+		// Limits 2, 2, 3, 2: with Equals a new instance each time, without it the same instance for the same limit.
+		static IPersonIdLimit[] PersonIdLimits(bool withEquals)
+		{
+			if (withEquals)
+			{
+				return [new PersonIdLimitWithEquals(2), new PersonIdLimitWithEquals(2), new PersonIdLimitWithEquals(3), new PersonIdLimitWithEquals(2)];
+			}
+
+			var two   = new PersonIdLimit(2);
+			var three = new PersonIdLimit(3);
+
+			return [two, two, three, two];
+		}
+
+		int[] ExpectedPersonIdsAtMost(int limit)
+		{
+			return Person
+				.Select(p => p.ID)
+				.Where(id => id <= limit)
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		static int[] SortedIds(IQueryable<int> query)
+		{
+			return query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		// A [SqlQueryDependent] object of a user type: one without Equals compares by reference, one with Equals by value.
+		// The query built for one limit must not answer for another, and equal limits share one cached query.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentObject_UserType(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   withEquals)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			IQueryable<int> PersonIdsAtMost(IPersonIdLimit limit)
+			{
+				return
+					from p in db.Person
+					where AtMost(p.ID, limit)
+					select p.ID;
+			}
+
+			var limits    = PersonIdLimits(withEquals);
+			var query     = PersonIdsAtMost(limits[0]);
+			var missCount = query.GetCacheMissCount();
+
+			foreach (var limit in limits)
+			{
+				SortedIds(PersonIdsAtMost(limit))
+					.ShouldBe(ExpectedPersonIdsAtMost(limit.Value), $"limit {limit.Value}");
+			}
+
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
+		}
+
+		static readonly Func<IDataContext, IPersonIdLimit, IQueryable<int>> _compiledPersonIdsAtMost =
+			CompiledQuery.Compile((IDataContext db, IPersonIdLimit limit) =>
+				from p in db.GetTable<Person>()
+				where AtMost(p.ID, limit)
+				select p.ID);
+
+		// The same through a compiled query, whose cache key holds the argument itself.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentObject_UserType_CompiledQuery(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   withEquals)
+		{
+			using var db = GetDataContext(context);
+
+			var queries = new Dictionary<int, object>();
+
+			foreach (var limit in PersonIdLimits(withEquals))
+			{
+				var query = _compiledPersonIdsAtMost(db, limit);
+				var info  = query.GetCompiledQueryInfo();
+
+				if (queries.TryGetValue(limit.Value, out var first))
+				{
+					info.ShouldBeSameAs(first, $"limit {limit.Value}");
+				}
+				else
+				{
+					queries.Add(limit.Value, info);
+				}
+
+				SortedIds(query)
+					.ShouldBe(ExpectedPersonIdsAtMost(limit.Value), $"limit {limit.Value}");
+			}
+
+			queries[3].ShouldNotBeSameAs(queries[2]);
+		}
+
+		// IEquatable<T>.Equals deliberately disagrees with the inherited field-wise Equals(object).
+#pragma warning disable CA1067 // the test needs IEquatable<T>.Equals and Equals(object) to differ
+		readonly struct LooseValue(int n) : IEquatable<LooseValue>
+		{
+			public int N { get; } = n;
+
+			public bool Equals(LooseValue other)
+			{
+				return N % 10 == other.N % 10;
+			}
+		}
+#pragma warning restore CA1067
+
+		sealed class BakeBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.ResultExpression = new SqlValue(builder.GetValue<LooseValue>(0).N);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(BakeBuilder), ServerSideOnly = true)]
+		static int Bake(LooseValue value) => throw new ServerSideOnlyException(nameof(Bake));
+
+		// A value an extension builder bakes into the SQL is compared by Equals(object), as it always was, not by
+		// IEquatable<T>.Equals.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void BakedStructValue_ComparedByEqualsObject([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			var value = new LooseValue(1);
+
+			db
+				.Select(() => Bake(value))
+				.ShouldBe(1);
+
+			value = new LooseValue(11);
+
+			db
+				.Select(() => Bake(value))
+				.ShouldBe(11);
 		}
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]

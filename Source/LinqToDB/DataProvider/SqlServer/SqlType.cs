@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -19,6 +20,20 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return _dataType;
 		}
+
+		// A data type passed to SqlFn selects the cached query by value, and each call creates a new instance.
+		public override bool Equals([NotNullWhen(true)] object? obj)
+		{
+			return obj is SqlType other && other.GetType() == GetType() && string.Equals(other._dataType, _dataType, StringComparison.Ordinal);
+		}
+
+		public override int GetHashCode()
+		{
+			return StringComparer.Ordinal.GetHashCode(_dataType);
+		}
+
+		// A function that returns this instance: SqlFn puts it in place of a data type given as a lambda.
+		internal virtual Delegate? ToFunction() => null;
 
 		sealed class SqlExpressionAttribute(string name) : Sql.ExpressionAttribute(ProviderName.SqlServer, name);
 
@@ -117,5 +132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			: base(dataType)
 		{
 		}
+
+		internal override Delegate ToFunction() => new Func<SqlType<T>>(() => this);
 	}
 }

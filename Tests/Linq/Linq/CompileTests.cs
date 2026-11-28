@@ -1248,6 +1248,49 @@ namespace Tests.Linq
 				Assert.That(applied, Is.EquivalentTo(new[] { 1 }));
 			}
 		}
+
+		// The IQueryable a compiled query returns, enumerated after the caller changed a [SqlQueryDependent] argument in place:
+		// the query it runs follows the argument, as a new call would.
+		[Test]
+		public void QueryableFormDependentArgumentChangedTest(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   enumeratedBefore)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<FilteredRow>()
+					.HasQueryFilter((q, dc) => q.Where(r => !r.Hidden))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable(
+			[
+				new FilteredRow { Id = 1, Hidden = false },
+				new FilteredRow { Id = 2, Hidden = true  },
+			]);
+
+			var query = CompiledQuery.Compile<IDataContext,Type[],IQueryable<FilteredRow>>(
+				static (dc, types) => dc
+					.GetTable<FilteredRow>()
+					.IgnoreFilters(types));
+
+			var types     = new[] { typeof(FilteredRow) };
+			var queryable = query(db, types);
+
+			if (enumeratedBefore)
+			{
+				queryable.ToList()
+					.Select(r => r.Id)
+					.ShouldBe([1, 2], ignoreOrder: true);
+			}
+
+			types[0] = typeof(Parent);
+
+			queryable.ToList()
+				.Select(r => r.Id)
+				.ShouldBe([1], ignoreOrder: true);
+		}
 	}
 
 	static class CompiledQueryWrapperExtensions
