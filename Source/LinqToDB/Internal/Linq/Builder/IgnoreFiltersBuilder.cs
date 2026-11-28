@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -19,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Coalesce a null key list to empty so it never reaches FilterIgnoreScope as the null "any key"
 				// wildcard — an explicit (empty/null) key list disables nothing, only the type-based overload disables all.
-				var keys  = builder.EvaluateExpression<string[]>(methodCall.Arguments[1]) ?? [];
+				var keys = builder.EvaluateExpression<IEnumerable<string>>(methodCall.Arguments[1])?.ToArray() ?? [];
 				var types = builder.EvaluateExpression<Type[]>  (methodCall.Arguments[2]) ?? [];
 				builder.PushDisabledQueryFilters(keys, types);
 			}

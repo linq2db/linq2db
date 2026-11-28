@@ -585,6 +585,46 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void IgnoreFilters_ByKey_List_CompiledQuery([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>()
+				.HasQueryFilter<MyDataContext>(
+					SoftDeleteKey,
+					(q, dc) => q.Where(e => !e.IsDeleted));
+
+			builder.Entity<DetailClass>()
+				.HasQueryFilter<MyDataContext>(
+					IdRangeKey,
+					(q, dc) => q.Where(e => e.Id < 500));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				// Avoid a previously cached query shape masking the regression.
+				Query.ClearCaches();
+
+				var compiledQuery = CompiledQuery.Compile(
+	(IDataContext dc, List<string> filterKeys) =>
+		dc.GetTable<DetailClass>().IgnoreFilters(filterKeys));
+
+				var ignoredKeys = new List<string> { SoftDeleteKey };
+
+				var result = compiledQuery(db, ignoredKeys).ToList();
+
+				// SoftDelete is disabled, but IdRange must remain active.
+				result.ShouldAllBe(e => e.Id < 500);
+				result.ShouldContain(e => e.IsDeleted);
+				result.Count.ShouldBe(499);
+			}
+		}
+
+		[Test]
 		public void IgnoreFilters_ByKey_Empty_DisablesNothing([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			var testData = GenerateTestData();
@@ -630,7 +670,6 @@ namespace Tests.Linq
 				result.Count.ShouldBeLessThan(testData.Item3.Length);
 			}
 		}
-
 		[Test]
 		public void IgnoreFilters_EmptyKeys_WithTypes_DisablesNothing([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
