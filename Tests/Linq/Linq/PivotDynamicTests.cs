@@ -792,15 +792,18 @@ namespace Tests.Linq
 						.Cell(rows => rows.Sum(x => x.Amount), Year)
 						.AsDictionary(),
 				})
-				.OrderBy(r => r.Key)
 				.Select(r => new
 				{
+					r.Key,
 					Absent      = r.Cells.Get<decimal?>("Y2099"),
 					AbsentIndex = (decimal?)r.Cells["Y2099"],
 					AsInt       = r.Cells.Get<int>("Y2010"),
 					AsString    = r.Cells.Get<string>("Y2010"),
 					Present     = r.Cells.Get<decimal?>("Y2010"),
 				})
+				.ToList()
+				// Sorted here: an ORDER BY on a key the projection leaves out is dropped (AnOrderingSurvivesAProjectionOfCellsOnly).
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
 
 			result.Count.ShouldBe(2);
@@ -810,11 +813,39 @@ namespace Tests.Linq
 				.ShouldBe(new decimal?[] { 20m, 15m });
 		}
 
+		/// <summary>An ordering by the group key holds when the projection after it reads only cells.</summary>
+		// The order is a SQL clause; a provider whose GROUP BY happens to sort hides its absence in the rows.
+		[Test]
+		[ActiveIssue(6496, Configurations = [TestProvName.AllSQLite], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain{0}ORDER BY{1}but")]
+		public void AnOrderingSurvivesAProjectionOfCellsOnly([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.OrderBy(r => r.Key)
+				.Select(r => r.Cells.Get<decimal?>("Y2010"))
+				.ToSqlQuery()
+				.Sql;
+
+			pivoted.ShouldContain("ORDER BY", Case.Insensitive);
+		}
+
 		/// <summary>
 		/// A projected cell name read from the row has no value until the query runs, so the cached query compares it as part
 		/// of the tree: the second execution reads as the first.
 		/// </summary>
 		[Test]
+		[ActiveIssue(6503, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Column Category is not in source column set")]
 		public void ARowDependentCellNameReadsOnEveryExecution([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1003,11 +1034,19 @@ namespace Tests.Linq
 						.AsDictionary(),
 				});
 
+			// The same comparison over the column: Access casts neither (#6502), so both compare 20.6 there and match nothing.
+			var castMatches = t
+				.Where(x => x.Year == 2010 && (int)x.Amount!.Value == castOfA)
+				.Select(x => x.Category)
+				.ToList();
+
+			castMatches.ShouldBe(context.IsAnyOf(TestProvName.AllAccess) ? Array.Empty<string>() : new[] { "A" });
+
 			pivoted
 				.Where(r => r.Cells.Get<int>("Y2010") == castOfA)
 				.Select(r => r.Key)
 				.ToList()
-				.ShouldBe(new[] { "A" });
+				.ShouldBe(castMatches);
 
 			pivoted
 				.Select(r => r.Cells.Get<int>("Y2010"))
@@ -1282,11 +1321,19 @@ namespace Tests.Linq
 					x => x.Cells.Get<int>("Y2010"),
 					x => x.Cells.Get<int>("Y2020"));
 
+			// The same comparison over the column: Access casts neither (#6502), so both compare 20.6 there and match nothing.
+			var castMatches = t
+				.Where(x => x.Year == 2010 && (int)x.Amount!.Value == castOfA)
+				.Select(x => x.Category)
+				.ToList();
+
+			castMatches.ShouldBe(context.IsAnyOf(TestProvName.AllAccess) ? Array.Empty<string>() : new[] { "A" });
+
 			unpivoted
 				.Where(u => u.Value == castOfA)
 				.Select(u => u.Key)
 				.ToList()
-				.ShouldBe(new[] { "A" });
+				.ShouldBe(castMatches);
 
 			unpivoted
 				.Where(u => u.Name == "Y2010")
@@ -1353,6 +1400,7 @@ namespace Tests.Linq
 
 		/// <summary>An unpivot column's value can feed a subquery in the result selector.</summary>
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void UnpivotValueFeedsASubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1437,6 +1485,8 @@ namespace Tests.Linq
 
 		/// <summary>Two pivots' cells of one name unpivot under the paths that tell them apart.</summary>
 		[Test]
+		// YDB types each UNION ALL arm's decimal aggregate on its own (SUM Decimal(35,9), MAX Decimal(26,9)) and rejects the mix.
+		[ActiveIssue(3360, Configurations = [TestProvName.AllYdb], ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Uncompatible member")]
 		public void UnpivotsSameNamedCellsOfTwoPivotsUnderTheirPaths([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1478,6 +1528,8 @@ namespace Tests.Linq
 
 		/// <summary>Same-named cells read through a cast of interface-typed members unpivot under the members' paths.</summary>
 		[Test]
+		// YDB types each UNION ALL arm's decimal aggregate on its own (SUM Decimal(35,9), MAX Decimal(26,9)) and rejects the mix.
+		[ActiveIssue(3360, Configurations = [TestProvName.AllYdb], ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Uncompatible member")]
 		public void UnpivotsCastInterfaceMembersUnderTheirPaths([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1912,6 +1964,7 @@ namespace Tests.Linq
 
 			var source = t.Select(x => new { x.Category, x.Year, x.Amount });
 
+			// Sorted here: an ORDER BY on a key the projection leaves out is dropped (AnOrderingSurvivesAProjectionOfCellsOnly).
 			source
 				.GroupBy(x => x.Category)
 				.Select(g => new
@@ -1922,9 +1975,10 @@ namespace Tests.Linq
 						.Cell(rows => rows.Sum(x => x.Amount), Year)
 						.AsDictionary(),
 				})
-				.OrderBy(r => r.Category)
-				.Select(r => (decimal?)Sql.Property<object>(r.Cells, "Y2010"))
+				.Select(r => new { r.Category, Value = (decimal?)Sql.Property<object>(r.Cells, "Y2010") })
 				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.Select(r => r.Value)
 				.ShouldBe(new decimal?[] { 20m, 15m });
 
 			var throughInterface = source
@@ -1936,18 +1990,21 @@ namespace Tests.Linq
 						.Pivot(x => x.Year, new[] { 2000, 2010 })
 						.Cell(rows => rows.Sum(x => x.Amount), Year)
 						.AsDictionary(),
-				})
-				.OrderBy(r => r.Category);
+				});
 
 			throughInterface
-				.Select(r => (decimal?)Sql.Property<object>(r.Cells, "Y2010"))
+				.Select(r => new { r.Category, Value = (decimal?)Sql.Property<object>(r.Cells, "Y2010") })
 				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.Select(r => r.Value)
 				.ShouldBe(new decimal?[] { 20m, 15m });
 
 			// Read as another type than the cell's.
 			throughInterface
-				.Select(r => (int)Sql.Property<object>(r.Cells, "Y2010"))
+				.Select(r => new { r.Category, Value = (int)Sql.Property<object>(r.Cells, "Y2010") })
 				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.Select(r => r.Value)
 				.ShouldBe(new[] { 20, 15 });
 		}
 
@@ -1989,11 +2046,6 @@ namespace Tests.Linq
 				.OrderBy(v => v)
 				.ShouldBe(new[] { 5, 10 });
 
-			categories
-				.SelectMany(c => unpivoted.Where(u => u.Key == c && u.Value > 100).Select(u => u.Value).DefaultIfEmpty())
-				.ToList()
-				.ShouldBe(new[] { 0, 0 });
-
 			var asUri = t
 				.GroupBy(x => x.Category)
 				.Select(g => new
@@ -2013,6 +2065,37 @@ namespace Tests.Linq
 					.SelectMany(c => asUri.Where(u => u.Key == c).Select(u => u.Value))
 					.ToList(),
 				Throws.TypeOf<LinqToDBException>().With.Message.Contains(Message(ErrorHelper.Pivot.Error_PivotCellType, "Y2000", typeof(Uri))));
+		}
+
+		/// <summary>An empty <c>DefaultIfEmpty</c> over an unpivot with a converted cell read reads the type's default.</summary>
+		[Test]
+		// The DefaultIfEmpty join compares a nullable key null-aware (an OR in ON), which YDB's JOIN ON does not accept.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "JOIN ON expression must be a conjunction of equality predicates")]
+		public void UnpivotsAConvertedCellUnderDefaultIfEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var unpivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Value = value },
+					x => x.Cells.Get<int>("Y2000"));
+
+			t
+				.Select(x => x.Category)
+				.Distinct()
+				.SelectMany(c => unpivoted.Where(u => u.Key == c && u.Value > 100).Select(u => u.Value).DefaultIfEmpty())
+				.ToList()
+				.ShouldBe(new[] { 0, 0 });
 		}
 
 		/// <summary>A set operation over rows with an interface-typed member still filters on its cells.</summary>
@@ -2324,8 +2407,8 @@ namespace Tests.Linq
 
 		/// <summary>A cell can carry any aggregate the provider can translate over a grouping - here a distinct count.</summary>
 		[Test]
-		// An aggregate over a distinct set lowers to a lateral subquery, which Access cannot join.
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess)]
+		// An aggregate over a distinct set lowers to a lateral subquery, which native Access cannot join; LibRed can.
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess)]
 		public void PivotsWithADistinctCountCell([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2842,6 +2925,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		// YDB types each UNION ALL arm's decimal aggregate on its own (SUM Decimal(35,9), MAX Decimal(26,9)) and rejects the mix.
+		[ActiveIssue(3360, Configurations = [TestProvName.AllYdb], ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Uncompatible member")]
 		public void PivotsUnderConcat([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
