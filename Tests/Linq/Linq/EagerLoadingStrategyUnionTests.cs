@@ -3913,6 +3913,60 @@ namespace Tests.Linq
 			}
 		}
 
+		// A CteUnion query that pages shares its SelectQuery with the CTE body, which is why it skips finalization.
+		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllSybase)]
+		public void NestedInPagedDetachedCollection_RootIsOptimized([DataSources(TestProvName.AllNativeAccess)] string context, [Values(0, 1)] int skip)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = db.Select(() => new
+			{
+				First     = tCo
+					.OrderBy(c => c.Id)
+					.Select(c => c.Id)
+					.First(),
+				Companies = tCo
+					.OrderBy(c => c.Id)
+					.Skip(skip)
+					.Take(2)
+					.Select(c => new
+					{
+						c.Id,
+						Departments = tDep
+							.Where(d => d.CompanyId == c.Id)
+							.OrderBy(d => d.Id)
+							.ToList(),
+					})
+					.WithUnionLoadStrategy()
+					.ToList(),
+			});
+
+			var expectedIds = companies
+				.OrderBy(c => c.Id)
+				.Skip(skip)
+				.Take(2)
+				.Select(c => c.Id)
+				.ToList();
+
+			result.First.ShouldBe(companies[0].Id);
+			result.Companies.Select(c => c.Id).ShouldBe(expectedIds);
+
+			foreach (var company in result.Companies)
+			{
+				var expected = departments
+					.Where(d => d.CompanyId == company.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				company.Departments.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
 		#endregion
 	}
 }
