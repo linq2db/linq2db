@@ -69,6 +69,16 @@ namespace LinqToDB.Linq.Translation
 		void MarkAsNonParameter(Expression expression, object? currentValue);
 
 		IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor);
+
+		/// <summary>
+		/// Types what is translated within the returned scope as the operands of a comparison between <paramref name="left"/>
+		/// and <paramref name="right"/> are typed: a value written beside a column takes the form that column stores.
+		/// </summary>
+		/// <param name="left">The left operand of the comparison.</param>
+		/// <param name="right">The right operand of the comparison.</param>
+		/// <returns>The scope; disposing it restores the previous typing.</returns>
+		IDisposable UsingComparisonDescriptor(Expression left, Expression right);
+
 		IDisposable UsingCurrentAggregationContext(Expression basedOn);
 	}
 }

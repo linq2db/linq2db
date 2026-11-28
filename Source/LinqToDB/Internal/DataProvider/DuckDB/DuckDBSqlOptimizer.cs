@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -21,8 +23,70 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
 
 			statement = TuneParameters(statement);
+			statement = CastTimestampValuesOfBetween(statement, mappingSchema);
 
 			return statement;
+		}
+
+		// DuckDB types a parameter value of BETWEEN by a date bound beside it, dropping its time, and binds a parameter its uses
+		// type differently as text, which fails. Such a value is cast to its own type wherever the statement uses it.
+		static SqlStatement CastTimestampValuesOfBetween(SqlStatement statement, MappingSchema mappingSchema)
+		{
+			var values = new HashSet<SqlParameter>(Utils.ObjectReferenceEqualityComparer<SqlParameter>.Default);
+
+			statement.VisitAll((values, mappingSchema), static (context, e) =>
+			{
+				if (e is SqlPredicate.Between between && IsTimestampParameterBesideDate(between, context.mappingSchema))
+					context.values.Add((SqlParameter)QueryHelper.UnwrapNullablity(between.Expr1));
+			});
+
+			if (values.Count == 0)
+				return statement;
+
+			return (SqlStatement)new CastParametersVisitor(values).ProcessElement(statement);
+		}
+
+		static bool IsTimestampParameterBesideDate(SqlPredicate.Between between, MappingSchema mappingSchema)
+		{
+			return QueryHelper.UnwrapNullablity(between.Expr1) is SqlParameter { IsQueryParameter: true }
+				&& QueryHelper.GetDbDataType(between.Expr1, mappingSchema).DataType is DataType.DateTime or DataType.DateTime2
+				&& (IsDate(between.Expr2, mappingSchema) || IsDate(between.Expr3, mappingSchema));
+
+			static bool IsDate(ISqlExpression expression, MappingSchema mappingSchema)
+			{
+				return QueryHelper.UnwrapNullablity(expression) is not SqlParameter
+					&& QueryHelper.GetDbDataType(expression, mappingSchema).DataType == DataType.Date;
+			}
+		}
+
+		sealed class CastParametersVisitor(HashSet<SqlParameter> parameters) : SqlQueryVisitor(VisitMode.Modify, null)
+		{
+			protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			{
+				return parameters.Contains(sqlParameter) ? Cast(sqlParameter) : base.VisitSqlParameter(sqlParameter);
+			}
+
+			// The nodes below keep their parameter in a SqlParameter-typed field, which a cast does not fit: a marked one
+			// is replaced by the cast, and an inlined one is rendered as a literal.
+			protected internal override IQueryElement VisitSqlParameterCastExpression(SqlParameterCastExpression element)
+			{
+				return parameters.Contains(element.Parameter) ? Cast(element.Parameter) : element;
+			}
+
+			protected internal override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
+			{
+				return element;
+			}
+
+			protected internal override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
+			{
+				return element;
+			}
+
+			static SqlCastExpression Cast(SqlParameter parameter)
+			{
+				return new SqlCastExpression(parameter, parameter.Type, null, isMandatory: true);
+			}
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)

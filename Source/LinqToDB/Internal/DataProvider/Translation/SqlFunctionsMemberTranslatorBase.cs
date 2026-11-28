@@ -3,6 +3,7 @@
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Translation
 {
@@ -40,14 +41,75 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// A column the call's result is assigned to or compared with types that boolean result, not the operands.
 			using var disposable = translationContext.UsingColumnDescriptor(null);
 
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var value)
-				|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var low)
-				|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out var high))
-				return null;
+			var valueExpression = methodCall.Arguments[0];
+			var lowExpression   = methodCall.Arguments[1];
+			var highExpression  = methodCall.Arguments[2];
+
+			// A descriptor types client values only, so only a client value can be written differently beside each bound.
+			var isClientValue = translationContext.CanBeEvaluatedOnClient(valueExpression);
+
+			ColumnDescriptor? lowDescriptor, highDescriptor;
+			ISqlExpression?   value, low, high, valueBesideHigh = null;
+
+			// The value is compared with each bound, so each pair is typed as the operands of that comparison, `>=` or `<=`, are.
+			using (translationContext.UsingComparisonDescriptor(valueExpression, lowExpression))
+			{
+				lowDescriptor = translationContext.CurrentColumnDescriptor;
+
+				if (!translationContext.TranslateToSqlExpression(valueExpression, out value)
+					|| !translationContext.TranslateToSqlExpression(lowExpression, out low))
+					return null;
+			}
+
+			using (translationContext.UsingComparisonDescriptor(valueExpression, highExpression))
+			{
+				highDescriptor = translationContext.CurrentColumnDescriptor;
+
+				if (!translationContext.TranslateToSqlExpression(highExpression, out high)
+					|| (isClientValue && !translationContext.TranslateToSqlExpression(valueExpression, out valueBesideHigh)))
+					return null;
+			}
+
+			// BETWEEN writes the value once. When the pairs write it differently, it takes the form of a converted bound, and the
+			// other client bound with it; without one, the value is written in no column's form.
+			if (valueBesideHigh != null && !value.Equals(valueBesideHigh, SqlQuery.SqlExtensions.DefaultComparer))
+			{
+				if (lowDescriptor is { ValueConverter: not null })
+				{
+					high = TranslateBeside(translationContext, lowDescriptor, highExpression, high);
+
+					if (high == null)
+						return null;
+				}
+				else if (highDescriptor is { ValueConverter: not null })
+				{
+					value = valueBesideHigh;
+
+					low   = TranslateBeside(translationContext, highDescriptor, lowExpression, low);
+
+					if (low == null)
+						return null;
+				}
+				else if (!translationContext.TranslateToSqlExpression(valueExpression, out value))
+				{
+					return null;
+				}
+			}
 
 			var searchCondition = translationContext.ExpressionFactory.SearchCondition().Add(new SqlPredicate.Between(value, isNot, low, high));
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
+		}
+
+		static ISqlExpression? TranslateBeside(ITranslationContext translationContext, ColumnDescriptor descriptor, Expression bound, ISqlExpression translated)
+		{
+			if (!translationContext.CanBeEvaluatedOnClient(bound))
+				return translated;
+
+			using (translationContext.UsingColumnDescriptor(descriptor))
+			{
+				return translationContext.TranslateToSqlExpression(bound, out var retranslated) ? retranslated : null;
+			}
 		}
 
 		Expression? TranslateToNullableMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
