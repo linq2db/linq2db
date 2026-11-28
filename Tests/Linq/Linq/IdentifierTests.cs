@@ -1,9 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.PostgreSQL;
+using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Mapping;
+using LinqToDB.Remote;
 
 using NUnit.Framework;
 
@@ -141,6 +152,145 @@ namespace Tests.Linq
 				.Where(абвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиаz => абвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиаz.ID == 1)
 				.ToArray();
 		}
+
+		/* The tests above use a single long name, so truncating it can never produce a duplicate.
+		 * The ones below use several names that differ only past the truncation point, which is what
+		 * actually breaks: a server that silently truncates (PostgreSQL, at 63 bytes) collapses them
+		 * into one and rejects the query. Aliases have to be uniquified *after* truncation.
+		 */
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void LongAliasNameTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			var parentsQry =
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					where longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			AssertQuery(parentsQry);
+		}
+
+		/* C# accepts any Unicode character in an identifier, so the same long name can carry non-ASCII
+		 * characters well before the truncation point rather than only in the tail. CorrectAlias keeps
+		 * letters and digits whatever the script, so those characters reach the length check and are
+		 * measured in the unit the provider actually counts - three UTF-8 bytes each here, which is
+		 * what makes these names collide at a byte limit that their character count would clear.
+		 */
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void LongAliasNameTest_Localized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			var parentsQry =
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					where long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			AssertQuery(parentsQry);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ThreeWayCollision([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			// three sources sharing a prefix longer than the shortest provider limit, so the
+			// uniquifier has to hand out more than one suffix
+			var actual =
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestGrand in db.GrandChild.InnerJoin(_ => _.ChildID == longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild.ChildID)
+					where longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			AssertQuery(actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ColumnAliasCollision([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Long member names over bare root fields: a bare field at the root keeps its physical column
+			// name as the alias (AliasesHelper.GetColumnAliasSeed), so these never reach the column
+			// uniquifier; TestAliasLengthName_DerivedColumnCollision covers that.
+			var actual =
+					from p in db.Parent
+					select new
+					{
+						longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParentId = p.ParentID,
+						longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestValueOne = p.Value1,
+					};
+
+			AssertQuery(actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasName_NonAsciiOnly([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			// A name with no ASCII at all is the shape that decides whether a provider quotes the
+			// alias: a mixed name like long親Long carries lowercase ASCII, which some builders use
+			// as their quoting trigger, so it would pass even where a bare 顧客 does not.
+			var actual =
+					from 親 in db.Parent
+					from 子 in db.Child.InnerJoin(_ => _.ParentID == 親.ParentID)
+					where 親.ParentID == parentId
+					select 親;
+
+			AssertQuery(actual);
+
+			// Informix keeps aliases ASCII (InformixIdentifierService), so the alias degrades to t1 there.
+			if (!context.IsAnyOf(TestProvName.AllInformix))
+			{
+				actual
+					.ToSqlQuery()
+					.Sql
+					.ShouldContain("親");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ThreeWayCollision_Localized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			var actual =
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestGrand in db.GrandChild.InnerJoin(_ => _.ChildID == long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild.ChildID)
+					where long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			AssertQuery(actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ColumnAliasCollision_Localized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// the Japanese characters sit ahead of the truncation point in both member names; as above,
+			// bare root fields keep their physical names, so this covers the seed, not the uniquifier
+			var actual =
+					from p in db.Parent
+					select new
+					{
+						long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParentId = p.ParentID,
+						long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestValueOne = p.Value1,
+					};
+
+			AssertQuery(actual);
+		}
 		#endregion
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
@@ -270,5 +420,341 @@ namespace Tests.Linq
 
 			sql.ShouldContain("[].");
 		}
+
+		#region Alias uniquifier at the limit
+
+		static IQueryable<int> SelectParentIdAs(IQueryable<Parent> source, string rangeVariable)
+		{
+			var p = Expression.Parameter(typeof(Parent), rangeVariable);
+
+			return source.Select(Expression.Lambda<Func<Parent, int>>(Expression.Property(p, nameof(Model.Parent.ParentID)), p));
+		}
+
+		// SQL generation of two sources sharing one alias; a uniquifier that cannot produce a fitting name
+		// never returns, so the build runs on a separate thread under a timeout.
+		static string BuildDuplicatedAliasSql(IDataContext db, string rangeVariable)
+		{
+			var query = SelectParentIdAs(db.GetTable<Parent>(), rangeVariable)
+				.Concat(SelectParentIdAs(db.GetTable<Parent>(), rangeVariable));
+
+			var build = Task.Run(() => query.ToSqlQuery().Sql);
+
+			build
+				.Wait(TimeSpan.FromSeconds(30))
+				.ShouldBeTrue("SQL generation did not finish");
+
+			return build.Result;
+		}
+
+		static int AliasLimit(string context)
+		{
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL)) return 63;
+			if (context.IsAnyOf(TestProvName.AllOracle11))   return 30;
+			return 128;
+		}
+
+		// A duplicated alias that fits the limit but has fewer than four units to spare: the "_1" seed of the
+		// uniquifier used to overflow the limit, so no candidate fitted and SQL generation never finished.
+		// The alias is now cut to leave room for a three-digit suffix.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_DuplicateNearLimit([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllOracle11)] string context, [Values(0, 1, 2, 3)] int spare)
+		{
+			using var db = GetDataContext(context);
+
+			var limit = AliasLimit(context);
+			var alias = new string('a', limit - spare);
+
+			var sql = BuildDuplicatedAliasSql(db, alias);
+
+			sql.ShouldContain(alias);
+			sql.ShouldContain(new string('a', limit - 4) + "_1");
+			sql.ShouldNotContain(alias + "_1");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_DuplicateNearLimit_Localized([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// 31 two-byte characters, 62 of PostgreSQL's 63 bytes; with "_999" the probe needs 66, so three
+			// characters are cut and the twin is 28 characters + "_1" (58 bytes)
+			var alias = new string('ж', 31);
+
+			var sql = BuildDuplicatedAliasSql(db, alias);
+
+			sql.ShouldContain(alias);
+			sql.ShouldContain(new string('ж', 28) + "_1");
+			sql.ShouldNotContain(new string('ж', 29) + "_1");
+		}
+
+		// An alias the truncation already cut keeps its four spare units, so its duplicate renders as before.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_TruncatedDuplicateUnchanged([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// 70 ASCII characters truncate to 59; the twin is those 59 + "_1"
+			var ascii = BuildDuplicatedAliasSql(db, new string('a', 70));
+
+			ascii.ShouldContain(new string('a', 59) + "_1");
+			ascii.ShouldNotContain(new string('a', 60));
+
+			// 40 two-byte characters (80 bytes) truncate to 27 (54 bytes); the twin is those 27 + "_1"
+			var localized = BuildDuplicatedAliasSql(db, new string('ж', 40));
+
+			localized.ShouldContain(new string('ж', 27) + "_1");
+			localized.ShouldNotContain(new string('ж', 28));
+		}
+
+		// Derived-table columns whose member names collide only after truncation: both names are longer than
+		// every provider's alias limit (255 at most) and share their first 256 characters.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_DerivedColumnCollision([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new
+				{
+					abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefFirst  = p.ParentID + 1,
+					abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefSecond = p.ParentID + 2,
+				})
+				.AsSubQuery()
+				.Where(x => x.abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefFirst > 0
+					&& x.abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefSecond > 0);
+
+			var service   = GetIdentifierService(db);
+			var aliasBase = IdentifiersHelper.TruncateIdentifier(
+				service,
+				IdentifierKind.Alias,
+				service.CorrectAlias("abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefFirst"));
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain(aliasBase);
+			sql.ShouldContain(aliasBase + "_1");
+
+			query
+				.ToList()
+				.Count
+				.ShouldBe(Parent.Count());
+		}
+
+		static IIdentifierService GetIdentifierService(IDataContext db)
+		{
+			var serviceProvider = db switch
+			{
+				DataConnection dc => ((IInfrastructure<IServiceProvider>)dc.DataProvider).Instance,
+				DataContext    dx => ((IInfrastructure<IServiceProvider>)dx.DataProvider).Instance,
+				_                 => ((IInfrastructure<IServiceProvider>)db).Instance,
+			};
+
+			return (IIdentifierService)serviceProvider.GetService(typeof(IIdentifierService))!;
+		}
+
+		#endregion
+
+		#region Generated primary-key names
+
+		[Table]
+		sealed class PkTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		// Table pairs whose PK_<table> names exceed the limit and differ only within its last four units: the
+		// alias truncation kept those four units in reserve and cut them off, so both tables got one PK name.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestPrimaryKeyName_LongTableNamesStayDistinct([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllFirebirdLess4)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var shared = context.IsAnyOf(TestProvName.AllPostgreSQL) ? 57 : context.IsAnyOf(TestProvName.AllOracle11) ? 24 : 25;
+			var prefix = new string('a', shared);
+
+			using (db.CreateLocalTable<PkTable>(prefix + "xxxxx"))
+			using (db.CreateLocalTable<PkTable>(prefix + "yyyyy"))
+			{
+			}
+
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL))
+			{
+				// 31 two-byte characters: PK_<table> is 65 bytes, the shared part ends at byte 61
+				var localized = new string('ж', 29);
+
+				using (db.CreateLocalTable<PkTable>(localized + "аю"))
+				using (db.CreateLocalTable<PkTable>(localized + "бю"))
+				{
+				}
+			}
+		}
+
+		#endregion
+
+		#region Remote identifier service
+
+		sealed class SQLiteWithParameterisedIdentifierService : SQLiteDataProvider
+		{
+			public SQLiteWithParameterisedIdentifierService() : base(ProviderName.SQLiteMS, SQLiteProvider.Microsoft)
+			{
+			}
+
+			protected override IIdentifierService CreateIdentifierService()
+			{
+				return new IdentifierServiceSimple(31);
+			}
+		}
+
+		const string FortyCharacterAlias = "aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd";
+
+		// A server whose provider service has no parameterless constructor: the client cannot create it by
+		// name, previews with its default service, and queries still run.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		[UsesRemoteContext]
+		public void TestRemote_ServerIdentifierServiceWithoutDefaultConstructor([IncludeDataSources(false, ProviderName.SQLiteMS)] string context)
+		{
+			const string configuration = nameof(TestRemote_ServerIdentifierServiceWithoutDefaultConstructor);
+
+			DataConnection.AddConfiguration(configuration, GetConnectionString(context), new SQLiteWithParameterisedIdentifierService());
+
+			using var db = GetDataContext(configuration + LinqServiceSuffix);
+
+			var query =
+				from aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd in db.Parent
+				where aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd.ParentID == 1
+				select aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd;
+
+			query
+				.ToList()
+				.Count
+				.ShouldBe(1);
+
+			query
+				.ToSqlQuery()
+				.Sql
+				.ShouldContain(FortyCharacterAlias);
+		}
+
+		// A server identifier-service type the client cannot load (0) or that is not an identifier service (1).
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		[UsesRemoteContext]
+		public void TestRemote_ServerIdentifierServiceTypeUnusable([IncludeDataSources(false, ProviderName.SQLiteMS)] string context, [Values(0, 1)] int kind)
+		{
+			var typeName = kind == 0 ? "Missing.Type, Missing" : typeof(object).AssemblyQualifiedName!;
+
+			using var backend = GetDataConnection(context);
+			using var db      = new RewritingRemoteDataContext(backend, $"Test.{nameof(TestRemote_ServerIdentifierServiceTypeUnusable)}{kind}", typeName);
+
+			var query =
+				from aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd in db.GetTable<Parent>()
+				where aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd.ParentID == 1
+				select aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd;
+
+			query
+				.ToList()
+				.Count
+				.ShouldBe(1);
+
+			query
+				.ToSqlQuery()
+				.Sql
+				.ShouldContain(FortyCharacterAlias);
+		}
+
+		// The remote client previews with the server's service: PostgreSQL's 63-byte limit, not the default 128.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestRemote_PreviewUsesServerIdentifierService([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+				select longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			query
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent");
+
+			if (context.IsRemote())
+			{
+				((IInfrastructure<IServiceProvider>)db)
+					.Instance
+					.GetService(typeof(IIdentifierService))
+					.ShouldBeOfType<PostgreSQLIdentifierService>();
+			}
+		}
+
+		sealed class RewritingRemoteDataContext : RemoteDataContextBase
+		{
+			readonly DataOptions _backendOptions;
+			readonly string      _configuration;
+			readonly string      _identifierServiceType;
+
+			// ConfigurationInfo is cached process-wide per configuration string, so each case uses its own
+			// name; BackendLinqService ignores it.
+			public RewritingRemoteDataContext(DataConnection backend, string configuration, string identifierServiceType)
+				: base(new DataOptions().UseConfiguration(configuration))
+			{
+				_backendOptions        = backend.Options;
+				_configuration         = configuration;
+				_identifierServiceType = identifierServiceType;
+			}
+
+			protected override string ContextIDPrefix => _configuration;
+
+			protected override ILinqService GetClient()
+			{
+				return new RewritingClient(new BackendLinqService(_backendOptions), _identifierServiceType);
+			}
+
+			sealed class BackendLinqService : LinqService
+			{
+				readonly DataOptions _options;
+
+				public BackendLinqService(DataOptions options)
+				{
+					_options = options;
+				}
+
+				public override DataConnection CreateDataContext(string? configuration) => new (_options);
+			}
+
+			sealed class RewritingClient : ILinqService, IDisposable
+			{
+				readonly ILinqService _inner;
+				readonly string       _identifierServiceType;
+
+				public RewritingClient(ILinqService inner, string identifierServiceType)
+				{
+					_inner                 = inner;
+					_identifierServiceType = identifierServiceType;
+				}
+
+				public string? RemoteClientTag { get => _inner.RemoteClientTag; set => _inner.RemoteClientTag = value; }
+
+				public void Dispose()
+				{
+				}
+
+				public async Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken = default)
+				{
+					var info = await _inner.GetInfoAsync(configuration, cancellationToken).ConfigureAwait(false);
+
+					info.IdentifierServiceType = _identifierServiceType;
+
+					return info;
+				}
+
+				public Task<int>     ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteNonQueryAsync(configuration, queryData, cancellationToken);
+				public Task<string?> ExecuteScalarAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteScalarAsync(configuration, queryData, cancellationToken);
+				public Task<string>  ExecuteReaderAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteReaderAsync(configuration, queryData, cancellationToken);
+				public Task<int>     ExecuteBatchAsync   (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteBatchAsync(configuration, queryData, cancellationToken);
+			}
+		}
+
+		#endregion
 	}
 }

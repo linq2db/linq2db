@@ -509,7 +509,7 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected abstract IMemberTranslator  CreateMemberTranslator();
 		protected virtual  IMemberConverter   CreateMemberConverter()   => new LegacyMemberConverterBase();
-		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
+		protected virtual  IIdentifierService CreateIdentifierService() => new DefaultIdentifierService();
 
 		/// <summary>
 		/// Creates the provider's <see cref="IDmlService"/> (command-scenario construction, physical grouping, and

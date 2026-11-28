@@ -72,6 +72,7 @@ namespace LinqToDB.Remote
 
 			serviceProvider.AddService(configurationInfo.MemberTranslator);
 			serviceProvider.AddService(configurationInfo.MemberConverter);
+			serviceProvider.AddService(configurationInfo.IdentifierService);
 
 			var dmlService = configurationInfo.DmlService;
 			if (dmlService != null)
@@ -103,13 +104,30 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		static class RemoteIdentifierService
+		{
+			static readonly MemoryCache<Type, IIdentifierService> _cache = new (new ());
+
+			public static IIdentifierService GetOrCreate(Type identifierServiceType)
+			{
+				return _cache.GetOrCreate(
+					identifierServiceType,
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return ActivatorExt.CreateInstance<IIdentifierService>(entry.Key);
+					});
+			}
+		}
+
 		sealed class ConfigurationInfo
 		{
-			public LinqServiceInfo   LinqServiceInfo  = null!;
-			public MappingSchema     MappingSchema    = null!;
-			public IMemberTranslator MemberTranslator = null!;
-			public IMemberConverter  MemberConverter  = null!;
-			public IDmlService?      DmlService;
+			public LinqServiceInfo    LinqServiceInfo   = null!;
+			public MappingSchema      MappingSchema     = null!;
+			public IMemberTranslator  MemberTranslator  = null!;
+			public IMemberConverter   MemberConverter   = null!;
+			public IIdentifierService IdentifierService = null!;
+			public IDmlService?       DmlService;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new(StringComparer.Ordinal);
@@ -277,13 +295,30 @@ namespace LinqToDB.Remote
 						dmlService         = RemoteDmlService.GetOrCreate(dmlServiceType);
 					}
 
+					// A server older than IdentifierServiceType sends null; keep the historical default there. The
+					// same default covers a type the client cannot load, that is not an identifier service, or that
+					// has no public parameterless constructor (IdentifierServiceSimple(n)): the client copy only
+					// shapes GetSqlText, the server aliases the executed statement with its own service.
+					var identifierServiceType = info.IdentifierServiceType != null
+						? Type.GetType(info.IdentifierServiceType, throwOnError: false)
+						: null;
+
+					IIdentifierService identifierService =
+						identifierServiceType != null
+						&& typeof(IIdentifierService).IsAssignableFrom(identifierServiceType)
+						&& !identifierServiceType.IsAbstract
+						&& identifierServiceType.GetConstructorEx(Type.EmptyTypes) != null
+							? RemoteIdentifierService.GetOrCreate(identifierServiceType)
+							: new DefaultIdentifierService();
+
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{
-						LinqServiceInfo  = info,
-						MappingSchema    = ms,
-						MemberTranslator = translator,
-						MemberConverter  = memberConverter,
-						DmlService       = dmlService,
+						LinqServiceInfo   = info,
+						MappingSchema     = ms,
+						MemberTranslator  = translator,
+						MemberConverter   = memberConverter,
+						IdentifierService = identifierService,
+						DmlService        = dmlService,
 					};
 				}
 				finally
@@ -428,6 +463,12 @@ namespace LinqToDB.Remote
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfoForPublicApi().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfoForPublicApi().LinqServiceInfo.SupportedTableOptions;
+
+		/// <summary>
+		/// Identifier service mirroring the server-side provider's limit, so client-side SQL preview
+		/// aliases a statement the same way the server does when it renders it for real.
+		/// </summary>
+		internal IIdentifierService IdentifierService => GetConfigurationInfoForPublicApi().IdentifierService;
 
 		Type IDataContext.DataReaderType => typeof(RemoteDataReader);
 

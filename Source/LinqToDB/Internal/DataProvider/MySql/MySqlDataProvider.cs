@@ -131,6 +131,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			};
 		}
 
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new MySqlIdentifierService();
+		}
+
 		protected override IDmlService CreateDmlService()
 		{
 			return new MySqlDmlService();

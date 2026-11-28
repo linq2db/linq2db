@@ -1815,7 +1815,7 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					var iIdentifierService = ((IInfrastructure<IServiceProvider>)DataProvider).Instance.GetRequiredService<IIdentifierService>();
 
-					pkName = IdentifiersHelper.TruncateIdentifier(iIdentifierService, IdentifierKind.PrimaryKey, pkName);
+					pkName = IdentifiersHelper.TruncateIdentifier(iIdentifierService, IdentifierKind.PrimaryKey, pkName, reserve: 0);
 				}
 
 				BuildCreateTablePrimaryKey(createTable, ConvertInline(pkName, ConvertType.NameToQueryTable),

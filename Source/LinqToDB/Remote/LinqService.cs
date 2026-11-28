@@ -90,6 +90,7 @@ namespace LinqToDB.Remote
 
 			return Task.FromResult(new LinqServiceInfo()
 			{
+				IdentifierServiceType    = serviceProvider.GetRequiredService<IIdentifierService>().GetType().AssemblyQualifiedName!,
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
 				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				MemberConverterType      = serviceProvider.GetRequiredService<IMemberConverter>().GetType().AssemblyQualifiedName!,

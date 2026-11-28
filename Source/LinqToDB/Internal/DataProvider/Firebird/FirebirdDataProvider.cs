@@ -115,7 +115,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override IIdentifierService CreateIdentifierService()
 		{
-			return new IdentifierServiceSimple(Version <= FirebirdVersion.v3 ? 31 : 63);
+			return Version <= FirebirdVersion.v3
+				? new Firebird3IdentifierService()
+				: new FirebirdIdentifierService();
 		}
 
 		protected override IDmlService CreateDmlService() => new FirebirdDmlService();
