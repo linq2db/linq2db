@@ -4718,5 +4718,280 @@ namespace Tests.Linq
 		}
 
 		private sealed record CteNodeRecord(int Id);
+
+		#region Null test of an outer-joined CTE side
+
+		[Table]
+		sealed class CteNullTestRow
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
+		sealed class CteNullTestKey
+		{
+			public int Id { get; set; }
+		}
+
+		sealed class CteNullTestNullableKey
+		{
+			public int? Id { get; set; }
+		}
+
+		static CteNullTestRow[] CteNullTestSeed(int from, int to)
+		{
+			return Enumerable.Range(from, to - from + 1).Select(i => new CteNullTestRow { Id = i, Value = i * 10 }).ToArray();
+		}
+
+		[Test]
+		public void FullJoinCteProjectionNullTest([CteContextSource(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 3));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(2, 4));
+
+			var a = t1.Select(e => new CteNullTestKey { Id = e.Id }).AsCte("a");
+			var b = t2.Select(e => new CteNullTestKey { Id = e.Id }).AsCte("b");
+
+			var result = a
+				.FullJoin(b, (x, y) => x.Id == y.Id, (x, y) => new
+				{
+					Id   = x != null ? x.Id : y.Id,
+					HasX = x != null,
+					HasY = y != null,
+				})
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Id).ShouldBe([1, 2, 3, 4]);
+			result.Select(r => r.HasX).ShouldBe([true, true, true, false]);
+			result.Select(r => r.HasY).ShouldBe([false, true, true, true]);
+		}
+
+		[Test]
+		public void FullJoinCteTableNullTest([CteContextSource(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 3));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(2, 4));
+
+			var result = t1.AsCte("a")
+				.FullJoin(t2.AsCte("b"), (x, y) => x.Id == y.Id, (x, y) => new
+				{
+					Id    = x != null ? x.Id : y.Id,
+					Value = (x != null ? x.Value : 0) + (y != null ? y.Value : 0),
+				})
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Id).ShouldBe([1, 2, 3, 4]);
+			result.Select(r => r.Value).ShouldBe([10, 40, 60, 40]);
+		}
+
+		[Test]
+		public void LeftJoinCteProjectionNullTest([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(1, 2));
+
+			var tier = t2.Select(e => new CteNullTestKey { Id = e.Id }).AsCte("tier");
+
+			var result =
+				(
+					from o in t1
+					from k in tier.LeftJoin(k => k.Id == o.Id)
+					select new { o.Id, Missing = k == null ? 1 : 0 }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Missing).ShouldBe([0, 0, 1, 1]);
+		}
+
+		[Test]
+		public void LeftJoinCteNullableProjectionNullTest([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(1, 2));
+
+			var tier = t2.Select(e => new CteNullTestNullableKey { Id = e.Id }).AsCte("tier");
+
+			var result =
+				(
+					from o in t1
+					from k in tier.LeftJoin(k => k.Id == o.Id)
+					select new { o.Id, Missing = k == null ? 1 : 0 }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Missing).ShouldBe([0, 0, 1, 1]);
+		}
+
+		[Test]
+		public void LeftJoinCteTableNullTest([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(1, 2));
+
+			var tier = t2.AsCte("tier");
+
+			var result =
+				(
+					from o in t1
+					from k in tier.LeftJoin(k => k.Id == o.Id)
+					select new { o.Id, Missing = k == null ? 1 : 0, Value = k != null ? k.Value : -1 }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Missing).ShouldBe([0, 0, 1, 1]);
+			result.Select(r => r.Value).ShouldBe([10, 20, -1, -1]);
+		}
+
+		[Test]
+		public void RightJoinCteProjectionNullTest([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(1, 2));
+
+			var tier = t2.Select(e => new CteNullTestKey { Id = e.Id }).AsCte("tier");
+
+			var result = tier
+				.RightJoin(t1, (k, o) => k.Id == o.Id, (k, o) => new { o.Id, Missing = k == null ? 1 : 0 })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Missing).ShouldBe([0, 0, 1, 1]);
+		}
+
+		// The raw SQL has no FROM clause, which Oracle, Firebird, DB2 and Informix reject, so the FromSql tests run
+		// on SQLite, PostgreSQL and SQL Server only.
+		const string CteNullTestFromSql = "SELECT 1 AS \"Id\" UNION ALL SELECT 2";
+
+		[Test]
+		public void LeftJoinCteFromSqlNullTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+
+			var tier = db.FromSql<CteNullTestKey>(CteNullTestFromSql).AsCte("tier");
+
+			var result =
+				(
+					from o in t1
+					from k in tier.LeftJoin(k => k.Id == o.Id)
+					select new { o.Id, Missing = k == null ? 1 : 0 }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Missing).ShouldBe([0, 0, 1, 1]);
+		}
+
+		// A nullable key makes the null test use a marker column; this shape was not affected.
+		[Test]
+		public void LeftJoinCteFromSqlNullableKeyNullTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+
+			var tier = db.FromSql<CteNullTestNullableKey>(CteNullTestFromSql).AsCte("tier");
+
+			var result =
+				(
+					from o in t1
+					from k in tier.LeftJoin(k => k.Id == o.Id)
+					select new { o.Id, Missing = k == null ? 1 : 0 }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Missing).ShouldBe([0, 0, 1, 1]);
+		}
+
+		[Test]
+		public void LeftJoinCteAntiJoinTest([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(1, 2));
+
+			var tier = t2.Select(e => new CteNullTestKey { Id = e.Id }).AsCte("tier");
+
+			var result =
+				(
+					from o in t1
+					from k in tier.LeftJoin(k => k.Id == o.Id)
+					where k == null
+					select o.Id
+				)
+				.ToList()
+				.OrderBy(id => id)
+				.ToList();
+
+			result.ShouldBe([3, 4]);
+		}
+
+		[Test]
+		public void LeftJoinCteAntiJoinDeleteTest([CteContextSource(true, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+			using var t2 = db.CreateLocalTable("CteNullTestB", CteNullTestSeed(1, 2));
+
+			var tier = t2.Select(e => new CteNullTestKey { Id = e.Id }).AsCte("tier");
+
+			(
+				from o in t1
+				from k in tier.LeftJoin(k => k.Id == o.Id)
+				where k == null
+				select o
+			)
+			.Delete();
+
+			t1.Select(o => o.Id).ToList().OrderBy(id => id).ShouldBe([1, 2]);
+		}
+
+		[Test]
+		public void LeftJoinRecursiveCteNullTest([RecursiveCteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable("CteNullTestA", CteNullTestSeed(1, 4));
+
+			var tier = db.GetCte<CteNullTestKey>(cte =>
+				t1.Where(e => e.Id == 1).Select(e => new CteNullTestKey { Id = e.Id })
+					.Concat(
+						from c in cte
+						where c.Id < 2
+						select new CteNullTestKey { Id = c.Id + 1 }),
+				"tier");
+
+			var result =
+				(
+					from o in t1
+					from k in tier.LeftJoin(k => k.Id == o.Id)
+					select new { o.Id, Missing = k == null ? 1 : 0 }
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Select(r => r.Missing).ShouldBe([0, 0, 1, 1]);
+		}
+
+		#endregion
 	}
 }

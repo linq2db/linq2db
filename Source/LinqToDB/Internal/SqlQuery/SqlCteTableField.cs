@@ -7,7 +7,8 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 namespace LinqToDB.Internal.SqlQuery
 {
 	/// <summary>
-	/// Field in <see cref="SqlCteTable"/>. Delegates Name, Type, CanBeNullable to the referenced <see cref="SqlCteField"/>.
+	/// Field in <see cref="SqlCteTable"/>. Delegates Name and Type to the referenced <see cref="SqlCteField"/>;
+	/// nullability also depends on how the owning table is joined (see <see cref="NullabilityContext.CanBeNull"/>).
 	/// </summary>
 	[DebuggerDisplay("CteTableField({Name}, CteField={CteField?.Name})")]
 	public sealed class SqlCteTableField : SqlFieldBase
@@ -24,7 +25,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		/// <summary>
 		/// Direct reference to the corresponding <see cref="SqlCteField"/> in <see cref="CteClause.Fields"/>.
-		/// All Name/Type/CanBeNullable are derived from this reference.
+		/// Name and Type are derived from this reference, and so is the column's own nullability.
 		/// </summary>
 		public SqlCteField? CteField { get; set; }
 
@@ -53,8 +54,12 @@ namespace LinqToDB.Internal.SqlQuery
 			set => base.Type = value;
 		}
 
+		// The field's own nullability comes from the CTE column, but a reference to it is also null when its CTE
+		// table is the outer-joined side of a join: NullabilityContext checks both, as it does for SqlField.
 		public override bool CanBeNullable(NullabilityContext nullability)
-			=> CteField?.CanBeNullable(nullability) ?? true;
+		{
+			return nullability.CanBeNull(this);
+		}
 
 		public override QueryElementType ElementType => QueryElementType.SqlCteTableField;
 
