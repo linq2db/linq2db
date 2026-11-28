@@ -1012,6 +1012,259 @@ namespace Tests.Linq
 			}
 		}
 
+		// A conversion of an integer operand to a wider or floating type decides the type the database computes in
+		// when the other operand is an integer too: without it 1.0 / (double)x.Value is an integer division (the
+		// literal is written as 1), and int.MaxValue * (long)x.Value an int overflow. Beside a floating or decimal
+		// operand the database promotes the integer itself, and a cast must not narrow it.
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void DivisionByIntegerConvertedToDoubleKeepsFraction([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => new
+				{
+					CastColumn      = 1.0 / (double)x.Value,
+					CastInSum       = 1.0 / (60 + (double)x.Value),
+					ImplicitInt     = 1.0 / x.Value,
+					ImplicitLongSum = 1.0 / (60 + x.Big),
+					ImplicitNull    = 1.0 / x.Nullable,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.CastColumn.ShouldBe(1.0 / 3, 1e-9);
+				result.CastInSum.ShouldBe(1.0 / 63, 1e-9);
+				result.ImplicitInt.ShouldBe(1.0 / 3, 1e-9);
+				result.ImplicitLongSum.ShouldBe(1.0 / 63, 1e-9);
+				result.ImplicitNull!.Value.ShouldBe(1.0 / 3, 1e-9);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void ArithmeticOnIntegerConvertedToDoubleKeepsFraction([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => new
+				{
+					Subtract = (1.0 - x.Value) / 4,
+					Multiply = 2.0 * x.Value / 4,
+					Modulo   = (10.0 % x.Value) / 4,
+					Negate   = 4.0 / -x.Value,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.Subtract.ShouldBe(-0.5, 1e-9);
+				result.Multiply.ShouldBe(1.5, 1e-9);
+				result.Modulo.ShouldBe(0.25, 1e-9);
+				result.Negate.ShouldBe(-4.0 / 3, 1e-9);
+			}
+		}
+
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "should be{0}0.33333m{1}but was",
+			Details = "the decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "should be{0}0.33333m{1}but was",
+			Details = "Firebird gives a decimal division the sum of its operands' scales, so 1 / CAST(x AS Decimal(10, 0)) has scale 0 - as on master, where the operand was not cast at all.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void DivisionByIntegerConvertedToDecimalKeepsFraction([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => new
+				{
+					Implicit = 1m / x.Value,
+					Cast     = 1m / (decimal)x.Big,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Math.Round(result.Implicit, 5).ShouldBe(0.33333m);
+				Math.Round(result.Cast, 5).ShouldBe(0.33333m);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void MultiplicationByIntegerConvertedToLongDoesNotOverflow([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			var result = tb
+				.Select(x => int.MaxValue * (long)x.Value)
+				.Single();
+
+			result.ShouldBe(int.MaxValue * 3L);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void DivisionOfInlinedParameterByIntegerKeepsFraction([DataSources] string context)
+		{
+			var one = 1.0;
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(WideningOperandTable.Data);
+
+			db.InlineParameters = true;
+
+			var result = tb
+				.Select(x => one / x.Value)
+				.Single();
+
+			result.ShouldBe(1.0 / 3, 1e-9);
+		}
+
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "should be{0}25000000.125m{1}but was",
+			Details = "the decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "should be{0}25000000.125m{1}but was",
+			Details = "Firebird gives a decimal division the sum of its operands' scales, so 1 / CAST(x AS Decimal(10, 0)) has scale 0 - as on master, where the operand was not cast at all.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void DivisionOfLargeIntegerConvertedToDecimalDoesNotOverflow([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(LargeOperandTable.Data);
+
+			var result = tb
+				.Where(x => x.Id == 3)
+				.Select(x => 1m * x.Value / 8)
+				.Single();
+
+			result.ShouldBe(25_000_000.125m);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void RemainderOfDecimalByLargeIntegerDoesNotOverflow([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(LargeOperandTable.Data);
+
+			var result = tb
+				.Where(x => x.Id == 2)
+				.Select(x => 999_999_999m % x.Value)
+				.Single();
+
+			result.ShouldBe(199_999_999m);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void FractionalParameterBesideNullableInteger([DataSources] string context)
+		{
+			var factor = 0.5;
+			var rate   = 1.5m;
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(LargeOperandTable.Data);
+
+			var result = tb
+				.Where(x => x.Id == 1)
+				.Select(x => new
+				{
+					Double  = factor * x.Nullable,
+					Decimal = rate * x.Nullable,
+					Sum     = factor + x.Nullable,
+					Divided = factor / x.Nullable,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.Double.ShouldBe(1.5);
+				result.Decimal.ShouldBe(4.5m);
+				result.Sum.ShouldBe(3.5);
+				result.Divided!.Value.ShouldBe(0.5 / 3, 1e-9);
+			}
+
+			tb.Count(x => factor * x.Nullable > 1).ShouldBe(3);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void FractionalValueBesideConvertedInteger([DataSources] string context)
+		{
+			var factor = 0.5;
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(LargeOperandTable.Data);
+
+			var result = tb
+				.Where(x => x.Id == 1)
+				.Select(x => new { Parameter = factor * x.Value, Constant = 1.5m * x.Value })
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.Parameter.ShouldBe(1.5);
+				result.Constant.ShouldBe(4.5m);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6505")]
+		public void DecimalBesideLargeIntegerDoesNotOverflow([DataSources] string context)
+		{
+			var price = 1.5m;
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(LargeOperandTable.Data);
+
+			var result = tb
+				.Where(x => x.Id == 2)
+				.Select(x => new
+				{
+					Parameter  = price * x.Value,
+					Expression = (x.Price + 1) * x.Value,
+					Constant   = 1.5m * x.Value,
+				})
+				.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.Parameter.ShouldBe(300_000_000m);
+				result.Expression.ShouldBe(700_000_000m);
+				result.Constant.ShouldBe(300_000_000m);
+			}
+
+			tb.GroupBy(x => 1).Select(g => g.Sum(x => x.Price) * g.Sum(x => x.Value)).Single().ShouldBe(7.5m * 400_000_004);
+		}
+
+		[Table]
+		sealed class LargeOperandTable
+		{
+			[PrimaryKey]                        public int     Id       { get; set; }
+			[Column]                            public int     Value    { get; set; }
+			[Column]                            public int?    Nullable { get; set; }
+			[Column(Precision = 18, Scale = 2)] public decimal Price    { get; set; }
+
+			public static readonly LargeOperandTable[] Data =
+			[
+				new LargeOperandTable() { Id = 1, Value = 3,           Nullable = 3, Price = 2.50m },
+				new LargeOperandTable() { Id = 2, Value = 200_000_000, Nullable = 3, Price = 2.50m },
+				new LargeOperandTable() { Id = 3, Value = 200_000_001, Nullable = 3, Price = 2.50m },
+			];
+		}
+
+		[Table]
+		sealed class WideningOperandTable
+		{
+			[PrimaryKey] public int    Id       { get; set; }
+			[Column]     public int    Value    { get; set; }
+			[Column]     public long   Big      { get; set; }
+			[Column]     public int?   Nullable { get; set; }
+
+			public static readonly WideningOperandTable[] Data =
+			[
+				new WideningOperandTable() { Id = 1, Value = 3, Big = 3, Nullable = 3 },
+			];
+		}
+
 		sealed class NumericDivisionTable
 		{
 			[PrimaryKey] public int Integer { get; set; }
