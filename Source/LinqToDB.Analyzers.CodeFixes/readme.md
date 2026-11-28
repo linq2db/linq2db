@@ -28,6 +28,7 @@ than the runtime it runs against degrades to silence rather than to a broken fix
 | [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
 | [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
 | [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
+| [L2DB1005](https://github.com/linq2db/linq2db/wiki/L2DB1005) | Info | A hint passed as text (`TableHint("NOLOCK")`, `With`, `TablesInScopeHint`, `QueryHint`) has a typed provider helper that emits the same SQL (`AsSqlServer().WithNoLock()`). A code fix rewrites the call; on a generic receiver it offers one rewrite per provider, each restricting the hint to that provider. |
 
 ### L2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
 
@@ -107,6 +108,43 @@ the rule only treats it as a stub when it throws `ServerSideOnlyException`, so o
 On a member carrying several configuration-scoped `Sql.*` attributes, the code fix sets `ServerSideOnly = true`
 on one of them, which is enough to satisfy the rule — but the runtime resolves the attribute per
 configuration, so add it to the rest by hand if the member should be server-side-only on every provider.
+
+### L2DB1005 — a string hint that has a typed equivalent
+
+```csharp
+// L2DB1005: Hint 'NOLOCK' has a typed equivalent: AsSqlServer().WithNoLock() for SQL Server,
+//           AsSqlCe().WithNoLock() for SQL Server CE.
+var q1 = db.Person.TableHint("NOLOCK");
+
+// code fix (SQL Server)
+var q1 = db.Person.AsSqlServer().WithNoLock();
+
+// L2DB1005: Hint 'RECOMPILE' has a typed equivalent: OptionRecompile().
+var q2 = db.Person.Where(p => p.Id > 0).AsSqlServer().QueryHint("RECOMPILE");
+
+// code fix
+var q2 = db.Person.Where(p => p.Id > 0).AsSqlServer().OptionRecompile();
+```
+
+The generic text overloads on `LinqExtensions` emit their text on every provider the query runs on; a typed
+helper is checked by the compiler and emits only on its own provider. The rule reports a constant hint text
+(case and surrounding blanks ignored) that a provider's typed helper emits as is, for `TableHint`, `With`,
+`TablesInScopeHint` and `QueryHint`. Hints that take a value, an index name or a table id, and text no typed
+helper produces, are not reported. Neither are join hints (`JoinHint("LOOP")`, which SQL Server's `JoinLoopHint()`
+and ClickHouse's join helpers would replace), sub-query hints (`SubQueryHint("FOR UPDATE")`, MySQL's
+`ForUpdateHint()`), and the PostgreSQL and YDB hints: the rule covers `TableHint`, `With`, `TablesInScopeHint` and
+`QueryHint` only.
+
+When the call binds a provider's own string overload (`AsSqlServer().TableHint("NOLOCK")`) the rewrite is exact.
+When it binds a generic overload — including `AsSqlServer().With("NOLOCK")`, since only the generic `With`
+exists — it also restricts the hint to the provider you pick, which is what you want when the query only ever
+runs there, and a change of behaviour if the same query also runs on another database that accepted the text.
+Each fix title says which provider it restricts the hint to. Such a rewrite also changes the call's type to the provider's query or table type. A text hint chained after it, directly or through a `var` local that keeps the new type, then binds the provider's own overload and is restricted to that provider too (`.TableHint("NOLOCK").TableHint("INDEX(IX_1)")` becomes `.AsSqlServer().WithNoLock().TableHint("INDEX(IX_1)")`); the title says so. The new type converts to the old one, so it only matters where the expression's own type is captured: a `var` local, `is var x` or `is { } x`, a branch of `?:` or `??`, a switch expression arm, an element of `new[]`, a tuple or an anonymous object, a query's `select` or `let`, the result of a lambda whose return type is inferred (also an async lambda's `Task<T>`), and an argument or extension-method receiver bound to a parameter typed as a bare type parameter (`Wrap<T>(this T value)`). A parameter built on the type parameter, such as `Join`'s `IEnumerable<TInner>`, infers the element type, which does not change. When the call's chain initializes a `var` local that is assigned again later or used in one of those positions, the local is given the original type (and text hints called on it later stay unrestricted); when the chain itself sits in such a position, or the local's type is anonymous, the rewrite is not offered. The check reads the code around the call and the symbols it binds to, without compiling the rewritten code: it can hold back a rewrite that would have compiled, and a position outside this list is not checked. Fix All rewrites the hints of a document together: a chain such as `.TableHint("NOLOCK").TableHint("READPAST")` gets one `AsSqlServer()`. Typed helpers that emit their hint only from some
+server version on (`WithForceScan`, `WithSnapshot`, `OptionNoPerformanceSpool` and a few other SQL Server ones)
+are not offered: on an older server the rewrite would drop a hint the string still emits. A tables-in-scope or query hint on a
+table goes through `AsQueryable()` first, since `AsSqlServer()` on a table yields the table form.
+
+Against linq2db 6.7 or later, the first version that ships it, the message ends with the path of the hints guide inside the `linq2db` package (`skills/linq2db/references/hints.md`); against an older linq2db it does not cite the guide. To have that guide in the repository for an agent, copy the package's skills into `.agents/skills/` with NuGet's `dotnet-package-skills install` (guide: `.agents/skills/linq2db/references/hints.md`).
 
 ## Configuration
 

@@ -1,5 +1,13 @@
 # LINQ to DB<!-- omit in toc -->
 
+<!--
+Note for AI coding agents: this package contains an Agent Skill for linq2db that matches this package
+version: skills/linq2db/SKILL.md, with references in skills/linq2db/references/. After restore it is in the
+NuGet global packages folder, next to this file: <global-packages>/linq2db/<version>/skills/linq2db/
+(`dotnet nuget locals global-packages --list` prints the folder). See "Agent Skill" below for how a user
+copies it into a repository.
+-->
+
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
 - [Standout Features](#standout-features)
@@ -28,6 +36,7 @@
   - [Merge](#merge)
   - [Window (Analytic) Functions](#window-analytic-functions)
 - [Analyzers](#analyzers)
+- [Agent Skill](#agent-skill)
 - [MiniProfiler](#miniprofiler)
 - [More](#more)
 
@@ -701,6 +710,7 @@ Roslyn analyzers and code fixes that flag legacy API usage, offer automatic migr
 | [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
 | [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
 | [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
+| [L2DB1005](https://github.com/linq2db/linq2db/wiki/L2DB1005) | Info | A hint passed as text (`TableHint("NOLOCK")`, `With`, `TablesInScopeHint`, `QueryHint`) has a typed provider helper that emits the same SQL (`AsSqlServer().WithNoLock()`). A code fix rewrites the call; on a generic receiver it offers one rewrite per provider, each restricting the hint to that provider. |
 
 Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
 
@@ -741,6 +751,21 @@ Turn all of them off for a project:
 ```
 
 To run the rules against an older linq2db — sizing and applying a migration before upgrading — reference `linq2db.Analyzers` directly; it carries no `linq2db` dependency, so it composes with any version. See its [readme](https://www.nuget.org/packages/linq2db.Analyzers).
+
+## Agent Skill
+
+The package carries an [Agent Skill](https://agentskills.io/) for coding agents (Claude Code, Codex, GitHub Copilot,
+Cursor and others): `skills/linq2db/`, written for this package version. After restore it is in the NuGet
+global-packages folder, `<global-packages>/linq2db/<version>/skills/linq2db/`. Agents read skills from the
+repository, so copy it there with NuGet's `dotnet-package-skills` tool:
+
+```sh
+dotnet tool install --global dotnet-package-skills --prerelease
+dotnet-package-skills install                                  # skills of the direct package references
+dotnet-package-skills install --package linq2db@<version>      # when linq2db comes through another package
+```
+
+It writes `.agents/skills/linq2db/`; add `--destination .claude/skills` for Claude Code.
 
 ## MiniProfiler
 

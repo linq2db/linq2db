@@ -18,6 +18,7 @@
 	
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">

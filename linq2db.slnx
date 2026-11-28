@@ -306,6 +306,16 @@
     <File Path="Source/Shared/JetBrains.Annotations.cs" />
     <File Path="Source/Shared/SharedAssemblyInfo.cs" />
   </Folder>
+  <Folder Name="/Source/Skills/">
+    <File Path="Source/Skills/README.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/">
+    <File Path="Source/Skills/linq2db/SKILL.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/references/">
+    <File Path="Source/Skills/linq2db/references/hints.md" />
+    <File Path="Source/Skills/linq2db/references/recent-changes.md" />
+  </Folder>
   <Folder Name="/Tests/">
     <File Path="DataProviders.json" />
     <File Path="Tests/BannedSymbols.txt" />
