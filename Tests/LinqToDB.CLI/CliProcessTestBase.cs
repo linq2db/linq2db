@@ -59,11 +59,23 @@ namespace Tests.LinqToDB.CLI
 
 		protected static Task<CliProcessResult> RunCliProcess(params string[] arguments)
 		{
-			return RunCliProcess(null, arguments);
+			return RunCliProcessCore(null, DefaultTimeout, arguments);
+		}
+
+		protected static Task<CliProcessResult> RunCliProcess(TimeSpan timeout, params string[] arguments)
+		{
+			return RunCliProcessCore(null, timeout, arguments);
 		}
 
 		/// <summary>Runs the CLI in a new process with extra environment variables (<see langword="null"/> removes one).</summary>
-		protected static async Task<CliProcessResult> RunCliProcess(IReadOnlyDictionary<string, string?>? environment, params string[] arguments)
+		protected static Task<CliProcessResult> RunCliProcess(IReadOnlyDictionary<string, string?>? environment, params string[] arguments)
+		{
+			return RunCliProcessCore(environment, DefaultTimeout, arguments);
+		}
+
+		static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(20);
+
+		static async Task<CliProcessResult> RunCliProcessCore(IReadOnlyDictionary<string, string?>? environment, TimeSpan timeout, string[] arguments)
 		{
 			var cliAssembly = Path.Combine(AppContext.BaseDirectory, "dotnet-linq2db.dll");
 
@@ -93,7 +105,7 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+				await process.WaitForExitAsync().WaitAsync(timeout).ConfigureAwait(false);
 			}
 			catch (TimeoutException)
 			{
