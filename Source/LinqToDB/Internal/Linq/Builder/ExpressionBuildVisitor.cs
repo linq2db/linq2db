@@ -3894,6 +3894,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!rightKeepsNull)
 				r = ReadAsTheReaderReads(node.Right, rightPlaceholder).Sql;
 
+			// Unwrapping the operands above removed C#'s widening of an integer operand, and the database computes in the
+			// types of the SQL operands. Beside another integer (a literal 1.0 is written as 1) the widening is restored as
+			// a cast to a type that holds every value of the integer; beside a floating or decimal operand, or a wider
+			// integer, the database promotes the integer itself and nothing is added.
+			if (node.NodeType is not (ExpressionType.Modulo or ExpressionType.Coalesce or ExpressionType.And or ExpressionType.Or or ExpressionType.ExclusiveOr))
+			{
+				if (!shouldCheckColumn)
+					l = RestoreWidening(node.Left, left, l, r);
+
+				r = RestoreWidening(node.Right, right, r, l);
+			}
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.Add            :
@@ -3901,7 +3913,23 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.And            : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise),        node); break;
 				case ExpressionType.Divide         : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.ExclusiveOr    : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise),        node); break;
-				case ExpressionType.Modulo         : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.Modulo         :
+				{
+					// Several databases have no floating remainder, and the remainder of integral values is the same either
+					// way, so a remainder keeps its operands as they are. Computed over integers it is an integer, though:
+					// it is cast to the type it is written in, or a calculation over it goes on in integers.
+					if (t.UnwrapNullableType().IsFloatType && IsIntegralSql(l, out var leftWidth) && IsIntegralSql(r, out var rightWidth))
+					{
+						var integerType = Math.Max(leftWidth, rightWidth) > 4 ? typeof(long) : typeof(int);
+						var remainder   = new SqlBinaryExpression(integerType, l, "%", r, Precedence.Multiplicative);
+
+						translated = CreatePlaceholder(PseudoFunctions.MakeCast(remainder, GetWideningType(integerType, t.UnwrapNullableType())), node);
+					}
+					else
+						translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node);
+
+					break;
+				}
 				case ExpressionType.Multiply       :
 				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.Or             : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise),      node); break;
@@ -3914,6 +3942,150 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Restores the widening of an integer operand that <see cref="HandleBinaryMath"/> unwrapped, when
+		/// <paramref name="other"/> is an integer in SQL too and so the database would compute in integers: an integer
+		/// division where <c>1.0 / (double)x.Int</c> is written, an <see cref="int"/> overflow for
+		/// <c>int.MaxValue * (long)x.Int</c>.
+		/// </summary>
+		/// <param name="written">The operand as written.</param>
+		/// <param name="unwrapped">The operand <see cref="HandleBinaryMath"/> translated.</param>
+		/// <param name="sql">The translation of <paramref name="unwrapped"/>.</param>
+		/// <param name="other">The translation of the other operand.</param>
+		ISqlExpression RestoreWidening(Expression written, Expression unwrapped, ISqlExpression sql, ISqlExpression other)
+		{
+			var from = unwrapped.Type.UnwrapNullableType();
+			var to   = written.Type.UnwrapNullableType();
+
+			if (from == to || from.IsEnum || to.IsEnum || !from.IsIntegerType || !IsIntegralSql(other, out var otherWidth))
+				return sql;
+
+			if (!to.IsFloatType && !(to.IsIntegerType && IntegerSize(to) > IntegerSize(from) && IntegerSize(to) > otherWidth))
+				return sql;
+
+			return PseudoFunctions.MakeCast(sql, GetWideningType(from, to));
+		}
+
+		/// <summary>
+		/// The type an integer of type <paramref name="from"/> is cast to when it is widened to <paramref name="to"/>:
+		/// one that holds every value of the integer.
+		/// </summary>
+		DbDataType GetWideningType(Type from, Type to)
+		{
+			// The provider's default decimal type can be narrower than the integer: decimal(18, 10) holds 8 integer
+			// digits. A scale of 0 is what the database gives an integer it promotes to decimal itself.
+			if (to == typeof(decimal))
+				return MappingSchema.GetDbDataType(to).WithPrecisionScale(DecimalDigits(from), 0);
+
+			return MappingSchema.GetDbDataType(to);
+
+			static int DecimalDigits(Type type)
+			{
+				return Type.GetTypeCode(type) switch
+				{
+					TypeCode.SByte or TypeCode.Byte   => 3,
+					TypeCode.Int16 or TypeCode.UInt16 => 5,
+					TypeCode.Int32 or TypeCode.UInt32 => 10,
+					TypeCode.Int64                    => 19,
+					_                                 => 20,
+				};
+			}
+		}
+
+		/// <summary>
+		/// The SQL <paramref name="expression"/> is an integer for the database, of <paramref name="width"/> bytes: an
+		/// integer column, parameter or calculation, or a literal with no fraction, which is written as an integer
+		/// whatever its .NET type. A parameter that is inlined is written as a literal, with a value not known here.
+		/// </summary>
+		static bool IsIntegralSql(ISqlExpression expression, out int width)
+		{
+			switch (expression)
+			{
+				case SqlValue { Value: { } value }:
+					return IsIntegralValue(value, out width);
+
+				case SqlParameter { IsQueryParameter: false } parameter when parameter.Type.SystemType.UnwrapNullableType().IsNumberType:
+				{
+					var type = parameter.Type.SystemType.UnwrapNullableType();
+
+					width = type.IsIntegerType ? Math.Max(IntegerSize(type), 4) : 8;
+					return true;
+				}
+
+				case SqlBinaryExpression { Operation: "+" or "-" or "*" or "/" or "%" } binary:
+				{
+					if (IsIntegralSql(binary.Expr1, out var width1) && IsIntegralSql(binary.Expr2, out var width2))
+					{
+						width = Math.Max(width1, width2);
+						return true;
+					}
+
+					width = 0;
+					return false;
+				}
+
+				case SqlCastExpression cast:
+					return IsIntegerType(cast.ToType.SystemType, out width);
+
+				default:
+					return IsIntegerType(expression.SystemType, out width);
+			}
+
+			static bool IsIntegerType(Type? type, out int width)
+			{
+				type = type?.UnwrapNullableType();
+
+				if (type is { IsEnum: false, IsIntegerType: true })
+				{
+					width = Math.Max(IntegerSize(type), 4);
+					return true;
+				}
+
+				width = 0;
+				return false;
+			}
+
+			static bool IsIntegralValue(object value, out int width)
+			{
+				switch (value)
+				{
+					case sbyte or byte or short or ushort or int:
+						width = 4;
+						return true;
+
+					case uint or long or ulong:
+						width = value is uint u && u <= int.MaxValue || value is long l && l is >= int.MinValue and <= int.MaxValue ? 4 : 8;
+						return true;
+
+					case double d when Math.Abs(d) < 1e15 && Math.Truncate(d) == d:
+						width = d is >= int.MinValue and <= int.MaxValue ? 4 : 8;
+						return true;
+
+					case float f when Math.Abs(f) < 1e7f && Math.Truncate(f) == f:
+						width = 4;
+						return true;
+
+					case decimal m when decimal.Truncate(m) == m:
+						width = m is >= int.MinValue and <= int.MaxValue ? 4 : 8;
+						return true;
+				}
+
+				width = 0;
+				return false;
+			}
+		}
+
+		static int IntegerSize(Type type)
+		{
+			return Type.GetTypeCode(type) switch
+			{
+				TypeCode.SByte or TypeCode.Byte   => 1,
+				TypeCode.Int16 or TypeCode.UInt16 => 2,
+				TypeCode.Int32 or TypeCode.UInt32 => 4,
+				_                                 => 8,
+			};
 		}
 
 		public override Expression VisitSqlAggregateLifterExpression(SqlAggregateLifterExpression node)
