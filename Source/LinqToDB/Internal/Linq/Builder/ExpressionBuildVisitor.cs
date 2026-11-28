@@ -409,6 +409,51 @@ namespace LinqToDB.Internal.Linq.Builder
 			return ExpressionEqualityComparer.Instance.Equals(expr1, expr2);
 		}
 
+		/// <summary>
+		/// Extract hands the defining expression of a projected value to the caller, which evaluates it at its own level.
+		/// A window function or an aggregate is bound to the row set of the query that defines it: rebuilt above a filter
+		/// that was applied to that query (e.g. the condition of a left join), it is computed over the filtered rows instead.
+		/// Such a value is translated here, in its defining context, so the caller receives it as a column.
+		/// </summary>
+		bool HandleExtractedWindowOrAggregate(MethodCallExpression node, [NotNullWhen(true)] out Expression? translated)
+		{
+			translated = null;
+
+			if (_buildPurpose is not BuildPurpose.Extract || BuildContext == null || !IsWindowOrAggregateCall(node))
+				return false;
+
+			if (BuildSqlExpression(BuildContext, node) is not SqlPlaceholderExpression placeholder
+				|| !QueryHelper.ContainsAggregationOrWindowFunction(placeholder.Sql))
+			{
+				return false;
+			}
+
+			translated = placeholder;
+			return true;
+		}
+
+		/// <summary>
+		/// Cheap syntactic check for <see cref="HandleExtractedWindowOrAggregate"/>: the call, or a call it is chained on,
+		/// is a <see cref="Sql.Window"/> function or a mapped function marked as a window function or an aggregate.
+		/// </summary>
+		bool IsWindowOrAggregateCall(MethodCallExpression node)
+		{
+			Expression? current = node;
+
+			while (current is MethodCallExpression call)
+			{
+				if (call.Method.DeclaringType == typeof(WindowFunctionBuilder))
+					return true;
+
+				if (call.Method.GetExpressionAttribute(MappingSchema) is { IsWindowFunction: true } or { IsAggregate: true })
+					return true;
+
+				current = call.Object ?? (call.Arguments.Count > 0 ? call.Arguments[0] : null);
+			}
+
+			return false;
+		}
+
 		bool HandleSqlRelated(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
 			translated = null;
@@ -971,6 +1016,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!IsSame(generic, node))
 					return Visit(generic);
 			}
+
+			if (HandleExtractedWindowOrAggregate(node, out var translatedWindow))
+				return translatedWindow;
 
 			if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Traverse or BuildPurpose.Expand or BuildPurpose.Extract or BuildPurpose.SubQuery)
 			{
