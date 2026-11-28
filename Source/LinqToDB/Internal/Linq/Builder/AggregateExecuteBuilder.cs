@@ -54,7 +54,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				sequence = new SubQueryContext(buildResult.BuildContext);
 
 				// Force initialization of sequence
-				_ = builder.BuildSqlExpression(buildInfo.Parent, SequenceHelper.CreateRef(sequence), BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
+				var keys = builder.BuildSqlExpression(buildInfo.Parent, SequenceHelper.CreateRef(sequence), BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
+
+				if (SequenceHelper.FindError(keys) is { } keysError)
+					return BuildSequenceResult.Error(keysError);
 
 				aggregateRootContext = new AggregateRootContext(sequence, sequenceExpression);
 				sequence             = aggregateRootContext;
