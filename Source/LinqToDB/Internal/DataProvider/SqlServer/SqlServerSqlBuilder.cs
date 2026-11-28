@@ -241,6 +241,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return escape ? Convert(sb, tableName, objectType) : sb.Append(tableName);
 		}
 
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return SqlServerTools.QuoteIdentifier(sb, value);
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -259,7 +264,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
-					return SqlServerTools.QuoteIdentifier(sb, value);
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.NameToServer    :
 				case ConvertType.NameToDatabase  :
@@ -270,7 +275,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
-					return SqlServerTools.QuoteIdentifier(sb, value);
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'

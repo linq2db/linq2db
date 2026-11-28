@@ -169,6 +169,21 @@ namespace LinqToDB.Internal.DataProvider.Access
 			}
 		}
 
+		/// <summary>
+		/// Access delimits with brackets and has no escape for the characters that terminate or confuse
+		/// one, so a name containing them cannot be represented. Refuse it here rather than emitting SQL
+		/// the driver reports only as "syntax error in field definition".
+		/// </summary>
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			// The double quote is legal here: ACE OLE DB and LibRed accept [Say "Hi"] in DDL and DML.
+			// Only the ODBC driver rejects it, so AccessODBCSqlBuilder refuses it there.
+			if (value.IndexOfAny(['[', ']', '`']) >= 0)
+				throw new LinqToDBException($"Access cannot represent the identifier '{value}': a bracketed identifier cannot contain a bracket or backtick.");
+
+			return sb.Append('[').Append(value).Append(']');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			// https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
@@ -185,7 +200,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
@@ -194,7 +209,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'

@@ -160,6 +160,32 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
 		}
 
+		// current logic limitations (hardly an issue as they represent quite exotic cases):
+		// - surrogate pairs/runes not handled
+		// - non-lowercase non-uppercase letters not handled
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
+		{
+			return ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None
+				&& (
+					// force quote enabled
+					ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+					// only for Auto mode - contains upper-case letter
+					|| (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper))
+					// is a keyword
+					|| IsReserved(value)
+					// starts from non-letter/underscore
+					|| (value[0] != '_' && !char.IsLetter(value[0]))
+					// contains non-letter/underscore/digit(0-9 only)/$
+					|| value.Skip(1).Any(c => !char.IsLetter(c) && !c.IsAsciiDigit() && c is not '_' and not '$')
+				);
+		}
+
+		// don't forget to duplicate quotes
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('"').Append(value.Replace("\"", "\"\"", StringComparison.Ordinal)).Append('"');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			// TODO: implement better quotation logic
@@ -179,30 +205,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
 				case ConvertType.SequenceName         :
-					if (ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
-					{
-						// current logic limitations (hardly an issue as they represent quite exotic cases):
-						// - surrogate pairs/runes not handled
-						// - non-lowercase non-uppercase letters not handled
-						var quote =
-							// force quote enabled
-							ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
-							// only for Auto mode - contains upper-case letter
-							|| (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper))
-							// is a keyword
-							|| IsReserved(value)
-							// starts from non-letter/underscore
-							|| (value.Length > 0 && value[0] != '_' && !char.IsLetter(value[0]))
-							// contains non-letter/underscore/digit(0-9 only)/$
-							|| value.Skip(1).Any(c => !char.IsLetter(c) && !c.IsAsciiDigit() && c is not '_' and not '$')
-							;
-
-						if (quote)
-							// don't forget to duplicate quotes
-							return sb.Append('"').Append(value.Replace("\"", "\"\"", StringComparison.Ordinal)).Append('"');
-					}
-
-					break;
+					return BuildIdentifier(sb, value, convertType);
 
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
