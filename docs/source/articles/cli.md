@@ -323,7 +323,7 @@ public sealed record ResultColumn(string? Name, DatabaseType Type, bool Nullable
 
 #### Type mapping interceptor
 
-This interceptor allows user to specify which .NET type should be used for specific database type and usefull in several cases:
+This interceptor allows user to specify which .NET type should be used for specific database type and useful in several cases:
 
 - when default type mapping use wrong type
 - user wants to use different type for specific database type

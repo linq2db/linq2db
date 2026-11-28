@@ -66,8 +66,8 @@ Already cloned? `git submodule update --init`, then `git -C .claude switch maste
 #### Solutions
 
 * `.\linq2db.slnx` - full linq2db solution
-* `.\linq2db.playground.slnf` - ligthweight linq2db test solution. Used to work on specific test without loading of all payload of full solution
-* `.\linq2db.Benchmarks.slnf` - ligthweight linq2db benchmarks solution. Used to work on benchmarks without loading of all payload of full solution
+* `.\linq2db.playground.slnf` - lightweight linq2db test solution. Used to work on specific test without loading of all payload of full solution
+* `.\linq2db.Benchmarks.slnf` - lightweight linq2db benchmarks solution. Used to work on benchmarks without loading of all payload of full solution
 * `.\Tests\Tests.T4.Nugets\Tests.T4.Nugets.slnx` - separate solution for T4 nugets testing
 
 #### Source projects
@@ -339,7 +339,7 @@ CI builds are done for all branches and PRs.
 
 In general you should follow simple rules:
 
-* Code style should match exising code
+* Code style should match existing code
 * There should be no compilation warnings (will fail CI builds)
 * Do not add new features without tests
 * Put a regression test in the fixture that owns the behaviour, or in a new fixture named for it (`Tests/Linq/<Area>/<Behaviour>Tests.cs`), with the issue in `[Test(Description = "<url>")]`. Do not add new `Issue<N>Tests.cs` fixtures or extend existing ones
