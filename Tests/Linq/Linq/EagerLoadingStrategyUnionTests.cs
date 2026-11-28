@@ -3868,7 +3868,7 @@ namespace Tests.Linq
 		// CteUnion belongs to the detached collection's query; the root, built by another strategy, still has to be optimized.
 		// Unoptimized, the root reaches the database as an APPLY or a FROM-less SELECT the database rejects.
 		// Jet / ACE refuse the root's FROM-less SELECT holding a subquery either way.
-		// Sybase takes no TOP in a subquery, so it cannot build the root's First(), with or without CteUnion.
+		// Sybase takes no ORDER BY in a derived table, which the root's ordered First() becomes beside other members, with or without CteUnion.
 		[Test]
 		[ThrowsCannotBeConverted(TestProvName.AllSybase)]
 		public void NestedInDetachedCollection_RootIsOptimized([DataSources(TestProvName.AllNativeAccess)] string context)
