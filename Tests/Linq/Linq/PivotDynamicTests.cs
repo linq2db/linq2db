@@ -846,6 +846,63 @@ namespace Tests.Linq
 			}
 		}
 
+		/// <summary>
+		/// A constant cell name and a name read from the row are different queries in either order: the cached constant must
+		/// not match the row-dependent name, nor the row-dependent name the constant. Each still hits its own entry.
+		/// </summary>
+		// Query-cache identity is provider-agnostic.
+		[Test, QueryCacheTest]
+		public void AConstantAndARowDependentCellNameAreDifferentQueries(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values] bool constantFirst,
+			[Values] bool throughIndexer)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var pivoted = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				});
+
+			var constant = throughIndexer
+				? pivoted.Select(r => (decimal?)r.Cells["Y2010"])
+				: pivoted.Select(r => r.Cells.Get<decimal?>("Y2010"));
+			var dependent = throughIndexer
+				? pivoted.Select(r => (decimal?)r.Cells[r.Key == "A" ? "Y2000" : "Y2010"])
+				: pivoted.Select(r => r.Cells.Get<decimal?>(r.Key == "A" ? "Y2000" : "Y2010"));
+
+			var first  = constantFirst ? constant  : dependent;
+			var second = constantFirst ? dependent : constant;
+
+			decimal?[] Expected(IQueryable<decimal?> query) => ReferenceEquals(query, constant)
+				? new decimal?[] { 15m, 20m }
+				: new decimal?[] { 10m, 15m };
+
+			first.ClearCache();
+
+			void ReadsItsOwnRows(IQueryable<decimal?> query, int expectedMisses)
+			{
+				var misses = query.GetCacheMissCount();
+
+				query.ToList().OrderBy(v => v).ShouldBe(Expected(query));
+				(query.GetCacheMissCount() - misses).ShouldBe(expectedMisses);
+			}
+
+			ReadsItsOwnRows(first,  1);
+			ReadsItsOwnRows(second, 1);
+
+			// A query that no longer matches its own entry would miss here.
+			ReadsItsOwnRows(first,  0);
+			ReadsItsOwnRows(second, 0);
+		}
+
 		/// <summary>A changed name read through the indexer is a different query, as through <see cref="PivotCells.Get{T}"/>.</summary>
 		[Test]
 		public void ACapturedCellNameKeysAnIndexerRead([DataSources] string context)

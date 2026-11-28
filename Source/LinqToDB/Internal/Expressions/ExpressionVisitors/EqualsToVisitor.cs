@@ -399,11 +399,11 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 					if (dependentAttribute != null)
 					{
-						if (arg1 is not ConstantPlaceholderExpression)
-						{
-							if (!dependentAttribute.ExpressionsEqual(bindings, arg1, arg2, static (scope, e1, e2) => e1.EqualsTo(e2, scope)))
-								return false;
-						}
+						// A cached constant matches only a constant of its type, as anywhere else in the tree.
+						if (arg1 is ConstantPlaceholderExpression
+							? !arg1.EqualsTo(arg2, bindings)
+							: !dependentAttribute.ExpressionsEqual(bindings, arg1, arg2, static (scope, e1, e2) => e1.EqualsTo(e2, scope)))
+							return false;
 					}
 					else
 					{
