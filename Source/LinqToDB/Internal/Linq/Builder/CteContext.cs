@@ -288,6 +288,32 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
+		/// <summary>
+		/// Returns the value of a CTE field as the SQL of the CTE body column that computes it. An expression built over
+		/// the field inside the CTE body (such as the ROW_NUMBER OVER clause that CteUnion adds) must reference that value.
+		/// Rebuilding the field from its defining expression would inline the definition instead: a window function or an
+		/// aggregate computed one level down would be computed again (nested inside the new window), and any other
+		/// expression would be evaluated twice.
+		/// </summary>
+		bool GetPlaceholderColumnExpression(SqlPlaceholderExpression placeholder, [NotNullWhen(true)] out Expression? columnExpression)
+		{
+			foreach (var map in _fieldsMap)
+			{
+				if (map.Value.placeholder.Equals(placeholder))
+				{
+					if (map.Value.field.Column is { } innerColumn)
+					{
+						columnExpression = new SqlPlaceholderExpression(CteInnerQueryContext?.SelectQuery, innerColumn.Expression, map.Key, placeholder.Type);
+						return true;
+					}
+
+					break;
+				}
+			}
+
+			return GetPlaceholderBaseExpression(placeholder, out columnExpression);
+		}
+
 		public MemberExpression RegisterVirtualField(Expression expression)
 		{
 			InitQuery();
@@ -304,7 +330,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new InvalidOperationException("Virtual field placeholder not found.");
 					}
 
-					if (!GetPlaceholderBaseExpression(specialPlaceholder, out var baseExpression))
+					if (!GetPlaceholderColumnExpression(specialPlaceholder, out var baseExpression))
 					{
 						throw new InvalidOperationException("Field placeholder not found for virtual field.");
 					}
@@ -314,7 +340,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (e is SqlPlaceholderExpression innerPlaceholder)
 				{
-					if (GetPlaceholderBaseExpression(innerPlaceholder, out var baseExpression))
+					if (GetPlaceholderColumnExpression(innerPlaceholder, out var baseExpression))
 					{
 						return baseExpression;
 					}
