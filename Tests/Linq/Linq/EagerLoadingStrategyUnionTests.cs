@@ -3862,5 +3862,205 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Parent keyed by a window function value — the CTE row number must reference the computed column
+
+		static void AssertWindowKeyed(
+			IEnumerable<(int ParentID, long Value, int[] Children)> result,
+			IEnumerable<(int ParentID, long Value, int[] Children)> expected)
+		{
+			var actualList   = result  .OrderBy(r => r.ParentID).ToList();
+			var expectedList = expected.OrderBy(r => r.ParentID).ToList();
+
+			actualList.Select(r => (r.ParentID, r.Value)).ShouldBe(expectedList.Select(r => (r.ParentID, r.Value)));
+
+			for (var i = 0; i < actualList.Count; i++)
+				actualList[i].Children.ShouldBe(expectedList[i].Children);
+		}
+
+		[Test]
+		public void CteUnion_KeyedByRowNumber([SupportsAnalyticFunctionsContext] string context, [Values] bool keyByWindow)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
+
+			var query =
+				from r in db.Parent.Select(p => new { p.ParentID, Rn = Sql.Window.RowNumber(w => w.OrderBy(p.ParentID)) })
+				where r.Rn <= 3
+				select new
+				{
+					r.ParentID,
+					r.Rn,
+					Children = db.Child
+						.Where(c => c.ParentID == (keyByWindow ? r.Rn : r.ParentID))
+						.Select(c => c.ChildID)
+						.OrderBy(id => id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = Parent
+				.OrderBy(p => p.ParentID)
+				.Select((p, i) => new { p.ParentID, Rn = i + 1L })
+				.Where(r => r.Rn <= 3)
+				.Select(r => (r.ParentID, r.Rn, Child.Where(c => c.ParentID == (keyByWindow ? r.Rn : r.ParentID)).Select(c => c.ChildID).OrderBy(id => id).ToArray()));
+
+			AssertWindowKeyed(result.Select(r => (r.ParentID, r.Rn, r.Children.ToArray())), expected);
+		}
+
+		[Test]
+		public void CteUnion_KeyedByRowNumber_OrderedByRowNumber([SupportsAnalyticFunctionsContext] string context, [Values] bool keyByWindow)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
+
+			var query =
+				from r in db.Parent.Select(p => new { p.ParentID, Rn = Sql.Window.RowNumber(w => w.OrderByDesc(p.ParentID)) })
+				where r.Rn <= 3
+				orderby r.Rn
+				select new
+				{
+					r.ParentID,
+					r.Rn,
+					Children = db.Child
+						.Where(c => c.ParentID == (keyByWindow ? r.Rn : r.ParentID))
+						.Select(c => c.ChildID)
+						.OrderBy(id => id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = Parent
+				.OrderByDescending(p => p.ParentID)
+				.Select((p, i) => new { p.ParentID, Rn = i + 1L })
+				.Where(r => r.Rn <= 3)
+				.Select(r => (r.ParentID, r.Rn, Child.Where(c => c.ParentID == (keyByWindow ? r.Rn : r.ParentID)).Select(c => c.ChildID).OrderBy(id => id).ToArray()))
+				.ToList();
+
+			result.Select(r => r.Rn).ShouldBe(expected.Select(r => r.Rn));
+
+			AssertWindowKeyed(result.Select(r => (r.ParentID, r.Rn, r.Children.ToArray())), expected);
+		}
+
+		[Test]
+		public void CteUnion_NestedKeyedByRowNumber([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
+
+			var query =
+				from p in db.Parent
+				where p.ParentID <= 3
+				select new
+				{
+					p.ParentID,
+					Children = (
+						from x in db.Child.Select(c => new { c.ParentID, c.ChildID, Rn = Sql.Window.RowNumber(w => w.OrderBy(c.ChildID)) })
+						where x.ParentID == p.ParentID
+						select new
+						{
+							x.ChildID,
+							x.Rn,
+							GrandChildren = db.GrandChild
+								.Where(g => g.ParentID == x.Rn)
+								.Select(g => g.GrandChildID)
+								.OrderBy(id => id)
+								.ToList(),
+						})
+						.ToList(),
+				};
+
+			var result = query.ToList().OrderBy(r => r.ParentID).ToList();
+
+			var numbered = Child.OrderBy(c => c.ChildID).Select((c, i) => new { c.ParentID, c.ChildID, Rn = i + 1L }).ToList();
+
+			var expected = Parent
+				.Where(p => p.ParentID <= 3)
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Children = numbered
+						.Where(x => x.ParentID == p.ParentID)
+						.Select(x => new
+						{
+							x.ChildID,
+							x.Rn,
+							GrandChildren = GrandChild.Where(g => g.ParentID == x.Rn).Select(g => g.GrandChildID).OrderBy(id => id).ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			result.Select(r => r.ParentID).ShouldBe(expected.Select(r => r.ParentID));
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var actualChildren   = result[i].Children.OrderBy(c => c.ChildID).ToList();
+				var expectedChildren = expected[i].Children;
+
+				actualChildren.Select(c => (c.ChildID, c.Rn)).ShouldBe(expectedChildren.Select(c => (c.ChildID, c.Rn)));
+
+				for (var j = 0; j < actualChildren.Count; j++)
+					actualChildren[j].GrandChildren.ShouldBe(expectedChildren[j].GrandChildren);
+			}
+		}
+
+		[Test]
+		public void CteUnion_KeyedByRank([SupportsAnalyticFunctionsContext] string context, [Values] bool keyByWindow)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
+
+			var query =
+				from r in db.Parent.Select(p => new { p.ParentID, Rank = Sql.Window.Rank(w => w.OrderBy(p.ParentID / 3)) })
+				select new
+				{
+					r.ParentID,
+					r.Rank,
+					Children = db.Child
+						.Where(c => c.ParentID == (keyByWindow ? r.Rank : r.ParentID))
+						.Select(c => c.ChildID)
+						.OrderBy(id => id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = Parent
+				.Select(p => new { p.ParentID, Rank = 1L + Parent.Count(o => o.ParentID / 3 < p.ParentID / 3) })
+				.Select(r => (r.ParentID, r.Rank, Child.Where(c => c.ParentID == (keyByWindow ? r.Rank : r.ParentID)).Select(c => c.ChildID).OrderBy(id => id).ToArray()));
+
+			AssertWindowKeyed(result.Select(r => (r.ParentID, r.Rank, r.Children.ToArray())), expected);
+		}
+
+		[Test]
+		public void CteUnion_KeyedBySumOver([SupportsAnalyticFunctionsContext] string context, [Values] bool keyByWindow)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
+
+			var query =
+				from r in db.Parent.Select(p => new { p.ParentID, Total = Sql.Window.Sum(p.ParentID, w => w.OrderBy(p.ParentID)) })
+				where r.Total <= 10
+				select new
+				{
+					r.ParentID,
+					r.Total,
+					Children = db.Child
+						.Where(c => c.ParentID == (keyByWindow ? r.Total : r.ParentID))
+						.Select(c => c.ChildID)
+						.OrderBy(id => id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = Parent
+				.Select(p => new { p.ParentID, Total = Parent.Where(o => o.ParentID <= p.ParentID).Sum(o => o.ParentID) })
+				.Where(r => r.Total <= 10)
+				.Select(r => (r.ParentID, (long)r.Total, Child.Where(c => c.ParentID == (keyByWindow ? r.Total : r.ParentID)).Select(c => c.ChildID).OrderBy(id => id).ToArray()));
+
+			AssertWindowKeyed(result.Select(r => (r.ParentID, (long)r.Total, r.Children.ToArray())), expected);
+		}
+
+		#endregion
 	}
 }
