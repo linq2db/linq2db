@@ -240,7 +240,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Action withoutLinqToDB = () => pivotQuery.ToArray();
 
+#if NETFRAMEWORK
+			// EF Core 3.1 rejects the element-projecting GroupBy before it reaches the Pivot call.
+			Assert.That(() => withoutLinqToDB(), Throws.TypeOf<InvalidOperationException>().With.Message.Contains("GroupByShaperExpression"));
+#else
 			Assert.That(() => withoutLinqToDB(), Throws.TypeOf<InvalidOperationException>().With.Message.Contains(nameof(LinqExtensions.Pivot)).IgnoreCase);
+#endif
 		}
 
 		[Test]
