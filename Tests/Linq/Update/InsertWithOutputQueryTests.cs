@@ -343,10 +343,9 @@ namespace Tests.xUpdate
 			var query = db.GetTable<SourceTable>()
 				.InsertWithOutputQuery(db.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
 
-			Action act = () => query.ToArray();
-
-			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported);
+			Assert.That(
+				() => query.ToArray(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported));
 		}
 
 		[Test]
@@ -357,10 +356,9 @@ namespace Tests.xUpdate
 			var query = db.GetTable<SourceTable>()
 				.InsertWithOutputQuery(db.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
 
-			Action act = () => query.ToArray();
-
-			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldContain(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported);
+			Assert.That(
+				() => query.ToArray(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported));
 		}
 
 		[Test]
@@ -530,10 +528,9 @@ namespace Tests.xUpdate
 						.ToList(),
 				});
 
-			Action act = () => query.ToArray();
-
-			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
+			Assert.That(
+				() => query.ToArray(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad));
 
 			target
 				.Count()
@@ -588,10 +585,9 @@ namespace Tests.xUpdate
 						.ToList(),
 				});
 
-			Action act = () => query.ToArray();
-
-			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
+			Assert.That(
+				() => query.ToArray(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad));
 
 			target
 				.Count()
@@ -620,10 +616,9 @@ namespace Tests.xUpdate
 						.ToList(),
 				});
 
-			Action act = () => query.ToArray();
-
-			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
+			Assert.That(
+				() => query.ToArray(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad));
 
 			target
 				.Count()
@@ -1110,10 +1105,9 @@ namespace Tests.xUpdate
 							.Count(),
 					});
 
-			Action act = () => query.ToArray();
-
-			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_Correlated);
+			Assert.That(
+				() => query.ToArray(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_Correlated));
 
 			target
 				.Count()
@@ -1321,33 +1315,30 @@ namespace Tests.xUpdate
 			{
 				case EnumerationEnd.Completed:
 				{
-					Action act = () => query.ToList();
-
-					var ex = act.ShouldThrow<InvalidOperationException>();
-					ex.Message.ShouldBe("Materialization failed.");
+					Assert.That(
+						() => query.ToList(),
+						Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo("Materialization failed."));
 					break;
 				}
 
 				case EnumerationEnd.AsyncCompleted:
 				{
-					Func<Task> act = async () =>
-					{
-						await foreach (var row in query.AsAsyncEnumerable())
+					await Assert.ThatAsync(
+						async () =>
 						{
-						}
-					};
-
-					var ex = await act.ShouldThrowAsync<InvalidOperationException>();
-					ex.Message.ShouldBe("Materialization failed.");
+							await foreach (var row in query.AsAsyncEnumerable())
+							{
+							}
+						},
+						Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo("Materialization failed."));
 					break;
 				}
 
 				case EnumerationEnd.ForEachAsync:
 				{
-					Func<Task> act = () => query.ForEachAsync(_ => { });
-
-					var ex = await act.ShouldThrowAsync<InvalidOperationException>();
-					ex.Message.ShouldBe("Materialization failed.");
+					await Assert.ThatAsync(
+						() => query.ForEachAsync(_ => { }),
+						Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo("Materialization failed."));
 					break;
 				}
 			}
@@ -1397,10 +1388,9 @@ namespace Tests.xUpdate
 
 			if (fail)
 			{
-				Action act = () => query.ToList();
-
-				var ex = act.ShouldThrow<InvalidOperationException>();
-				ex.Message.ShouldBe("Materialization failed.");
+				Assert.That(
+					() => query.ToList(),
+					Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo("Materialization failed."));
 			}
 			else
 			{
@@ -1542,17 +1532,16 @@ namespace Tests.xUpdate
 			using var target = db.CreateLocalTable<TargetTable>();
 
 			// a collection over the output would be loaded as a child query that reads the output itself
-			Action act = () => db.QueryBatch(() => new
-			{
-				Rows = source
-					.Where(s => s.Id <= 3)
-					.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
-					.ToList(),
-				Total = source.Count(),
-			});
-
-			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
+			Assert.That(
+				() => db.QueryBatch(() => new
+				{
+					Rows = source
+						.Where(s => s.Id <= 3)
+						.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+						.ToList(),
+					Total = source.Count(),
+				}),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad));
 
 			target
 				.Count()
@@ -1567,14 +1556,13 @@ namespace Tests.xUpdate
 			using var target = db.CreateLocalTable<TargetTable>();
 
 			// without eager loading no transaction is started: the insert commits with the statement
-			Action act = () => source
-				.Where(s => s.Id <= 3)
-				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
-				.Select(t => FailOnSecond(t.Id))
-				.ToArray();
-
-			var ex = act.ShouldThrow<InvalidOperationException>();
-			ex.Message.ShouldBe("Materialization failed.");
+			Assert.That(
+				() => source
+					.Where(s => s.Id <= 3)
+					.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+					.Select(t => FailOnSecond(t.Id))
+					.ToArray(),
+				Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo("Materialization failed."));
 
 			db.Transaction.ShouldBeNull();
 			target
@@ -1591,22 +1579,20 @@ namespace Tests.xUpdate
 			using var remote = new ReadOnlyRemoteDataContext(db, context);
 
 			// control: a plain insert is refused by the read-only service policy
-			Action insert = () => remote.GetTable<SourceTable>()
-				.Where(s => s.Id <= 3)
-				.Insert(remote.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
-
-			var insertEx = insert.ShouldThrow<LinqToDBException>();
-			insertEx.Message.ShouldBe("Insert/Update/Delete requests are not allowed by the service policy.");
+			Assert.That(
+				() => remote.GetTable<SourceTable>()
+					.Where(s => s.Id <= 3)
+					.Insert(remote.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr }),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Insert/Update/Delete requests are not allowed by the service policy."));
 
 			// the same insert reaches the service as a SELECT, with the INSERT inside its CTE
-			Action output = () => remote.GetTable<SourceTable>()
-				.Where(s => s.Id <= 3)
-				.InsertWithOutputQuery(remote.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
-				.Select(t => t.Id)
-				.ToArray();
-
-			var outputEx = output.ShouldThrow<LinqToDBException>();
-			outputEx.Message.ShouldBe("Insert/Update/Delete requests are not allowed by the service policy.");
+			Assert.That(
+				() => remote.GetTable<SourceTable>()
+					.Where(s => s.Id <= 3)
+					.InsertWithOutputQuery(remote.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+					.Select(t => t.Id)
+					.ToArray(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Insert/Update/Delete requests are not allowed by the service policy."));
 
 			target
 				.Count()
