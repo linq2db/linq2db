@@ -49,7 +49,7 @@ let SelectLeftJoin (db : IDataContext) =
 
     Assert.That(child, Is.Not.Null)
 
-let Issue3699Test (db : IDataContext) =
+let GroupJoinSelectManyOverJoinedAnonymousTypes (db : IDataContext) =
     let children = db.GetTable<Parent>()
     let parents = db.GetTable<Parent>()
     let pets = db.GetTable<Parent>()

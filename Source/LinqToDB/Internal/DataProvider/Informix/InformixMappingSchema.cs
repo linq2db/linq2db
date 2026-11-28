@@ -93,7 +93,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
 			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
 			// without generation of range-specific literals
-			// see Issue1307Tests tests
+			// see InformixTests.InsertDateTimeWithInformixQualifiers test
 #if SUPPORTS_COMPOSITE_FORMAT
 			CompositeFormat format;
 #else

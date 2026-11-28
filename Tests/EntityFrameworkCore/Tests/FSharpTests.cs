@@ -39,8 +39,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			FSharpTestMethods.TestLeftJoin(ctx);
 		}
 
-		#region Issue 260
-
 		[Table]
 		public class Issue4646Table
 		{
@@ -53,7 +51,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/260")]
-		public void Issue4646TestLinqToDB([EFDataSources] string provider)
+		public void Option_RoundtripWithDefaultMappingLinqToDB([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -71,7 +69,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
-		public void Issue4646TestEF([EFDataSources] string provider)
+		public void Option_RoundtripWithDefaultMappingEF([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -88,8 +86,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(result.ValueN, Is.Null);
 			}
 		}
-
-		#endregion
 	}
 }
 

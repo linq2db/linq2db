@@ -2322,7 +2322,6 @@ namespace Tests.xUpdate
 		}
 		#endregion
 
-		#region issue 2243
 		[Table("test_insert_or_replace")]
 		public partial class TestInsertOrReplaceInfo
 		{
@@ -2332,8 +2331,8 @@ namespace Tests.xUpdate
 			[Column("updated_by", SkipOnInsert = true), Nullable] public string?   UpdatedBy { get; set; } // character varying(100)
 		}
 
-		[Test]
-		public void Issue2243([InsertOrUpdateDataSources] string context, [Values(1, 2, 3)] int seed)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2243")]
+		public void InsertOrReplaceHonorsSkipOnInsertAndSkipOnUpdate([InsertOrUpdateDataSources] string context, [Values(1, 2, 3)] int seed)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
@@ -2370,21 +2369,19 @@ namespace Tests.xUpdate
 				Assert.That(res.UpdatedBy, Is.EqualTo(user));
 			}
 		}
-		#endregion
 
-		#region Issue 3927
 		[Table]
-		sealed class Issue3927Table
+		sealed class SerialNumberPageTable
 		{
 			[Column(DataType = DataType.Char, Length = 11), PrimaryKey, NotNull] public string SerialNumber { get; set; } = null!;
 			[Column(DataType = DataType.Int32)] public int PageNumber { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
-		public void Issue3927Test1([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
+		public void InsertFromFilteredQueryWithValueConstant([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue3927Table>();
+			using var tb = db.CreateLocalTable<SerialNumberPageTable>();
 
 			var serialNumber = "12345678901";
 			var pageNumber = 9;
@@ -2396,10 +2393,10 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
-		public void Issue3927Test2([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
+		public void InsertFromFilteredQueryWithValueLambda([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue3927Table>();
+			using var tb = db.CreateLocalTable<SerialNumberPageTable>();
 
 			var serialNumber = "12345678901";
 			var pageNumber = 9;
@@ -2409,13 +2406,11 @@ namespace Tests.xUpdate
 				.Value(display => display.PageNumber, r => pageNumber)
 				.Insert();
 		}
-		#endregion
 
-		#region Issue 4702
 		[Table]
-		public partial class Issue4702Table
+		public partial class KeepIdentityTable
 		{
-			//[SequenceName("Issue4702Table_Id_seq")]
+			//[SequenceName("KeepIdentityTable_Id_seq")]
 			[PrimaryKey, Identity] public int Id { get; set; }
 			[Column] public string? Text { get; set; }
 		}
@@ -2431,7 +2426,7 @@ namespace Tests.xUpdate
 			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider",
 			Details = "no-issue: as above, but Firebird is refused by name before the RowByRow check is reached.")]
 		[ActiveIssue(4702, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
-			ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4702Table\"",
+			ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_KeepIdentityTable\"",
 			Details = "no-issue: as above; the identity value is written rather than generated, so the key collides.")]
 		[ActiveIssue(4702, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Constraint Error: Duplicate key", Details = "no-issue: as the PostgreSQL half.")]
@@ -2442,20 +2437,19 @@ namespace Tests.xUpdate
 		[ActiveIssue(4702, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Status: PreconditionFailed", Details = "no-issue: as the PostgreSQL half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
-		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
+		public void BulkCopyKeepIdentityWithRetrieveIdentity([DataSources(false)] string context, [Values] bool useSequence)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4702Table>();
+			using var tb = db.CreateLocalTable<KeepIdentityTable>();
 
-			List<Issue4702Table> records = [
+			List<KeepIdentityTable> records = [
 				new() { Text = "Text 1" },
 				new() { Text = "Text 2" }
 			];
 
 			db.BulkCopy(new BulkCopyOptions { KeepIdentity = true }, records.RetrieveIdentity(db, useSequence));
-			tb.Insert(() => new Issue4702Table() { Text = "Text 3" });
+			tb.Insert(() => new KeepIdentityTable() { Text = "Text 3" });
 		}
-		#endregion
 
 		#region Set with Coalesce
 		[Table]
@@ -2645,6 +2639,285 @@ namespace Tests.xUpdate
 				.Single()
 				.Title
 				.ShouldBe("Signed contract");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1110")]
+		public void InsertIntoReservedWordColumn([DataSources] string configuration)
+		{
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<ReservedWordColumnRecord>())
+			{
+				db.Insert(new ReservedWordColumnRecord() { Id = 10, TimeStamp = TestData.DateTime });
+			}
+		}
+
+		[Table(Name = "ReservedWordColumn")]
+		sealed class ReservedWordColumnRecord
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public DateTime TimeStamp { get; set; }
+		}
+
+		// PostgreSQL and SQLite disabled because they need real unique constrain on database side
+		// DB2 needs merge api + arraycontext features from 3.0
+		[ActiveIssue(1239, Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0418N{0}untyped parameter marker",
+			Details = "DB2 rejects the emulated INSERT OR UPDATE: the null key value reaches it as an untyped parameter marker.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1238")]
+		public void InsertOrUpdateWithNullKeyColumn([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<NullableKeyRecord>().Delete();
+
+				db.GetTable<NullableKeyRecord>()
+					.InsertOrUpdate(
+						() => new NullableKeyRecord()
+						{
+							Key1 = 143,
+							Key2 = null,
+							Data = 1
+						},
+						p => new NullableKeyRecord()
+						{
+							Data = 1
+						});
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+
+				db.GetTable<NullableKeyRecord>()
+					.InsertOrUpdate(
+						() => new NullableKeyRecord()
+						{
+							Key1 = 143,
+							Key2 = null,
+							Data = 1
+						},
+						p => new NullableKeyRecord()
+						{
+							Data = 1
+						});
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+			}
+		}
+
+		// PostgreSQL, SQLite and DuckDB disabled because they need real unique constrain on database side
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1238")]
+		public void InsertOrReplaceWithNullKeyColumn([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				db.GetTable<NullableKeyRecord>().Delete();
+
+				var record = new NullableKeyRecord()
+				{
+					Key1 = 143,
+					Key2 = null,
+					Data = 1
+				};
+
+				db.InsertOrReplace(record);
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+
+				db.InsertOrReplace(record);
+
+				Assert.That(db.GetTable<NullableKeyRecord>().Count(), Is.EqualTo(1));
+			}
+		}
+
+		// #5482 / SUG001 regression. The PR rewired SAP HANA's legacy 3-arg
+		// InsertOrUpdate(insert, update, keySelector) onto the native `UPSERT … WITH PRIMARY KEY`, which
+		// keys on the table PRIMARY KEY and ignores a caller-supplied non-PK key selector — whereas the
+		// old 2-statement emulation honored the arbitrary key. Here the match key is the non-PK `Code`
+		// column: since Code=100 already exists, the second call must UPDATE that row (count stays 1),
+		// not INSERT a new row keyed on the PK `Id=2` (which would make 2 rows).
+		// Insert and Update branches are deliberately aligned on their non-key columns (Id, Val) so the
+		// native single-statement path is actually exercised — divergent branches fall back to the
+		// UPDATE→INSERT emulation (HasDivergentInsertOrUpdateBranches) and would mask the regression.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5482")]
+		public void InsertOrUpdate_NonPkKey_MatchesKeyNotPrimaryKey([IncludeDataSources(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var _  = db.CreateLocalTable<NonPkKeyUpsert>();
+
+			db.Insert(new NonPkKeyUpsert { Id = 1, Code = 100, Val = 10 });
+
+			db.GetTable<NonPkKeyUpsert>().InsertOrUpdate(
+				() => new NonPkKeyUpsert { Id = 2, Code = 100, Val = 20 },
+				p  => new NonPkKeyUpsert { Id = 2, Val = 20 },
+				() => new NonPkKeyUpsert { Code = 100 });
+
+			var rows = db.GetTable<NonPkKeyUpsert>().ToList();
+			Assert.That(rows, Has.Count.EqualTo(1));
+			Assert.That(rows[0].Val, Is.EqualTo(20));
+		}
+
+		[Table("InheritanceParent")]
+		public class NullableKeyRecord
+		{
+			[Column("InheritanceParentId"), PrimaryKey]           public int     Key1;
+			[Column("Name"),                PrimaryKey, Nullable] public string? Key2;
+			[Column("TypeDiscriminator")]                         public int?    Data;
+		}
+
+		[Table("SUG001NonPkKey")]
+		sealed class NonPkKeyUpsert
+		{
+			[PrimaryKey] public int Id   { get; set; }
+			[Column]     public int Code { get; set; }
+			[Column]     public int Val  { get; set; }
+		}
+
+		// Not attributed to the issue this test reproduces: that is what the test checks, not why this gate exists. That issue is "Use of null
+		// value for parameter of subquery makes it ignore non-null values on next calls", which is unrelated to
+		// the INSERT syntax these providers reject.
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+			ErrorMessage = "The name 'required_field' is illegal in this context",
+			Details = "no-issue: Sybase rejects a column reference where it wants a constant. SqlCe was dropped from this gate - it passes, direct and remote.")]
+		[ActiveIssue(Configurations = [ProviderName.AccessAceOleDb, ProviderName.AccessAceOdbc],
+			ErrorMessage = "Query input must contain at least one table or query",
+			Details = "no-issue: both ACE drivers reject it with the same sentence, so one fragment covers OleDb and ODBC alike.")]
+		[ActiveIssue(Configuration = ProviderName.AccessJetOdbc, ErrorTypeName = "System.Data.Odbc.OdbcException",
+			ErrorMessage = "Reserved error (|); there is no message for this error.",
+			Details = "no-issue: as the ACE half, but Jet reports the same rejection without a message of its own.")]
+		[ActiveIssue(Configuration = ProviderName.AccessJetOleDb, ErrorTypeName = "System.Data.OleDb.OleDbException",
+			ErrorMessage = "Unspecified error",
+			Details = "no-issue: as the Jet ODBC half, in the OleDb driver's wording.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1363")]
+		public void InsertSubqueryValueWithNullThenNonNullParameter([DataSources(TestProvName.AllSqlServer2005, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl = db.CreateLocalTable<GuidSubqueryInsertRecord>();
+			var id1 = TestData.Guid1;
+			var id2 = TestData.Guid2;
+
+			insert(id1, null);
+			insert(id2, id1);
+
+			var record = tbl.Where(_ => _.Required == id2).Single();
+			Assert.That(record.Optional, Is.EqualTo(id1));
+
+			void insert(Guid id, Guid? testId)
+			{
+				tbl.Insert(() => new GuidSubqueryInsertRecord()
+				{
+					Required = id,
+					Optional = tbl.Where(_ => _.Required == testId).Select(_ => (Guid?)_.Required).SingleOrDefault()
+				});
+			}
+		}
+
+		[Table("GuidSubqueryInsertRecord")]
+		public sealed class GuidSubqueryInsertRecord
+		{
+			[PrimaryKey, Column("required_field")] public Guid  Required { get; set; }
+			[Column("optional_field")] public Guid? Optional { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2743")]
+		public void InsertProjectedComplexObjectIntoOtherTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<MessageEventDTO>())
+			using (db.CreateLocalTable<MessageEventDTO>(tableName: "MessageEventDTOTb2"))
+			{
+				var evtQry = db.GetTable<MessageEventDTO>();
+				var q = from evt in evtQry
+						select new MessageEventCombinedWithoutTranslationDTO
+						{
+							MessageEventDTO = evt,
+						};
+
+				var query = q.Select(x => x.MessageEventDTO!);
+
+				var destination = db.GetTable<MessageEventDTO>().TableName("MessageEventDTOTb2");
+
+				query.Insert(destination, x => x);
+			}
+		}
+
+		[Table]
+		class MessageEventDTO
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+		}
+
+		class MessageEventCombinedWithoutTranslationDTO
+		{
+			public virtual MessageEventDTO? MessageEventDTO { get; set; }
+
+		}
+
+		[Test]
+		public void InsertFromSelectWithNullableFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(InsertSelectAssociationRow.TestData);
+
+			Query(true);
+
+			Query(false);
+
+			var data = tb.ToArray();
+			Assert.That(data, Has.Length.EqualTo(5));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 0), Is.EqualTo(2));
+				Assert.That(data.Count(r => r.ID == 123 && r.intDataType == 1234), Is.EqualTo(1));
+				Assert.That(data.Count(r => r.ID == 1234 && r.intDataType == 1234), Is.EqualTo(2));
+			}
+
+			void Query(bool isNull)
+			{
+				var rows = db.GetTable<InsertSelectAssociationRow>()
+					.Where(_ => _.ID == GetNullableShortId(isNull))
+					.SelectMany(_ => _.Association)
+					.Select(_ => _.ID)
+					.Distinct()
+					.Insert(
+						db.GetTable<InsertSelectAssociationRow>(),
+						_ => new InsertSelectAssociationRow()
+						{
+							Pk = _,
+							ID = 123,
+							intDataType = _
+						});
+
+				if (context.SupportsRowcount())
+					Assert.That(rows, Is.EqualTo(isNull ? 0 : 1));
+			}
+		}
+
+		private short? GetNullableShortId(bool isNull)
+		{
+			return isNull ? (short?)null : 1234;
+		}
+
+		[Table]
+		private sealed class InsertSelectAssociationRow
+		{
+			[PrimaryKey] public int Pk { get; set; }
+			[Column] public short ID;
+
+			[Column] public int? intDataType;
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
+			public IQueryable<InsertSelectAssociationRow> Association => throw new InvalidOperationException();
+
+			public static InsertSelectAssociationRow[] TestData =
+			[
+				new InsertSelectAssociationRow() { Pk = 1, ID = 0, intDataType = 0 },
+				new InsertSelectAssociationRow() { Pk = 2, ID = 0, intDataType = 0 },
+				new InsertSelectAssociationRow() { Pk = 3, ID = 1234, intDataType = 1234 },
+				new InsertSelectAssociationRow() { Pk = 4, ID = 1234, intDataType = 1234 },
+			];
 		}
 	}
 }

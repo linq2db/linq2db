@@ -545,8 +545,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
-		public void Issue2990([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2990")]
+		public void MultiInsertWithOuterApplyInSource([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var src   = db.CreateLocalTable<TestSource>();

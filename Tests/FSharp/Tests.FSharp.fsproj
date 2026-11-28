@@ -10,20 +10,20 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="Issue4851.fs" />
-		<Compile Include="Issue2678.fs" />
+		<Compile Include="UseFSharpExtension.fs" />
+		<Compile Include="MappedPropertiesTest.fs" />
 		<Compile Include="Models.fs" />
-		<Compile Include="Issue3357.fs" />
+		<Compile Include="ConcatTest.fs" />
 		<Compile Include="WhereTest.fs" />
 		<Compile Include="SelectTest.fs" />
 		<Compile Include="InsertTest.fs" />
 		<Compile Include="MappingSchema.fs" />
-		<Compile Include="Issue3743.fs" />
-		<Compile Include="Issue4132.fs" />
-		<Compile Include="Issue5598.fs" />
-		<Compile Include="Issue1813.fs" />
-		<Compile Include="Issue5428.fs" />
-		<Compile Include="Issue4646.fs" />
+		<Compile Include="JoinTest.fs" />
+		<Compile Include="RecordSetterTest.fs" />
+		<Compile Include="UpdateTest.fs" />
+		<Compile Include="LeftJoinTests.fs" />
+		<Compile Include="ExpressionFunctionInCteTest.fs" />
+		<Compile Include="OptionRoundtrip.fs" />
 		<Compile Include="OptionMappingPrecedence.fs" />
 		<Compile Include="OptionTypes.fs" />
 		<Compile Include="OptionQueryTests.fs" />

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -957,7 +958,7 @@ namespace Tests.Linq
 
 #if NET8_0_OR_GREATER
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test1([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void EnumValuesArrayCrossJoin([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -972,7 +973,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test2([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void EnumValuesInlineCrossJoin([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -991,7 +992,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test3([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void UnmappedEnumValuesArrayCrossJoin([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1006,7 +1007,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test4([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void UnmappedEnumValuesInlineCrossJoin([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1019,7 +1020,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test5([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void EnumValuesCrossJoinSelectValue([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1058,6 +1059,47 @@ namespace Tests.Linq
 				select new { r.Id, r.Value, r.Name };
 
 			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3847")]
+		public void DictionaryAsQueryableInProjectionSubqueries([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string configuration)
+		{
+			using var db = GetDataContext(
+				configuration,
+				new FluentMappingBuilder()
+					.Entity<DictionaryLookupOrder>()
+						.HasTableName("DictionaryLookupOrder")
+					.Build()
+					.MappingSchema);
+			using (db.CreateLocalTable<DictionaryLookupOrder>())
+			{
+				var _lastCheck = new Dictionary<Guid, DateTime>();
+				var _nextCheck = new Dictionary<Guid, DateTime>();
+				_lastCheck.Add(TestData.Guid1, TestData.DateTime);
+				_lastCheck.Add(TestData.Guid2, TestData.DateTime);
+				_lastCheck.Add(TestData.Guid3, TestData.DateTime);
+				_nextCheck.Add(TestData.Guid4, TestData.DateTime);
+				_nextCheck.Add(TestData.Guid5, TestData.DateTime);
+				IQueryable<KeyValuePair<Guid, DateTime>> lastcheckquery = _lastCheck.AsQueryable();
+				IQueryable<KeyValuePair<Guid, DateTime>> nextcheckquery = _nextCheck.AsQueryable();
+
+				var qry = from outfeed in db.GetTable<DictionaryLookupOrder>()
+						  select new
+						  {
+							  OutfeedTransportOrder = outfeed,
+							  LastCheck = lastcheckquery.Where(x => x.Key == outfeed.Id).Select(x => (DateTime?)x.Value).FirstOrDefault(),
+							  NextCheck = nextcheckquery.Where(x => x.Key == outfeed.Id).Select(x => (DateTime?)x.Value).FirstOrDefault(),
+
+						  };
+
+				var d = qry.ToList();
+				var sql = ((DataConnection)db).LastQuery;
+			}
+		}
+
+		public class DictionaryLookupOrder
+		{
+			public virtual Guid Id { get; set; }
 		}
 	}
 }

@@ -914,14 +914,13 @@ namespace Tests.Linq
 			}
 		}
 
-		#region Issue 4469
-		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)))",
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Decimal / param, 5)))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test1([DataSources] string context, [Values] bool inline)
+		public void DivisionByIntParameterKeepsScale([DataSources] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4469Table.Data);
+			using var tb = db.CreateLocalTable(NumericDivisionTable.Data);
 			db.InlineParameters = inline;
 
 			var param = 33;
@@ -936,9 +935,9 @@ namespace Tests.Linq
 						 .Single();
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.Integer, Is.EqualTo(Issue4469Table.Data[0].Integer / param));
-				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)));
-				Assert.That(result.Double, Is.EqualTo(Issue4469Table.Data[0].Double / param));
+				Assert.That(result.Integer, Is.EqualTo(NumericDivisionTable.Data[0].Integer / param));
+				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Decimal / param, 5)));
+				Assert.That(result.Double, Is.EqualTo(NumericDivisionTable.Data[0].Double / param));
 			}
 		}
 
@@ -948,26 +947,26 @@ namespace Tests.Linq
 		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Math.Round(result.Integer, 5)",
 			Details = "the division loses its scale, so the result rounds to 3 where 3.0303 is due - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test2Inlined([DataSources] string context)
+		public void DivisionByDecimalParameterKeepsScaleInlined([DataSources] string context)
 		{
-			Issue4469Test2Core(context, inline: true);
+			DivisionByDecimalParameterCore(context, inline: true);
 		}
 
 		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLiteClassic], ErrorMessage = "Math.Round(result.Integer, 5)",
-			Details = "as Issue4469Test2Inlined, but Microsoft.Data.Sqlite keeps the scale when the divisor travels as a parameter.")]
+			Details = "as DivisionByDecimalParameterKeepsScaleInlined, but Microsoft.Data.Sqlite keeps the scale when the divisor travels as a parameter.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test2([DataSources] string context)
+		public void DivisionByDecimalParameterKeepsScale([DataSources] string context)
 		{
-			Issue4469Test2Core(context, inline: false);
+			DivisionByDecimalParameterCore(context, inline: false);
 		}
 
-		void Issue4469Test2Core(string context, bool inline)
+		void DivisionByDecimalParameterCore(string context, bool inline)
 		{
 			if (context.IsAnyOf(TestProvName.AllFirebirdLess4) && !inline)
 				Assert.Ignore("Hard-to-workaround overflow bug");
 
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4469Table.Data);
+			using var tb = db.CreateLocalTable(NumericDivisionTable.Data);
 			db.InlineParameters = inline;
 
 			var param = 33m;
@@ -982,17 +981,17 @@ namespace Tests.Linq
 						 .Single();
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Integer / param, 5)));
-				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)));
-				Assert.That(result.Double, Is.EqualTo(Issue4469Table.Data[0].Double / (double)param));
+				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Integer / param, 5)));
+				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Decimal / param, 5)));
+				Assert.That(result.Double, Is.EqualTo(NumericDivisionTable.Data[0].Double / (double)param));
 			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test3([DataSources] string context, [Values] bool inline)
+		public void DivisionByDoubleParameterKeepsScale([DataSources] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4469Table.Data);
+			using var tb = db.CreateLocalTable(NumericDivisionTable.Data);
 			db.InlineParameters = inline;
 
 			var param = 33D;
@@ -1007,24 +1006,119 @@ namespace Tests.Linq
 						 .Single();
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Integer / param, 5)));
-				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round((double)Issue4469Table.Data[0].Decimal / param, 5)));
-				Assert.That(Math.Round(result.Double, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Double / param, 5)));
+				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Integer / param, 5)));
+				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round((double)NumericDivisionTable.Data[0].Decimal / param, 5)));
+				Assert.That(Math.Round(result.Double, 5), Is.EqualTo(Math.Round(NumericDivisionTable.Data[0].Double / param, 5)));
 			}
 		}
 
-		sealed class Issue4469Table
+		sealed class NumericDivisionTable
 		{
 			[PrimaryKey] public int Integer { get; set; }
 			[Column(Precision = 10, Scale = 5)] public decimal Decimal { get; set; }
 			public double Double { get; set; }
 
-			public static readonly Issue4469Table[] Data =
+			public static readonly NumericDivisionTable[] Data =
 			[
-				new Issue4469Table() { Integer = 100, Decimal = 100m, Double = 100.0 },
+				new NumericDivisionTable() { Integer = 100, Decimal = 100m, Double = 100.0 },
 			];
 		}
-		#endregion
 
+		[Table]
+		public class DecimalDefaultsRow
+		{
+			[Column]                            public int      Id       { get; set; }
+			[Column(Precision = 10, Scale = 4)] public decimal  Decimal1 { get; set; }
+			[Column(Precision = 10, Scale = 4)] public decimal? Decimal2 { get; set; }
+			[Column(Precision = 10, Scale = 4)] public decimal? Decimal3 { get; set; }
+			[Column]                            public int?     Int1     { get; set; }
+			[Column]                            public int?     Int2     { get; set; }
+
+			public static readonly DecimalDefaultsRow[] Data = new[]
+			{
+				new DecimalDefaultsRow() { Id = 1, Decimal1 = 123.456m },
+				new DecimalDefaultsRow() { Id = 2, Decimal1 = -123.456m, Decimal2 = 678.903m, Decimal3 = 3523.2352m, Int1 = -123, Int2 = 345 },
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2032")]
+		public void NullableDecimalAndIntDefaultsInProjection([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(DecimalDefaultsRow.Data);
+			var data = table
+					.OrderBy(r => r.Id)
+					.Select(r => new
+					{
+						r.Id,
+						r.Decimal1,
+						Decimal2 = r.Decimal2.GetValueOrDefault(),
+						Decimal3 = r.Decimal3 ?? 0.1m,
+						Int1     = r.Int1.GetValueOrDefault(),
+						Int2     = r.Int2 ?? 22
+					})
+					.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Decimal1, Is.EqualTo(123.456m));
+				Assert.That(data[0].Decimal2, Is.Zero);
+				Assert.That(data[0].Decimal3, Is.EqualTo(0.1m));
+				Assert.That(data[0].Int1, Is.Zero);
+				Assert.That(data[0].Int2, Is.EqualTo(22));
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Decimal1, Is.EqualTo(-123.456m));
+				Assert.That(data[1].Decimal2, Is.EqualTo(678.903m));
+				Assert.That(data[1].Decimal3, Is.EqualTo(3523.2352m));
+				Assert.That(data[1].Int1, Is.EqualTo(-123));
+				Assert.That(data[1].Int2, Is.EqualTo(345));
+			}
+		}
+
+		[Table("BinaryValuesTable")]
+		sealed class BinaryValuesEntity
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public byte[]? Data { get; set; }
+			[Column]
+			public Binary? DataB { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2691")]
+		public void BinaryAndByteArrayLengthTranslation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var table = db.CreateLocalTable<BinaryValuesEntity>();
+			db.Insert(new BinaryValuesEntity()
+			{
+				Id = 99,
+				Data = new byte[] { 1, 2, 3, 4, 5 },
+				DataB = new Binary(new byte[] { 1, 2, 3, 4, 5, 6 })
+			});
+
+			var qry1 = table.Select(x => Sql.Length(x.Data)).ToList();
+			Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
+
+			var qry2 = table.Select(x => x.Data!.Length).ToList();
+			Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
+
+			var qry3 = db.GetTable<BinaryValuesEntity>().Select(x => Sql.Length(x.DataB)).ToList();
+			Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
+
+			var qry4 = db.GetTable<BinaryValuesEntity>().Select(x => x.DataB!.Length).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
+
+				Assert.That(qry1[0], Is.EqualTo(5));
+				Assert.That(qry2[0], Is.EqualTo(5));
+				Assert.That(qry3[0], Is.EqualTo(6));
+				Assert.That(qry4[0], Is.EqualTo(6));
+			}
+		}
 	}
 }

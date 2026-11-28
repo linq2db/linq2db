@@ -223,5 +223,41 @@ namespace Tests.Mapping
 			Assert.That(row.Part!.Upper, Is.EqualTo("XYZ"));
 		}
 		#endregion
+
+		sealed class ContainerParameterEntity
+		{
+			[Column] [PrimaryKey] public int Id { get; set; }
+			[Column] public string? Value { get; set; }
+			public string? Value2 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2546")]
+		public void ExpressionMappedPropertyComparedToContainerParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ContainerParameterEntity>()
+				.Property(m => m.Value2)
+				.HasSkipOnInsert()
+				.HasSkipOnUpdate()
+				.IsExpression(x => Sql.Property<object>(x, "Value"))
+				.Build();
+
+			var data = new[] { new ContainerParameterEntity { Id = 1, Value = "Hello World" } };
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable(data))
+			{
+				var container = new ContainerParameterEntity();
+				container.Value2 = "Hello World";
+
+				var something = (from x in db.GetTable<ContainerParameterEntity>()
+					where x.Value2 == container.Value2
+					select x).ToList();
+
+				Assert.That(something, Has.Count.EqualTo(1));
+			}
+		}
 	}
 }

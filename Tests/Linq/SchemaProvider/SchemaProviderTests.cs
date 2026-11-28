@@ -392,7 +392,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2348")]
-		public void SchemaOnlyTestIssue2348([IncludeDataSources(TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse)] string context)
+		public void SchemaOnlyProceduresMatchFullSchema([IncludeDataSources(TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
 
@@ -555,6 +555,179 @@ namespace Tests.SchemaProvider
 					db.Execute($"DROP VIEW [{view}]");
 				db.DropTable<LibRedSchemaTypesTable>();
 			}
+		}
+
+		[Table("AllTypes", IsColumnAttributeRequired = false)]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		public class AllTypesChar20Row
+		{
+			[Column("CHAR20DATATYPE", Configuration = ProviderName.DB2)]
+			public string? char20DataType;
+		}
+
+		/// <summary>
+		/// Note that tests below do only following:
+		/// - check if procedure schema works as it is or it executes procedures for real and should be wrapped in transaction and rolled back
+		/// - check it it works in existing transaction or not
+		/// - DB2 zOS not tested due to unavailability
+		///
+		/// What is not tested:
+		/// - support for procedure schema read and correctness of received data. For this we need a separate per-provider
+		/// tests like we have for MySQL already. If schema provider that lacks procedures support will add this support,
+		/// tests below should be reexaminated for this provider.
+		///
+		/// Summary on tests below:
+		/// 1. SQL CE and SQLite excluded, as they don't support stored procedures
+		/// 2. Following providers execute procedures for real: Sybase, MySQL/MariaDB
+		/// 3. Following providers miss procedures schema load so wasn't really tested yet: PostgreSQL, Informix
+		/// 4. Following providers doesn't support transactions during schema load:
+		///    Sybase (The 'CREATE TABLE' command is not allowed within a multi-statement transaction in the 'tempdb' database.)
+		///    DB2, MSSQL (Execute requires the command to have a transaction object when the connection assigned to the command is in a pending local transaction.  The Transaction property of the command has not been initialized)
+		///    see also: https://social.msdn.microsoft.com/Forums/en-US/b4a458d0-65bd-40fb-bc60-c7ed8e94517f/sqlconnectiongetschema-exceptions-when-in-a-transaction?forum=adodotnetdataproviders
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/792")]
+		public void ProcedureSchemaLoadDoesNotExecuteProcedures([DataSources(false,
+			// those providers doesn't support stored procedures
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB,
+			TestProvName.AllYdb,
+			// those providers miss procedure schema load implementation for now
+			TestProvName.AllInformix)]
+			string context)
+		{
+			using var db = GetDataConnection(context);
+			var recordsBefore = db.GetTable<AllTypesChar20Row>().Count();
+
+			var sp = db.DataProvider.GetSchemaProvider();
+
+			try
+			{
+				var schemaName = TestUtils.GetSchemaName(db, context);
+				var schema     = sp.GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables       = false,
+					IncludedSchemas = !string.IsNullOrEmpty(schemaName) && schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+				});
+
+				var recordsAfter = db.GetTable<AllTypesChar20Row>().Count();
+				using (Assert.EnterMultipleScope())
+				{
+					// schema request shouldn't execute procedure
+					Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
+
+					// schema provider should find our procedure for real
+					Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
+				}
+			}
+			finally
+			{
+				// cleanup
+				db.GetTable<AllTypesChar20Row>().Delete(_ => _.char20DataType == "issue792");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/792")]
+		public void ProcedureSchemaLoadInsideTransaction([DataSources(false,
+			// those providers doesn't support stored procedures
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB,
+			TestProvName.AllYdb,
+			// those providers miss procedure schema load implementation for now
+			TestProvName.AllInformix,
+			// those providers cannot load schema when in transaction
+			ProviderName.DB2,
+			TestProvName.AllAccessOleDb,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllSapHana,
+			TestProvName.AllSqlServer)]
+			string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var recordsBefore = db.GetTable<AllTypesChar20Row>().Count();
+
+				var sp = db.DataProvider.GetSchemaProvider();
+
+				var schemaName = TestUtils.GetSchemaName(db, context);
+				var schema     = sp.GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables       = false,
+					IncludedSchemas = !string.IsNullOrEmpty(schemaName) && schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+				});
+
+				var recordsAfter = db.GetTable<AllTypesChar20Row>().Count();
+				using (Assert.EnterMultipleScope())
+				{
+					// schema request shouldn't execute procedure
+					Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
+
+					// schema provider should find our procedure for real
+					Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/792")]
+		public void ProcedureSchemaLoadInTransactionThrowsFromProvider([IncludeDataSources(
+			ProviderName.DB2,
+			TestProvName.AllSqlServer)]
+			string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var recordsBefore = db.GetTable<AllTypesChar20Row>().Count();
+
+				var sp = db.DataProvider.GetSchemaProvider();
+
+				Assert.That(() => sp.GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables = false,
+				}),
+					Throws.InstanceOf<InvalidOperationException>().With.Message.Contains("requires the command to have a transaction"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/792")]
+		public void ProcedureSchemaLoadInTransactionThrowsFromLinqToDB([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var recordsBefore = db.GetTable<AllTypesChar20Row>().Count();
+
+				var sp = db.DataProvider.GetSchemaProvider();
+
+				Assert.That(() => sp.GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables = false,
+				}),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/60")]
+		public void TinyIntColumnNotMappedToSByte([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataConnection(context);
+			var sp       = db.DataProvider.GetSchemaProvider();
+			var dbSchema = sp.GetSchema(db);
+
+			var q =
+					from t in dbSchema.Tables
+					from c in t.Columns
+					where c.ColumnType!.StartsWith("tinyint") && c.MemberType.StartsWith("sbyte")
+					select c;
+
+			var column = q.FirstOrDefault();
+
+			Assert.That(column, Is.Null);
 		}
 	}
 }

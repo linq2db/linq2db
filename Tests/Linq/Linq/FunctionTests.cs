@@ -680,8 +680,8 @@ namespace Tests.Linq
 			[Column] public string? Name { get; set; }
 		}
 
-		[Test]
-		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3543")]
+		public void SubstringWithNestedIndexOfPositions([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tags = db.CreateLocalTable<TagsTable>();

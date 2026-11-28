@@ -57,9 +57,8 @@ namespace Tests.Linq
 			var _ = q2.ToList();
 		}
 
-		#region issue 4322
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4322")]
-		public void Issue4322Test([DataSources] string context)
+		public void GenerateTestStringForExpressionMethodWithArrayArgument([DataSources] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGenerateExpressionTest(true));
 
@@ -110,7 +109,5 @@ namespace Tests.Linq
 		{
 			return (position, example) => example.Any(t => Sql.Expr<bool>($"{position}.x > {t.X}"));
 		}
-
-		#endregion
 	}
 }

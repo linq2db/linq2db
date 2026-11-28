@@ -8,6 +8,56 @@ This package provides required client classes to query database from remote clie
 
 You can find working example [here](https://github.com/linq2db/linq2db/tree/master/Examples\Remote\SignalR).
 
+## Usage
+
+With dependency injection (Blazor WebAssembly and other client applications):
+
+```csharp
+builder.Services.AddLinqToDBSignalRDataContext<IMyDataContext>(
+    new Uri(new Uri(builder.HostEnvironment.BaseAddress), "/hub/linq2db"),
+    client => new MyDataContext(client),
+    options => options.ConfigureHttpConnection = http => http.AccessTokenProvider = GetAccessTokenAsync);
+```
+
+All contexts of one registration share one `LinqToDBSignalRConnection`; each registered context type has a connection
+of its own, so two context types can use two hubs. The first query starts it; a query after the connection was lost
+(a failed start, reconnect attempts exhausted, or a dropped connection on .NET Framework / .NET Standard, whose client
+does not reconnect) starts it again. `InitSignalRAsync<T>()` does the same up front and is optional.
+
+With your own `HubConnection`:
+
+```csharp
+// .NET 10+; with the 1.x client (.NET Framework, .NET Standard, .NET 8/9) HubConnection is not IAsyncDisposable:
+// call DisposeAsync() yourself.
+await using var connection = new HubConnectionBuilder().WithUrl(hubUrl).Build();
+await connection.StartAsync();
+
+await using (var db = new SignalRDataContext(connection))
+{
+    // ...
+}
+```
+
+`SignalRDataContext(HubConnection)` leaves the connection to the caller, so one connection can serve any number of
+contexts. Use `SignalRDataContext(connection, disposeHubConnection: true)` to hand it over to the context.
+
+On .NET Framework / .NET Standard, and in .NET 8 and .NET 9 applications (which get the .NET Standard build of this
+package), it is built against the 1.x Signal/R client it depends on, and works with that version only: from 3.0 on,
+`HubConnection` is not binary compatible with it (`DisposeAsync` returns `ValueTask`), so keep
+`Microsoft.AspNetCore.SignalR.Client` at 1.x there. That client does not reconnect automatically, in .NET 8 and
+.NET 9 applications either.
+
+Every client build checks a request against the size limit the server reports before sending it. Whether there is one
+depends on the server: a .NET 10+ server reports its own, the .NET Framework / .NET Standard build of the server
+package (which .NET 8 and .NET 9 servers get too) reports none.
+
+Cancelling a query (the `CancellationToken` of `ToListAsync` and other async methods) cancels it on the server: a
+running command is cancelled where the database provider supports it, and reading the result stops at the next row.
+Calls are never re-sent after a lost connection. Synchronous APIs block a thread, which Blazor
+WebAssembly does not support: use the async ones there.
+
+Use the same linq2db version on the client and the server.
+
 ## Other Transports
 
 We provide

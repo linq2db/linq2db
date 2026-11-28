@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -705,6 +706,288 @@ namespace Tests.Linq
 			var finerInList = t.Count(r => finerCaptured.Contains(Math.Abs(r.Value)));
 
 			finerInList.ShouldBe(0);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/82")]
+		public void GroupJoinCountAndSum([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			var resultQuery =
+					from o in db.Parent
+					join od in db.Child on o.ParentID equals od.ParentID into irc
+					select new
+					{
+						ParentID    = o.ParentID,
+						CountResult = irc.Count(),
+						SumResult   = irc.Sum(x => x.ParentID)
+					};
+
+			var expectedQuery =
+					from o in Parent
+					join od in Child on o.ParentID equals od.ParentID into irc
+					select new
+					{
+						ParentID    = o.ParentID,
+						CountResult = irc.Count(),
+						SumResult   = irc.Sum(x => x.ParentID)
+					};
+
+			AreEqual(expectedQuery, resultQuery);
+
+			Assert.That(expectedQuery.Count(), Is.EqualTo(resultQuery.Count()));
+
+			AreEqual(
+				expectedQuery.Where(x => x.CountResult > 0),
+				resultQuery.Where(x => x.CountResult > 0));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/82")]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void AssociationCountAndSum([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var resultQuery =
+							from o in db.Parent
+							select new
+							{
+								ParentID    = o.ParentID,
+								CountResult = o.Children.Count(),
+								SumResult   = o.Children.Sum(x => x.ParentID)
+							};
+
+			var expectedQuery =
+							from o in Parent
+							select new
+							{
+								ParentID    = o.ParentID,
+								CountResult = o.Children.Count(),
+								SumResult   = o.Children.Sum(x => x.ParentID)
+							};
+
+			AreEqual(expectedQuery, resultQuery);
+
+			Assert.That(expectedQuery.Count(), Is.EqualTo(resultQuery.Count()));
+
+			AreEqual(expectedQuery.Where(x => x.CountResult > 0),
+					 resultQuery.Where(x => x.CountResult > 0));
+		}
+
+		public class EmployeeTimeOffBalance
+		{
+			public virtual int              Id               { get; set; }
+			public virtual TrackingTimeType TrackingTimeType { get; set; }
+			public virtual TimeOffEmployee         Employee         { get; set; } = null!;
+			public virtual int              EmployeeId       { get; set; }
+		}
+
+		public class TimeOffEmployee
+		{
+			public virtual int Id { get; set; }
+
+			public virtual ICollection<TimeOffLeaveRequest> LeaveRequests { get; set; } = null!;
+		}
+
+		public class TimeOffLeaveRequest
+		{
+			public virtual int                                Id                      { get; set; }
+			public virtual int                                EmployeeId              { get; set; }
+			public virtual ICollection<TimeOffLeaveRequestDateEntry> LeaveRequestDateEntries { get; set; } = null!;
+		}
+
+		public class TimeOffLeaveRequestDateEntry
+		{
+			public virtual int      Id             { get; set; }
+			public virtual decimal? EndHour        { get; set; }
+			public virtual decimal? StartHour      { get; set; }
+			public virtual int      LeaveRequestId { get; set; }
+		}
+
+		public enum TrackingTimeType
+		{
+			Hour,
+			Day
+		}
+
+		[Sql.Extension("Sum({expr})", IsAggregate = true, ServerSideOnly = true)]
+		private static TV SumCustom<T, TV>(IEnumerable<T> items, [ExprParameter] Expression<Func<T, TV>> expr)
+		{
+			throw new ServerSideOnlyException(nameof(SumCustom));
+		}
+
+		[Sql.Extension("Sum({items})", IsAggregate = true, ServerSideOnly = true)]
+		private static T SumCustom<T>([ExprParameter] IEnumerable<T> items)
+		{
+			throw new ServerSideOnlyException(nameof(SumCustom));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3259")]
+		public void SubqueryAggregation([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms      = new MappingSchema();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<EmployeeTimeOffBalance>()
+				.HasPrimaryKey(x => x.Id)
+				.Association(x => x.Employee, x => x.EmployeeId, x => x.Id, canBeNull: false);
+
+			builder.Entity<TimeOffEmployee>()
+				.Property(e => e.Id).HasColumnName("EmployeeId").IsPrimaryKey()
+				.Association(x => x.LeaveRequests, x => x.Id, x => x.EmployeeId, canBeNull: false);
+
+			builder.Entity<TimeOffLeaveRequest>()
+				.HasPrimaryKey(x => x.Id)
+				.Association(x => x.LeaveRequestDateEntries, x => x.Id, x => x.LeaveRequestId, canBeNull: false);
+
+			builder.Entity<TimeOffLeaveRequestDateEntry>()
+				.HasPrimaryKey(x => x.Id);
+
+			builder.Build();
+
+			var timeOffBalances = new EmployeeTimeOffBalance[]{new()
+				{
+					Id               = 1,
+					EmployeeId       = 1,
+					TrackingTimeType = TrackingTimeType.Hour
+				},
+				new ()
+				{
+					Id               = 2,
+					EmployeeId       = 2,
+					TrackingTimeType = TrackingTimeType.Day
+				}};
+
+			var employees = new TimeOffEmployee[] { new() { Id = 1 }, new() { Id = 2 } };
+
+			var leaveRequests = new TimeOffLeaveRequest[]
+			{
+				new() { EmployeeId = 1, Id = 1 }, new() { EmployeeId = 1, Id = 2 },
+				new() { EmployeeId = 2, Id = 3 }, new() { EmployeeId = 2, Id = 4 }
+			};
+
+			var dateEntry = new TimeOffLeaveRequestDateEntry[]
+			{
+				new() { Id = 1, StartHour = 1, EndHour = 12, LeaveRequestId = 1 },
+				new() { Id = 2, StartHour = 2, EndHour = 13, LeaveRequestId = 1 },
+				new() { Id = 3, StartHour = 3, EndHour = 14, LeaveRequestId = 2 },
+				new() { Id = 4, StartHour = 4, EndHour = 15, LeaveRequestId = 2 },
+			};
+
+			using var db = GetDataContext(context, ms);
+			using (var employeeTimeOffBalances = db.CreateLocalTable(timeOffBalances))
+			using (db.CreateLocalTable(employees))
+			using (db.CreateLocalTable(leaveRequests))
+			using (db.CreateLocalTable(dateEntry))
+			{
+				var query = employeeTimeOffBalances
+						.Select(tracking => new
+						{
+							WithParentReference = (decimal?)tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum(),
+							WithParentReferenceCustom1 = SumCustom(tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0), x => x),
+							WithParentReferenceCustom2 = SumCustom(tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)),
+							WithoutParentReference = (decimal?)tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e => e.StartHour != null ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum()
+						});
+
+				var result = query.OrderBy(x => x.WithParentReference ?? 0)
+						.ThenBy(x => x.WithParentReferenceCustom1         ?? 0)
+						.ThenBy(x => x.WithParentReferenceCustom2         ?? 0)
+						.ThenByDescending(x => x.WithoutParentReference   ?? 0)
+						.ToArray();
+
+				var expectedQuery = timeOffBalances
+						.Select(tracking => new
+						{
+							WithParentReference = leaveRequests.Where(lr => lr.EmployeeId == tracking.EmployeeId)
+								.SelectMany(e => dateEntry.Where(d => d.LeaveRequestId == e.Id))
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum(),
+
+							WithoutParentReference = leaveRequests.Where(lr => lr.EmployeeId == tracking.EmployeeId)
+								.SelectMany(e => dateEntry.Where(d => d.LeaveRequestId == e.Id))
+								.Select(e => e.StartHour != null ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum()
+						});
+
+				var expected = expectedQuery
+						.OrderBy(x => x.WithParentReference             ?? 0)
+						.ThenByDescending(x => x.WithoutParentReference ?? 0)
+						.ToArray();
+
+				result.Length.ShouldBe(expected.Length);
+
+				for (int i = 0; i < result.Length; i++)
+				{
+					result[i].WithParentReference.ShouldBe(expected[i].WithParentReference);
+					result[i].WithoutParentReference.ShouldBe(expected[i].WithoutParentReference);
+				}
+
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/75")]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void CorrelatedAggregatesInProjectionJoinedLater([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Child.Select(c => new
+			{
+				c.ChildID,
+				c.ParentID,
+				CountChildren  = db.Child.Count(c2 => c2.ParentID == c.ParentID),
+				CountChildren2 = db.Child.Count(c2 => c2.ParentID == c.ParentID),
+				HasChildren    = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
+				HasChildren2   = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
+				AllChildren    = db.Child.All  (c2 => c2.ParentID == c.ParentID),
+				AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
+				AllChildrenMax = db.Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
+			});
+
+			result =
+				from child in result
+				join parent in db.Parent on child.ParentID equals parent.ParentID
+				where parent.Value1 < 7
+				select child;
+
+			var expected = Child.Select(c => new
+			{
+				c.ChildID,
+				c.ParentID,
+				CountChildren  = Child.Count(c2 => c2.ParentID == c.ParentID),
+				CountChildren2 = Child.Count(c2 => c2.ParentID == c.ParentID),
+				HasChildren    = Child.Any  (c2 => c2.ParentID == c.ParentID),
+				HasChildren2   = Child.Any  (c2 => c2.ParentID == c.ParentID),
+				AllChildren    = Child.All  (c2 => c2.ParentID == c.ParentID),
+				AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
+				AllChildrenMax = Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
+			});
+
+			expected =
+				from child in expected
+				join parent in Parent on child.ParentID equals parent.ParentID
+				where parent.Value1 < 7
+				select child;
+
+			AreEqual(expected, result);
 		}
 	}
 }

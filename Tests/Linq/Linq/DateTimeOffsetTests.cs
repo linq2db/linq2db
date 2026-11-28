@@ -1019,10 +1019,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Issue Tests
-
-		[Test]
-		public void Issue2508Test([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2508")]
+		public void DateTimeOffsetComparisonWithUniversalTime([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
@@ -1042,14 +1040,14 @@ namespace Tests.Linq
 			ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Incorrect time zone value.",
 			Details = "the client rejects the DateTimeOffset parameter outright rather than answering wrongly.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1855")]
-		public void Issue1855Test(
+		public void DateTimeOffsetDateAddAndInequalityFilter(
 			// DateTimeOffset not mapped
 			[DataSources(TestProvName.AllFirebirdLess4, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005)]
 				string context,
 			[Values(0, 1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue1855Table>();
+			using var tb = db.CreateLocalTable<DateTimeOffsetFilterTable>();
 
 			var dtoBase = new DateTimeOffset(2019,08,08,08,08,08, TimeSpan.Zero);
 			var insert = tb
@@ -1067,7 +1065,7 @@ namespace Tests.Linq
 
 			var interval = 10;
 			var clientSideIn = dtoBase.AddSeconds(interval);
-			IQueryable<Issue1855Table> query = tb;
+			IQueryable<DateTimeOffsetFilterTable> query = tb;
 
 			if (testCase == 2)
 			{
@@ -1097,13 +1095,11 @@ namespace Tests.Linq
 			}
 		}
 
-		sealed class Issue1855Table
+		sealed class DateTimeOffsetFilterTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public DateTimeOffset SomeDateTimeOffset { get; set; }
 			public DateTimeOffset? SomeNullableDateTimeOffset { get; set; }
 		}
-
-		#endregion
 	}
 }

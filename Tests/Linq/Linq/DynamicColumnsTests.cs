@@ -743,8 +743,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue3158([DataSources(TestProvName.AllClickHouse)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3158")]
+		public void SqlPropertyInLeftJoinPredicate([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			(from p in db.GetTable<PersonWithoutDynamicStore>()
@@ -754,9 +754,8 @@ namespace Tests.Linq
 			.ToList();
 		}
 
-		#region Issue 4483
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4483")]
-		public void Issue4483Test1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void JsonValueDynamicColumnsReadAsFloat([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var ms = new MappingSchema();
 			var fm = new FluentMappingBuilder(ms);
@@ -807,7 +806,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4483")]
-		public void Issue4483Test2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void JsonValueDynamicColumnsReadAsString([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var ms = new MappingSchema();
 			var fm = new FluentMappingBuilder(ms);
@@ -876,10 +875,9 @@ namespace Tests.Linq
 			[DynamicColumnsStore]
 			public Dictionary<string, object?> Values { get; set; } = new();
 		}
-		#endregion
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2817")]
-		public void Issue2817Test([DataSources] string context)
+		public void SqlPropertyOnGenericQuery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -894,8 +892,8 @@ namespace Tests.Linq
 			static IQueryable<T> ApplyFilterToGeneric<T>(IQueryable<T> query) => query.Where(p => Sql.Property<string>(p, "LastName") == "ministra");
 		}
 
-		[Test]
-		public async Task Issue4602([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4602")]
+		public async Task AssociationFromCustomMetadataReader([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.AddMetadataReader(new CustomMetadataReader());

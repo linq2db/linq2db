@@ -381,52 +381,52 @@ namespace Tests.Linq
 			return db.Child.Where(c => list.Where(filter).Select(r => r.ChildID).Contains(c.ChildID));
 		}
 
-		enum Issue404
+		enum UsageKind
 		{
 			Value1,
 			Value2,
 		}
 
 		[Table]
-		sealed class Table404One
+		sealed class UsageOwner
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			public static readonly Table404One[] Data = new[]
+			public static readonly UsageOwner[] Data = new[]
 			{
-				new Table404One() { Id = 1 },
-				new Table404One() { Id = 2 }
+				new UsageOwner() { Id = 1 },
+				new UsageOwner() { Id = 2 }
 			};
 		}
 
 		[Table]
-		sealed class Table404Two
+		sealed class EnumUsageDetail
 		{
 			[PrimaryKey] public int Id { get; set; }
 
-			[Column] public Issue404 Usage { get; set; }
+			[Column] public UsageKind Usage { get; set; }
 
 			[Column] public int FirstTableId { get; set; }
 
-			public static readonly Table404Two[] Data = new[]
+			public static readonly EnumUsageDetail[] Data = new[]
 			{
-				new Table404Two() { Id = 1, Usage = Issue404.Value1, FirstTableId = 1 },
-				new Table404Two() { Id = 2, Usage = Issue404.Value1, FirstTableId = 1 },
-				new Table404Two() { Id = 3, Usage = Issue404.Value2, FirstTableId = 1 },
-				new Table404Two() { Id = 4, Usage = Issue404.Value1, FirstTableId = 2 },
-				new Table404Two() { Id = 5, Usage = Issue404.Value2, FirstTableId = 2 },
-				new Table404Two() { Id = 6, Usage = Issue404.Value2, FirstTableId = 2 },
+				new EnumUsageDetail() { Id = 1, Usage = UsageKind.Value1, FirstTableId = 1 },
+				new EnumUsageDetail() { Id = 2, Usage = UsageKind.Value1, FirstTableId = 1 },
+				new EnumUsageDetail() { Id = 3, Usage = UsageKind.Value2, FirstTableId = 1 },
+				new EnumUsageDetail() { Id = 4, Usage = UsageKind.Value1, FirstTableId = 2 },
+				new EnumUsageDetail() { Id = 5, Usage = UsageKind.Value2, FirstTableId = 2 },
+				new EnumUsageDetail() { Id = 6, Usage = UsageKind.Value2, FirstTableId = 2 },
 			};
 		}
 
 		sealed class FirstTable
 		{
 			public int Id;
-			public List<Table404Two>? Values;
+			public List<EnumUsageDetail>? Values;
 		}
 
-		[Test]
-		public void Issue404Test([DataSources(TestProvName.AllSybase)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/404")]
+		public void GroupJoinParameterCachingWithEnumFilter([DataSources(TestProvName.AllSybase)] string context)
 		{
 			// executed twice to test issue #2174
 			Execute();
@@ -435,9 +435,9 @@ namespace Tests.Linq
 			void Execute()
 			{
 				using var db = GetDataContext(context);
-				using var t1 = db.CreateLocalTable(Table404One.Data);
-				using var t2 = db.CreateLocalTable(Table404Two.Data);
-				Issue404? usage = null;
+				using var t1 = db.CreateLocalTable(UsageOwner.Data);
+				using var t2 = db.CreateLocalTable(EnumUsageDetail.Data);
+				UsageKind? usage = null;
 				var allUsages = !usage.HasValue;
 				var res1 = Test()!;
 				using (Assert.EnterMultipleScope())
@@ -447,7 +447,7 @@ namespace Tests.Linq
 					Assert.That(res1.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(3));
 				}
 
-				usage = Issue404.Value1;
+				usage = UsageKind.Value1;
 				allUsages = false;
 				var res2 = Test()!;
 				using (Assert.EnterMultipleScope())
@@ -458,7 +458,7 @@ namespace Tests.Linq
 					Assert.That(res2.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(2));
 				}
 
-				usage = Issue404.Value2;
+				usage = UsageKind.Value2;
 				allUsages = false;
 				var res3 = Test()!;
 				using (Assert.EnterMultipleScope())
@@ -481,7 +481,7 @@ namespace Tests.Linq
 		}
 
 		[Table(IsColumnAttributeRequired = true)]
-		public partial class Issue1189Customer
+		public partial class DefaultDateTimeCustomer
 		{
 			[Column("ID"), PrimaryKey, NotNull] public int Id { get; set; } // integer
 
@@ -490,17 +490,17 @@ namespace Tests.Linq
 			[ExpressionMethod(nameof(DefaultDateTime), IsColumn = true)]
 			public DateTime? ToDelete { get; set; }
 
-			static Expression<Func<Issue1189Customer, DateTime>> DefaultDateTime()
+			static Expression<Func<DefaultDateTimeCustomer, DateTime>> DefaultDateTime()
 			{
 				return p => Sql.AsSql(TestData.DateTime);
 			}
 		}
 
-		[Test]
-		public void Issue1189Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1189")]
+		public void ExpressionMethodColumnWithDefaultDateTime([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable<Issue1189Customer>();
+			using var table = db.CreateLocalTable<DefaultDateTimeCustomer>();
 			table.Where(k => k.ToDelete <= TestData.NonReadonlyDateTime).ToList();
 		}
 
@@ -1793,8 +1793,8 @@ namespace Tests.Linq
 			return new[] { 1, 2, 3, 4 }.Where(_ => _ != _param);
 		}
 
-		[Test]
-		public void Issue4052([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4052")]
+		public void ConditionalOperatorOnParameterInWhere([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1848,32 +1848,32 @@ namespace Tests.Linq
 
 #if SUPPORTS_DATEONLY
 		[Table]
-		public sealed class Issue4371Table2
+		public sealed class CultureDateOnlyTable
 		{
 			[Column(DataType = DataType.VarChar)] public DateOnly?       ColumnDO  { get; set; }
 		}
 
-		[Test]
-		public void Issue4371TestDateOnly([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4371")]
+		public void DateOnlyParameterUnderChangedCulture([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4371Table2>();
+			using var tb = db.CreateLocalTable<CultureDateOnlyTable>();
 
 			var dt = TestData.DateOnly;
-			db.Insert(new Issue4371Table2() { ColumnDO = dt });
+			db.Insert(new CultureDateOnlyTable() { ColumnDO = dt });
 
 			using var _ = new CultureRegion("fa-IR");
 			Assert.That(tb.Where(r => r.ColumnDO == dt).Count(), Is.EqualTo(1));
 		}
 
-		[Test]
-		public void Issue4371TestDateOnlyCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4371")]
+		public void DateOnlyBeyondCalendarRangeUnderChangedCulture([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4371Table2>();
+			using var tb = db.CreateLocalTable<CultureDateOnlyTable>();
 
 			var dt = DateOnly.FromDateTime(new DateTime(50284592391540000));
-			db.Insert(new Issue4371Table2() { ColumnDO = dt });
+			db.Insert(new CultureDateOnlyTable() { ColumnDO = dt });
 
 			using var _ = new CultureRegion("fa-IR");
 			Assert.That(tb.Where(r => r.ColumnDO == dt).Count(), Is.EqualTo(1));
@@ -1881,67 +1881,67 @@ namespace Tests.Linq
 #endif
 
 		[Table]
-		public sealed class Issue4371Table
+		public sealed class CultureDateTimeTable
 		{
 			[Column(DataType = DataType.VarChar)] public DateTime?       ColumnDT  { get; set; }
 			[Column(DataType = DataType.VarChar)] public DateTimeOffset? ColumnDTO { get; set; }
 			[Column(DataType = DataType.VarChar)] public TimeSpan?       ColumnTS  { get; set; }
 		}
 
-		[Test]
-		public void Issue4371TestDateTimeOffset([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4371")]
+		public void DateTimeOffsetParameterUnderChangedCulture([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4371Table>();
+			using var tb = db.CreateLocalTable<CultureDateTimeTable>();
 
 			var dto = TestData.DateTimeOffset;
-			db.Insert(new Issue4371Table() { ColumnDTO = dto });
+			db.Insert(new CultureDateTimeTable() { ColumnDTO = dto });
 
 			using var _ = new CultureRegion("fa-IR");
 			Assert.That(tb.Where(r => r.ColumnDTO == dto).Count(), Is.EqualTo(1));
 		}
 
-		[Test]
-		public void Issue4371TestDateTimeCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4371")]
+		public void DateTimeBeyondCalendarRangeUnderChangedCulture([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4371Table>();
+			using var tb = db.CreateLocalTable<CultureDateTimeTable>();
 
 			var dt = new DateTime(50284592391540000);
-			db.Insert(new Issue4371Table() { ColumnDT = dt });
+			db.Insert(new CultureDateTimeTable() { ColumnDT = dt });
 
 			using var _ = new CultureRegion("fa-IR");
 			Assert.That(tb.Where(r => r.ColumnDT == dt).Count(), Is.EqualTo(1));
 		}
 
-		[Test]
-		public void Issue4371TestDateTimeOffsetCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4371")]
+		public void DateTimeOffsetBeyondCalendarRangeUnderChangedCulture([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4371Table>();
+			using var tb = db.CreateLocalTable<CultureDateTimeTable>();
 
 			var dto = new DateTimeOffset(50284592391540000, default);
-			db.Insert(new Issue4371Table() { ColumnDTO = dto });
+			db.Insert(new CultureDateTimeTable() { ColumnDTO = dto });
 
 			using var _ = new CultureRegion("fa-IR");
 			Assert.That(tb.Where(r => r.ColumnDTO == dto).Count(), Is.EqualTo(1));
 		}
 
-		[Test]
-		public void Issue4371TestTimeSpan([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4371")]
+		public void TimeSpanParameterUnderChangedCulture([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4371Table>();
+			using var tb = db.CreateLocalTable<CultureDateTimeTable>();
 
 			var ts = TestData.TimeOfDay;
-			db.Insert(new Issue4371Table() { ColumnTS = ts });
+			db.Insert(new CultureDateTimeTable() { ColumnTS = ts });
 
 			using var _ = new CultureRegion("fa-IR");
 			Assert.That(tb.Where(r => r.ColumnTS == ts).Count(), Is.EqualTo(1));
 		}
 
-		[Test]
-		public void Issue4359_PrimaryParameterName([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4359")]
+		public void PrimaryConstructorParameterName([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1969,7 +1969,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_BooleanNullPreserved([DataSources] string context, [Values] bool inline, [Values] bool? value)
+		public void NullableBooleanNullPreserved([DataSources] string context, [Values] bool inline, [Values] bool? value)
 		{
 			if (value == null && context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSybase))
 				Assert.Ignore("Database doesn't support NULL as boolean");
@@ -2106,14 +2106,14 @@ namespace Tests.Linq
 		[ActiveIssue(ErrorTypeName = "System.NullReferenceException", ErrorMessage = "Object reference not set to an instance of an object.",
 			Details = "no-issue: a null first argument to Sql.PadLeft throws while the accessor is built, before any SQL is produced. #4799 is the only PadLeft issue on the tracker and reports trimming, which is a different defect.")]
 		[Test]
-		public void Issue_NRE_InAccessor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void PadLeftNullArgumentInAccessor([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.Null);
 		}
 
-		sealed class IssueDedup
+		sealed class BoolSetDedupTable
 		{
 			public int Id { get; set; }
 			public bool? Value1 { get; set; }
@@ -2127,7 +2127,7 @@ namespace Tests.Linq
 		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable([new IssueDedup()]);
+			using var tb = db.CreateLocalTable([new BoolSetDedupTable()]);
 
 			Test(new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(false));
 			Test(new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false));
@@ -2196,22 +2196,22 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		sealed class Issue4963Table
+		sealed class ByteFieldUpdateTable
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public byte Field { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4963")]
-		public void Issue4963([DataSources] string context, [Values] bool inline)
+		public void UpdateByteColumnWithNegativeVariableOffset([DataSources] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(new[] { new Issue4963Table() { Id = 1, Field = 2 } });
+			using var tb = db.CreateLocalTable(new[] { new ByteFieldUpdateTable() { Id = 1, Field = 2 } });
 
 			db.InlineParameters = inline;
 			var offset = -1;
 
-			tb.Update(r => new Issue4963Table()
+			tb.Update(r => new ByteFieldUpdateTable()
 			{
 				Field = (byte)(r.Field + offset)
 			});
@@ -2615,5 +2615,77 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Table(Name = "Emails")]
+		public class ClosureCachedEmail
+		{
+			[Identity]
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = "EmailId")]
+			public IEnumerable<ClosureCachedEmailAttachment> Attachments { get; set; } = null!;
+		}
+
+		[Table(Name = "EmailAttachment")]
+		public class ClosureCachedEmailAttachment
+		{
+			[Identity]
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			[NotNull]
+			public int EmailId { get; set; }
+
+			[Column]
+			[NotNull]
+			public string FileName { get; set; } = null!;
+		}
+
+		private sealed class ClosureEmailReader : IDisposable
+		{
+			private bool disposed;
+			private readonly int id;
+
+			public ClosureEmailReader(int id)
+			{
+				this.id = id;
+			}
+
+			public void Dispose()
+			{
+				disposed = true;
+			}
+
+			public int GetId()
+			{
+				ObjectDisposedException.ThrowIf(disposed, typeof(ClosureEmailReader));
+
+				return id;
+			}
+
+			public ClosureCachedEmail? GetEmail(string context)
+			{
+				using var db = new DataConnection(context);
+				return db.GetTable<ClosureCachedEmail>().LoadWith(c => c.Attachments).FirstOrDefault(c => c.Id == GetId());
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2602")]
+		public void ParameterFromInstanceMethodNotCachedAcrossCalls([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ClosureCachedEmail>())
+			using (db.CreateLocalTable<ClosureCachedEmailAttachment>())
+			{
+				var reader1 = new ClosureEmailReader(35);
+				reader1.GetEmail(context);
+				reader1.Dispose();
+				using var reader2 = new ClosureEmailReader(36);
+
+				reader2.GetEmail(context);
+			}
+		}
 	}
 }
