@@ -3821,6 +3821,61 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		public void GroupByFilterWithBetweenOfAggregate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p by new { p.FirstName } into g
+				where Sql.NotBetween(g.Sum(x => x.ID), 2, 3)
+				select new
+				{
+					g.Key.FirstName,
+					InRange = Sql.Between(g.Max(x => x.ID), 1, 3),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByBetweenFilterWithNotBetweenOfAggregate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p by new { p.FirstName } into g
+				where Sql.Between(g.Sum(x => x.ID), 1, 2)
+				select new
+				{
+					g.Key.FirstName,
+					OutOfRange = Sql.NotBetween(g.Max(x => x.ID), 2, 3),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByFilterWithBetweenOfKeyAndRowValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p by new { p.FirstName } into g
+				where Sql.NotBetween(g.Sum(x => x.ID), 2, 2)
+				select new
+				{
+					g.Key.FirstName,
+					KeyInRange  = Sql.Between(g.Key.FirstName, "A", "Jo"),
+					RowsInRange = g.Count(x => Sql.Between(x.ID, 3, 4)),
+				};
+
+			AssertQuery(query);
+		}
+
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void FilterByOrderedLimitedGroupBy([DataSources] string context)
