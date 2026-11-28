@@ -3914,9 +3914,10 @@ namespace Tests.Linq
 		}
 
 		// A CteUnion query that pages shares its SelectQuery with the CTE body, which is why it skips finalization.
+		// Informix rejects that query's parameterized SKIP / FIRST ("Too many or too few host variables given"), as in Select_Union_ParentWithTake.
 		[Test]
 		[ThrowsCannotBeConverted(TestProvName.AllSybase)]
-		public void NestedInPagedDetachedCollection_RootIsOptimized([DataSources(TestProvName.AllNativeAccess)] string context, [Values(0, 1)] int skip)
+		public void NestedInPagedDetachedCollection_RootIsOptimized([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context, [Values(0, 1)] int skip)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
