@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -456,6 +457,128 @@ namespace Tests.Linq
 				.ToList();
 
 			actual.ShouldBe(expected);
+		}
+
+		/// <summary>
+		/// An aggregate whose selector cannot be translated refuses the same way inside a projection as it does on
+		/// its own, and refuses while the query is still being built.
+		/// </summary>
+		/// <remarks>
+		/// The projection form used to leave the internal <c>AggregateExecute</c> marker in the materialization
+		/// lambda: the query ran without its aggregate and then failed on the client with
+		/// <c>There is no method 'AggregateExecute'</c>. https://github.com/linq2db/linq2db/issues/5787
+		/// <para>
+		/// <see cref="DateTime.ToBinary"/> is a selector no provider translates, so the refusal is
+		/// provider-independent and SQLite alone covers it.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void UntranslatableAggregateInProjectionRefusesLikeTheBareForm([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var bare = Shouldly.Should.Throw<LinqToDBException>(() => db.Types.Min(t => t.DateTimeValue.ToBinary()));
+
+			var projected = Shouldly.Should.Throw<LinqToDBException>(() => db.Types
+				.Select(_ => new { Min = db.Types.Min(t => t.DateTimeValue.ToBinary()) })
+				.First());
+
+			projected.Message.ShouldBe(bare.Message);
+
+			// Both refusals happen while building the query, so nothing was ever sent.
+			db.LastQuery.ShouldBeNull();
+		}
+
+		[Test]
+		public void UntranslatableAggregateInProjectionRefusesForEveryAggregate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			Assert.That(() => db.Types
+				.Select(_ => new { Value = db.Types.Max(t => t.DateTimeValue.ToBinary()) })
+				.First(), Throws.TypeOf<LinqToDBException>());
+
+			Assert.That(() => db.Types
+				.Select(_ => new { Value = db.Types.Sum(t => t.DateTimeValue.ToBinary()) })
+				.First(), Throws.TypeOf<LinqToDBException>());
+
+			Assert.That(() => db.Types
+				.Select(_ => new { Value = db.Types.Average(t => t.DateTimeValue.ToBinary()) })
+				.First(), Throws.TypeOf<LinqToDBException>());
+
+			Assert.That(() => db.Types
+				.Select(_ => new { Value = db.Types.AggregateExecute(e => e.Min(t => t.DateTimeValue.ToBinary())) })
+				.First(), Throws.TypeOf<LinqToDBException>());
+		}
+
+		/// <summary>
+		/// The other positions an aggregate can take. The <c>OrderBy</c> case is the one that used to fail silently:
+		/// the untranslatable aggregate was dropped from the ordering and the query ran.
+		/// </summary>
+		[Test]
+		public void UntranslatableAggregateRefusesInPredicateOrderByAndGrouping([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			Assert.That(() => db.Types
+				.Where(_ => db.Types.Min(t => t.DateTimeValue.ToBinary()) > 0)
+				.ToArray(), Throws.TypeOf<LinqToDBException>());
+
+			Assert.That(() => db.Types
+				.OrderBy(_ => db.Types.Min(t => t.DateTimeValue.ToBinary()))
+				.ToArray(), Throws.TypeOf<LinqToDBException>());
+
+			Assert.That(() => db.Types
+				.GroupBy(t => t.ID)
+				.Select(g => new { Min = g.Min(t => t.DateTimeValue.ToBinary()) })
+				.ToArray(), Throws.TypeOf<LinqToDBException>());
+		}
+
+#if NET8_0_OR_GREATER
+		/// <summary>
+		/// The aggregate's own body translates; its <b>source</b> is what refuses, and it refuses with a detail
+		/// message rather than an error expression. That detail must survive into the projection form too.
+		/// </summary>
+		[Test]
+		public void UnbuildableAggregateSourceKeepsItsDetailMessage([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var bare = Shouldly.Should.Throw<LinqToDBException>(() => db.Types
+				.DistinctBy(t => t.SmallIntValue)
+				.Min(t => t.ID));
+
+			var projected = Shouldly.Should.Throw<LinqToDBException>(() => db.Types
+				.Select(_ => new { Min = db.Types.DistinctBy(t => t.SmallIntValue).Min(t => t.ID) })
+				.First());
+
+			bare.Message.ShouldContain(ErrorHelper.Error_DistinctByRequiresOrderBy);
+			projected.Message.ShouldBe(bare.Message);
+		}
+#endif
+
+		/// <summary>
+		/// The unchanged path: an aggregate the provider can translate still builds and runs inside the same
+		/// projection shape the refusals above use.
+		/// </summary>
+		[Test]
+		public void TranslatableAggregateInProjectionStillRuns([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var row = items
+				.Select(_ => new
+				{
+					Min = items.Min(i => i.Id),
+					Max = items.Max(i => i.Id),
+					Sum = items.Sum(i => i.Id),
+				})
+				.First();
+
+			row.Min.ShouldBe(Item.Data.Min(i => i.Id));
+			row.Max.ShouldBe(Item.Data.Max(i => i.Id));
+			row.Sum.ShouldBe(Item.Data.Sum(i => i.Id));
 		}
 
 		/// <summary>
