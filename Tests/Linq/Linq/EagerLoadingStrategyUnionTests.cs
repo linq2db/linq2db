@@ -3943,6 +3943,69 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CteUnion_NestedKeyedByRowNumber([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
+
+			var query =
+				from p in db.Parent
+				where p.ParentID <= 3
+				select new
+				{
+					p.ParentID,
+					Children = (
+						from x in db.Child.Select(c => new { c.ParentID, c.ChildID, Rn = Sql.Window.RowNumber(w => w.OrderBy(c.ChildID)) })
+						where x.ParentID == p.ParentID
+						select new
+						{
+							x.ChildID,
+							x.Rn,
+							GrandChildren = db.GrandChild
+								.Where(g => g.ParentID == x.Rn)
+								.Select(g => g.GrandChildID)
+								.OrderBy(id => id)
+								.ToList(),
+						})
+						.ToList(),
+				};
+
+			var result = query.ToList().OrderBy(r => r.ParentID).ToList();
+
+			var numbered = Child.OrderBy(c => c.ChildID).Select((c, i) => new { c.ParentID, c.ChildID, Rn = i + 1L }).ToList();
+
+			var expected = Parent
+				.Where(p => p.ParentID <= 3)
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Children = numbered
+						.Where(x => x.ParentID == p.ParentID)
+						.Select(x => new
+						{
+							x.ChildID,
+							x.Rn,
+							GrandChildren = GrandChild.Where(g => g.ParentID == x.Rn).Select(g => g.GrandChildID).OrderBy(id => id).ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			result.Select(r => r.ParentID).ShouldBe(expected.Select(r => r.ParentID));
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var actualChildren   = result[i].Children.OrderBy(c => c.ChildID).ToList();
+				var expectedChildren = expected[i].Children;
+
+				actualChildren.Select(c => (c.ChildID, c.Rn)).ShouldBe(expectedChildren.Select(c => (c.ChildID, c.Rn)));
+
+				for (var j = 0; j < actualChildren.Count; j++)
+					actualChildren[j].GrandChildren.ShouldBe(expectedChildren[j].GrandChildren);
+			}
+		}
+
+		[Test]
 		public void CteUnion_KeyedByRank([SupportsAnalyticFunctionsContext] string context, [Values] bool keyByWindow)
 		{
 			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
