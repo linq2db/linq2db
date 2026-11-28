@@ -2001,11 +2001,11 @@ namespace Tests.Linq
 			new() { Id = 11, D =  2.5m,   F =  2.5,   P = null },
 		];
 
-		// Access cannot type a function result whose argument is NULL ("could not determine the Double value" over OleDb,
-		// "data type mismatch" over ODBC), so its null rows are left out.
+		// Jet and ACE cannot type a function result whose argument is NULL ("could not determine the Double value" over
+		// OleDb, "data type mismatch" over ODBC), so their null rows are left out.
 		static RoundValues[] RoundValuesFor(string context)
 		{
-			return context.IsAnyOf(TestProvName.AllAccess)
+			return context.IsAnyOf(TestProvName.AllNativeAccess)
 				? RoundValuesData
 					.Where(r => r.D != null && r.P != null)
 					.ToArray()
@@ -2034,7 +2034,8 @@ namespace Tests.Linq
 					ToEvenPrecision = Sql.AsSql(Sql.RoundToEven(r.D, r.P)),
 				});
 
-			AssertQuery(query);
+			// PostgreSQL's POWER and SQLite's REAL return these through a double, which .NET 11 converts to decimal exactly
+			AssertQueryWithinDelta(query);
 		}
 
 		[Test]
@@ -2128,10 +2129,10 @@ namespace Tests.Linq
 		}
 
 		// Above 2^53 a double cannot hold these values, so a decimal rounding emulation that routes any arm through a
-		// double loses the last digits. SQLite stores such a decimal as REAL in the first place, and Access's Round and Int
-		// return a Double.
+		// double loses the last digits. SQLite stores such a decimal as REAL in the first place, and the Round and Int of
+		// Jet and ACE return a Double.
 		[Test]
-		public void MathRoundDecimalHeadroom([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void MathRoundDecimalHeadroom([DataSources(TestProvName.AllSQLite, TestProvName.AllNativeAccess)] string context)
 		{
 			var data = new[]
 			{
@@ -2190,8 +2191,9 @@ namespace Tests.Linq
 			[Column    ] public int    P  { get; set; }
 		}
 
-		// C# scales a double by a power of ten before rounding: 1.15 and 2.675 become exact ties, and 1.005 becomes
-		// 100.49999..., which rounds down. The server must agree in both modes.
+		// Up to .NET 10, C# scales a double by a power of ten before rounding: 1.15 and 2.675 become exact ties, and 1.005
+		// becomes 100.49999..., which rounds down. .NET 11 rounds the exact binary value instead (1.15 gives 1.1). The SQL
+		// keeps the scaled semantics on every runtime, so the expected side computes them rather than calling Math.Round.
 		static readonly ResidueValues[] ResidueRows =
 		[
 			new ResidueValues { Id = 1, F = 1.15,  P = 1 },
@@ -2199,6 +2201,14 @@ namespace Tests.Linq
 			new ResidueValues { Id = 3, F = 1.005, P = 2 },
 		];
 
+		static double ScaledRound(double value, int digits, MidpointRounding mode)
+		{
+			var scale = Math.Pow(10, digits);
+			return Math.Round(value * scale, mode) / scale;
+		}
+
+		// These providers round a double through a scaled formula: PostgreSQL's float8 route, and the magnitude formula of
+		// MySQL, ClickHouse and DB2.
 		[Test]
 		public void MathRoundResidueDoubleKeepsDoubleRoute([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
 		{
@@ -2213,11 +2223,18 @@ namespace Tests.Linq
 					Away = Sql.AsSql(Math.Round(r.F, r.P, MidpointRounding.AwayFromZero)),
 				});
 
-			AssertQuery(query);
+			var expected = ResidueRows.Select(r => new
+			{
+				r.Id,
+				Away = ScaledRound(r.F, r.P, MidpointRounding.AwayFromZero),
+			});
+
+			AreEqual(expected, query);
 		}
 
 		[ActiveIssue(6263, Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
-			Details = "DB2's native ROUND(1.15, 1) on a DOUBLE returns 1.1; .NET scales to the tie 11.5 and returns 1.2")]
+			Details = "DB2's native ROUND(1.15, 1) on a DOUBLE returns 1.1; the scaled value is the tie 11.5, which rounds to 1.2")]
+		// same providers as MathRoundResidueDoubleKeepsDoubleRoute
 		[Test]
 		public void MathRoundResidueDoubleToEven([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
 		{
@@ -2232,7 +2249,13 @@ namespace Tests.Linq
 					ToEven = Sql.AsSql(Math.Round(r.F, r.P)),
 				});
 
-			AssertQuery(query);
+			var expected = ResidueRows.Select(r => new
+			{
+				r.Id,
+				ToEven = ScaledRound(r.F, r.P, MidpointRounding.ToEven),
+			});
+
+			AreEqual(expected, query);
 		}
 
 		// PostgreSQL's float8 to numeric cast keeps 15 significant digits, so on the numeric route of Sql.Round(double, p)

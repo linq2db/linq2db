@@ -1620,7 +1620,8 @@ namespace Tests.Linq
 
 		// In-range lengths and nulls, where every provider must answer as the client does. Trailing blanks catch a length
 		// taken with a function that ignores them. Oracle, Sybase and Informix return NULL for an empty string, so their
-		// zero-length row is left out; Access cannot type a function result over a NULL argument, so its null rows are.
+		// zero-length row is left out. Jet and ACE cannot type a function result over a NULL argument, so they leave out both null
+		// rows; LibRed refuses a NULL length ("length argument is null"), so it leaves out that one.
 		[Test]
 		public void RightInRange([DataSources] string context)
 		{
@@ -1634,11 +1635,11 @@ namespace Tests.Linq
 			if (!context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllInformix))
 				data.Add(new() { Id = 1, S = "John", N = 0 });
 
-			if (!context.IsAnyOf(TestProvName.AllAccess))
-			{
+			if (!context.IsAnyOf(TestProvName.AllNativeAccess))
 				data.Add(new() { Id = 5, S = null,   N = 2    });
+
+			if (!context.IsAnyOf(TestProvName.AllAccess))
 				data.Add(new() { Id = 6, S = "John", N = null });
-			}
 
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
