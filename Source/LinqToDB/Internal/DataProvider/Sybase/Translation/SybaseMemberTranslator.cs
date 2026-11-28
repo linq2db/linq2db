@@ -218,6 +218,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			{
 				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
 			}
+
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				return TranslateTruncateAsFloorOrCeiling(translationContext, methodCall);
+			}
 		}
 
 		protected class SybaseStingMemberTranslator : StringMemberTranslatorBase

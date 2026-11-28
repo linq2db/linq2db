@@ -294,6 +294,22 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 
 				return factory.Function(dbType, "LEAST", xValue, yValue);
 			}
+
+			// Sql.RoundToEven(double) rounds through decimal, as Math.Round does not.
+			protected override ISqlExpression? TranslateSqlRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				if (methodCall.Arguments[0].Type == typeof(decimal?))
+					return base.TranslateSqlRoundToEven(translationContext, methodCall, value, precision);
+
+				return RoundThroughDecimal(translationContext, value, v => base.TranslateSqlRoundToEven(translationContext, methodCall, v, precision));
+			}
+
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return new SqlExpression(factory.GetDbDataType(methodCall.Type), "Round({0}, 0, ROUND_DOWN)", Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.IfAnyParameterNullable, value);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

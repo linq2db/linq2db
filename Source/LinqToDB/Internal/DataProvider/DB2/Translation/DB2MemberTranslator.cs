@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -306,6 +307,25 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				var dbType = factory.GetDbDataType(xValue);
 
 				return factory.Function(dbType, "LEAST", xValue, yValue);
+			}
+
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Truncate", value, factory.Value(0));
+			}
+
+			// ROUND() on a DOUBLE rounds a midpoint to even. POWER over two integers is an integer.
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var type    = factory.GetDbDataType(value);
+
+				if (type.SystemType.UnwrapNullableType() == typeof(decimal))
+					return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision);
+
+				return RoundAwayFromZeroByMagnitude(factory, value, precision, factory.Cast(factory.Value(10), type));
 			}
 		}
 
