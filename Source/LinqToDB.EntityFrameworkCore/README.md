@@ -160,7 +160,7 @@ using (var ctx = CreateAdventureWorksContext())
         select new
         {
             // Window Function
-            Count = Sql.Ext.Count().Over().PartitionBy(p.ProductModelID).ToValue(),
+            Count = Sql.Window.Count(w => w.PartitionBy(p.ProductModelID)),
             Product = p
         };
 

@@ -9,12 +9,18 @@ Contributing article include the repository's `README.md` and `CONTRIBUTING.md`.
 ```powershell
 ./docs/build.ps1                    # output: .build/docs/_site
 ./docs/build.ps1 -WarningsAsErrors  # what CI runs
+./docs/build.ps1 -ArticlesOnly      # articles only, in seconds; output: .build/docs/_preview
 ```
 
 Needs only the .NET SDK from `global.json`; tested on Windows only. The script cleans the previous output, downloads the pinned
 docfx on first use (cached under `.build/docfx/<sha256>/`), builds `LinqToDB.FSharp` (its API is read from
 the built assembly) and runs docfx. Open `.build/docs/_site/index.html`, or serve it with
 `dotnet .build/docfx/<sha256>/docfx.dll serve .build/docs/_site`.
+
+`-ArticlesOnly` is for editing articles: it skips the API metadata and pages, which take nearly all of a
+full build, and resolves links to the API through the xref map of the last full build, so run a full build
+once first. Links from articles to the API are checked, but the API pages themselves are not in `_preview`.
+It can be combined with `-WarningsAsErrors`.
 
 ## Publishing
 
