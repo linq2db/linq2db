@@ -17,6 +17,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// Quote identifiers only when it is required according to DB2 identifier quotation rules:
 		/// <list type="bullet">
 		/// <item>identifier starts with underscore: <c>'_'</c></item>
+		/// <item>identifier starts with a digit</item>
 		/// <item>identifier contains whitespace character(s)</item>
 		/// <item>identifier contains lowercase letter(s)</item>
 		/// </list>
