@@ -911,13 +911,31 @@ namespace LinqToDB.Mapping
 					// becomes unreachable and those sibling rows would write the default — revisit then.
 					if (_valueSiblings != null)
 					{
+						// A sibling may map a member of another CLR type to this physical column (e.g. int beside
+						// this column's long). Its value is written to this column, so every branch yields this
+						// column's value type - lifted to nullable when a sibling's value can be NULL, so that a
+						// NULL is written as NULL rather than as this column's default.
+						var siblingValues = new List<(Type type, Expression value)>();
+						var valueType     = getterExpr.Type;
+
 						foreach (var sibling in _valueSiblings)
 						{
 							var siblingType = sibling.MemberAccessor.TypeAccessor.Type;
 							var siblingExpr = InternalExtensions.ApplyLambdaToExpression(
 								sibling.GetDbValueLambda(), Expression.Convert(objParam, siblingType));
 
-							elseExpr = Expression.Condition(Expression.TypeIs(objParam, siblingType), siblingExpr, elseExpr);
+							siblingValues.Add((siblingType, siblingExpr));
+
+							if (siblingExpr.Type != valueType && siblingExpr.Type.IsNullableOrReferenceType && !valueType.IsNullableOrReferenceType)
+								valueType = valueType.AsNullable();
+						}
+
+						getterExpr = ConvertDbValue(getterExpr, valueType);
+						elseExpr   = ConvertDbValue(elseExpr,   valueType);
+
+						foreach (var (siblingType, siblingExpr) in siblingValues)
+						{
+							elseExpr = Expression.Condition(Expression.TypeIs(objParam, siblingType), ConvertDbValue(siblingExpr, valueType), elseExpr);
 						}
 					}
 
@@ -933,6 +951,16 @@ namespace LinqToDB.Mapping
 			}
 
 			return _getter(obj);
+		}
+
+		Expression ConvertDbValue(Expression value, Type type)
+		{
+			if (value.Type == type)
+				return value;
+
+			var convert = MappingSchema.GetConvertExpression(value.Type, type, conversionType: ConversionType.ToDatabase)!;
+
+			return InternalExtensions.ApplyLambdaToExpression(convert, value);
 		}
 	}
 }

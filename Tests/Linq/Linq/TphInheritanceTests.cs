@@ -446,6 +446,74 @@ namespace Tests.Linq
 		class TphDupColSecond : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
 		class TphDupColThird  : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
 
+		[Table("TphDupCol")]
+		sealed class TphDupColRaw
+		{
+			[PrimaryKey] public int  Id      { get; set; }
+			[Column]     public long Payload { get; set; }
+		}
+
+		[Test]
+		public void TPH_SiblingColumn_BulkCopy_DifferentMemberTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// One base-typed (mixed) copy into a column mapped as long by the first type and as int by the others.
+			using var tb = db.CreateLocalTable(new TphDupColBase[]
+			{
+				new TphDupColFirst  { Id = 1, Payload = 10 },
+				new TphDupColSecond { Id = 2, Payload = 20 },
+				new TphDupColThird  { Id = 3, Payload = 30 },
+			});
+
+			var payloads = db.GetTable<TphDupColRaw>()
+				.OrderBy(r => r.Id)
+				.Select(r => r.Payload)
+				.ToArray();
+
+			payloads.ShouldBe([10, 20, 30]);
+		}
+
+		[Test]
+		public void TPH_SiblingColumn_BulkCopy_NullableSiblingMemberType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// The first type maps the column as long, the second as int?: its NULL must stay NULL, not become 0.
+			using var tb = db.CreateLocalTable(new TphNullSiblingBase[]
+			{
+				new TphNullSiblingLong        { Id = 1, Kind = 1, Amount = 10   },
+				new TphNullSiblingNullableInt { Id = 2, Kind = 2, Amount = null },
+				new TphNullSiblingNullableInt { Id = 3, Kind = 2, Amount = 30   },
+			});
+
+			var amounts = db.GetTable<TphNullSiblingRaw>()
+				.OrderBy(r => r.Id)
+				.Select(r => r.Amount)
+				.ToArray();
+
+			amounts.ShouldBe([10, null, 30]);
+		}
+
+		[Table("TphNullSibling")]
+		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(TphNullSiblingLong))]
+		[InheritanceMapping(Code = 2, Type = typeof(TphNullSiblingNullableInt))]
+		abstract class TphNullSiblingBase
+		{
+			[Column(IsDiscriminator = true)] public int Kind { get; set; }
+			[PrimaryKey]                     public int Id   { get; set; }
+		}
+
+		sealed class TphNullSiblingLong        : TphNullSiblingBase { [Column("Amount"), LinqToDB.Mapping.Nullable] public long Amount { get; set; } }
+		sealed class TphNullSiblingNullableInt : TphNullSiblingBase { [Column("Amount")]                             public int? Amount { get; set; } }
+
+		[Table("TphNullSibling")]
+		sealed class TphNullSiblingRaw
+		{
+			[PrimaryKey] public int   Id     { get; set; }
+			[Column]     public long? Amount { get; set; }
+		}
+
 		[ActiveIssue(ErrorMessage = "Assert.That(((TphConvScaled)all[1]).Value, Is.EqualTo(7))",
 			Details = "no-issue: Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
 		[Test]
