@@ -100,9 +100,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			// every ConvertType is an identifier here, hence no switch: ClickHouse names its query
 			// parameters the same way it names anything else
-			if (value.Length == 0)
-				throw new LinqToDBException("Empty identifier");
-
 			return BuildIdentifier(sb, value, convertType);
 		}
 

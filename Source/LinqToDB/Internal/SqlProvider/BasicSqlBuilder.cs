@@ -4865,7 +4865,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// instead of once per <see cref="ConvertType"/>.
 		/// <para>
 		/// <paramref name="value"/> is never empty - <see cref="BuildIdentifier"/> is the only caller and
-		/// short-circuits first - so an override may index its first character without a length check.
+		/// rejects an empty value first - so an override may index its first character without a length check.
 		/// </para>
 		/// </summary>
 		protected virtual bool RequiresQuoting(string value, ConvertType convertType) => true;
@@ -4912,14 +4912,17 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Writes an identifier, delimiting it only when <see cref="RequiresQuoting"/> says so. This is
-		/// the single place that decision is made, so a provider cannot forget one <see cref="ConvertType"/>
-		/// and silently emit a bare name - which is how table aliases went unquoted on more than one
-		/// provider.
+		/// Writes an identifier, delimiting it only when <see cref="RequiresQuoting"/> says so. This is the
+		/// single place the quote-or-not decision is made for the <see cref="ConvertType"/>s a builder routes
+		/// here; which ones it routes is still decided by each builder's <c>Convert</c> switch. An empty
+		/// identifier cannot be rendered and is refused.
 		/// </summary>
 		protected StringBuilder BuildIdentifier(StringBuilder sb, string value, ConvertType convertType)
 		{
-			return value.Length > 0 && RequiresQuoting(value, convertType)
+			if (value.Length == 0)
+				throw new LinqToDBException("Empty identifier");
+
+			return RequiresQuoting(value, convertType)
 				? DelimitIdentifier(sb, value)
 				: sb.Append(value);
 		}
