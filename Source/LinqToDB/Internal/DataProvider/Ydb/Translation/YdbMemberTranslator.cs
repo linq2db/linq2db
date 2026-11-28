@@ -129,14 +129,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			{
 				var factory = translationContext.ExpressionFactory;
 
-				using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
-
-				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedField))
-					return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
-
-				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedValue))
-					return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
-
 				ISqlExpression? escape = null;
 
 				if (methodCall.Arguments.Count == 3)
@@ -147,6 +139,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					if (escape is SqlValue { ValueType.DataType: not DataType.Binary } value)
 						value.ValueType = value.ValueType.WithDataType(DataType.Binary);
 				}
+
+				using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
+
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedField))
+					return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedValue))
+					return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
 
 				var predicate       = factory.LikePredicate(translatedField, false, translatedValue, escape);
 				var searchCondition = factory.SearchCondition().Add(predicate);

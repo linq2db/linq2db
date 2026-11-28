@@ -1480,6 +1480,21 @@ namespace Tests.Linq
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6391")]
+		public void LikeEscapeParameter([DataSources] string context)
+		{
+			char? escape = '~';
+
+			using var db = GetDataContext(context);
+
+			var ids = db.Person
+				.Where(p => Sql.Like(p.FirstName, "Jo%", escape) && !Sql.Like(p.FirstName, "Jo~%", escape))
+				.Select(p => p.ID)
+				.ToArray();
+
+			ids.ShouldContain(1);
+		}
+
 		[Test]
 		public void IndexOf11([DataSources] string context)
 		{

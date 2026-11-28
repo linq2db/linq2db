@@ -145,6 +145,32 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var items2 = query.ToLinqToDB().ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6391")]
+		public void TestLikeWithEscapeCharacter([EFDataSources] string provider, [Values] bool escapeAsParameter)
+		{
+			using var ctx = CreateContext(provider);
+
+			var escape = "\\";
+
+			var query = escapeAsParameter
+				? ctx.Products.Where(p => EF.Functions.Like(p.ProductName, "Chef%", escape) && !EF.Functions.Like(p.ProductName, "Chef\\%", escape))
+				: ctx.Products.Where(p => EF.Functions.Like(p.ProductName, "Chef%", "\\") && !EF.Functions.Like(p.ProductName, "Chef\\%", "\\"));
+
+			var expected = query
+				.OrderBy(p => p.ProductId)
+				.Select(p => p.ProductName)
+				.ToArray();
+
+			expected.Length.ShouldBe(2);
+
+			query
+				.ToLinqToDB()
+				.OrderBy(p => p.ProductId)
+				.Select(p => p.ProductName)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
 		[Test]
 		public async Task TestTransaction([EFDataSources] string provider, [Values] bool enableFilter)
 		{
