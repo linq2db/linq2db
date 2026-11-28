@@ -4,11 +4,16 @@
 	{
 		public static string TruncateIdentifier(IIdentifierService identifierService, IdentifierKind identifierKind, string identifier)
 		{
+			return TruncateIdentifier(identifierService, identifierKind, identifier, reserve: 4);
+		}
+
+		// reserve: units kept free below the limit. An alias keeps four for the "_<n>" suffix the uniquifier
+		// appends; a generated name nothing uniquifies (a primary-key name) uses the full limit.
+		internal static string TruncateIdentifier(IIdentifierService identifierService, IdentifierKind identifierKind, string identifier, int reserve)
+		{
 			if (!identifierService.IsFit(identifierKind, identifier, out var sizeDecrement))
 			{
-				// TODO: ???
-				//TODO: It is quick solution
-				var decrement = sizeDecrement.Value + 4;
+				var decrement = sizeDecrement.Value + reserve;
 
 				var size = identifier.Length - decrement;
 				if (size <= 0)

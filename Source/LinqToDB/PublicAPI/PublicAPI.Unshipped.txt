@@ -12,7 +12,7 @@ override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLDataProvider.Create
 override LinqToDB.Internal.DataProvider.SapHana.SapHanaDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
 virtual LinqToDB.Internal.DataProvider.IdentifierServiceBase.IsIdentifierChar(char c) -> bool
 LinqToDB.Internal.DataProvider.IdentifierLengthUnit
-LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Characters = 0 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
+LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Utf16CodeUnits = 0 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
 LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Utf8Bytes = 1 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
 LinqToDB.Internal.DataProvider.IdentifierServiceSimple.IdentifierServiceSimple(int maxLength, LinqToDB.Internal.DataProvider.IdentifierLengthUnit unit) -> void
 LinqToDB.Internal.DataProvider.IdentifierServiceSimple.Unit.get -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit

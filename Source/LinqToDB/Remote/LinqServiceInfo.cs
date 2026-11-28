@@ -1,6 +1,5 @@
 ﻿using System.Runtime.Serialization;
 
-using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Remote
@@ -26,11 +25,15 @@ namespace LinqToDB.Remote
 		public string?          DmlServiceType           { get; set; }
 
 		/// <summary>
-		/// Identifier service the server-side provider uses, so client-side SQL preview aliases a
-		/// statement the same way the server does when it renders it for real. Carried as a type name
-		/// like the other provider services, which reproduces the whole policy rather than the few
-		/// numbers a scalar contract could hold. <see langword="null"/> when the server predates this
-		/// member; the client then falls back to its historical default.
+		/// Type of the identifier service the server-side provider uses, so client-side SQL preview
+		/// aliases a statement the way the server does. The policy is transported by type: the client
+		/// creates the type by name with its public parameterless constructor, which reproduces services
+		/// whose rules the type alone defines, not instance state such as constructor arguments. When the
+		/// client cannot load the type, the type is not an identifier service, or it has no public
+		/// parameterless constructor, the client uses its default service; so it does when this member is
+		/// <see langword="null"/> (a server that predates it). An exception thrown by the constructor
+		/// itself propagates. Only the preview is affected: the server aliases the executed statement
+		/// with its own service.
 		/// </summary>
 		[DataMember(Order = 9)]
 		public string?          IdentifierServiceType    { get; set; }

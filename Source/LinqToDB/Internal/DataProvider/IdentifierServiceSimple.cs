@@ -24,12 +24,12 @@ namespace LinqToDB.Internal.DataProvider
 		public IdentifierLengthUnit Unit      { get; }
 
 		/// <summary>
-		/// Creates a service whose limit is counted in characters.
+		/// Creates a service whose limit is counted in UTF-16 code units.
 		/// </summary>
 		/// <param name="maxLength">Longest identifier the server accepts; must be greater than four,
 		/// since truncation reserves four units for the suffix that makes a truncated name unique.</param>
 		public IdentifierServiceSimple(int maxLength)
-			: this(maxLength, IdentifierLengthUnit.Characters)
+			: this(maxLength, IdentifierLengthUnit.Utf16CodeUnits)
 		{
 		}
 
@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.DataProvider
 		/// </summary>
 		/// <param name="maxLength">Longest identifier the server accepts; must be greater than four,
 		/// since truncation reserves four units for the suffix that makes a truncated name unique.</param>
-		/// <param name="unit">Whether the server counts characters or UTF-8 bytes.</param>
+		/// <param name="unit">Whether the server counts UTF-16 code units or UTF-8 bytes.</param>
 		public IdentifierServiceSimple(int maxLength, IdentifierLengthUnit unit)
 		{
 			MaxLength  = maxLength;
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			var maxLength = GetMaxLength(identifierKind);
 
-			if (Unit == IdentifierLengthUnit.Characters)
+			if (Unit == IdentifierLengthUnit.Utf16CodeUnits)
 			{
 				if (identifier.Length > maxLength)
 				{

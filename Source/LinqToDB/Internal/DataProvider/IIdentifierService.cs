@@ -3,8 +3,8 @@
 namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>
-	/// Provider-specific rules for the names linq2db generates: how long they may be, which characters
-	/// they may contain, and when they have to be delimited.
+	/// Provider-specific rules for the names linq2db generates: how long they may be and which characters
+	/// they may contain. Delimiting is decided by the SQL builder, not here.
 	/// </summary>
 	public interface IIdentifierService
 	{

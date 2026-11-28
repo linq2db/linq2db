@@ -65,11 +65,7 @@ namespace LinqToDB.Internal.DataProvider
 						{
 							_newAliases.SetTableAlias(ts, n);
 						},
-						ts =>
-						{
-							var a = GetCurrentAlias(ts);
-							return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
-						},
+						ts => SuffixSeed(GetCurrentAlias(ts), "t1"),
 						StringComparer.OrdinalIgnoreCase);
 				}
 
@@ -104,6 +100,30 @@ namespace LinqToDB.Internal.DataProvider
 				identifier = _identifierService.CorrectAlias(identifier);
 
 				return IdentifiersHelper.TruncateIdentifier(_identifierService, IdentifierKind.Alias, identifier);
+			}
+
+			// Seed for the uniquifier's fallback: the alias plus "_1", which Utils.MakeUniqueNames counts up
+			// from. An alias that fits but leaves no room for that suffix would make every candidate fail
+			// IsValidAlias and the uniquifier never terminate, so the alias is cut until a three-digit
+			// suffix fits too. An alias TruncateIdentifier already cut keeps that room and is unchanged.
+			string SuffixSeed(string alias, string fallback)
+			{
+				if (alias.Length == 0)
+					return fallback;
+
+				var separator = alias.EndsWith('_') ? string.Empty : "_";
+
+				if (!_identifierService.IsFit(IdentifierKind.Alias, alias + separator + "999", out var decrement))
+				{
+					var size = Math.Max(1, alias.Length - decrement.Value);
+
+					if (size > 1 && size < alias.Length && char.IsHighSurrogate(alias[size - 1]))
+						size--;
+
+					alias = alias.Substring(0, size);
+				}
+
+				return alias + separator + "1";
 			}
 
 			bool IsValidAlias(string identifier)
@@ -148,13 +168,7 @@ namespace LinqToDB.Internal.DataProvider
 					(n, a) => IsValidAlias(n),
 					f => TruncateAlias(f.PhysicalName),
 					(f, n, a) => { _newAliases.SetFieldName(f, n); },
-					f =>
-					{
-						var a = TruncateAlias(f.PhysicalName);
-						return string.IsNullOrEmpty(a)
-							? "c1"
-							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
-					},
+					f => SuffixSeed(TruncateAlias(f.PhysicalName), "c1"),
 					StringComparer.OrdinalIgnoreCase);
 
 				// copy aliases to source query fields
@@ -183,13 +197,7 @@ namespace LinqToDB.Internal.DataProvider
 						_newAliases.SetFieldName(f, n);
 						// do not touch name
 					},
-					f =>
-					{
-						var a = TruncateAlias(f.Name);
-						return string.IsNullOrEmpty(a)
-							? "f1"
-							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
-					},
+					f => SuffixSeed(TruncateAlias(f.Name), "f1"),
 					StringComparer.OrdinalIgnoreCase);
 
 				base.VisitCteClause(element);
@@ -255,13 +263,7 @@ namespace LinqToDB.Internal.DataProvider
 							a?.Add(n);
 							_newAliases.SetColumnAlias(c, n);
 						},
-						c =>
-						{
-							var a = TruncateAlias(_newAliases.GetColumnAlias(c) ?? string.Empty);
-							return string.IsNullOrEmpty(a)
-								? "c1"
-								: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
-						},
+						c => SuffixSeed(TruncateAlias(_newAliases.GetColumnAlias(c) ?? string.Empty), "c1"),
 						StringComparer.OrdinalIgnoreCase);
 
 					if (selectQuery.HasSetOperators)

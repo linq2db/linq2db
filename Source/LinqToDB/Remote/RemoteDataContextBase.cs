@@ -72,6 +72,7 @@ namespace LinqToDB.Remote
 
 			serviceProvider.AddService(configurationInfo.MemberTranslator);
 			serviceProvider.AddService(configurationInfo.MemberConverter);
+			serviceProvider.AddService(configurationInfo.IdentifierService);
 
 			var dmlService = configurationInfo.DmlService;
 			if (dmlService != null)
@@ -294,10 +295,21 @@ namespace LinqToDB.Remote
 						dmlService         = RemoteDmlService.GetOrCreate(dmlServiceType);
 					}
 
-					// A server older than IdentifierServiceType sends null; keep the historical default there.
-					IIdentifierService identifierService = info.IdentifierServiceType != null
-						? RemoteIdentifierService.GetOrCreate(Type.GetType(info.IdentifierServiceType)!)
-						: new DefaultIdentifierService();
+					// A server older than IdentifierServiceType sends null; keep the historical default there. The
+					// same default covers a type the client cannot load, that is not an identifier service, or that
+					// has no public parameterless constructor (IdentifierServiceSimple(n)): the client copy only
+					// shapes GetSqlText, the server aliases the executed statement with its own service.
+					var identifierServiceType = info.IdentifierServiceType != null
+						? Type.GetType(info.IdentifierServiceType, throwOnError: false)
+						: null;
+
+					IIdentifierService identifierService =
+						identifierServiceType != null
+						&& typeof(IIdentifierService).IsAssignableFrom(identifierServiceType)
+						&& !identifierServiceType.IsAbstract
+						&& identifierServiceType.GetConstructorEx(Type.EmptyTypes) != null
+							? RemoteIdentifierService.GetOrCreate(identifierServiceType)
+							: new DefaultIdentifierService();
 
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{

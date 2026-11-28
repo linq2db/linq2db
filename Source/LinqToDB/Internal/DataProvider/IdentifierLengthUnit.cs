@@ -6,9 +6,11 @@
 	public enum IdentifierLengthUnit
 	{
 		/// <summary>
-		/// The limit counts characters, as .NET stores them.
+		/// The limit counts UTF-16 code units (<see cref="string.Length"/>): one per BMP character, two for a
+		/// character outside it. Exact where the server stores names as UTF-16 (SQL Server's <c>sysname</c>),
+		/// conservative where it counts code points.
 		/// </summary>
-		Characters,
+		Utf16CodeUnits,
 
 		/// <summary>
 		/// The limit counts bytes rather than characters, so a non-ASCII name reaches it sooner than its
