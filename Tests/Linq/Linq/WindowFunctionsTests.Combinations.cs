@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -656,6 +657,205 @@ namespace Tests.Linq
 				};
 
 			AreEqual(expected, result);
+		}
+
+		// Window functions computed in a subquery that is joined on a correlated condition. The condition filters the
+		// rows *after* the window is computed; moving it into the subquery that computes the window would narrow the
+		// window to the single matching row (ROW_NUMBER/RANK always 1, LAG/LEAD always NULL, SUM over one row).
+
+		sealed class JoinedWindowRow
+		{
+			public int  Id        { get; set; }
+			public long RowNumber { get; set; }
+			public long Rank      { get; set; }
+			public long DenseRank { get; set; }
+			public int  Sum       { get; set; }
+			public int? Lag       { get; set; }
+			public int? Lead      { get; set; }
+		}
+
+		static IQueryable<JoinedWindowRow> JoinedWindowQuery(IQueryable<WindowFunctionTestEntity> table)
+		{
+			return table.Select(t => new JoinedWindowRow
+			{
+				Id        = t.Id,
+				RowNumber = Sql.Window.RowNumber(w => w.OrderByDesc(t.Id)),
+				Rank      = Sql.Window.Rank(w => w.OrderBy(t.CategoryId)),
+				DenseRank = Sql.Window.DenseRank(w => w.OrderBy(t.CategoryId)),
+				Sum       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId)),
+				Lag       = Sql.Window.Lag(t.NullableIntValue, w => w.OrderBy(t.Id)),
+				Lead      = Sql.Window.Lead(t.NullableIntValue, w => w.OrderBy(t.Id)),
+			});
+		}
+
+		static List<JoinedWindowRow> JoinedWindowExpected(WindowFunctionTestEntity[] data)
+		{
+			var byId = data.OrderBy(t => t.Id).ToArray();
+
+			return byId
+				.Select((t, i) => new JoinedWindowRow
+				{
+					Id        = t.Id,
+					RowNumber = data.Count(o => o.Id >= t.Id),
+					Rank      = data.Count(o => o.CategoryId < t.CategoryId) + 1,
+					DenseRank = data.Where(o => o.CategoryId < t.CategoryId).Select(o => o.CategoryId).Distinct().Count() + 1,
+					Sum       = data.Where(o => o.CategoryId == t.CategoryId).Sum(o => o.IntValue),
+					Lag       = i > 0               ? byId[i - 1].NullableIntValue : null,
+					Lead      = i < byId.Length - 1 ? byId[i + 1].NullableIntValue : null,
+				})
+				.ToList();
+		}
+
+		static void ShouldMatchJoinedWindow(List<JoinedWindowRow> result, List<JoinedWindowRow> expected)
+		{
+			result = result.OrderBy(r => r.Id).ToList();
+
+			result.Select(r => r.Id)       .ShouldBe(expected.Select(r => r.Id));
+			result.Select(r => r.RowNumber).ShouldBe(expected.Select(r => r.RowNumber));
+			result.Select(r => r.Rank)     .ShouldBe(expected.Select(r => r.Rank));
+			result.Select(r => r.DenseRank).ShouldBe(expected.Select(r => r.DenseRank));
+			result.Select(r => r.Sum)      .ShouldBe(expected.Select(r => r.Sum));
+			result.Select(r => r.Lag)      .ShouldBe(expected.Select(r => r.Lag));
+			result.Select(r => r.Lead)     .ShouldBe(expected.Select(r => r.Lead));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void WindowSubqueryLeftJoinMethod([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = JoinedWindowQuery(table);
+
+			var result =
+				(
+					from t in table
+					from r in ranked.LeftJoin(r => r.Id == t.Id)
+					select r
+				)
+				.ToList();
+
+			ShouldMatchJoinedWindow(result, JoinedWindowExpected(data));
+		}
+
+		// The same subquery through an inner join.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void WindowSubqueryInnerJoinMethod([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = JoinedWindowQuery(table);
+
+			var result =
+				(
+					from t in table
+					from r in ranked.InnerJoin(r => r.Id == t.Id)
+					select r
+				)
+				.ToList();
+
+			ShouldMatchJoinedWindow(result, JoinedWindowExpected(data));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void WindowSubqueryGroupJoinDefaultIfEmpty([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = JoinedWindowQuery(table);
+
+			var result =
+				(
+					from t in table
+					join r in ranked on t.Id equals r.Id into g
+					from r in g.DefaultIfEmpty()
+					select r
+				)
+				.ToList();
+
+			ShouldMatchJoinedWindow(result, JoinedWindowExpected(data));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void WindowSubqueryWhereDefaultIfEmpty([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = JoinedWindowQuery(table);
+
+			var result =
+				(
+					from t in table
+					from r in ranked.Where(r => r.Id == t.Id).DefaultIfEmpty()
+					select r
+				)
+				.ToList();
+
+			ShouldMatchJoinedWindow(result, JoinedWindowExpected(data));
+		}
+
+		// The same subquery read through a correlated subquery in the projection.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void WindowSubqueryCorrelatedInSelect([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = JoinedWindowQuery(table);
+
+			var result =
+				(
+					from t in table
+					select ranked.Where(r => r.Id == t.Id).First()
+				)
+				.ToList();
+
+			ShouldMatchJoinedWindow(result, JoinedWindowExpected(data));
+		}
+
+		// The same left join over the Sql.Ext analytic functions.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6507")]
+		public void LegacyWindowSubqueryLeftJoinMethod([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var ranked = table.Select(t => new
+			{
+				t.Id,
+				RowNumber = Sql.Ext.RowNumber().Over().OrderByDesc(t.Id).ToValue(),
+				Sum       = Sql.Ext.Sum(t.IntValue).Over().PartitionBy(t.CategoryId).ToValue(),
+			});
+
+			var result =
+				(
+					from t in table
+					from r in ranked.LeftJoin(r => r.Id == t.Id)
+					select r
+				)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			var expected = JoinedWindowExpected(data);
+
+			result.Select(r => r.RowNumber).ShouldBe(expected.Select(r => r.RowNumber));
+			result.Select(r => r.Sum)      .ShouldBe(expected.Select(r => r.Sum));
 		}
 	}
 }
