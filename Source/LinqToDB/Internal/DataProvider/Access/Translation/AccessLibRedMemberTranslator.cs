@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -29,6 +30,24 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 		protected override IMemberTranslator CreateAggregateFunctionsMemberTranslator()
 		{
 			return new AccessLibRedAggregateFunctionsMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new AccessLibRedMathMemberTranslator();
+		}
+
+		protected class AccessLibRedMathMemberTranslator : MathMemberTranslator
+		{
+			// ^ is a Double, and LibRed reports a decimal expression over it as a Double column while returning Decimal values
+			protected override ISqlExpression Power(ISqlExpressionFactory factory, DbDataType type, ISqlExpression x, ISqlExpression y)
+			{
+				var power = base.Power(factory, type, x, y);
+
+				return type.SystemType.UnwrapNullableType() == typeof(decimal)
+					? factory.Function(type, "CDec", power)
+					: power;
+			}
 		}
 
 		// LibRed takes DISTINCT inside an aggregate, which Jet does not
