@@ -20,11 +20,11 @@ Development version nugets [feeds](https://dev.azure.com/linq2db/linq2db/_artifa
 ## Standout Features
 
 - Rich Querying API:
-  - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/join-operators.html) (In addition to standard LINQ join syntax)
-  - [CTE Support](https://linq2db.github.io/articles/sql/cte.html)
-  - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/bulk-copy.html)
-  - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/window-functions-%28analytic-functions%29.html)
-  - [Merge API](https://linq2db.github.io/articles/sql/merge/merge-api-description.html)
+  - [Explicit Join Syntax](https://linq2db.github.io/documentation/sql/join-operators.html) (In addition to standard LINQ join syntax)
+  - [CTE Support](https://linq2db.github.io/documentation/sql/cte.html)
+  - [Bulk Copy/Insert](https://linq2db.github.io/documentation/sql/bulk-copy.html)
+  - [Window/Analytic Functions](https://linq2db.github.io/documentation/sql/window-functions-%28analytic-functions%29.html)
+  - [Merge API](https://linq2db.github.io/documentation/sql/merge/merge-api-description.html)
 - Extensibility:
   - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
 
@@ -148,7 +148,7 @@ DataConnection.DefaultSettings = new MySettings();
 
 ### Use with ASP.NET Core and Dependency Injection
 
-See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
+See [article](https://linq2db.github.io/documentation/get-started/asp-dotnet-core/index.html).
 
 ## Define **POCO** class
 
@@ -307,7 +307,7 @@ public static List<Product> GetProducts()
 }
 ```
 
-Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool ([more details](https://linq2db.github.io/articles/general/managing-data-connection.html)).
+Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool ([more details](https://linq2db.github.io/documentation/general/managing-data-connection.html)).
 
 ## Queries
 
@@ -417,7 +417,7 @@ select new Product
 };
 ```
 
-[More samples are here](https://linq2db.github.io/articles/sql/join-operators.html)
+[More samples are here](https://linq2db.github.io/documentation/sql/join-operators.html)
 
 ### Creating your POCOs
 
@@ -568,7 +568,7 @@ db.Product
 
 ### Bulk Copy
 
-Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For more details read this [article](https://linq2db.github.io/articles/sql/bulk-copy.html).
+Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For more details read this [article](https://linq2db.github.io/documentation/sql/bulk-copy.html).
 
 ```c#
 using LinqToDB.Data;
@@ -668,11 +668,11 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 
 ### Merge
 
-[Here](https://linq2db.github.io/articles/sql/merge/merge-api.html) you can read about SQL MERGE support.
+[Here](https://linq2db.github.io/documentation/sql/merge/merge-api.html) you can read about SQL MERGE support.
 
 ### Window (Analytic) Functions
 
-[Here](https://linq2db.github.io/articles/sql/window-functions-%28analytic-functions%29.html) you can read about Window (Analytic) Functions support.
+[Here](https://linq2db.github.io/documentation/sql/window-functions-%28analytic-functions%29.html) you can read about Window (Analytic) Functions support.
 
 ## MiniProfiler
 
@@ -757,7 +757,7 @@ let getPerson (db: IDataContext) (id: int) =
 
 ## More
 
-Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/faq.html)
+Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/documentation/faq.html)
 
 ### Supported by
 [![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)

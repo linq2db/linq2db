@@ -1,1 +1,689 @@
 .dropdown-menu { white-space:nowrap }
+
+/* A short page has no vertical scrollbar where it takes room (Windows); reserving its gutter keeps every
+   page the same width, so the navbar and centered content do not shift when moving between pages.
+   Not below 768px, where the article TOC is a Bootstrap offcanvas: its scroll lock adds the
+   scrollbar's width as body padding, which with a reserved gutter would shift the page while it is
+   open (reasoned from Bootstrap's scroll-bar helper, not reproduced). */
+@media (min-width: 768px) {
+	html {
+		scrollbar-gutter: stable;
+	}
+}
+
+/* Links in the landing page's indigo, AA on both backgrounds (6.3:1 on white, 7.7:1 on #212529) */
+:root,
+[data-bs-theme="light"] {
+	--bs-link-color: #4f46e5;
+	--bs-link-color-rgb: 79, 70, 229;
+	--bs-link-hover-color: #4338ca;
+	--bs-link-hover-color-rgb: 67, 56, 202;
+}
+
+[data-bs-theme="dark"] {
+	--bs-link-color: #a5b4fc;
+	--bs-link-color-rgb: 165, 180, 252;
+	--bs-link-hover-color: #c7d2fe;
+	--bs-link-hover-color-rgb: 199, 210, 254;
+}
+
+/* The footer is .text-secondary, whose #6c757d does not follow the theme: 3.3:1 on the dark body */
+[data-bs-theme="dark"] footer {
+	--bs-secondary-rgb: 173, 181, 189;
+}
+
+/* The landing sections break out to 100vw, which counts the vertical scrollbar where it takes
+   room (Windows); without this the page scrolls sideways by the scrollbar's width. */
+body:has(.landing-hero) {
+	overflow-x: clip;
+}
+
+/* Navbar logo */
+#logo {
+	height: 24px;
+	width: auto;
+	margin-right: 8px;
+}
+
+/* ============================================================
+   Landing page
+   ============================================================ */
+
+/* Hero — full-width breakout */
+.landing-hero {
+	margin: -1.5rem calc(-50vw + 50%) 0;
+	padding: 3rem 2rem 2.5rem;
+	background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+	color: #e8e8f0;
+	overflow: hidden;
+	position: relative;
+}
+
+[data-bs-theme="light"] .landing-hero {
+	background: linear-gradient(135deg, #0f3460 0%, #16213e 40%, #1a1a2e 100%);
+}
+
+.landing-hero-inner {
+	position: relative;
+	z-index: 1;
+}
+
+.landing-title {
+	font-size: 3rem;
+	font-weight: 800;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	margin-bottom: 1rem;
+	color: #fff;
+}
+
+.landing-accent {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+.landing-subtitle {
+	font-size: 1.05rem;
+	line-height: 1.6;
+	color: #b0b8d0;
+	max-width: 480px;
+	margin-bottom: 1.5rem;
+}
+
+.landing-actions {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.landing-btn-primary {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	border: none;
+	font-weight: 600;
+	padding: 0.75rem 1.75rem;
+	border-radius: 0.5rem;
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.landing-btn-primary:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.landing-btn-secondary {
+	border-color: rgba(255,255,255,0.25);
+	color: #e0e0f0;
+	font-weight: 600;
+	padding: 0.75rem 1.75rem;
+	border-radius: 0.5rem;
+}
+
+.landing-btn-secondary:hover {
+	background: rgba(255,255,255,0.1);
+	border-color: rgba(255,255,255,0.4);
+	color: #fff;
+}
+
+/* NuGet install box */
+.landing-install {
+	display: inline-block;
+	background: rgba(0,0,0,0.3);
+	border: 1px solid rgba(255,255,255,0.1);
+	border-radius: 0.5rem;
+	padding: 0.5rem 1.25rem;
+	font-family: var(--bs-font-monospace);
+	font-size: 0.9rem;
+	color: #a8b4ff;
+	letter-spacing: 0.01em;
+}
+
+.landing-install code {
+	color: inherit;
+	background: none;
+	padding: 0;
+}
+
+/* added by main.js */
+.landing-copy {
+	margin-left: 0.75rem;
+	padding: 0 0.25rem;
+	border: none;
+	background: none;
+	color: inherit;
+	opacity: 0.8;
+	cursor: pointer;
+}
+
+.landing-copy:hover,
+.landing-copy:focus-visible {
+	opacity: 1;
+}
+
+/* Syntax colors */
+.code-keyword { color: #c792ea; }
+.code-type    { color: #82aaff; }
+.code-string  { color: #c3e88d; }
+.code-number  { color: #f78c6c; }
+
+/* ============================================================
+   Interactive demo (pure CSS tabs)
+   ============================================================ */
+.demo-container {
+	background: rgba(0,0,0,0.35);
+	border: 1px solid rgba(255,255,255,0.08);
+	border-radius: 0.75rem;
+	overflow: hidden;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+/* Visually hidden but focusable: display:none would take the radios out of the tab order */
+.demo-radio {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* Two radio groups, each radio right before its label: the example tabs and the SQL dialects */
+.demo-tabs,
+.demo-dialects {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.demo-tabs {
+	background: rgba(255,255,255,0.05);
+	border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.demo-tab {
+	padding: 0.6rem 1rem;
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: rgba(255,255,255,0.55);
+	cursor: pointer;
+	white-space: nowrap;
+	border-bottom: 2px solid transparent;
+	transition: color 0.2s, border-color 0.2s;
+	user-select: none;
+}
+
+.demo-tab:hover {
+	color: rgba(255,255,255,0.7);
+}
+
+.demo-radio:checked + .demo-tab {
+	color: #a8b4ff;
+	border-bottom-color: #667eea;
+}
+
+.demo-dialects {
+	gap: 0.35rem;
+	padding: 0.5rem 1rem;
+	border-bottom: 1px solid rgba(255,255,255,0.06);
+	font-size: 0.72rem;
+}
+
+.demo-dialects-label {
+	margin-right: 0.25rem;
+	color: rgba(255,255,255,0.55);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.65rem;
+}
+
+.demo-dialect {
+	padding: 0.15rem 0.6rem;
+	border: 1px solid rgba(255,255,255,0.14);
+	border-radius: 999px;
+	color: rgba(255,255,255,0.7);
+	cursor: pointer;
+	white-space: nowrap;
+	user-select: none;
+	transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.demo-dialect:hover {
+	color: #fff;
+	border-color: rgba(255,255,255,0.3);
+}
+
+.demo-radio:checked + .demo-dialect {
+	color: #fff;
+	background: rgba(102,126,234,0.35);
+	border-color: #667eea;
+}
+
+/* Keyboard focus on the hidden radio shows on its label */
+.demo-radio:focus-visible + .demo-tab,
+.demo-radio:focus-visible + .demo-dialect {
+	outline: 2px solid #a8b4ff;
+	outline-offset: -2px;
+}
+
+/* Temp Table (tab 8) runs on SQLite only: its tab shows a note instead of the switcher */
+.demo-dialects-note {
+	display: none;
+	color: rgba(255,255,255,0.7);
+}
+
+.demo-container:has(#demo-tab-8:checked) .demo-dialects > :not(.demo-dialects-note) {
+	display: none;
+}
+
+.demo-container:has(#demo-tab-8:checked) .demo-dialects-note {
+	display: inline;
+}
+
+/* Panel and dialect visibility follow the checked radios */
+.demo-panel,
+.demo-sql-variant {
+	display: none;
+}
+
+.demo-container:has(#demo-tab-1:checked) .demo-panel-1,
+.demo-container:has(#demo-tab-2:checked) .demo-panel-2,
+.demo-container:has(#demo-tab-3:checked) .demo-panel-3,
+.demo-container:has(#demo-tab-4:checked) .demo-panel-4,
+.demo-container:has(#demo-tab-5:checked) .demo-panel-5,
+.demo-container:has(#demo-tab-6:checked) .demo-panel-6,
+.demo-container:has(#demo-tab-7:checked) .demo-panel-7,
+.demo-container:has(#demo-tab-8:checked) .demo-panel-8,
+.demo-container:has(#demo-dialect-sqlserver:checked)  .demo-sql-variant[data-dialect="sqlserver"],
+.demo-container:has(#demo-dialect-postgresql:checked) .demo-sql-variant[data-dialect="postgresql"],
+.demo-container:has(#demo-dialect-mysql:checked)      .demo-sql-variant[data-dialect="mysql"],
+.demo-container:has(#demo-dialect-oracle:checked)     .demo-sql-variant[data-dialect="oracle"],
+.demo-container:has(#demo-dialect-sqlite:checked)     .demo-sql-variant[data-dialect="sqlite"] {
+	display: block;
+}
+
+.demo-na {
+	margin: 0;
+	padding: 0.5rem 1rem 1rem;
+	font-size: 0.8rem;
+	color: rgba(255,255,255,0.7);
+}
+
+/* "<topic> in the docs →" under each example; an xref: link comes out of docfx with class "xref" instead */
+.demo-more,
+.demo-panel > a.xref {
+	display: block;
+	padding: 0.45rem 1rem;
+	border-top: 1px solid rgba(255,255,255,0.06);
+	font-size: 0.75rem;
+	text-align: right;
+	color: #a8b4ff;
+	text-decoration: none;
+}
+
+.demo-more:hover,
+.demo-panel > a.xref:hover {
+	color: #fff;
+	text-decoration: underline;
+}
+
+/* C# : SQL as their widest lines, 47 : 58 characters, so neither pane scrolls before the other has to */
+.demo-split {
+	display: grid;
+	grid-template-columns: minmax(0, 47fr) minmax(0, 58fr);
+	min-height: 280px;
+}
+
+@media (max-width: 767.98px) {
+	.demo-split {
+		grid-template-columns: 1fr;
+	}
+}
+
+.demo-pane {
+	padding: 0;
+	position: relative;
+	overflow: hidden;
+}
+
+.demo-pane + .demo-pane {
+	border-left: 1px solid rgba(255,255,255,0.06);
+}
+
+@media (max-width: 767.98px) {
+	.demo-pane + .demo-pane {
+		border-left: none;
+		border-top: 1px solid rgba(255,255,255,0.06);
+	}
+}
+
+.demo-pane-label {
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: rgba(255,255,255,0.55);
+	padding: 0.5rem 1rem 0;
+}
+
+.demo-code {
+	margin: 0;
+	padding: 0.5rem 1rem 1rem;
+	font-size: 0.75rem;
+	line-height: 1.6;
+	color: #c8cee0;
+	background: transparent !important;
+	border: none !important;
+	overflow-x: auto;
+	white-space: pre;
+}
+
+.demo-sql {
+	color: #e0dcc8;
+}
+
+.code-comment { color: #8b93bd; font-style: italic; }
+
+/* ============================================================
+   Supported databases strip
+   ============================================================ */
+.landing-dbs {
+	margin: 0 calc(-50vw + 50%);
+	padding: 1.1rem 2rem;
+	text-align: center;
+	border-bottom: 1px solid var(--bs-border-color);
+}
+
+.landing-dbs-title {
+	margin-bottom: 0.4rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--bs-secondary-color);
+}
+
+.landing-dbs-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	row-gap: 0.2rem;
+	max-width: 1320px;
+	margin: 0 auto;
+	padding: 0;
+	list-style: none;
+	font-size: 0.95rem;
+}
+
+.landing-dbs-list li {
+	white-space: nowrap;
+}
+
+/* separators trail the names, so a wrapped line ends with one instead of starting with it */
+.landing-dbs-list li:not(:last-child)::after {
+	content: "·";
+	content: "·" / "";
+	margin: 0 0.6rem;
+	color: var(--bs-secondary-color);
+}
+
+.landing-dbs-list a {
+	color: var(--bs-body-color);
+	text-decoration: none;
+}
+
+.landing-dbs-list a:hover {
+	color: var(--bs-link-color);
+	text-decoration: underline;
+}
+
+/* ============================================================
+   Get started in three steps
+   ============================================================ */
+.landing-steps {
+	margin: 0 calc(-50vw + 50%);
+	padding: 2.5rem 0;
+	background: var(--bs-body-bg);
+}
+
+.landing-steps-title {
+	margin-bottom: 1.5rem;
+	font-size: 1.5rem;
+	font-weight: 700;
+	text-align: center;
+}
+
+.landing-steps-list {
+	padding: 0;
+	list-style: none;
+}
+
+.landing-step {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 1.75rem;
+	border: 1px solid var(--bs-border-color);
+	border-radius: 1rem;
+	background: var(--bs-body-bg);
+}
+
+.landing-step-number {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	margin-bottom: 1rem;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #fff;
+	font-weight: 700;
+}
+
+.landing-step h3 {
+	margin-bottom: 0.4rem;
+	font-size: 1.15rem;
+	font-weight: 700;
+}
+
+.landing-step p {
+	margin-bottom: 1rem;
+	font-size: 0.95rem;
+	color: var(--bs-secondary-color);
+}
+
+/* the demo's dark code look, so the code-* colors keep their contrast in both themes */
+.landing-step-code {
+	flex: 1;
+	margin: 0 0 1rem;
+	padding: 0.9rem 1rem;
+	border: none !important;
+	border-radius: 0.5rem;
+	background: #161b2e !important;
+	color: #c8cee0;
+	font-size: 0.8rem;
+	line-height: 1.6;
+	white-space: pre;
+	overflow-x: auto;
+}
+
+.landing-step-link {
+	font-size: 0.9rem;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.landing-step-link:hover {
+	text-decoration: underline;
+}
+/* ============================================================
+   Features section
+   ============================================================ */
+.landing-features {
+	margin: 0 calc(-50vw + 50%);
+	padding: 2.5rem 0 3rem;
+	background: var(--bs-tertiary-bg);
+	border-top: 1px solid var(--bs-border-color);
+}
+
+.landing-feature {
+	text-align: center;
+	padding: 1rem;
+}
+
+.landing-feature-icon {
+	width: 52px;
+	height: 52px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.75rem;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #fff;
+	font-size: 1.3rem;
+	margin-bottom: 1rem;
+}
+
+.landing-feature h3 {
+	font-size: 1.1rem;
+	font-weight: 700;
+	margin-bottom: 0.5rem;
+}
+
+/* a linked feature title still reads as a title */
+.landing-feature h3 a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.landing-feature h3 a:hover {
+	text-decoration: underline;
+}
+
+.landing-feature p {
+	font-size: 0.9rem;
+	color: var(--bs-secondary-color);
+	line-height: 1.6;
+	margin: 0;
+}
+
+/* ============================================================
+   Documentation hub cards (documentation/index.md)
+   ============================================================ */
+.doc-card {
+	border: 1px solid var(--bs-border-color);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	cursor: pointer;
+}
+
+.doc-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.08);
+	border-color: #667eea;
+}
+
+.doc-card .card-title i {
+	margin-right: 0.5rem;
+	color: #667eea;
+}
+
+/* the title carries the card's stretched link; keep it looking like a title */
+.doc-card .card-title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+/* The demo shows C# and SQL side by side; split 47:58 like their widest lines, its column takes
+   815px with Consolas (see SqlHtml.MaxWidth in docs/tools/sql-demo). From 1220px the text keeps
+   340px and the demo takes the rest; the text grows towards the 416px that keeps both buttons on
+   one row only while the demo keeps 885px, room for a monospace font about 9% wider (macOS), and
+   past that once the demo reaches 1100px. Below 1220px the hero is centered with the demo under
+   the text instead of scrolling sideways. The text sits at the top so it stays put while the
+   demo's height changes with the tab. */
+@media (min-width: 1220px) {
+	.landing-hero .row {
+		display: grid;
+		grid-template-columns: minmax(clamp(340px, 100% - 885px, 416px), 1fr) minmax(815px, 1100px);
+		align-items: start;
+	}
+
+	.landing-hero .row > .col-lg-6 {
+		width: auto;
+	}
+
+	.landing-hero .row > .col-lg-6:first-child {
+		padding-top: 2.5rem;
+	}
+}
+
+@media (min-width: 992px) and (max-width: 1219.98px) {
+	.landing-hero .row > .col-lg-6 {
+		width: 100%;
+	}
+
+	.landing-hero .row > .col-lg-6:first-child {
+		text-align: center;
+	}
+
+	.landing-hero .landing-subtitle {
+		max-width: 620px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.landing-hero .landing-actions {
+		justify-content: center;
+	}
+
+	.landing-hero .demo-container {
+		max-width: 1100px;
+		margin: 0 auto;
+	}
+}
+
+@media (max-width: 991.98px) {
+	.landing-title {
+		font-size: 2.5rem;
+	}
+
+	.landing-hero {
+		padding: 3rem 0;
+	}
+}
+
+@media (max-width: 575.98px) {
+	.landing-title {
+		font-size: 2rem;
+	}
+
+	.landing-actions {
+		flex-direction: column;
+	}
+
+	.landing-actions .btn {
+		width: 100%;
+	}
+
+	/* "dotnet add package Microsoft.Data.SqlClient" fits a 375px screen */
+	.landing-step {
+		padding: 1.25rem;
+	}
+
+	.landing-step-code {
+		padding: 0.75rem;
+		font-size: 0.72rem;
+	}
+}

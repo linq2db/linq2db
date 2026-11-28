@@ -1,8 +1,14 @@
 # Documentation site
 
 Sources of <https://linq2db.github.io>: articles, table of contents and the docfx configuration under
-`source/`, API reference generated from the projects under `Source/`. The site's home page and the
-Contributing article include the repository's `README.md` and `CONTRIBUTING.md`.
+`source/`, API reference generated from the projects under `Source/`. The Get Started overview and the
+Contributing article include the repository's `README.md` and `CONTRIBUTING.md`. The home page's SQL demo
+is maintained with `tools/sql-demo/`.
+
+`source/redirects/` keeps old URLs working: each file there is a static HTML page that sends the browser to
+the new location, `#anchor` included, published at the path it has under `redirects/`
+(`redirects/articles/faq.html` becomes `articles/faq.html`). When a page moves or is renamed, add a stub for
+its old path; the site is on GitHub Pages, which has no server-side redirects.
 
 ## Building locally
 

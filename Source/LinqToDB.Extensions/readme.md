@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
-Main [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
+Main [article](https://linq2db.github.io/documentation/get-started/asp-dotnet-core/index.html).
 
 - [Setup Walkthrough](#setup-walkthrough)
   - [Create a new project](#create-a-new-project)

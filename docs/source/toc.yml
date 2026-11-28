@@ -1,5 +1,9 @@
+- name: Documentation
+  href: documentation/
+  topicHref: documentation/index.md
 - name: Articles
   href: articles/
+  topicHref: articles/index.md
 - name: API Documentation
   dropdown: true
   items:
