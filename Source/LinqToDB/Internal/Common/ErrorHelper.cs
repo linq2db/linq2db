@@ -27,6 +27,7 @@
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
 		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
+		public const string Error_QueryMarkerInvoked               = "{0} is a query marker and must not be invoked directly.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";
@@ -167,6 +168,36 @@
 		public static class MySql
 		{
 			public const string Error_SkipInUpdate = "Feature not supported by database: Skip in UPDATE.";
+		}
+
+		public static class DynamicColumns
+		{
+			public const string Error_DynamicColumnShadowsMember = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column.";
+			public const string Error_NoDynamicColumnsStore      = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so its initializer cannot set a dynamic column.";
+		}
+
+		public static class Pivot
+		{
+			public const string Error_UnpivotNeedsColumn            = "An unpivot needs at least one column.";
+			public const string Error_UnpivotEmptyColumnName        = "Column name at index {0} is empty.";
+			public const string Error_UnpivotColumnSelector         = "Unpivot column selector must be a member access (e.g. x => x.Jan) or a pivot cell read with a name that does not depend on the row, typed by Get<T> or a cast (e.g. x => (decimal?)x.Cells[name]).";
+			public const string Error_UnpivotNeedsColumnGroup       = "An unpivot needs at least one column group.";
+			public const string Error_UnpivotEmptyGroupName         = "Column group name at index {0} is empty.";
+			public const string Error_UnpivotNullGroupColumn        = "Column group '{0}' has a null column selector.";
+			public const string Error_PivotTerminalNotAMember       = "'{0}' must be the value of a member or a constructor argument in the projection.";
+			public const string Error_PivotChainNotFromGroup        = "'{0}' must be called on a chain started by Pivot on a group.";
+			public const string Error_PivotNoTerminal               = "A pivot of a group must end in AsDictionary, AsDynamic or Select.";
+			public const string Error_PivotSelectAfterCells         = "Select projects each pivoted value itself, so it cannot follow Cell or Cells.";
+			public const string Error_PivotReadsQueryParameter      = "The pivot's {0} is read when the query is built, so it may not read the group or another query parameter.";
+			public const string Error_PivotLambdaNotInline          = "The pivot's {0} must be written as an inline lambda.";
+			public const string Error_PivotAggregateNotInline       = "A pivot cell's aggregate must be written as an inline lambda; pass one built elsewhere through Cells and PivotCell.Create.";
+			public const string Error_PivotArgumentNull             = "The pivot's {0} is null.";
+			public const string Error_PivotNeedsCellTemplate        = "A pivot needs at least one cell template.";
+			public const string Error_PivotNameFactoryRequired      = "A pivot with more than one cell template needs a name factory on each, so the generated columns can be told apart.";
+			public const string Error_PivotValueEmptyName           = "Pivot value '{0}' produced an empty column name.";
+			public const string Error_PivotDuplicateName            = "Duplicate pivot column name '{0}'.";
+			public const string Error_PivotCellNotFound             = "No pivot cell is named '{0}'.";
+			public const string Error_PivotCellType                 = "Pivot cell '{0}' cannot be read as '{1}' where SQL is required.";
 		}
 	}
 }

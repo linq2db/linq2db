@@ -987,6 +987,28 @@ namespace Tests.DataProvider
 			Assert.That(db.LastQuery!, Does.Contain("@"));
 		}
 
+		[Table]
+		sealed class DigitLeadingNames
+		{
+			[Column("1COL")] public int Digit { get; set; }
+			[Column("COL1")] public int Plain { get; set; }
+		}
+
+		/// <summary>The automatic quote mode quotes a name that starts with a digit and leaves an uppercase name bare.</summary>
+		[Test]
+		public void AutoQuoteModeQuotesADigitLeadingName([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable(new[] { new DigitLeadingNames { Digit = 1, Plain = 2 } });
+
+			var row = table.Single();
+
+			row.Digit.ShouldBe(1);
+			row.Plain.ShouldBe(2);
+			db.LastQuery!.ShouldContain("\"1COL\"");
+			db.LastQuery!.ShouldNotContain("\"COL1\"");
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2763")]
 		public void GetSchemaTrimsPaddedSchemaNames([IncludeDataSources(CurrentProvider)] string context)
 		{

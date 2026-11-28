@@ -828,6 +828,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				return newNode;
 			}
 
+			// A bare indexer arrives where a key is unwrapped of its conversion (OrderBy).
+			if (node.Method is { Name: nameof(PivotCells.Get), IsGenericMethod: true } or { Name: "get_Item" }
+				&& TryGetPivotCellRead(node, node.Method.IsGenericMethod ? node.Method.GetGenericArguments()[0] : node.Type, out var cellRead))
+			{
+				return cellRead;
+			}
+
 			if (node.Method.DeclaringType == typeof(Sql))
 			{
 				switch (node.Method.Name)
@@ -1074,6 +1081,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
 		{
+			if (HasDynamicColumnBinding(node))
+			{
+				// Construction would otherwise drop the dynamic assignments silently.
+				if (MappingSchema.GetEntityDescriptor(node.Type).DynamicColumnSetter == null)
+					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.DynamicColumns.Error_NoDynamicColumnsStore, node.Type.Name));
+
+				// A dynamic column has no real setter, so the raw MemberInit compiles to invalid IL; the generic
+				// constructor writes it through the type's dynamic-columns store.
+				if (_buildPurpose is BuildPurpose.Expression)
+					return Visit(new SqlGenericConstructorExpression(node).WithMappingSchema(MappingSchema));
+			}
+
 			if (_buildPurpose is BuildPurpose.Sql)
 			{
 				if (HandleValue(node, out var translated))
@@ -1103,6 +1122,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(newExpression);
 
 			return newExpression;
+		}
+
+		static bool HasDynamicColumnBinding(MemberInitExpression node)
+		{
+			foreach (var binding in node.Bindings)
+			{
+				if (binding.Member.IsDynamicColumnProperty)
+					return true;
+			}
+
+			return false;
 		}
 
 		protected override Expression VisitSwitch(SwitchExpression node)
@@ -2680,6 +2710,66 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& !node.Operand.Type.IsNullableOrReferenceType;
 		}
 
+		// A cell read where SQL is required - a filter, an ordering - is the dynamic column the pivot generated, as
+		// Sql.Property reads it. A projection keeps the in-memory read, and a receiver the client holds stays a value.
+		bool TryGetPivotCellRead(MethodCallExpression call, Type cellType, [NotNullWhen(true)] out Expression? cellRead)
+		{
+			cellRead = null;
+
+			if (_buildPurpose is not BuildPurpose.Sql
+				|| call.Object is not { } cells
+				|| cells.Type != typeof(PivotCells)
+				|| Builder.CanBeEvaluatedOnClient(cells)
+				|| !Builder.CanBeEvaluatedOnClient(call.Arguments[0]))
+				return false;
+
+			var name = Builder.EvaluateExpression<string>(call.Arguments[0]);
+			if (name == null)
+				return false;
+
+			var access = Expression.MakeMemberAccess(cells, new DynamicColumnInfo(typeof(PivotCells), typeof(object), name));
+
+			cellRead = ReadPivotCellAs(access, ExpressionType.Convert, cellType, call);
+			return true;
+		}
+
+		// A pivot cell read as a type is the cell's column cast in SQL, as the provider casts. The cell is resolved first, so a
+		// name no cell carries - or cells that are not the pivot's own - and a type the cell has no conversion to are named
+		// errors rather than failures inside the conversion. Critical, so a grouping key reports them as they are.
+		Expression ReadPivotCellAs(MemberExpression access, ExpressionType conversion, Type type, Expression read)
+		{
+			var name = access.Member.Name;
+
+			Expression cell;
+			using (UsingBuildPurpose(BuildPurpose.Sql))
+				cell = Visit(access);
+
+			if (cell is not SqlPlaceholderExpression)
+				return new SqlErrorExpression(read, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, name), type, true);
+
+			if (type == typeof(object))
+				return cell;
+
+			if (!HasConversion(cell.Type, type))
+				return new SqlErrorExpression(read, string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellType, name, type), type, true);
+
+			using (UsingBuildPurpose(BuildPurpose.Sql))
+				return Visit(Expression.MakeUnary(conversion, cell, type));
+		}
+
+		static bool HasConversion(Type from, Type to)
+		{
+			try
+			{
+				_ = Expression.Convert(Expression.Default(from), to);
+				return true;
+			}
+			catch (InvalidOperationException)
+			{
+				return false;
+			}
+		}
+
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
 			// A conversion to a nullable type asks for the NULL: its operand is neither calculated on the client under the
@@ -2692,8 +2782,31 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			// An Unpivot column reads a pivot cell as object converted to its type; it is read as a filter reads it, where the BCL's
+			// rewrite of the conversion would reject the operand changing from object to the cell's own type.
+			if (node is { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null, Operand: MemberExpression { Member: DynamicColumnInfo { DeclaringType: { } declaringType } } cellAccess }
+				&& (declaringType == typeof(PivotCells) || declaringType.IsInterface && declaringType.IsAssignableFrom(typeof(PivotCells)))
+				&& cellAccess.Type == typeof(object)
+				&& cellAccess.Expression != null
+				&& !Builder.CanBeEvaluatedOnClient(cellAccess.Expression))
+			{
+				if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
+					return ReadPivotCellAs(cellAccess, node.NodeType, node.Type, node);
+
+				// Other passes (Extract) leave the read as written; the pass that builds the query reads it above.
+				return node;
+			}
+
 			if (PreferClientCalculation(node))
 				return base.VisitUnary(node);
+
+			// The indexer is typed object; the conversion over it names the cell's type.
+			if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
+				&& node.Operand is MethodCallExpression { Method.Name: "get_Item" } indexer
+				&& TryGetPivotCellRead(indexer, node.Type, out var cellRead))
+			{
+				return cellRead;
+			}
 
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
